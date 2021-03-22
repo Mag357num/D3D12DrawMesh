@@ -18,7 +18,7 @@ class SimpleCamera
 public:
     SimpleCamera();
 
-    void Init(XMFLOAT3 position);
+    void Init(XMFLOAT3 position, XMFLOAT3 upDir, XMFLOAT3 lookAt);
     void Update(float elapsedSeconds);
     XMMATRIX GetViewMatrix();
     XMMATRIX GetProjectionMatrix(float fov, float aspectRatio, float nearPlane = 1.0f, float farPlane = 1000.0f);
@@ -44,7 +44,9 @@ private:
         bool down;
     };
 
-    XMFLOAT3 m_initialPosition;
+	XMFLOAT3 m_initialPosition;
+	XMFLOAT3 m_initialUpDir;
+	XMFLOAT3 m_initialLookAt;
     XMFLOAT3 m_position;
     float m_yaw;                // Relative to the +z axis.
     float m_pitch;                // Relative to the xz plane.

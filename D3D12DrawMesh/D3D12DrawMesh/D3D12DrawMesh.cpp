@@ -29,17 +29,17 @@ void D3D12DrawMesh::OnInit()
 {
 	//read cam binary
 	XMFLOAT3 location;
-	XMFLOAT3 target;
+	XMFLOAT3 dir;
 	float fov;
 	float aspect;
 	XMFLOAT4 rotator;
-	ReadCameraBinary("SingleCameraBinary_.dat", location, target, fov, aspect, rotator);
+	ReadCameraBinary("SingleCameraBinary_.dat", location, dir, fov, aspect, rotator);
 
 	LoadPipeline();
 	LoadAssets();
 }
 
-void D3D12DrawMesh::ReadCameraBinary(const string& binFileName, XMFLOAT3& location, XMFLOAT3& target, float& fov, float& aspect, XMFLOAT4& rotator)
+void D3D12DrawMesh::ReadCameraBinary(const string& binFileName, XMFLOAT3& location, XMFLOAT3& dir, float& fov, float& aspect, XMFLOAT4& rotator)
 {
 	std::ifstream fin(binFileName, std::ios::binary);
 
@@ -48,11 +48,11 @@ void D3D12DrawMesh::ReadCameraBinary(const string& binFileName, XMFLOAT3& locati
 		throw std::exception("open file faild.");
 	}
 	fin.read((char*)&location, sizeof(float) * 3);
-	fin.read((char*)&target, sizeof(float) * 3);
+	fin.read((char*)&dir, sizeof(float) * 3);
 	fin.read((char*)&fov, sizeof(float));
 	fin.read((char*)&aspect, sizeof(float));
 	fin.read((char*)&rotator, sizeof(float) * 4);
-	m_camera.Init({ location.x, location.y, location.z }); //TODO: use fov, aspect etc
+	m_camera.Init({ -500, 0, 0 }, {0, 0, 1}, { 1, 0, 0});
 	fin.close();
 }
 
