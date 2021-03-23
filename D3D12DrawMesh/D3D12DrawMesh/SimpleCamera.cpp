@@ -51,8 +51,10 @@ void SimpleCamera::Reset()
 	m_position = m_initialPosition;
 	m_upDirection = m_initialUpDir;
 	m_lookDirection = m_initialLookAt;
-	m_yaw = XM_PI;
-	m_pitch = 0.0f;
+	
+	//TODO: calculate the roll, pitch, yaw by lookDir
+	// step1: unitization the lookDir
+	// step2: calculate the yaw and pitch through triangles with side which length is lookDir.x or lookDir.y or lookDir.z
 }
 
 void SimpleCamera::Update(float elapsedSeconds)
@@ -73,9 +75,27 @@ void SimpleCamera::Update(float elapsedSeconds)
 	if (m_keysPressed.e)
 		move.z -= 1.0f;
 
+	float moveInterval = m_moveSpeed * elapsedSeconds;
+	float rotateInterval = m_turnSpeed * elapsedSeconds;
+
+	if (m_keysPressed.left)
+		m_yaw += rotateInterval;
+	if (m_keysPressed.right)
+		m_yaw -= rotateInterval;
+	if (m_keysPressed.up)
+		m_pitch += rotateInterval;
+	if (m_keysPressed.down)
+		m_pitch -= rotateInterval;
+
 	m_position.x += move.x;
 	m_position.y += move.y;
 	m_position.z += move.z;
+
+	//TODO: figure out how to use yaw and pitch to calculate lookDir
+	//TODO: figure out how to make the move goes according camera lookDir
+
+
+
 
 	//if (fabs(move.x) > 0.1f && fabs(move.z) > 0.1f)
 	//{
