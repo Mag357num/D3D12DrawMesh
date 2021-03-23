@@ -52,7 +52,7 @@ void D3D12DrawMesh::ReadCameraBinary(const string& binFileName, XMFLOAT3& locati
 	fin.read((char*)&fov, sizeof(float));
 	fin.read((char*)&aspect, sizeof(float));
 	fin.read((char*)&rotator, sizeof(float) * 4);
-	m_camera.Init({ -500, 0, 0 }, {0, 0, 1}, { 1, 0, 0});
+	m_camera.Init({ 500, 0, 0 }, {0, 0, 1}, { -1, 0, 0});
 	fin.close();
 }
 

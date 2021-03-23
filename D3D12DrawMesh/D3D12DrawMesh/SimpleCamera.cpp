@@ -13,11 +13,11 @@
 #include "SimpleCamera.h"
 
 SimpleCamera::SimpleCamera():
-	m_initialPosition(0, 0, 0),
+	m_initialPosition(500, 0, 0),
 	m_position(m_initialPosition),
 	m_yaw(XM_PI),
 	m_pitch(0.0f),
-	m_lookDirection(1, 0, 0),
+	m_lookDirection(-1, 0, 0),
 	m_upDirection(0, 0, 1),
 	m_moveSpeed(100.0f),
 	m_turnSpeed(XM_PIDIV2),
