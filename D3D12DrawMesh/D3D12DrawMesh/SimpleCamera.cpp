@@ -61,42 +61,50 @@ void SimpleCamera::Update(float elapsedSeconds)
 	XMFLOAT3 move(0, 0, 0);
 
 	if (m_keysPressed.a)
-		move.x -= 1.0f;
+		move.y -= 1.0f;
 	if (m_keysPressed.d)
-		move.x += 1.0f;
+		move.y += 1.0f;
 	if (m_keysPressed.w)
-		move.z -= 1.0f;
+		move.x += 1.0f;
 	if (m_keysPressed.s)
+		move.x -= 1.0f;
+	if (m_keysPressed.q)
 		move.z += 1.0f;
+	if (m_keysPressed.e)
+		move.z -= 1.0f;
 
-	if (fabs(move.x) > 0.1f && fabs(move.z) > 0.1f)
-	{
-		XMVECTOR vector = XMVector3Normalize(XMLoadFloat3(&move));
-		move.x = XMVectorGetX(vector);
-		move.z = XMVectorGetZ(vector);
-	}
+	m_position.x += move.x;
+	m_position.y += move.y;
+	m_position.z += move.z;
 
-	float moveInterval = m_moveSpeed * elapsedSeconds;
-	float rotateInterval = m_turnSpeed * elapsedSeconds;
+	//if (fabs(move.x) > 0.1f && fabs(move.z) > 0.1f)
+	//{
+	//	XMVECTOR vector = XMVector3Normalize(XMLoadFloat3(&move));
+	//	move.x = XMVectorGetX(vector);
+	//	move.z = XMVectorGetZ(vector);
+	//}
 
-	if (m_keysPressed.left)
-		m_yaw += rotateInterval;
-	if (m_keysPressed.right)
-		m_yaw -= rotateInterval;
-	if (m_keysPressed.up)
-		m_pitch += rotateInterval;
-	if (m_keysPressed.down)
-		m_pitch -= rotateInterval;
+	//float moveInterval = m_moveSpeed * elapsedSeconds;
+	//float rotateInterval = m_turnSpeed * elapsedSeconds;
 
-	// Prevent looking too far up or down.
-	m_pitch = min(m_pitch, XM_PIDIV4);
-	m_pitch = max(-XM_PIDIV4, m_pitch);
+	//if (m_keysPressed.left)
+	//	m_yaw += rotateInterval;
+	//if (m_keysPressed.right)
+	//	m_yaw -= rotateInterval;
+	//if (m_keysPressed.up)
+	//	m_pitch += rotateInterval;
+	//if (m_keysPressed.down)
+	//	m_pitch -= rotateInterval;
 
-	// Move the camera in model space.
-	float x = move.x * -cosf(m_yaw) - move.z * sinf(m_yaw);
-	float z = move.x * sinf(m_yaw) - move.z * cosf(m_yaw);
-	m_position.x += x * moveInterval;
-	m_position.z += z * moveInterval;
+	//// Prevent looking too far up or down.
+	//m_pitch = min(m_pitch, XM_PIDIV4);
+	//m_pitch = max(-XM_PIDIV4, m_pitch);
+
+	//// Move the camera in model space.
+	//float x = move.x * -cosf(m_yaw) - move.z * sinf(m_yaw);
+	//float z = move.x * sinf(m_yaw) - move.z * cosf(m_yaw);
+	//m_position.x += x * moveInterval;
+	//m_position.z += z * moveInterval;
 
 	// Determine the look direction.
 	//float r = cosf(m_pitch);
@@ -107,12 +115,12 @@ void SimpleCamera::Update(float elapsedSeconds)
 
 XMMATRIX SimpleCamera::GetViewMatrix()
 {
-	return XMMatrixLookToRH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_lookDirection), XMLoadFloat3(&m_upDirection));
+	return XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_lookDirection), XMLoadFloat3(&m_upDirection));
 }
 
 XMMATRIX SimpleCamera::GetProjectionMatrix(float fov, float aspectRatio, float nearPlane, float farPlane)
 {
-	return XMMatrixPerspectiveFovRH(fov, aspectRatio, nearPlane, farPlane);
+	return XMMatrixPerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
 }
 
 void SimpleCamera::OnKeyDown(WPARAM key)
@@ -130,6 +138,12 @@ void SimpleCamera::OnKeyDown(WPARAM key)
 		break;
 	case 'D':
 		m_keysPressed.d = true;
+		break;
+	case 'Q':
+		m_keysPressed.q = true;
+		break;
+	case 'E':
+		m_keysPressed.e = true;
 		break;
 	case VK_LEFT:
 		m_keysPressed.left = true;
@@ -164,6 +178,12 @@ void SimpleCamera::OnKeyUp(WPARAM key)
 		break;
 	case 'D':
 		m_keysPressed.d = false;
+		break;
+	case 'Q':
+		m_keysPressed.q = false;
+		break;
+	case 'E':
+		m_keysPressed.e = false;
 		break;
 	case VK_LEFT:
 		m_keysPressed.left = false;

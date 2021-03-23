@@ -37,6 +37,8 @@ private:
         bool a;
         bool s;
 		bool d;
+		bool q;
+		bool e;
 
         bool left;
         bool right;

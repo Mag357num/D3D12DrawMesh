@@ -284,6 +284,7 @@ void D3D12DrawMesh::LoadAssets()
 
 		CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
 		rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
+		rasterizerStateDesc.FrontCounterClockwise = TRUE;
 
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
@@ -590,15 +591,16 @@ void D3D12DrawMesh::WaitForPreviousFrame()
 	// maximize GPU utilization.
 
 	// Signal and increment the fence value.
-	const UINT64 fence = m_fenceValue;
-	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence));
+	const UINT64 fence = m_fenceValue; //m_fenceValue: CPU fence value
+	ThrowIfFailed(m_commandQueue->Signal(m_fence.Get(), fence)); // set a fence in GPU
 	m_fenceValue++;
 
 	// Wait until the previous frame is finished.
-	if (m_fence->GetCompletedValue() < fence)
+	// GetCompletedValue(): get the fence index that GPU still in( regard GPU in a runways with many fence )
+	if (m_fence->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
 	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent));
-		WaitForSingleObject(m_fenceEvent, INFINITE);
+		ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
+		WaitForSingleObject(m_fenceEvent, INFINITE); // CPU wait
 	}
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
