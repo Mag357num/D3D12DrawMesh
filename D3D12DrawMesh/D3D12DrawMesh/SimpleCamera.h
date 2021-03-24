@@ -16,46 +16,50 @@ using namespace DirectX;
 class SimpleCamera
 {
 public:
-    SimpleCamera();
+	SimpleCamera();
 
-    void Init(XMFLOAT3 position, XMFLOAT3 upDir, XMFLOAT3 lookAt);
-    void Update(float elapsedSeconds);
-    XMMATRIX GetViewMatrix();
-    XMMATRIX GetProjectionMatrix(float fov, float aspectRatio, float nearPlane = 1.0f, float farPlane = 1000.0f);
-    void SetMoveSpeed(float unitsPerSecond);
-    void SetTurnSpeed(float radiansPerSecond);
+	void Init(XMFLOAT3 position, XMFLOAT3 upDir, XMFLOAT3 lookAt);
+	void Update(float elapsedSeconds);
+	XMMATRIX GetViewMatrix();
+	XMMATRIX GetProjectionMatrix(float fov, float aspectRatio, float nearPlane = 1.0f, float farPlane = 1000.0f);
+	void SetMoveSpeed(float unitsPerSecond);
+	void SetTurnSpeed(float radiansPerSecond);
 
-    void OnKeyDown(WPARAM key);
-    void OnKeyUp(WPARAM key);
+	void OnKeyDown(WPARAM key);
+	void OnKeyUp(WPARAM key);
+
+	float Atan2(const float& y, const float& x); // TODO: put this func to a math lib
+	void GetEulerByLook(const XMFLOAT3& lookAt);
+	void GetLookByEuler(const float& pitch, const float& yaw);
 
 private:
-    void Reset();
+	void Reset();
 
-    struct KeysPressed
-    {
-        bool w;
-        bool a;
-        bool s;
+	struct KeysPressed
+	{
+		bool w;
+		bool a;
+		bool s;
 		bool d;
 		bool q;
 		bool e;
 
-        bool left;
-        bool right;
-        bool up;
-        bool down;
-    };
+		bool left;
+		bool right;
+		bool up;
+		bool down;
+	};
 
 	XMFLOAT3 m_initialPosition;
 	XMFLOAT3 m_initialUpDir;
 	XMFLOAT3 m_initialLookAt;
-    XMFLOAT3 m_position;
-    float m_yaw;                // Relative to the +z axis.
-    float m_pitch;                // Relative to the xz plane.
-    XMFLOAT3 m_lookDirection;
-    XMFLOAT3 m_upDirection;
-    float m_moveSpeed;            // Speed at which the camera moves, in units per second.
-    float m_turnSpeed;            // Speed at which the camera turns, in radians per second.
+	XMFLOAT3 m_position;
+	float m_yaw;                // Relative to the +z axis.
+	float m_pitch;                // Relative to the xz plane.
+	XMFLOAT3 m_lookDirection;
+	XMFLOAT3 m_upDirection;
+	float m_moveSpeed;            // Speed at which the camera moves, in units per second.
+	float m_turnSpeed;            // Speed at which the camera turns, in radians per second.
 
-    KeysPressed m_keysPressed;
+	KeysPressed m_keysPressed;
 };
