@@ -12,191 +12,149 @@
 #include "stdafx.h"
 #include "SimpleCamera.h"
 #include <cmath>
+#include "MathExtend.h"
 
-SimpleCamera::SimpleCamera():
-	m_initialPosition(500, 0, 0),
-	m_position(m_initialPosition),
-	m_yaw(XM_PI),
-	m_pitch(0.0f),
-	m_lookDirection(-1, 0, 0),
-	m_upDirection(0, 0, 1),
-	m_moveSpeed(100.0f),
-	m_turnSpeed(XM_PIDIV2),
-	m_keysPressed{}
+Camera::Camera():
+	InitialPosition(500, 0, 0),
+	Position(InitialPosition),
+	Yaw(XM_PI),
+	Pitch(0.0f),
+	LookDirection(-1, 0, 0),
+	UpDirection(0, 0, 1),
+	MoveSpeed(100.0f),
+	TurnSpeed(XM_PIDIV2),
+	Keys{}
 {
 }
 
-float SimpleCamera::Atan2(const float& Y, const float& X)
+void Camera::GetEulerByLook(const XMFLOAT3& lookAt)
 {
-	const float absX = fabs(X);
-	const float absY = fabs(Y);
-	const bool yAbsBigger = (absY > absX);
-	float t0 = yAbsBigger ? absY : absX; // Max(absY, absX)
-	float t1 = yAbsBigger ? absX : absY; // Min(absX, absY)
-
-	if (t0 == 0.f)
-		return 0.f;
-
-	float t3 = t1 / t0;
-	float t4 = t3 * t3;
-
-	static const float c[7] = {
-		+7.2128853633444123e-03f,
-		-3.5059680836411644e-02f,
-		+8.1675882859940430e-02f,
-		-1.3374657325451267e-01f,
-		+1.9856563505717162e-01f,
-		-3.3324998579202170e-01f,
-		+1.0f
-	};
-
-	t0 = c[0];
-	t0 = t0 * t4 + c[1];
-	t0 = t0 * t4 + c[2];
-	t0 = t0 * t4 + c[3];
-	t0 = t0 * t4 + c[4];
-	t0 = t0 * t4 + c[5];
-	t0 = t0 * t4 + c[6];
-	t3 = t0 * t3;
-
-	t3 = yAbsBigger ? (0.5f * XM_PI) - t3 : t3;
-	t3 = (X < 0.0f) ? XM_PI - t3 : t3;
-	t3 = (Y < 0.0f) ? -t3 : t3;
-
-	return t3;
+	Yaw = Atan2(lookAt.y, lookAt.x);
+	Pitch = Atan2(lookAt.z, sqrt(lookAt.x * lookAt.x + lookAt.y * lookAt.y));
 }
 
-void SimpleCamera::GetEulerByLook(const XMFLOAT3& lookAt)
+void Camera::GetLookByEuler(const float& pitch, const float& yaw)
 {
-	// Find yaw.
-	m_yaw = Atan2(lookAt.y, lookAt.x);
+	LookDirection.x = cosf(pitch) * cosf(yaw);
+	LookDirection.y = cosf(pitch) * sinf(yaw);
+	LookDirection.z = sinf(pitch);
 
-	// Find pitch.
-	m_pitch = Atan2(lookAt.z, sqrt(lookAt.x * lookAt.x + lookAt.y * lookAt.y));
+	if (fabs(LookDirection.x) < 0.001f) LookDirection.x = 0;
+	if (fabs(LookDirection.y) < 0.001f) LookDirection.y = 0;
+	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0;
 }
 
-void SimpleCamera::GetLookByEuler(const float& pitch, const float& yaw)
+void Camera::Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt)
 {
-	m_lookDirection.x = cosf(pitch) * cosf(yaw);
-	m_lookDirection.y = cosf(pitch) * sinf(yaw);
-	m_lookDirection.z = sinf(pitch);
+	InitialPosition = position;
+	InitialUpDir = upDir;
+	InitialLookAt = lookAt;
 
-	if (fabs(m_lookDirection.x) < 0.001f) m_lookDirection.x = 0;
-	if (fabs(m_lookDirection.y) < 0.001f) m_lookDirection.y = 0;
-	if (fabs(m_lookDirection.z) < 0.001f) m_lookDirection.z = 0;
-}
-
-void SimpleCamera::Init(XMFLOAT3 position, XMFLOAT3 upDir, XMFLOAT3 lookAt)
-{
-	m_initialPosition = position;
-	m_initialUpDir = upDir;
-	m_initialLookAt = lookAt;
-
-	m_position = position;
-	m_upDirection = upDir;
-	m_lookDirection = lookAt;
+	Position = position;
+	UpDirection = upDir;
+	LookDirection = lookAt;
 
 	// regard the yaw start at x+ dir, pitch start at x+ dir, roll start at y+ dir.
 	GetEulerByLook(lookAt);
 }
 
-void SimpleCamera::SetMoveSpeed(float unitsPerSecond)
+void Camera::SetMoveSpeed(const float & UnitsPerSecond)
 {
-	m_moveSpeed = unitsPerSecond;
+	MoveSpeed = UnitsPerSecond;
 }
 
-void SimpleCamera::SetTurnSpeed(float radiansPerSecond)
+void Camera::SetTurnSpeed(const float& RadiansPerSecond)
 {
-	m_turnSpeed = radiansPerSecond;
+	TurnSpeed = RadiansPerSecond;
 }
 
-void SimpleCamera::Reset()
+void Camera::Reset()
 {
-	m_position = m_initialPosition;
-	m_upDirection = m_initialUpDir;
-	m_lookDirection = m_initialLookAt;
+	Position = InitialPosition;
+	UpDirection = InitialUpDir;
+	LookDirection = InitialLookAt;
 	
-	GetEulerByLook(m_lookDirection);
+	GetEulerByLook(LookDirection);
 }
 
-void SimpleCamera::Update(float elapsedSeconds)
+void Camera::Update(const float& ElapsedSeconds)
 {
 	XMFLOAT3 move(0, 0, 0);
-	float moveInterval = m_moveSpeed * elapsedSeconds;
-	float rotateInterval = m_turnSpeed * elapsedSeconds;
+	float moveInterval = MoveSpeed * ElapsedSeconds;
+	float rotateInterval = TurnSpeed * ElapsedSeconds;
 
-	if (m_keysPressed.a)
+	if (Keys.a)
 		move.y -= moveInterval;
-	if (m_keysPressed.d)
+	if (Keys.d)
 		move.y += moveInterval;
-	if (m_keysPressed.w)
+	if (Keys.w)
 		move.x += moveInterval;
-	if (m_keysPressed.s)
+	if (Keys.s)
 		move.x -= moveInterval;
-	if (m_keysPressed.q)
+	if (Keys.q)
 		move.z += moveInterval;
-	if (m_keysPressed.e)
+	if (Keys.e)
 		move.z -= moveInterval;
 
-	if (m_keysPressed.up)
-		m_pitch += rotateInterval;
-	if (m_keysPressed.down)
-		m_pitch -= rotateInterval;
-	if (m_keysPressed.left)
-		m_yaw -= rotateInterval;
-	if (m_keysPressed.right)
-		m_yaw += rotateInterval;
+	if (Keys.up)
+		Pitch += rotateInterval;
+	if (Keys.down)
+		Pitch -= rotateInterval;
+	if (Keys.left)
+		Yaw -= rotateInterval;
+	if (Keys.right)
+		Yaw += rotateInterval;
 
-	m_position.x += move.x * cos(m_yaw) - move.y * sin(m_yaw);
-	m_position.y += move.x * sin(m_yaw) + move.y * cos(m_yaw);
-	m_position.z += move.z;
+	Position.x += move.x * cos(Yaw) - move.y * sin(Yaw);
+	Position.y += move.x * sin(Yaw) + move.y * cos(Yaw);
+	Position.z += move.z;
 
-	GetLookByEuler(m_pitch, m_yaw);
+	GetLookByEuler(Pitch, Yaw);
 }
 
-XMMATRIX SimpleCamera::GetViewMatrix()
+XMMATRIX Camera::GetViewMatrix()
 {
-	return XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_lookDirection), XMLoadFloat3(&m_upDirection));
+	return XMMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
 }
 
-XMMATRIX SimpleCamera::GetProjectionMatrix(float fov, float aspectRatio, float nearPlane, float farPlane)
+XMMATRIX Camera::GetProjectionMatrix(const float& fov, const float& aspectRatio, const float& nearPlane, const float& farPlane)
 {
 	return XMMatrixPerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
 }
 
-void SimpleCamera::OnKeyDown(WPARAM key)
+void Camera::OnKeyDown(const WPARAM& key)
 {
 	switch (key)
 	{
 	case 'W':
-		m_keysPressed.w = true;
+		Keys.w = true;
 		break;
 	case 'A':
-		m_keysPressed.a = true;
+		Keys.a = true;
 		break;
 	case 'S':
-		m_keysPressed.s = true;
+		Keys.s = true;
 		break;
 	case 'D':
-		m_keysPressed.d = true;
+		Keys.d = true;
 		break;
 	case 'Q':
-		m_keysPressed.q = true;
+		Keys.q = true;
 		break;
 	case 'E':
-		m_keysPressed.e = true;
+		Keys.e = true;
 		break;
 	case VK_LEFT:
-		m_keysPressed.left = true;
+		Keys.left = true;
 		break;
 	case VK_RIGHT:
-		m_keysPressed.right = true;
+		Keys.right = true;
 		break;
 	case VK_UP:
-		m_keysPressed.up = true;
+		Keys.up = true;
 		break;
 	case VK_DOWN:
-		m_keysPressed.down = true;
+		Keys.down = true;
 		break;
 	case VK_ESCAPE:
 		Reset();
@@ -204,39 +162,39 @@ void SimpleCamera::OnKeyDown(WPARAM key)
 	}
 }
 
-void SimpleCamera::OnKeyUp(WPARAM key)
+void Camera::OnKeyUp(const WPARAM& key)
 {
 	switch (key)
 	{
 	case 'W':
-		m_keysPressed.w = false;
+		Keys.w = false;
 		break;
 	case 'A':
-		m_keysPressed.a = false;
+		Keys.a = false;
 		break;
 	case 'S':
-		m_keysPressed.s = false;
+		Keys.s = false;
 		break;
 	case 'D':
-		m_keysPressed.d = false;
+		Keys.d = false;
 		break;
 	case 'Q':
-		m_keysPressed.q = false;
+		Keys.q = false;
 		break;
 	case 'E':
-		m_keysPressed.e = false;
+		Keys.e = false;
 		break;
 	case VK_LEFT:
-		m_keysPressed.left = false;
+		Keys.left = false;
 		break;
 	case VK_RIGHT:
-		m_keysPressed.right = false;
+		Keys.right = false;
 		break;
 	case VK_UP:
-		m_keysPressed.up = false;
+		Keys.up = false;
 		break;
 	case VK_DOWN:
-		m_keysPressed.down = false;
+		Keys.down = false;
 		break;
 	}
 }

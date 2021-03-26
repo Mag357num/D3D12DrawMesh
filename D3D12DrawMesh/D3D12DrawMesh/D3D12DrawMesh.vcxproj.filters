@@ -39,6 +39,9 @@
     <ClInclude Include="StepTimer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MathExtend.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D3D12DrawMesh.cpp">
