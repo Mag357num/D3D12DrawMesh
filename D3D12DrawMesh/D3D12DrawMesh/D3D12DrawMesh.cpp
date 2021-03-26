@@ -601,7 +601,6 @@ void D3D12DrawMesh::LoadAssets()
 	ID3D12CommandList* ppCommandLists[] = { ResourceCommitCommandList.Get() };
 	CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-
 	// Create synchronization objects and wait until assets have been uploaded to the GPU.
 	{
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
