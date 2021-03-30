@@ -160,8 +160,8 @@ void D3D12DrawMesh::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, DX
 	// Describe and create the swap chain.
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.BufferCount = FrameCount;
-	swapChainDesc.Width = m_width;
-	swapChainDesc.Height = m_height;
+	swapChainDesc.Width = Width;
+	swapChainDesc.Height = Height;
 	swapChainDesc.Format = Format;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
