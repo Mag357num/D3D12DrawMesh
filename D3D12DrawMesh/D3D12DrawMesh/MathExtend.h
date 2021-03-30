@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 
 float Atan2(const float& Y, const float& X)

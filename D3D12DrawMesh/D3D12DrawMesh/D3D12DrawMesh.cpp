@@ -364,7 +364,7 @@ void D3D12DrawMesh::CloseCommandList(ComPtr<ID3D12GraphicsCommandList> commandLi
 	ThrowIfFailed(commandList->Close());
 }
 
-D3D12_VERTEX_BUFFER_VIEW D3D12DrawMesh::UpdateVertexBuffer_CommandList(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
+D3D12_VERTEX_BUFFER_VIEW D3D12DrawMesh::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
 	ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData)
 {
 	ThrowIfFailed(Device->CreateCommittedResource(
@@ -403,7 +403,7 @@ D3D12_VERTEX_BUFFER_VIEW D3D12DrawMesh::UpdateVertexBuffer_CommandList(ComPtr<ID
 	return VertexBufferView;
 }
 
-D3D12_INDEX_BUFFER_VIEW D3D12DrawMesh::UpdateIndexBuffer_CommandList(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
+D3D12_INDEX_BUFFER_VIEW D3D12DrawMesh::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
 {
 	ThrowIfFailed(Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -579,10 +579,10 @@ void D3D12DrawMesh::LoadAssets()
 
 	//Create the vertex buffer.
 	// TODO: add this method to a class of RHICommandList
-	m_vertexBufferView = UpdateVertexBuffer_CommandList(ResourceCommitCommandList, m_vertexBuffer, VertexBufferUploadHeap, vertexBufferSize, vertexStride, pVertData);
+	m_vertexBufferView = UpdateVertexBuffer(ResourceCommitCommandList, m_vertexBuffer, VertexBufferUploadHeap, vertexBufferSize, vertexStride, pVertData);
 
 	// Create the index buffer.
-	m_indexBufferView = UpdateIndexBuffer_CommandList(ResourceCommitCommandList, m_indexBuffer, IndexBufferUploadHeap, indexBufferSize, pIndtData);
+	m_indexBufferView = UpdateIndexBuffer(ResourceCommitCommandList, m_indexBuffer, IndexBufferUploadHeap, indexBufferSize, pIndtData);
 
 	free(pVertData);
 	free(pIndtData);

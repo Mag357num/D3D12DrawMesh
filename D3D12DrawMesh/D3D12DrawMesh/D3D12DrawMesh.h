@@ -130,9 +130,9 @@ public:
 	ComPtr<ID3D12CommandAllocator> CreateCommandAllocator();
 	ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> commandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState);
 	void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> commandList);
-	D3D12_VERTEX_BUFFER_VIEW UpdateVertexBuffer_CommandList(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData);
-	D3D12_INDEX_BUFFER_VIEW UpdateIndexBuffer_CommandList(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData);
-	void ExecuteCommand(ID3D12CommandList* ppCommandLists);
+	D3D12_VERTEX_BUFFER_VIEW UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData);
+	D3D12_INDEX_BUFFER_VIEW UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData);
+	void ExecuteCommand(ID3D12CommandList* ppCommandLists){ }; // TODO: finish this
 
 
 	void CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, DXGI_FORMAT Format);
