@@ -29,38 +29,38 @@ using namespace RHI;
 // An example of this can be found in the class method: OnDestroy().
 using Microsoft::WRL::ComPtr;
 
-struct SceneConstantBuffer : public ConstantBufferBase
+struct FSceneConstantBuffer : public FConstantBufferBase
 {
 	XMFLOAT4X4 worldViewProj;
 	float padding[48]; // Padding so the constant buffer is 256-byte aligned.
 };
-static_assert((sizeof(SceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+static_assert((sizeof(FSceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 
 
-class D3D12DrawMesh : public DXSample
+class FDrawMesh : public DXSample
 {
 public:
-	D3D12DrawMesh(UINT width, UINT height, std::wstring name);
+	FDrawMesh(UINT Width, UINT Height, std::wstring Name);
 
 	virtual void OnInit();
 	virtual void OnUpdate();
 	virtual void OnRender();
 	virtual void OnDestroy();
-	virtual void OnKeyDown(UINT8 key);
-	virtual void OnKeyUp(UINT8 key);
-	void ReadCameraBinary(const string& binFileName, XMFLOAT3& location, XMFLOAT3& target, float& fov, float& aspect, XMFLOAT4& rotator);
-	void ReadStaticMeshBinary(const string& binFileName, UINT8*& pVertData, UINT8*& pIndtData, int& vertexBufferSize, int& vertexStride, int& indexBufferSize);
+	virtual void OnKeyDown(UINT8 Key);
+	virtual void OnKeyUp(UINT8 Key);
+	void ReadCameraBinary(const string & BinFileName, XMFLOAT3 & Location, XMFLOAT3 & Dir, float & Fov, float & Aspect, XMFLOAT4 & Rotator);
+	void ReadStaticMeshBinary(const string & BinFileName, UINT8 *& PVertData, UINT8 *& PIndtData, int & VertexBufferSize, int & VertexStride, int & IndexBufferSize);
 
 private:
 	static const UINT FrameCount = 2;
 
-	CD3DX12_VIEWPORT m_viewport;
-	CD3DX12_RECT m_scissorRect;
-	StepTimer m_timer;
-	Camera m_camera;
+	CD3DX12_VIEWPORT Viewport;
+	CD3DX12_RECT ScissorRect;
+	StepTimer Timer;
+	Camera MainCamera;
 	UINT8* PCbvDataBegin1;
-	SceneConstantBuffer m_constantBufferData;
-	UINT m_indexNum;
+	FSceneConstantBuffer ConstantBufferData;
+	UINT IndexNum;
 	ComPtr<ID3D12PipelineState> PipelineState1;
 	ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 	ComPtr<ID3D12Resource> IndexBufferUploadHeap;
@@ -69,10 +69,10 @@ private:
 	ComPtr<ID3D12CommandAllocator> MainCommandAllocator;
 
 	// Synchronization objects.
-	UINT m_frameIndex;
-	HANDLE m_fenceEvent;
-	UINT64 m_fenceValue;
-	ComPtr<ID3D12Fence> m_fence;
+	UINT FrameIndex;
+	HANDLE FenceEvent;
+	UINT64 FenceValue;
+	ComPtr<ID3D12Fence> FenceGPU;
 
 	void LoadPipeline();
 	void LoadAssets();

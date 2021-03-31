@@ -15,8 +15,8 @@
 using namespace Microsoft::WRL;
 
 DXSample::DXSample(UINT width, UINT height, std::wstring name) :
-    m_width(width),
-    m_height(height),
+    ResoWidth(width),
+    ResoHeight(height),
     m_title(name),
     m_useWarpDevice(false)
 {

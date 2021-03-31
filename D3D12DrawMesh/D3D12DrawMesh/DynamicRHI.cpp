@@ -3,9 +3,9 @@
 using namespace RHI;
 
 // Globals.
-DynamicRHI* RHI::GDynamicRHI = new D3D12DynamicRHI(); // TODO: add a init rhi method to init GDynamicRHI.
+std::shared_ptr<DynamicRHI> RHI::GDynamicRHI = std::make_shared<D3D12DynamicRHI>(); // TODO: add a init rhi method to init GDynamicRHI.
 
-GraphicsPipelineStateInitializer::GraphicsPipelineStateInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
+FGraphicsPipelineStateInitializer::FGraphicsPipelineStateInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
 	ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,
 	const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
 {
@@ -98,16 +98,16 @@ ComPtr<ID3D12CommandAllocator> D3D12DynamicRHI::CreateCommandAllocator()
 	return commandAllocator;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D12DynamicRHI::CreateCommandList(ComPtr<ID3D12CommandAllocator> commandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState)
+ComPtr<ID3D12GraphicsCommandList> D3D12DynamicRHI::CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState)
 {
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList)));
-	return commandList;
+	ComPtr<ID3D12GraphicsCommandList> CommandList;
+	ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, CommandAllocator.Get(), nullptr, IID_PPV_ARGS(&CommandList)));
+	return CommandList;
 }
 
-void D3D12DynamicRHI::CloseCommandList(ComPtr<ID3D12GraphicsCommandList> commandList)
+void D3D12DynamicRHI::CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList)
 {
-	ThrowIfFailed(commandList->Close());
+	ThrowIfFailed(CommandList->Close());
 }
 
 void D3D12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
@@ -142,11 +142,9 @@ void D3D12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> Comma
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
 	// Initialize the vertex buffer view.
-	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
 	VertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
 	VertexBufferView.StrideInBytes = VertexStride;
 	VertexBufferView.SizeInBytes = VertexBufferSize;
-	m_vertexBufferView = VertexBufferView;
 }
 
 void D3D12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
@@ -180,11 +178,9 @@ void D3D12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> Comman
 	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
 	// Describe the index buffer view.
-	D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 	IndexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
 	IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	IndexBufferView.SizeInBytes = IndexBufferSize;
-	m_indexBufferView = IndexBufferView;
 }
 
 void D3D12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, DXGI_FORMAT Format)
@@ -235,15 +231,15 @@ void D3D12DynamicRHI::CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const
 
 	for (UINT n = 0; n < FrameCount; n++)
 	{
-		ThrowIfFailed(SwapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-		Device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, HeapsHandle);
+		ThrowIfFailed(SwapChain->GetBuffer(n, IID_PPV_ARGS(&RenderTargets[n])));
+		Device->CreateRenderTargetView(RenderTargets[n].Get(), nullptr, HeapsHandle);
 		HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
 }
 
-void D3D12DynamicRHI::CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& cbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap)
+void D3D12DynamicRHI::CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap)
 {
-	Device->CreateConstantBufferView(&cbvDesc, Heap->GetCPUDescriptorHandleForHeapStart());
+	Device->CreateConstantBufferView(&CbvDesc, Heap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void D3D12DynamicRHI::CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height)
@@ -324,7 +320,7 @@ D3D12_DEPTH_STENCIL_DESC D3D12DynamicRHI::CreateDepthStencilDesc()
 	return static_cast<D3D12_DEPTH_STENCIL_DESC>(depthStencilDesc);
 }
 
-D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DynamicRHI::CreateGraphicsPipelineStateDesc(const GraphicsPipelineStateInitializer& Initializer)
+D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DynamicRHI::CreateGraphicsPipelineStateDesc(const FGraphicsPipelineStateInitializer& Initializer)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = Initializer.InputLayout;
@@ -344,19 +340,14 @@ D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DynamicRHI::CreateGraphicsPipelineStateD
 	return psoDesc;
 }
 
-void D3D12DynamicRHI::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, ComPtr<ID3D12PipelineState>& pipelineState)
+ComPtr<ID3D12PipelineState> D3D12DynamicRHI::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
 {
-	ThrowIfFailed(Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
+	ComPtr<ID3D12PipelineState> PipelineState;
+	ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&PipelineState)));
+	return PipelineState;
 }
 
-ComPtr<ID3D12PipelineState> D3D12DynamicRHI::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
-{
-	ComPtr<ID3D12PipelineState> pipelineState;
-	ThrowIfFailed(Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
-	return pipelineState;
-}
-
-void D3D12DynamicRHI::UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const ConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
+void D3D12DynamicRHI::UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
 {
 	ThrowIfFailed(Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -369,10 +360,10 @@ void D3D12DynamicRHI::UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffe
 	NAME_D3D12_OBJECT(ConstantBuffer);
 
 	// Describe and create a constant buffer view.
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-	cbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
-	cbvDesc.SizeInBytes = ConstantBufferSize;
-	CreateCBVToHeaps(cbvDesc, Heap);
+	D3D12_CONSTANT_BUFFER_VIEW_DESC CbvDesc = {};
+	CbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
+	CbvDesc.SizeInBytes = ConstantBufferSize;
+	CreateCBVToHeaps(CbvDesc, Heap);
 
 	// Map and initialize the constant buffer. We don't unmap this until the
 	// app closes. Keeping things mapped for the lifetime of the resource is okay.
@@ -450,7 +441,7 @@ void D3D12DynamicRHI::GetHardwareAdapter(
 	*ppAdapter = adapter.Detach();
 }
 
-void D3D12DynamicRHI::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData)
+void D3D12DynamicRHI::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData)
 {
 	CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
 	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
@@ -469,10 +460,10 @@ void D3D12DynamicRHI::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE feat
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
 
-	ComPtr<ID3DBlob> signature;
+	ComPtr<ID3DBlob> Signature;
 	ComPtr<ID3DBlob> error;
-	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
-	ThrowIfFailed(Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &error));
+	ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 }
 
 void D3D12DynamicRHI::CreateGPUFence(ComPtr<ID3D12Fence>& Fence)

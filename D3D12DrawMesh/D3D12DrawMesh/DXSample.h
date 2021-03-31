@@ -30,8 +30,8 @@ public:
     virtual void OnKeyUp(UINT8 /*key*/)     {}
 
     // Accessors.
-    UINT GetWidth() const           { return m_width; }
-    UINT GetHeight() const          { return m_height; }
+    UINT GetWidth() const           { return ResoWidth; }
+    UINT GetHeight() const          { return ResoHeight; }
     const WCHAR* GetTitle() const   { return m_title.c_str(); }
 
     void ParseCommandLineArgs(_In_reads_(argc) WCHAR* argv[], int argc);
@@ -47,8 +47,8 @@ protected:
     void SetCustomWindowText(LPCWSTR text);
 
     // Viewport dimensions.
-    UINT m_width;
-    UINT m_height;
+    UINT ResoWidth;
+    UINT ResoHeight;
     float m_aspectRatio;
 
     // Adapter info.

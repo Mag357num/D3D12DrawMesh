@@ -18,91 +18,91 @@
 using namespace RHI;
 using RHI::GDynamicRHI;
 
-D3D12DrawMesh::D3D12DrawMesh(UINT width, UINT height, std::wstring name) :
-	DXSample(width, height, name),
+FDrawMesh::FDrawMesh(UINT Width, UINT Height, std::wstring Name) :
+	DXSample(Width, Height, Name),
 	PCbvDataBegin1(nullptr),
-	m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
-	m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
-	m_constantBufferData{}
+	Viewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height)),
+	ScissorRect(0, 0, static_cast<LONG>(Width), static_cast<LONG>(Height)),
+	ConstantBufferData{}
 {
 }
 
-void D3D12DrawMesh::OnInit()
+void FDrawMesh::OnInit()
 {
 	//read cam binary
-	XMFLOAT3 location;
-	XMFLOAT3 dir;
-	float fov;
-	float aspect;
-	XMFLOAT4 rotator;
-	ReadCameraBinary("SingleCameraBinary_.dat", location, dir, fov, aspect, rotator);
+	XMFLOAT3 Location;
+	XMFLOAT3 Dir;
+	float Fov;
+	float Aspect;
+	XMFLOAT4 Rotator;
+	ReadCameraBinary("SingleCameraBinary_.dat", Location, Dir, Fov, Aspect, Rotator);
 
 	LoadPipeline();
 	LoadAssets();
 }
 
-void D3D12DrawMesh::ReadCameraBinary(const string& binFileName, XMFLOAT3& location, XMFLOAT3& dir, float& fov, float& aspect, XMFLOAT4& rotator)
+void FDrawMesh::ReadCameraBinary(const string & BinFileName, XMFLOAT3 & Location, XMFLOAT3 & Dir, float & Fov, float & Aspect, XMFLOAT4 & Rotator)
 {
-	std::ifstream fin(binFileName, std::ios::binary);
+	std::ifstream fin(BinFileName, std::ios::binary);
 
 	if (!fin.is_open())
 	{
 		throw std::exception("open file faild.");
 	}
-	fin.read((char*)&location, sizeof(float) * 3);
-	fin.read((char*)&dir, sizeof(float) * 3);
-	fin.read((char*)&fov, sizeof(float));
-	fin.read((char*)&aspect, sizeof(float));
-	fin.read((char*)&rotator, sizeof(float) * 4);
-	m_camera.Init({ 500, 0, 0 }, {0, 0, 1}, { -1, 0, 0});
+	fin.read((char*)&Location, sizeof(float) * 3);
+	fin.read((char*)&Dir, sizeof(float) * 3);
+	fin.read((char*)&Fov, sizeof(float));
+	fin.read((char*)&Aspect, sizeof(float));
+	fin.read((char*)&Rotator, sizeof(float) * 4);
+	MainCamera.Init({ 500, 0, 0 }, {0, 0, 1}, { -1, 0, 0});
 	fin.close();
 }
 
-void D3D12DrawMesh::ReadStaticMeshBinary(const string& binFileName, UINT8*& pVertData, UINT8*& pIndtData, int& vertexBufferSize, int& vertexStride, int& indexBufferSize)
+void FDrawMesh::ReadStaticMeshBinary(const string & BinFileName, UINT8 *& PVertData, UINT8 *& PIndtData, int & VertexBufferSize, int & VertexStride, int & IndexBufferSize)
 {
-	std::ifstream fin(binFileName, std::ios::binary);
+	std::ifstream fin(BinFileName, std::ios::binary);
 
 	if (!fin.is_open())
 	{
 		throw std::exception("open file faild.");
 	}
 
-	fin.read((char*)&vertexStride, sizeof(int));
+	fin.read((char*)&VertexStride, sizeof(int));
 
-	fin.read((char*)&vertexBufferSize, sizeof(int));
-	vertexBufferSize *= static_cast<size_t>(vertexStride);
+	fin.read((char*)&VertexBufferSize, sizeof(int));
+	VertexBufferSize *= static_cast<size_t>(VertexStride);
 
-	if (vertexBufferSize > 0)
+	if (VertexBufferSize > 0)
 	{
-		pVertData = reinterpret_cast<UINT8*>(malloc(vertexBufferSize));
-		fin.read((char*)pVertData, vertexBufferSize);
+		PVertData = reinterpret_cast<UINT8*>(malloc(VertexBufferSize));
+		fin.read((char*)PVertData, VertexBufferSize);
 	}
 	else
 	{
 		throw std::exception();
 	}
 
-	fin.read((char*)&indexBufferSize, sizeof(int));
-	m_indexNum = indexBufferSize;
-	indexBufferSize *= sizeof(int);
+	fin.read((char*)&IndexBufferSize, sizeof(int));
+	IndexNum = IndexBufferSize;
+	IndexBufferSize *= sizeof(int);
 
-	if (indexBufferSize > 0)
+	if (IndexBufferSize > 0)
 	{
-		pIndtData = reinterpret_cast<UINT8*>(malloc(indexBufferSize));
-		fin.read((char*)pIndtData, indexBufferSize);
+		PIndtData = reinterpret_cast<UINT8*>(malloc(IndexBufferSize));
+		fin.read((char*)PIndtData, IndexBufferSize);
 	}
 
 	fin.close();
 }
 
 // Load the rendering pipeline dependencies.
-void D3D12DrawMesh::LoadPipeline()
+void FDrawMesh::LoadPipeline()
 {
 	GDynamicRHI->CreateDevice(m_useWarpDevice);
 	GDynamicRHI->CreateCommandQueue();
-	GDynamicRHI->CreateSwapChain(FrameCount, m_width, m_height, DXGI_FORMAT_R8G8B8A8_UNORM);
+	GDynamicRHI->CreateSwapChain(FrameCount, ResoWidth, ResoHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-	m_frameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
+	FrameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
 
 	// Create descriptor heaps.
 	{
@@ -115,7 +115,7 @@ void D3D12DrawMesh::LoadPipeline()
 		// Describe and create a constant buffer view (CBV) descriptor heap.
 		// Flags indicate that this descriptor heap can be bound to the pipeline 
 		// and that descriptors contained in it can be referenced by a root table.
-		GDynamicRHI->CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, GDynamicRHI->GetCBVHeap());
+		GDynamicRHI->CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, GDynamicRHI->GetCBVSRVHeap());
 	}
 
 	// Create frame resources.
@@ -125,16 +125,16 @@ void D3D12DrawMesh::LoadPipeline()
 }
 
 // Load the sample assets.
-void D3D12DrawMesh::LoadAssets()
+void FDrawMesh::LoadAssets()
 {
 	// Create a root signature consisting of a descriptor table with a single CBV.
 	{
 		// choose root signature version
-		D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-		GDynamicRHI->ChooseSupportedFeatureVersion(featureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
+		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
+		GDynamicRHI->ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
 		// create root signature
-		GDynamicRHI->CreateRootSignature(featureData);
+		GDynamicRHI->CreateRootSignature(FeatureData);
 	}
 
 	// Create the pipeline state, which includes compiling and loading shaders.
@@ -157,12 +157,11 @@ void D3D12DrawMesh::LoadAssets()
 		D3D12_DEPTH_STENCIL_DESC DepthStencilDesc = GDynamicRHI->CreateDepthStencilDesc();
 
 		// Describe and create the graphics pipeline state object (PSO).
-		GraphicsPipelineStateInitializer Initializer(VertexDescription, GDynamicRHI->GetRootSignature().Get(), CD3DX12_SHADER_BYTECODE(vertexShader.Get()), CD3DX12_SHADER_BYTECODE(pixelShader.Get()),
+		FGraphicsPipelineStateInitializer Initializer(VertexDescription, GDynamicRHI->GetRootSignature().Get(), CD3DX12_SHADER_BYTECODE(vertexShader.Get()), CD3DX12_SHADER_BYTECODE(pixelShader.Get()),
 			RasterizerStateDesc, DepthStencilDesc);
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = GDynamicRHI->CreateGraphicsPipelineStateDesc(Initializer);
 
 		// TODO: figure out whats the different between this two way to pass a smart ptr
-		//CreateGraphicsPipelineState(psoDesc, m_pipelineState);
 		PipelineState1 = GDynamicRHI->CreateGraphicsPipelineState(PsoDesc);
 	}
 
@@ -178,45 +177,45 @@ void D3D12DrawMesh::LoadAssets()
 	GDynamicRHI->CloseCommandList(MainCommandList);
 
 	//read binary
-	UINT8* pVertData = nullptr;
-	UINT8* pIndtData = nullptr;
-	int vertexBufferSize;
-	int vertexStride;
-	int indexBufferSize;
-	ReadStaticMeshBinary("StaticMeshBinary_.dat", pVertData, pIndtData, vertexBufferSize, vertexStride, indexBufferSize);
+	UINT8* PVertData = nullptr;
+	UINT8* PIndtData = nullptr;
+	int VertexBufferSize;
+	int VertexStride;
+	int IndexBufferSize;
+	ReadStaticMeshBinary("StaticMeshBinary_.dat", PVertData, PIndtData, VertexBufferSize, VertexStride, IndexBufferSize);
 
 	//Create the vertex buffer.
 	// TODO: add this method to a class of RHICommandList
-	GDynamicRHI->UpdateVertexBuffer(ResourceCommitCommandList, GDynamicRHI->GetVertexBuffer(), VertexBufferUploadHeap, vertexBufferSize, vertexStride, pVertData);
+	GDynamicRHI->UpdateVertexBuffer(ResourceCommitCommandList, GDynamicRHI->GetVertexBuffer(), VertexBufferUploadHeap, VertexBufferSize, VertexStride, PVertData);
 
 	// Create the index buffer.
-	GDynamicRHI->UpdateIndexBuffer(ResourceCommitCommandList, GDynamicRHI->GetIndexBuffer(), IndexBufferUploadHeap, indexBufferSize, pIndtData);
+	GDynamicRHI->UpdateIndexBuffer(ResourceCommitCommandList, GDynamicRHI->GetIndexBuffer(), IndexBufferUploadHeap, IndexBufferSize, PIndtData);
 
-	free(pVertData);
-	free(pIndtData);
+	free(PVertData);
+	free(PIndtData);
 
 	// Create the constant buffer.
-	const UINT constantBufferSize = sizeof(SceneConstantBuffer);    // CB size is required to be 256-byte aligned.
-	GDynamicRHI->UpdateConstantBuffer(GDynamicRHI->GetConstantBuffer(), constantBufferSize, m_constantBufferData, GDynamicRHI->GetCBVHeap(), PCbvDataBegin1);
+	const UINT ConstantBufferSize = sizeof(FSceneConstantBuffer);    // CB size is required to be 256-byte aligned.
+	GDynamicRHI->UpdateConstantBuffer(GDynamicRHI->GetConstantBuffer(), ConstantBufferSize, ConstantBufferData, GDynamicRHI->GetCBVSRVHeap(), PCbvDataBegin1);
 
 	// Create the depth stencil view.
-	GDynamicRHI->CreateDSVToHeaps(GDynamicRHI->GetDSV(), GDynamicRHI->GetDSVHeap(), m_width, m_height);
+	GDynamicRHI->CreateDSVToHeaps(GDynamicRHI->GetDSV(), GDynamicRHI->GetDSVHeap(), ResoWidth, ResoHeight);
 
 	// Close the resource creation command list and execute it to begin the vertex buffer copy into
 	// the default heap.
 	// encapsulated the ExecuteCommand() function.
 	GDynamicRHI->CloseCommandList(ResourceCommitCommandList);
-	ID3D12CommandList* ppCommandLists[] = { ResourceCommitCommandList.Get() };
-	GDynamicRHI->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	ID3D12CommandList* PPCommandLists[] = { ResourceCommitCommandList.Get() };
+	GDynamicRHI->GetCommandQueue()->ExecuteCommandLists(_countof(PPCommandLists), PPCommandLists);
 
 	// Create synchronization objects and wait until assets have been uploaded to the GPU.
 	{
-		GDynamicRHI->CreateGPUFence(m_fence);
-		m_fenceValue = 1;
+		GDynamicRHI->CreateGPUFence(FenceGPU);
+		FenceValue = 1;
 
 		// Create an event handle to use for frame synchronization.
-		m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		if (m_fenceEvent == nullptr)
+		FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		if (FenceEvent == nullptr)
 		{
 			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 		}
@@ -229,25 +228,25 @@ void D3D12DrawMesh::LoadAssets()
 }
 
 // Update frame-based values.
-void D3D12DrawMesh::OnUpdate()
+void FDrawMesh::OnUpdate()
 {
-	m_timer.Tick(NULL);
+	Timer.Tick(NULL);
 
 
-	m_camera.Update(static_cast<float>(m_timer.GetElapsedSeconds()));
+	MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 
 	XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
-	XMMATRIX v = m_camera.GetViewMatrix();
-	XMMATRIX p = m_camera.GetProjectionMatrix(0.8f, m_aspectRatio);
+	XMMATRIX v = MainCamera.GetViewMatrix();
+	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
 
 	// Compute the model-view-projection matrix.
-	XMStoreFloat4x4(&m_constantBufferData.worldViewProj, XMMatrixTranspose(m * v * p));
+	XMStoreFloat4x4(&ConstantBufferData.worldViewProj, XMMatrixTranspose(m * v * p));
 
-	memcpy(PCbvDataBegin1, &m_constantBufferData, sizeof(m_constantBufferData));
+	memcpy(PCbvDataBegin1, &ConstantBufferData, sizeof(ConstantBufferData));
 }
 
 // Render the scene.
-void D3D12DrawMesh::OnRender()
+void FDrawMesh::OnRender()
 {
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
@@ -262,27 +261,27 @@ void D3D12DrawMesh::OnRender()
 	WaitForPreviousFrame();
 }
 
-void D3D12DrawMesh::OnDestroy()
+void FDrawMesh::OnDestroy()
 {
 	// Ensure that the GPU is no longer referencing resources that are about to be
 	// cleaned up by the destructor.
 	WaitForPreviousFrame();
 
-	CloseHandle(m_fenceEvent);
+	CloseHandle(FenceEvent);
 }
 
-void D3D12DrawMesh::OnKeyDown(UINT8 key)
+void FDrawMesh::OnKeyDown(UINT8 Key)
 {
-	m_camera.OnKeyDown(key);
+	MainCamera.OnKeyDown(Key);
 }
 
-void D3D12DrawMesh::OnKeyUp(UINT8 key)
+void FDrawMesh::OnKeyUp(UINT8 Key)
 {
-	m_camera.OnKeyUp(key);
+	MainCamera.OnKeyUp(Key);
 }
 
 // Fill the command list with all the render commands and dependent state.
-void D3D12DrawMesh::PopulateCommandList()
+void FDrawMesh::PopulateCommandList()
 {
 	// Command list allocators can only be reset when the associated 
 	// command lists have finished execution on the GPU; apps should use 
@@ -297,13 +296,13 @@ void D3D12DrawMesh::PopulateCommandList()
 	// Set necessary state.
 	MainCommandList->SetGraphicsRootSignature(GDynamicRHI->GetRootSignature().Get());
 
-	MainCommandList->RSSetViewports(1, &m_viewport);
-	MainCommandList->RSSetScissorRects(1, &m_scissorRect);
+	MainCommandList->RSSetViewports(1, &Viewport);
+	MainCommandList->RSSetScissorRects(1, &ScissorRect);
 
 	// Indicate that the back buffer will be used as a render target.
-	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[FrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(GDynamicRHI->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, GDynamicRHI->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(GDynamicRHI->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(), FrameIndex, GDynamicRHI->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(GDynamicRHI->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart());
 
 	MainCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
@@ -313,21 +312,21 @@ void D3D12DrawMesh::PopulateCommandList()
 	MainCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	MainCommandList->ClearDepthStencilView(GDynamicRHI->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { GDynamicRHI->GetCBVHeap().Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { GDynamicRHI->GetCBVSRVHeap().Get() };
 	MainCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	MainCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	MainCommandList->IASetIndexBuffer(&GDynamicRHI->GetIBV());
 	MainCommandList->IASetVertexBuffers(0, 1, &GDynamicRHI->GetVBV());
-	MainCommandList->SetGraphicsRootDescriptorTable(0, GDynamicRHI->GetCBVHeap()->GetGPUDescriptorHandleForHeapStart());
-	MainCommandList->DrawIndexedInstanced(m_indexNum, 1, 0, 0, 0);
+	MainCommandList->SetGraphicsRootDescriptorTable(0, GDynamicRHI->GetCBVSRVHeap()->GetGPUDescriptorHandleForHeapStart());
+	MainCommandList->DrawIndexedInstanced(IndexNum, 1, 0, 0, 0);
 
 	// Indicate that the back buffer will now be used to present.
-	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[FrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	ThrowIfFailed(MainCommandList->Close());
 }
 
-void D3D12DrawMesh::WaitForPreviousFrame()
+void FDrawMesh::WaitForPreviousFrame()
 {
 	// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
 	// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
@@ -335,17 +334,17 @@ void D3D12DrawMesh::WaitForPreviousFrame()
 	// maximize GPU utilization.
 
 	// Signal and increment the fence value.
-	const UINT64 fence = m_fenceValue; //m_fenceValue: CPU fence value
-	ThrowIfFailed(GDynamicRHI->GetCommandQueue()->Signal(m_fence.Get(), fence)); // set a fence in GPU
-	m_fenceValue++;
+	const UINT64 fence = FenceValue; //m_fenceValue: CPU fence value
+	ThrowIfFailed(GDynamicRHI->GetCommandQueue()->Signal(FenceGPU.Get(), fence)); // set a fence in GPU
+	FenceValue++;
 
 	// Wait until the previous frame is finished.
 	// GetCompletedValue(): get the fence index that GPU still in( regard GPU in a runways with many fence )
-	if (m_fence->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
+	if (FenceGPU->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
 	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(fence, m_fenceEvent)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
-		WaitForSingleObject(m_fenceEvent, INFINITE); // CPU wait
+		ThrowIfFailed(FenceGPU->SetEventOnCompletion(fence, FenceEvent)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
+		WaitForSingleObject(FenceEvent, INFINITE); // CPU wait
 	}
 
-	m_frameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
+	FrameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
 }
