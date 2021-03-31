@@ -11,10 +11,10 @@ public:
 	SceneRenderer() = default;
 	~SceneRenderer() = default;
 
-	void RenderForward();
+	void Render(FRHICommandListImmediate& RHICmdList);
 };
 
-void SceneRenderer::RenderForward() // TODO: input the scene binary
+void SceneRenderer::Render(FRHICommandListImmediate& RHICmdList) // TODO: input the scene binary
 {
 	// TODO: init the pipeline
 	// TODO: load the resource

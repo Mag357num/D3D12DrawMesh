@@ -13,18 +13,18 @@
 #include "D3D12DrawMesh.h"
 #include "SimpleCamera.h"
 #include <fstream>
+#include "DynamicRHI.h"
+
+using namespace RHI;
+using RHI::GDynamicRHI;
 
 D3D12DrawMesh::D3D12DrawMesh(UINT width, UINT height, std::wstring name) :
 	DXSample(width, height, name),
-	m_frameIndex(0),
 	PCbvDataBegin1(nullptr),
 	m_viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)),
 	m_scissorRect(0, 0, static_cast<LONG>(width), static_cast<LONG>(height)),
 	m_constantBufferData{}
 {
-	UINT dxgiFactoryFlags = 0;
-	EnableDebug(dxgiFactoryFlags);
-	CreateFactory(dxgiFactoryFlags);
 }
 
 void D3D12DrawMesh::OnInit()
@@ -95,428 +95,33 @@ void D3D12DrawMesh::ReadStaticMeshBinary(const string& binFileName, UINT8*& pVer
 	fin.close();
 }
 
-void D3D12DrawMesh::EnableDebug(UINT& DxgiFactoryFlags)
-{
-#if defined(_DEBUG)
-	// Enable the debug layer (requires the Graphics Tools "optional feature").
-	// NOTE: Enabling the debug layer after device creation will invalidate the active device.
-	{
-		ComPtr<ID3D12Debug> debugController;
-		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-		{
-			debugController->EnableDebugLayer();
-
-			// Enable additional debug layers.
-			DxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-		}
-	}
-#endif
-}
-
-void D3D12DrawMesh::CreateFactory(bool FactoryFlags)
-{
-	ThrowIfFailed(CreateDXGIFactory2(FactoryFlags, IID_PPV_ARGS(&Factory)));
-}
-
-
-void D3D12DrawMesh::CreateDevice(bool HasWarpDevice)
-{
-	if (HasWarpDevice)
-	{
-		ComPtr<IDXGIAdapter> warpAdapter;
-		ThrowIfFailed(Factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-		ThrowIfFailed(D3D12CreateDevice(
-			warpAdapter.Get(),
-			D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS(&Device)
-		));
-	}
-	else
-	{
-		ComPtr<IDXGIAdapter1> hardwareAdapter;
-		GetHardwareAdapter(Factory.Get(), &hardwareAdapter);
-
-		ThrowIfFailed(D3D12CreateDevice(
-			hardwareAdapter.Get(),
-			D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS(&Device)
-		));
-	}
-}
-
-void D3D12DrawMesh::CreateCommandQueue()
-{
-	// Describe and create the command queue.
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-	ThrowIfFailed(Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&CommandQueue)));
-}
-
-void D3D12DrawMesh::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, DXGI_FORMAT Format)
-{
-	// Describe and create the swap chain.
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.BufferCount = FrameCount;
-	swapChainDesc.Width = Width;
-	swapChainDesc.Height = Height;
-	swapChainDesc.Format = Format;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.SampleDesc.Count = 1;
-
-	ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed(Factory->CreateSwapChainForHwnd(
-		CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-		Win32Application::GetHwnd(),
-		&swapChainDesc,
-		nullptr,
-		nullptr,
-		&swapChain
-	));
-
-	// This sample does not support fullscreen transitions.
-	ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-	ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
-	m_frameIndex = SwapChain->GetCurrentBackBufferIndex();
-}
-
-void D3D12DrawMesh::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
-	HeapDesc.NumDescriptors = NumDescriptors;
-	HeapDesc.Type = Type;
-	HeapDesc.Flags = Flags;
-	ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
-}
-
-void D3D12DrawMesh::CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount)
-{
-	CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(Heap->GetCPUDescriptorHandleForHeapStart());
-
-	for (UINT n = 0; n < FrameCount; n++)
-	{
-		ThrowIfFailed(SwapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
-		Device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, HeapsHandle);
-		HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-	}
-}
-
-void D3D12DrawMesh::CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& cbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap)
-{
-	Device->CreateConstantBufferView(&cbvDesc, Heap->GetCPUDescriptorHandleForHeapStart());
-}
-
-void D3D12DrawMesh::CreateCommandlist(ComPtr<ID3D12CommandAllocator>& CommandAllocator)
-{
-	ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&CommandAllocator)));
-}
-
 // Load the rendering pipeline dependencies.
 void D3D12DrawMesh::LoadPipeline()
 {
-	CreateDevice(m_useWarpDevice);
-	CreateCommandQueue();
-	CreateSwapChain(FrameCount, m_width, m_height, DXGI_FORMAT_R8G8B8A8_UNORM);
+	GDynamicRHI->CreateDevice(m_useWarpDevice);
+	GDynamicRHI->CreateCommandQueue();
+	GDynamicRHI->CreateSwapChain(FrameCount, m_width, m_height, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	m_frameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
 
 	// Create descriptor heaps.
 	{
 		// Describe and create a render target view (RTV) descriptor heap.
-		CreateDescriptorHeaps(FrameCount, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, m_rtvHeap);
+		GDynamicRHI->CreateDescriptorHeaps(FrameCount, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, GDynamicRHI->GetRTVHeap());
 
 		// Describe and create a depth stencil view (DSV) descriptor heap.
-		CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, m_dsvHeap);
+		GDynamicRHI->CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, GDynamicRHI->GetDSVHeap());
 
 		// Describe and create a constant buffer view (CBV) descriptor heap.
 		// Flags indicate that this descriptor heap can be bound to the pipeline 
 		// and that descriptors contained in it can be referenced by a root table.
-		CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, m_cbvHeap);
+		GDynamicRHI->CreateDescriptorHeaps(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, GDynamicRHI->GetCBVHeap());
 	}
 
 	// Create frame resources.
-	CreateRTVToHeaps(m_rtvHeap, FrameCount);
+	GDynamicRHI->CreateRTVToHeaps(GDynamicRHI->GetRTVHeap(), FrameCount);
 
-	CreateCommandlist(MainCommandAllocator);
-}
-
-void D3D12DrawMesh::ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version)
-{
-	// This is the highest version the sample supports. If CheckFeatureSupport succeeds, the HighestVersion returned will not be greater than this.
-	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-
-	if (FAILED(Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
-	{
-		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-	}
-}
-
-UINT D3D12DrawMesh::GetEnableShaderDebugFlags()
-{
-#if defined(_DEBUG)
-	// Enable better shader debugging with the graphics debugging tools.
-	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-	UINT compileFlags = 0;
-#endif
-	return compileFlags;
-}
-
-ComPtr<ID3DBlob> D3D12DrawMesh::CreateVertexShader(LPCWSTR FileName)
-{
-	ComPtr<ID3DBlob> vertexShader;
-	ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &vertexShader, nullptr));
-	return vertexShader;
-}
-
-ComPtr<ID3DBlob> D3D12DrawMesh::CreatePixelShader(LPCWSTR FileName)
-{
-	ComPtr<ID3DBlob> pixelShader;
-	ThrowIfFailed(D3DCompileFromFile(GetAssetFullPath(L"shaders.hlsl").c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &pixelShader, nullptr));
-	return pixelShader;
-}
-
-D3D12_RASTERIZER_DESC D3D12DrawMesh::CreateRasterizerStateDesc()
-{
-	// TODO: figure out how to make this func can create all kinds of raster state
-	CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
-	rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
-	rasterizerStateDesc.FrontCounterClockwise = TRUE;
-	return static_cast<D3D12_RASTERIZER_DESC>(rasterizerStateDesc);
-}
-
-D3D12_DEPTH_STENCIL_DESC D3D12DrawMesh::CreateDepthStencilDesc()
-{
-	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
-	depthStencilDesc.DepthEnable = TRUE;
-	return static_cast<D3D12_DEPTH_STENCIL_DESC>(depthStencilDesc);
-}
-
-D3D12DrawMesh::GraphicsPipelineStateInitializer::GraphicsPipelineStateInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
-	ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS,const D3D12_SHADER_BYTECODE& PS,
-	const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
-{
-	InputLayout = VertexDescription;
-	pRootSignature = RootSignature;
-	this->VS = VS;
-	this->PS = PS;
-	RasterizerState = rasterizerStateDesc;
-	BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	DepthStencilState = depthStencilDesc;
-	SampleMask = UINT_MAX;
-	PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	NumRenderTargets = 1;
-	RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	DSVFormat = DXGI_FORMAT_D32_FLOAT;
-	SampleDesc.Count = 1;
-}
-
-D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DrawMesh::CreateGraphicsPipelineStateDesc(const GraphicsPipelineStateInitializer& Initializer)
-{
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.InputLayout = Initializer.InputLayout;
-	psoDesc.pRootSignature = Initializer.pRootSignature;
-	psoDesc.VS = Initializer.VS;
-	psoDesc.PS = Initializer.PS;
-	psoDesc.RasterizerState = Initializer.RasterizerState;
-	psoDesc.BlendState = Initializer.BlendState;
-	psoDesc.DepthStencilState = Initializer.DepthStencilState;
-	psoDesc.SampleMask = Initializer.SampleMask;
-	psoDesc.PrimitiveTopologyType = Initializer.PrimitiveTopologyType;
-	psoDesc.NumRenderTargets = Initializer.NumRenderTargets;
-	psoDesc.RTVFormats[0] = Initializer.RTVFormats[0];
-	//psoDesc.RTVFormats = Initializer.RTVFormats; // TODO: why error?
-	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-	psoDesc.SampleDesc.Count = Initializer.SampleDesc.Count;
-	return psoDesc;
-}
-
-void D3D12DrawMesh::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, ComPtr<ID3D12PipelineState>& pipelineState)
-{
-	ThrowIfFailed(Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
-}
-
-ComPtr<ID3D12PipelineState> D3D12DrawMesh::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
-{
-	ComPtr<ID3D12PipelineState> pipelineState;
-	ThrowIfFailed(Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
-	return pipelineState;
-}
-
-ComPtr<ID3D12CommandAllocator> D3D12DrawMesh::CreateCommandAllocator()
-{
-	ComPtr<ID3D12CommandAllocator> commandAllocator;
-	ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
-	return commandAllocator;
-}
-
-ComPtr<ID3D12GraphicsCommandList> D3D12DrawMesh::CreateCommandList(ComPtr<ID3D12CommandAllocator> commandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState)
-{
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList)));
-	return commandList;
-}
-
-void D3D12DrawMesh::CloseCommandList(ComPtr<ID3D12GraphicsCommandList> commandList)
-{
-	ThrowIfFailed(commandList->Close());
-}
-
-D3D12_VERTEX_BUFFER_VIEW D3D12DrawMesh::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
-	ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData)
-{
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&VertexBuffer)));
-
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&VertexBufferUploadHeap)));
-
-	NAME_D3D12_OBJECT(VertexBuffer);
-
-	// Copy data to the intermediate upload heap and then schedule a copy 
-	// from the upload heap to the vertex buffer.
-	D3D12_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pData = PVertData;
-	vertexData.RowPitch = VertexBufferSize;
-	vertexData.SlicePitch = vertexData.RowPitch;
-
-	UpdateSubresources<1>(CommandList.Get(), VertexBuffer.Get(), VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-	// Initialize the vertex buffer view.
-	D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-	VertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
-	VertexBufferView.StrideInBytes = VertexStride;
-	VertexBufferView.SizeInBytes = VertexBufferSize;
-	return VertexBufferView;
-}
-
-D3D12_INDEX_BUFFER_VIEW D3D12DrawMesh::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
-{
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&IndexBuffer)));
-
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&IndexBufferUploadHeap)));
-
-	NAME_D3D12_OBJECT(IndexBuffer);
-
-	// Copy data to the intermediate upload heap and then schedule a copy 
-	// from the upload heap to the index buffer.
-	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = PIndData;
-	indexData.RowPitch = IndexBufferSize;
-	indexData.SlicePitch = indexData.RowPitch;
-
-	UpdateSubresources<1>(CommandList.Get(), IndexBuffer.Get(), IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-	CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-	// Describe the index buffer view.
-	D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-	IndexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
-	IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	IndexBufferView.SizeInBytes = IndexBufferSize;
-	return IndexBufferView;
-}
-
-void D3D12DrawMesh::UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const ConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
-{
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(ConstantBufferSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&ConstantBuffer)));
-
-	NAME_D3D12_OBJECT(ConstantBuffer);
-
-	// Describe and create a constant buffer view.
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-	cbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
-	cbvDesc.SizeInBytes = ConstantBufferSize;
-	CreateCBVToHeaps(cbvDesc, Heap);
-
-	// Map and initialize the constant buffer. We don't unmap this until the
-	// app closes. Keeping things mapped for the lifetime of the resource is okay.
-	CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-	// Map: resource give cpu the right to dynamic manipulate(memcpy) it, and forbid gpu to manipulate it, until Unmap occur.
-	// resource->Map(subresource, cpuReadRange, cpuVirtualAdress )
-	ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&PCbvDataBegin)));
-	memcpy(PCbvDataBegin, &ConstantBufferData, ConstantBufferSize);
-}
-
-void D3D12DrawMesh::CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap)
-{
-	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-	depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-	depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-	ThrowIfFailed(Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_width, m_height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthOptimizedClearValue,
-		IID_PPV_ARGS(&DepthStencilBuffer)
-	));
-
-	NAME_D3D12_OBJECT(DepthStencilBuffer);
-
-	Device->CreateDepthStencilView(DepthStencilBuffer.Get(), &depthStencilDesc, Heap->GetCPUDescriptorHandleForHeapStart());
-}
-
-void D3D12DrawMesh::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData)
-{
-	CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-
-	// Allow input layout and deny uneccessary access to certain pipeline stages.
-	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-
-	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-
-	ComPtr<ID3DBlob> signature;
-	ComPtr<ID3DBlob> error;
-	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
-	ThrowIfFailed(Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+	GDynamicRHI->CreateCommandlist(MainCommandAllocator);
 }
 
 // Load the sample assets.
@@ -526,16 +131,16 @@ void D3D12DrawMesh::LoadAssets()
 	{
 		// choose root signature version
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-		ChooseSupportedFeatureVersion(featureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
+		GDynamicRHI->ChooseSupportedFeatureVersion(featureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
 		// create root signature
-		CreateRootSignature(featureData);
+		GDynamicRHI->CreateRootSignature(featureData);
 	}
 
 	// Create the pipeline state, which includes compiling and loading shaders.
 	{
-		ComPtr<ID3DBlob> vertexShader = CreateVertexShader(L"shaders.hlsl");
-		ComPtr<ID3DBlob> pixelShader = CreatePixelShader(L"shaders.hlsl");
+		ComPtr<ID3DBlob> vertexShader = GDynamicRHI->CreateVertexShader(GetAssetFullPath(L"shaders.hlsl").c_str());
+		ComPtr<ID3DBlob> pixelShader = GDynamicRHI->CreatePixelShader(GetAssetFullPath(L"shaders.hlsl").c_str());
 
 		// Define the vertex input layout.
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -548,29 +153,29 @@ void D3D12DrawMesh::LoadAssets()
 		};
 		D3D12_INPUT_LAYOUT_DESC VertexDescription = { inputElementDescs, _countof(inputElementDescs) };
 
-		D3D12_RASTERIZER_DESC RasterizerStateDesc = CreateRasterizerStateDesc();
-		D3D12_DEPTH_STENCIL_DESC DepthStencilDesc = CreateDepthStencilDesc();
+		D3D12_RASTERIZER_DESC RasterizerStateDesc = GDynamicRHI->CreateRasterizerStateDesc();
+		D3D12_DEPTH_STENCIL_DESC DepthStencilDesc = GDynamicRHI->CreateDepthStencilDesc();
 
 		// Describe and create the graphics pipeline state object (PSO).
-		GraphicsPipelineStateInitializer Initializer(VertexDescription, m_rootSignature.Get(), CD3DX12_SHADER_BYTECODE(vertexShader.Get()), CD3DX12_SHADER_BYTECODE(pixelShader.Get()),
+		GraphicsPipelineStateInitializer Initializer(VertexDescription, GDynamicRHI->GetRootSignature().Get(), CD3DX12_SHADER_BYTECODE(vertexShader.Get()), CD3DX12_SHADER_BYTECODE(pixelShader.Get()),
 			RasterizerStateDesc, DepthStencilDesc);
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(Initializer);
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = GDynamicRHI->CreateGraphicsPipelineStateDesc(Initializer);
 
 		// TODO: figure out whats the different between this two way to pass a smart ptr
 		//CreateGraphicsPipelineState(psoDesc, m_pipelineState);
-		PipelineState1 = CreateGraphicsPipelineState(PsoDesc);
+		PipelineState1 = GDynamicRHI->CreateGraphicsPipelineState(PsoDesc);
 	}
 
 	// Single-use command allocator and command list for creating resources.
-	ComPtr<ID3D12CommandAllocator> ResourceCommitCommandAllocator = CreateCommandAllocator();
-	ComPtr<ID3D12GraphicsCommandList> ResourceCommitCommandList = CreateCommandList(ResourceCommitCommandAllocator, nullptr);
+	ComPtr<ID3D12CommandAllocator> ResourceCommitCommandAllocator = GDynamicRHI->CreateCommandAllocator();
+	ComPtr<ID3D12GraphicsCommandList> ResourceCommitCommandList = GDynamicRHI->CreateCommandList(ResourceCommitCommandAllocator, nullptr);
 
 	// Create the command list.
-	MainCommandList = CreateCommandList(MainCommandAllocator, PipelineState1);
+	MainCommandList = GDynamicRHI->CreateCommandList(MainCommandAllocator, PipelineState1);
 
 	// Command lists are created in the recording state, but there is nothing
 	// to record yet. The main loop expects it to be closed, so close it now.
-	CloseCommandList(MainCommandList);
+	GDynamicRHI->CloseCommandList(MainCommandList);
 
 	//read binary
 	UINT8* pVertData = nullptr;
@@ -582,31 +187,31 @@ void D3D12DrawMesh::LoadAssets()
 
 	//Create the vertex buffer.
 	// TODO: add this method to a class of RHICommandList
-	m_vertexBufferView = UpdateVertexBuffer(ResourceCommitCommandList, m_vertexBuffer, VertexBufferUploadHeap, vertexBufferSize, vertexStride, pVertData);
+	GDynamicRHI->UpdateVertexBuffer(ResourceCommitCommandList, GDynamicRHI->GetVertexBuffer(), VertexBufferUploadHeap, vertexBufferSize, vertexStride, pVertData);
 
 	// Create the index buffer.
-	m_indexBufferView = UpdateIndexBuffer(ResourceCommitCommandList, m_indexBuffer, IndexBufferUploadHeap, indexBufferSize, pIndtData);
+	GDynamicRHI->UpdateIndexBuffer(ResourceCommitCommandList, GDynamicRHI->GetIndexBuffer(), IndexBufferUploadHeap, indexBufferSize, pIndtData);
 
 	free(pVertData);
 	free(pIndtData);
 
 	// Create the constant buffer.
 	const UINT constantBufferSize = sizeof(SceneConstantBuffer);    // CB size is required to be 256-byte aligned.
-	UpdateConstantBuffer(m_constantBuffer, constantBufferSize, m_constantBufferData, m_cbvHeap, PCbvDataBegin1);
+	GDynamicRHI->UpdateConstantBuffer(GDynamicRHI->GetConstantBuffer(), constantBufferSize, m_constantBufferData, GDynamicRHI->GetCBVHeap(), PCbvDataBegin1);
 
 	// Create the depth stencil view.
-	CreateDSVToHeaps(m_depthStencil, m_dsvHeap);
+	GDynamicRHI->CreateDSVToHeaps(GDynamicRHI->GetDSV(), GDynamicRHI->GetDSVHeap(), m_width, m_height);
 
 	// Close the resource creation command list and execute it to begin the vertex buffer copy into
 	// the default heap.
 	// encapsulated the ExecuteCommand() function.
-	CloseCommandList(ResourceCommitCommandList);
+	GDynamicRHI->CloseCommandList(ResourceCommitCommandList);
 	ID3D12CommandList* ppCommandLists[] = { ResourceCommitCommandList.Get() };
-	CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	GDynamicRHI->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Create synchronization objects and wait until assets have been uploaded to the GPU.
 	{
-		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+		GDynamicRHI->CreateGPUFence(m_fence);
 		m_fenceValue = 1;
 
 		// Create an event handle to use for frame synchronization.
@@ -649,10 +254,10 @@ void D3D12DrawMesh::OnRender()
 
 	// Execute the command list.
 	ID3D12CommandList* ppCommandLists[] = { MainCommandList.Get() };
-	CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	GDynamicRHI->GetCommandQueue()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 	// Present the frame.
-	ThrowIfFailed(SwapChain->Present(1, 0));
+	ThrowIfFailed(GDynamicRHI->GetSwapChain()->Present(1, 0));
 
 	WaitForPreviousFrame();
 }
@@ -690,34 +295,34 @@ void D3D12DrawMesh::PopulateCommandList()
 	ThrowIfFailed(MainCommandList->Reset(MainCommandAllocator.Get(), PipelineState1.Get()));
 
 	// Set necessary state.
-	MainCommandList->SetGraphicsRootSignature(m_rootSignature.Get());
+	MainCommandList->SetGraphicsRootSignature(GDynamicRHI->GetRootSignature().Get());
 
 	MainCommandList->RSSetViewports(1, &m_viewport);
 	MainCommandList->RSSetScissorRects(1, &m_scissorRect);
 
 	// Indicate that the back buffer will be used as a render target.
-	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(GDynamicRHI->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, GDynamicRHI->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(GDynamicRHI->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart());
 
 	MainCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 	// Record commands.
 	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 	MainCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	MainCommandList->ClearDepthStencilView(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	MainCommandList->ClearDepthStencilView(GDynamicRHI->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	ID3D12DescriptorHeap* ppHeaps[] = { m_cbvHeap.Get() };
+	ID3D12DescriptorHeap* ppHeaps[] = { GDynamicRHI->GetCBVHeap().Get() };
 	MainCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	MainCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	MainCommandList->IASetIndexBuffer(&m_indexBufferView);
-	MainCommandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	MainCommandList->SetGraphicsRootDescriptorTable(0, m_cbvHeap->GetGPUDescriptorHandleForHeapStart());
+	MainCommandList->IASetIndexBuffer(&GDynamicRHI->GetIBV());
+	MainCommandList->IASetVertexBuffers(0, 1, &GDynamicRHI->GetVBV());
+	MainCommandList->SetGraphicsRootDescriptorTable(0, GDynamicRHI->GetCBVHeap()->GetGPUDescriptorHandleForHeapStart());
 	MainCommandList->DrawIndexedInstanced(m_indexNum, 1, 0, 0, 0);
 
 	// Indicate that the back buffer will now be used to present.
-	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	MainCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GDynamicRHI->GetRTV()[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 	ThrowIfFailed(MainCommandList->Close());
 }
@@ -731,7 +336,7 @@ void D3D12DrawMesh::WaitForPreviousFrame()
 
 	// Signal and increment the fence value.
 	const UINT64 fence = m_fenceValue; //m_fenceValue: CPU fence value
-	ThrowIfFailed(CommandQueue->Signal(m_fence.Get(), fence)); // set a fence in GPU
+	ThrowIfFailed(GDynamicRHI->GetCommandQueue()->Signal(m_fence.Get(), fence)); // set a fence in GPU
 	m_fenceValue++;
 
 	// Wait until the previous frame is finished.
@@ -742,5 +347,5 @@ void D3D12DrawMesh::WaitForPreviousFrame()
 		WaitForSingleObject(m_fenceEvent, INFINITE); // CPU wait
 	}
 
-	m_frameIndex = SwapChain->GetCurrentBackBufferIndex();
+	m_frameIndex = GDynamicRHI->GetSwapChain()->GetCurrentBackBufferIndex();
 }
