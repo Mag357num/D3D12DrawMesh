@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D12DrawMesh.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="d3dx12.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -51,11 +48,11 @@
     <ClInclude Include="RHICommandList.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DrawMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3D12DrawMesh.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="DXSample.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -78,6 +75,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="RHICommandList.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawMesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

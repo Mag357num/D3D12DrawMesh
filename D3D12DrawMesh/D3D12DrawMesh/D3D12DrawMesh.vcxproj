@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D12DrawMesh.h" />
     <ClInclude Include="d3dx12.h" />
+    <ClInclude Include="DrawMesh.h" />
     <ClInclude Include="DXSample.h" />
     <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="DynamicRHI.h" />
@@ -33,7 +33,7 @@
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3D12DrawMesh.cpp" />
+    <ClCompile Include="DrawMesh.cpp" />
     <ClCompile Include="DXSample.cpp" />
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Main.cpp" />
