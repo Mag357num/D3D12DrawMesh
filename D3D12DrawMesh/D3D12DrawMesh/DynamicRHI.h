@@ -15,22 +15,16 @@ namespace RHI
 	{
 	};
 
-	//struct FInputLayout
-	//{
+	struct FMesh
+	{
 
-	//};
+	};
 
-	//struct FRHIShader
-	//{
-
-	//};
-
-	//struct FDX12Shader
-	//{
-	//	ID3D12RootSignature* RootSignature;
-	//	D3D12_SHADER_BYTECODE VS;
-	//	D3D12_SHADER_BYTECODE PS;
-	//};
+	struct FMeshDx12 : public FMesh
+	{
+		ComPtr<ID3D12Resource> VertexBuffer;
+		ComPtr<ID3D12Resource> IndexBuffer;
+	};
 
 	struct FRHIPSOInitializer
 	{
@@ -57,9 +51,6 @@ namespace RHI
 		};
 
 		D3D12_INPUT_LAYOUT_DESC InputLayout;
-		//ID3D12RootSignature* pRootSignature;
-		//D3D12_SHADER_BYTECODE VS;
-		//D3D12_SHADER_BYTECODE PS;
 		D3D12_RASTERIZER_DESC RasterizerState;
 		D3D12_BLEND_DESC BlendState;
 		D3D12_DEPTH_STENCIL_DESC DepthStencilState;
@@ -93,11 +84,6 @@ namespace RHI
 
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) = 0; // factory, device, command, swapchain,
 		
-		//virtual void CreateShader() = 0; // root signature,
-		//virtual void RHICreatePipleline() = 0; // heaps, views, pso, constantbuffer,
-		//virtual void CreateMesh() = 0; // vertex buffer, index buffer
-		//virtual void Draw() = 0; // populateCommandlist, fence
-
 		virtual void GetBackBufferIndex() = 0;
 
 		//update resource
@@ -107,7 +93,8 @@ namespace RHI
 		// pipeline
 		virtual void InitPipeLine() = 0;
 
-
+		// mesh
+		virtual void UpLoadMesh(FMesh Mesh) = 0;
 
 
 		/* old recognize, which is wrong */
@@ -165,6 +152,7 @@ namespace RHI
 
 	protected:
 		FRHIPSOInitializer* PsoInitializer;
+		FMesh* Mesh;
 	};
 
 	class D3D12DynamicRHI : public FDynamicRHI
@@ -174,60 +162,18 @@ namespace RHI
 		~D3D12DynamicRHI() = default;
 
 		/* new recognize */
-		void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override
-		{
-			CreateDevice(UseWarpDevice);
-			CreateCommandQueue();
-			CreateSwapChain(BufferFrameCount, ResoWidth, ResoHeight);
-			GetBackBufferIndex();
+		void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
 
-			// heaps
-			CreateRenderTarget();
-			CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
-			CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
-			CreateDSVToHeaps(DepthStencil, DSVHeap, ResoWidth, ResoHeight);
-
-			// command
-			FCommandListDx12 CommandList;
-			CommandList.Create(Device);
-			GraphicsCommandLists.push_back(CommandList);
-
-			//root signature
-			CreateDX12RootSignature();
-
-			// pso initializer
-			PsoInitializer = new FDX12PSOInitializer();
-		}
-
-
-		//void CreateShader() override {};
-		//void RHICreatePipleline() override {};
-		//void CreateMesh() override {};
-		//void Draw() override {};
 		virtual inline void GetBackBufferIndex() { BackFrameIndex = GDynamicRHI->GetSwapChainRef()->GetCurrentBackBufferIndex(); }
 
 		//update resource
 		void CreateVertexShader(LPCWSTR FileName) override;
 		void CreatePixelShader(LPCWSTR FileName) override;
-		void CreateRenderTarget() override
-		{
-			GDynamicRHI->CreateDescriptorHeaps(BUFFRING_NUM, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
-			GDynamicRHI->CreateRTVToHeaps( RTVHeap, BUFFRING_NUM);
-		}
-		void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override
-		{
-			DX12UpdateConstantBuffer(ConstantBuffer, CBSize, CBData, CBVSRVHeap, PCbvDataBegin);
-		}
+		void CreateRenderTarget() override;
+		void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
 
 		// pipeline
-		void InitPipeLine() override
-		{
-			FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
-			D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = GDynamicRHI->CreateGraphicsPipelineStateDesc(*Dx12Initializer,
-				GDynamicRHI->GetRootSignatureRef().Get(), CD3DX12_SHADER_BYTECODE(GDynamicRHI->GetVS().Get()),
-				CD3DX12_SHADER_BYTECODE(GDynamicRHI->GetPS().Get()));
-			PipelineStateArray[0] = GDynamicRHI->CreateGraphicsPipelineState(PsoDesc); // TODO: hard coding
-		}
+		void InitPipeLine() override;
 
 		struct FCommandListDx12
 		{
@@ -235,27 +181,16 @@ namespace RHI
 			ComPtr<ID3D12GraphicsCommandList> CommandList;
 			//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
 
-			void Create(ComPtr<ID3D12Device> Device)
-			{
-				for (int i = 0; i < BUFFRING_NUM; i++)
-				{
-					Allocators[i] = GDynamicRHI->CreateCommandAllocator();
-				}
-				ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
-				CommandList->Close();
-			}
-
-			void Reset()
-			{
-				for (int i = 0; i < BUFFRING_NUM; i++)
-				{
-					ThrowIfFailed(Allocators[i]->Reset());
-				}
-
-				ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), GDynamicRHI->GetPSOArray()[0].Get()));
-			}
+			void Create(ComPtr<ID3D12Device> Device);
+			void Reset();
 		};
 		std::vector<FCommandListDx12> GraphicsCommandLists;
+
+		// mesh
+		void UpLoadMesh(FMesh Mesh) override
+		{
+
+		}
 
 
 

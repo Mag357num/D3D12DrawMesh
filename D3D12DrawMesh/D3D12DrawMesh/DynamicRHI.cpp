@@ -63,6 +63,71 @@ void FDynamicRHI::CreateRHI()
 #endif
 }
 
+void D3D12DynamicRHI::RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight)
+{
+	CreateDevice(UseWarpDevice);
+	CreateCommandQueue();
+	CreateSwapChain(BufferFrameCount, ResoWidth, ResoHeight);
+	GetBackBufferIndex();
+
+	// heaps
+	CreateRenderTarget();
+	CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
+	CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
+	CreateDSVToHeaps(DepthStencil, DSVHeap, ResoWidth, ResoHeight);
+
+	// command
+	FCommandListDx12 CommandList;
+	CommandList.Create(Device);
+	GraphicsCommandLists.push_back(CommandList);
+
+	//root signature
+	CreateDX12RootSignature();
+
+	// pso initializer
+	PsoInitializer = new FDX12PSOInitializer();
+}
+
+void D3D12DynamicRHI::FCommandListDx12::Reset()
+{
+	for (int i = 0; i < BUFFRING_NUM; i++)
+	{
+		ThrowIfFailed(Allocators[i]->Reset());
+	}
+
+	ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), GDynamicRHI->GetPSOArray()[0].Get()));
+}
+
+void D3D12DynamicRHI::FCommandListDx12::Create(ComPtr<ID3D12Device> Device)
+{
+	for (int i = 0; i < BUFFRING_NUM; i++)
+	{
+		Allocators[i] = GDynamicRHI->CreateCommandAllocator();
+	}
+	ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
+	CommandList->Close();
+}
+
+void D3D12DynamicRHI::UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin)
+{
+	DX12UpdateConstantBuffer(ConstantBuffer, CBSize, CBData, CBVSRVHeap, PCbvDataBegin);
+}
+
+void D3D12DynamicRHI::CreateRenderTarget()
+{
+	GDynamicRHI->CreateDescriptorHeaps(BUFFRING_NUM, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
+	GDynamicRHI->CreateRTVToHeaps(RTVHeap, BUFFRING_NUM);
+}
+
+void D3D12DynamicRHI::InitPipeLine()
+{
+	FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = GDynamicRHI->CreateGraphicsPipelineStateDesc(*Dx12Initializer,
+		GDynamicRHI->GetRootSignatureRef().Get(), CD3DX12_SHADER_BYTECODE(GDynamicRHI->GetVS().Get()),
+		CD3DX12_SHADER_BYTECODE(GDynamicRHI->GetPS().Get()));
+	PipelineStateArray[0] = GDynamicRHI->CreateGraphicsPipelineState(PsoDesc); // TODO: hard coding
+}
+
 D3D12DynamicRHI::D3D12DynamicRHI()
 {
 	UINT dxgiFactoryFlags = 0;
