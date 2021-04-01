@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "DXSample.h"
-#include "DynamicRHI.h"
+#include "FDynamicRHI.h"
 
 using namespace RHI;
 

@@ -45,9 +45,6 @@
     <ClInclude Include="Renderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RHICommandList.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="DrawMesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -57,9 +54,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Win32Application.cpp">
@@ -72,9 +66,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="RHICommandList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DrawMesh.cpp">

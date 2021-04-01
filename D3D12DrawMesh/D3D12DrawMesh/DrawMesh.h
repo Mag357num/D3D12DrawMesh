@@ -31,8 +31,8 @@ using Microsoft::WRL::ComPtr;
 
 struct FSceneConstantBuffer : public FConstantBufferBase
 {
-	XMFLOAT4X4 worldViewProj;
-	float padding[48]; // Padding so the constant buffer is 256-byte aligned.
+	XMFLOAT4X4 WorldViewProj;
+	float Padding[48]; // Padding so the constant buffer is 256-byte aligned.
 };
 static_assert((sizeof(FSceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 
@@ -42,17 +42,18 @@ class FDrawMesh : public DXSample
 public:
 	FDrawMesh(UINT Width, UINT Height, std::wstring Name);
 
-	virtual void OnInit();
-	virtual void OnUpdate();
-	virtual void OnRender();
-	virtual void OnDestroy();
-	virtual void OnKeyDown(UINT8 Key);
-	virtual void OnKeyUp(UINT8 Key);
+	void OnInit() override;
+	void OnUpdate() override;
+	void OnRender() override;
+	void OnDestroy() override;
+	void OnKeyDown(UINT8 Key) override;
+	void OnKeyUp(UINT8 Key) override;
+
 	void ReadCameraBinary(const string & BinFileName, XMFLOAT3 & Location, XMFLOAT3 & Dir, float & Fov, float & Aspect, XMFLOAT4 & Rotator);
 	void ReadStaticMeshBinary(const string & BinFileName, UINT8 *& PVertData, UINT8 *& PIndtData, int & VertexBufferSize, int & VertexStride, int & IndexBufferSize);
 
 private:
-	static const UINT FrameCount = 2;
+	static const UINT BufferFrameCount = 2;
 
 	CD3DX12_VIEWPORT Viewport;
 	CD3DX12_RECT ScissorRect;
@@ -61,7 +62,6 @@ private:
 	UINT8* PCbvDataBegin1;
 	FSceneConstantBuffer ConstantBufferData;
 	UINT IndexNum;
-	ComPtr<ID3D12PipelineState> PipelineState1;
 	ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 	ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 
@@ -69,7 +69,6 @@ private:
 	ComPtr<ID3D12CommandAllocator> MainCommandAllocator;
 
 	// Synchronization objects.
-	UINT FrameIndex;
 	HANDLE FenceEvent;
 	UINT64 FenceValue;
 	ComPtr<ID3D12Fence> FenceGPU;

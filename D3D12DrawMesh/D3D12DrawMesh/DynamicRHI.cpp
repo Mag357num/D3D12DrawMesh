@@ -3,16 +3,27 @@
 using namespace RHI;
 
 // Globals.
-std::shared_ptr<DynamicRHI> RHI::GDynamicRHI = std::make_shared<D3D12DynamicRHI>(); // TODO: add a init rhi method to init GDynamicRHI.
+std::shared_ptr<FDynamicRHI> RHI::GDynamicRHI = nullptr;
 
-FGraphicsPipelineStateInitializer::FGraphicsPipelineStateInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
-	ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,
-	const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
+FDX12PSOInitializer::FDX12PSOInitializer()
 {
-	InputLayout = VertexDescription;
-	pRootSignature = RootSignature;
-	this->VS = VS;
-	this->PS = PS;
+	static D3D12_INPUT_ELEMENT_DESC InputElementDescs[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+
+	CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
+	rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerStateDesc.FrontCounterClockwise = TRUE;
+
+	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+	depthStencilDesc.DepthEnable = TRUE;
+
+	InputLayout = { InputElementDescs, _countof(InputElementDescs) };
 	RasterizerState = rasterizerStateDesc;
 	BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	DepthStencilState = depthStencilDesc;
@@ -22,6 +33,34 @@ FGraphicsPipelineStateInitializer::FGraphicsPipelineStateInitializer(const D3D12
 	RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	SampleDesc.Count = 1;
+}
+
+FDX12PSOInitializer::FDX12PSOInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
+	/*ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,*/
+	const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
+{
+	InputLayout = VertexDescription;
+	//pRootSignature = RootSignature;
+	//this->VS = VS;
+	//this->PS = PS;
+	RasterizerState = rasterizerStateDesc;
+	BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	DepthStencilState = depthStencilDesc;
+	SampleMask = UINT_MAX;
+	PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	NumRenderTargets = 1;
+	RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	SampleDesc.Count = 1;
+}
+
+void FDynamicRHI::CreateRHI()
+{
+#if defined (_WINDOWS)
+	RHI::GDynamicRHI = std::make_shared<D3D12DynamicRHI>();
+#else
+#error("No avaible RHI.")
+#endif
 }
 
 D3D12DynamicRHI::D3D12DynamicRHI()
@@ -54,7 +93,6 @@ void D3D12DynamicRHI::CreateFactory(bool FactoryFlags)
 	ThrowIfFailed(CreateDXGIFactory2(FactoryFlags, IID_PPV_ARGS(&Factory)));
 }
 
-
 void D3D12DynamicRHI::CreateDevice(bool HasWarpDevice)
 {
 	if (HasWarpDevice)
@@ -84,11 +122,11 @@ void D3D12DynamicRHI::CreateDevice(bool HasWarpDevice)
 void D3D12DynamicRHI::CreateCommandQueue()
 {
 	// Describe and create the command queue.
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	D3D12_COMMAND_QUEUE_DESC QueueDesc = {};
+	QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
-	ThrowIfFailed(Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&CommandQueue)));
+	ThrowIfFailed(Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&CommandQueue)));
 }
 
 ComPtr<ID3D12CommandAllocator> D3D12DynamicRHI::CreateCommandAllocator()
@@ -183,14 +221,14 @@ void D3D12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> Comman
 	IndexBufferView.SizeInBytes = IndexBufferSize;
 }
 
-void D3D12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, DXGI_FORMAT Format)
+void D3D12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height)
 {
 	// Describe and create the swap chain.
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.BufferCount = FrameCount;
 	swapChainDesc.Width = Width;
 	swapChainDesc.Height = Height;
-	swapChainDesc.Format = Format;
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
@@ -209,11 +247,6 @@ void D3D12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height, 
 	ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 
 	ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
-}
-
-void D3D12DynamicRHI::CreateCommandlist(ComPtr<ID3D12CommandAllocator>& CommandAllocator)
-{
-	ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&CommandAllocator)));
 }
 
 void D3D12DynamicRHI::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
@@ -290,23 +323,18 @@ UINT D3D12DynamicRHI::GetEnableShaderDebugFlags()
 	return compileFlags;
 }
 
-ComPtr<ID3DBlob> D3D12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
+void D3D12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
 {
-	ComPtr<ID3DBlob> vertexShader;
-	ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &vertexShader, nullptr));
-	return vertexShader;
+	ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &VertexShader, nullptr));
 }
 
-ComPtr<ID3DBlob> D3D12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
+void D3D12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
 {
-	ComPtr<ID3DBlob> pixelShader;
-	ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &pixelShader, nullptr));
-	return pixelShader;
+	ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &PixelShader, nullptr));
 }
 
 D3D12_RASTERIZER_DESC D3D12DynamicRHI::CreateRasterizerStateDesc()
 {
-	// TODO: figure out how to make this func can create all kinds of raster state
 	CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
 	rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
 	rasterizerStateDesc.FrontCounterClockwise = TRUE;
@@ -320,13 +348,14 @@ D3D12_DEPTH_STENCIL_DESC D3D12DynamicRHI::CreateDepthStencilDesc()
 	return static_cast<D3D12_DEPTH_STENCIL_DESC>(depthStencilDesc);
 }
 
-D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DynamicRHI::CreateGraphicsPipelineStateDesc(const FGraphicsPipelineStateInitializer& Initializer)
+D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12DynamicRHI::CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
+	ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = Initializer.InputLayout;
-	psoDesc.pRootSignature = Initializer.pRootSignature;
-	psoDesc.VS = Initializer.VS;
-	psoDesc.PS = Initializer.PS;
+	psoDesc.pRootSignature = RootSignature;
+	psoDesc.VS = VS;
+	psoDesc.PS = PS;
 	psoDesc.RasterizerState = Initializer.RasterizerState;
 	psoDesc.BlendState = Initializer.BlendState;
 	psoDesc.DepthStencilState = Initializer.DepthStencilState;
@@ -347,7 +376,7 @@ ComPtr<ID3D12PipelineState> D3D12DynamicRHI::CreateGraphicsPipelineState(const D
 	return PipelineState;
 }
 
-void D3D12DynamicRHI::UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
+void D3D12DynamicRHI::DX12UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
 {
 	ThrowIfFailed(Device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -441,8 +470,11 @@ void D3D12DynamicRHI::GetHardwareAdapter(
 	*ppAdapter = adapter.Detach();
 }
 
-void D3D12DynamicRHI::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData)
+void D3D12DynamicRHI::CreateDX12RootSignature()
 {
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
+	GDynamicRHI->ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
+
 	CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
 	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
 
@@ -461,12 +493,12 @@ void D3D12DynamicRHI::CreateRootSignature(D3D12_FEATURE_DATA_ROOT_SIGNATURE Feat
 	rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
 
 	ComPtr<ID3DBlob> Signature;
-	ComPtr<ID3DBlob> error;
-	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &error));
+	ComPtr<ID3DBlob> Error;
+	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
 	ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 }
 
 void D3D12DynamicRHI::CreateGPUFence(ComPtr<ID3D12Fence>& Fence)
 {
-	ThrowIfFailed(GDynamicRHI->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
+	ThrowIfFailed(GDynamicRHI->GetDeviceRef()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 }

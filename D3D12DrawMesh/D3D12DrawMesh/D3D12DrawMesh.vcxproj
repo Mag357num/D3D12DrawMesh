@@ -26,7 +26,6 @@
     <ClInclude Include="DynamicRHI.h" />
     <ClInclude Include="MathExtend.h" />
     <ClInclude Include="Renderer.h" />
-    <ClInclude Include="RHICommandList.h" />
     <ClInclude Include="SimpleCamera.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
@@ -38,9 +37,7 @@
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="RHICommandList.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
-    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
