@@ -108,6 +108,8 @@ namespace RHI
 		virtual void InitPipeLine() = 0;
 
 
+
+
 		/* old recognize, which is wrong */
 		virtual void EnableDebug(UINT& DxgiFactoryFlags) = 0;
 		virtual void CreateFactory(bool FactoryFlags) = 0; //TODO: dont know is there a factory notion in other api, so put it here right now.
@@ -115,7 +117,7 @@ namespace RHI
 
 		virtual void CreateCommandQueue() = 0;
 		virtual ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() = 0;
-		virtual ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState) = 0;
+		virtual ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator) = 0;
 		virtual void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList) = 0;
 		virtual void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData) = 0;
 		virtual void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData) = 0;
@@ -227,6 +229,35 @@ namespace RHI
 			PipelineStateArray[0] = GDynamicRHI->CreateGraphicsPipelineState(PsoDesc); // TODO: hard coding
 		}
 
+		struct FCommandListDx12
+		{
+			ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
+			ComPtr<ID3D12GraphicsCommandList> CommandList;
+			//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
+
+			void Create(ComPtr<ID3D12Device> Device)
+			{
+				for (int i = 0; i < BUFFRING_NUM; i++)
+				{
+					Allocators[i] = GDynamicRHI->CreateCommandAllocator();
+				}
+				ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
+				CommandList->Close();
+			}
+
+			void Reset()
+			{
+				for (int i = 0; i < BUFFRING_NUM; i++)
+				{
+					ThrowIfFailed(Allocators[i]->Reset());
+				}
+
+				ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), GDynamicRHI->GetPSOArray()[0].Get()));
+			}
+		};
+		std::vector<FCommandListDx12> GraphicsCommandLists;
+
+
 
 		/* old recognize, which is wrong */
 		void EnableDebug(UINT& DxgiFactoryFlags) override;
@@ -235,7 +266,7 @@ namespace RHI
 
 		void CreateCommandQueue() override;
 		ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() override;
-		ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState) override;
+		ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator) override;
 		void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList) override;
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData) override;
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData) override;
@@ -280,31 +311,6 @@ namespace RHI
 		ComPtr<ID3DBlob> GetVS() { return VertexShader; }
 		ComPtr<ID3DBlob> GetPS() { return PixelShader; }
 		ComPtr<ID3D12PipelineState>* GetPSOArray() { return PipelineStateArray; }
-
-
-
-		struct FCommandListDx12
-		{
-			ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
-			ComPtr<ID3D12GraphicsCommandList> CommandList;
-			//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
-
-			void Create(ComPtr<ID3D12Device> Device)
-			{
-				for (int i = 0; i < BUFFRING_NUM; i++)
-				{
-					Allocators[i] = GDynamicRHI->CreateCommandAllocator();
-				}
-				ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
-				CommandList->Close();
-			}
-
-			void Reset()
-			{
-
-			}
-		};
-		std::vector<FCommandListDx12> GraphicsCommandLists;
 
 	private:
 		ComPtr<ID3D12Device> Device;

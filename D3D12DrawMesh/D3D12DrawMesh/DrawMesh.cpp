@@ -110,22 +110,14 @@ void FDrawMesh::LoadAssets()
 	GDynamicRHI->CreateVertexShader(GetAssetFullPath(L"shaders.hlsl").c_str());
 	GDynamicRHI->CreatePixelShader(GetAssetFullPath(L"shaders.hlsl").c_str());
 
+	GDynamicRHI->InitPipeLine(); // TODO: open interface to allow more param
 
-
-
-
-
-
-
-
-	GDynamicRHI->InitPipeLine();
-
-	// Single-use command allocator and command list for creating resources.
+	//// Single-use command allocator and command list for creating resources.
 	ComPtr<ID3D12CommandAllocator> ResourceCommitCommandAllocator = GDynamicRHI->CreateCommandAllocator();
-	ComPtr<ID3D12GraphicsCommandList> ResourceCommitCommandList = GDynamicRHI->CreateCommandList(ResourceCommitCommandAllocator, nullptr);
+	ComPtr<ID3D12GraphicsCommandList> ResourceCommitCommandList = GDynamicRHI->CreateCommandList(ResourceCommitCommandAllocator);
 
 	// Create the command list.
-	MainCommandList = GDynamicRHI->CreateCommandList(MainCommandAllocator, GDynamicRHI->GetPSOArray()[0]);
+	MainCommandList = GDynamicRHI->CreateCommandList(MainCommandAllocator);
 
 	// Command lists are created in the recording state, but there is nothing
 	// to record yet. The main loop expects it to be closed, so close it now.

@@ -136,7 +136,7 @@ ComPtr<ID3D12CommandAllocator> D3D12DynamicRHI::CreateCommandAllocator()
 	return commandAllocator;
 }
 
-ComPtr<ID3D12GraphicsCommandList> D3D12DynamicRHI::CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator, const ComPtr<ID3D12PipelineState>& PipelineState)
+ComPtr<ID3D12GraphicsCommandList> D3D12DynamicRHI::CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator)
 {
 	ComPtr<ID3D12GraphicsCommandList> CommandList;
 	ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, CommandAllocator.Get(), nullptr, IID_PPV_ARGS(&CommandList)));
