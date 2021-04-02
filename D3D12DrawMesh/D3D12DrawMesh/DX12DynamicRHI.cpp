@@ -1,6 +1,6 @@
 #include "DX12DynamicRHI.h"
 #include "DXSampleHelper.h"
-#include "Win32Application.h"
+#include "Renderer.h"
 
 namespace RHI
 {
@@ -304,7 +304,7 @@ namespace RHI
 		ComPtr<IDXGISwapChain1> swapChain;
 		ThrowIfFailed(Factory->CreateSwapChainForHwnd(
 			CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-			Win32Application::GetHwnd(),
+			Renderer::GetHwnd(),
 			&swapChainDesc,
 			nullptr,
 			nullptr,
@@ -312,7 +312,7 @@ namespace RHI
 		));
 
 		// This sample does not support fullscreen transitions.
-		ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+		ThrowIfFailed(Factory->MakeWindowAssociation(Renderer::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 
 		ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
 	}

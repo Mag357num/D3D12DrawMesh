@@ -1,22 +1,50 @@
+//*********************************************************
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//*********************************************************
+
 #pragma once
-#include "stdafx.h"
+
 #include "DXSample.h"
-#include "FDynamicRHI.h"
+#include "DirectXMath.h"
+#include "SimpleCamera.h"
+#include "StepTimer.h"
+#include "string.h"
+#include "DynamicRHI.h"
 
-using namespace RHI;
+using RHI::GDynamicRHI;
+using RHI::FMesh;
 
-class SceneRenderer
+class DXSample;
+
+struct FSceneConstantBuffer : public RHI::FConstantBufferBase
+{
+	XMFLOAT4X4 WorldViewProj;
+	float Padding[48]; // Padding so the constant buffer is 256-byte aligned.
+};
+static_assert((sizeof(FSceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+
+class Renderer
 {
 public:
-	SceneRenderer() = default;
-	~SceneRenderer() = default;
+	static int Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow);
+	static HWND GetHwnd() { return m_hwnd; }
 
-	void Render(FRHICommandListImmediate& RHICmdList);
+protected:
+	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static void LoadAssets(FMesh*& MeshPtr, std::wstring assetName);
+	static void OnUpdate();
+
+private:
+	static HWND m_hwnd;
+	static FSceneConstantBuffer ConstantBufferData;
+	static UINT8* PCbvDataBegin;
+	static StepTimer Timer;
+	static Camera MainCamera;
 };
-
-void SceneRenderer::Render(FRHICommandListImmediate& RHICmdList) // TODO: input the scene binary
-{
-	// TODO: init the pipeline
-	// TODO: load the resource
-	// TODO: draw the scene
-}
