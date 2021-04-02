@@ -48,7 +48,7 @@ namespace RHI
 		/* new recognize */
 		void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
 
-		virtual inline void GetBackBufferIndex() { BackFrameIndex = GetSwapChainRef()->GetCurrentBackBufferIndex(); }
+		virtual inline void GetBackBufferIndex() { BackFrameIndex = SwapChain->GetCurrentBackBufferIndex(); }
 
 		//update resource
 		void CreateVertexShader(LPCWSTR FileName) override;
@@ -117,26 +117,6 @@ namespace RHI
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
-
-	public:
-		ComPtr<ID3D12DescriptorHeap>& GetRTVHeapRef() { return RTVHeap; }
-		ComPtr<ID3D12DescriptorHeap>& GetDSVHeapRef() { return DSVHeap; }
-		ComPtr<ID3D12DescriptorHeap>& GetCBVSRVHeapRef() { return CBVSRVHeap; }
-		ComPtr<ID3D12Device>& GetDeviceRef() { return Device; };
-		ComPtr<ID3D12CommandQueue>& GetCommandQueueRef() { return CommandQueue; }
-		ComPtr<ID3D12RootSignature>& GetRootSignatureRef() { return RootSignature; };
-		ComPtr<ID3D12Resource>& GetVertexBufferRef() { return VertexBuffer; };
-		ComPtr<ID3D12Resource>& GetIndexBufferRef() { return IndexBuffer; };
-		ComPtr<ID3D12Resource>& GetConstantBufferRef() { return ConstantBuffer; };
-		ComPtr<ID3D12Resource>* GetRTVRef() { return RenderTargets; }
-		ComPtr<ID3D12Resource>& GetDSVRef() { return DepthStencil; }
-		D3D12_VERTEX_BUFFER_VIEW& GetVBVRef() { return VertexBufferView; }
-		D3D12_INDEX_BUFFER_VIEW& GetIBVRef() { return IndexBufferView; }
-		ComPtr<IDXGISwapChain3>& GetSwapChainRef() { return SwapChain; }
-		UINT& GetBackBufferIndexRef() { return BackFrameIndex; }
-		ComPtr<ID3DBlob> GetVS() { return VertexShader; }
-		ComPtr<ID3DBlob> GetPS() { return PixelShader; }
-		ComPtr<ID3D12PipelineState>* GetPSOArray() { return PipelineStateArray; }
 
 	private:
 		ComPtr<ID3D12Device> Device;

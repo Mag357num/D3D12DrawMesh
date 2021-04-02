@@ -132,7 +132,7 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void Win32Application::LoadAssets(FMesh* MeshPtr, std::wstring assetName)
+void Win32Application::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
 {
 	WCHAR assetsPath[512];
 	GetAssetsPath(assetsPath, _countof(assetsPath));

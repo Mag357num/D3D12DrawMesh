@@ -38,7 +38,7 @@ public:
 
 protected:
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	static void LoadAssets(FMesh* MeshPtr, std::wstring assetName);
+	static void LoadAssets(FMesh*& MeshPtr, std::wstring assetName);
 	static void OnUpdate();
 
 private:

@@ -119,8 +119,8 @@ namespace RHI
 	{
 		FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(*Dx12Initializer,
-			GetRootSignatureRef().Get(), CD3DX12_SHADER_BYTECODE(GetVS().Get()),
-			CD3DX12_SHADER_BYTECODE(GetPS().Get()));
+			RootSignature.Get(), CD3DX12_SHADER_BYTECODE(VertexShader.Get()),
+			CD3DX12_SHADER_BYTECODE(PixelShader.Get()));
 		PipelineStateArray[0] = CreateGraphicsPipelineState(PsoDesc); // TODO: hard coding
 	}
 
@@ -246,7 +246,7 @@ namespace RHI
 
 		// execute
 		ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		GetCommandQueueRef()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
@@ -286,7 +286,7 @@ namespace RHI
 
 		// execute
 		ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		GetCommandQueueRef()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	void FDX12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height)
@@ -567,7 +567,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::CreateGPUFence(ComPtr<ID3D12Fence>& Fence)
 	{
-		ThrowIfFailed(GetDeviceRef()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
+		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
 	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
@@ -626,16 +626,16 @@ namespace RHI
 		GraphicsCommandLists[0].Reset(PipelineStateArray);
 
 		// Set necessary state.
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(GetRootSignatureRef().Get());
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get());
 
 		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
 		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 
 		// Indicate that the back buffer will be used as a render target.
-		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetRTVRef()[GetBackBufferIndexRef()].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(GetRTVHeapRef()->GetCPUDescriptorHandleForHeapStart(), GetBackBufferIndexRef(), GetDeviceRef()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(GetDSVHeapRef()->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(DSVHeap->GetCPUDescriptorHandleForHeapStart());
 
 		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
@@ -644,16 +644,16 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		ID3D12DescriptorHeap* ppHeaps[] = { GetCBVSRVHeapRef().Get() };
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		GraphicsCommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&GetIBVRef());
-		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &GetVBVRef());
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, GetCBVSRVHeapRef()->GetGPUDescriptorHandleForHeapStart());
+		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&IndexBufferView);
+		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &VertexBufferView);
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(MeshPtr->IndexNum, 1, 0, 0, 0);
 
 		// Indicate that the back buffer will now be used to present.
-		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(GetRTVRef()[GetBackBufferIndexRef()].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		ThrowIfFailed(GraphicsCommandLists[0].CommandList->Close());
 	}
@@ -666,10 +666,10 @@ namespace RHI
 
 		// Execute the command list.
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
-		GetCommandQueueRef()->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 		// Present the frame.
-		ThrowIfFailed(GetSwapChainRef()->Present(1, 0));
+		ThrowIfFailed(SwapChain->Present(1, 0));
 
 		WaitForPreviousFrame();
 	}
@@ -683,7 +683,7 @@ namespace RHI
 
 		// Signal and increment the fence value.
 		const UINT64 fence = FenceValueGPURHI; //m_fenceValue: CPU fence value
-		ThrowIfFailed(GetCommandQueueRef()->Signal(FenceGPURHI.Get(), fence)); // set a fence in GPU
+		ThrowIfFailed(CommandQueue->Signal(FenceGPURHI.Get(), fence)); // set a fence in GPU
 		FenceValueGPURHI++;
 
 		// Wait until the previous frame is finished.
@@ -694,7 +694,7 @@ namespace RHI
 			WaitForSingleObject(FenceEventGPURHI, INFINITE); // CPU wait
 		}
 
-		GetBackBufferIndexRef() = GetSwapChainRef()->GetCurrentBackBufferIndex();
+		BackFrameIndex = SwapChain->GetCurrentBackBufferIndex();
 	}
 
 	void FDX12DynamicRHI::SyncFrame()
