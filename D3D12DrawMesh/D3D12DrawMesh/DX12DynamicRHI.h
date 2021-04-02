@@ -76,7 +76,9 @@ namespace RHI
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// draw
+		virtual void FrameBegin() override;
 		virtual void DrawMesh(FMesh* MeshPtr) override;
+		virtual void FrameEnd() override;
 
 		// sync
 		virtual void SyncFrame() override;
@@ -84,7 +86,6 @@ namespace RHI
 	private:
 		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
-		void PopulateCommandList(FDX12Mesh* MeshPtr);
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
@@ -106,6 +107,7 @@ namespace RHI
 	private:
 		// RHI attributes
 		ComPtr<ID3D12Device> Device;
+		ComPtr<IDXGIFactory4> DxgiFactory;
 		ComPtr<IDXGIFactory4> Factory;
 		ComPtr<IDXGISwapChain3> SwapChain;
 		ComPtr<ID3D12CommandQueue> CommandQueue;
@@ -129,13 +131,5 @@ namespace RHI
 		ComPtr<ID3D12Resource> ConstantBuffer;
 		ComPtr<ID3DBlob> VertexShader;
 		ComPtr<ID3DBlob> PixelShader;
-
-		//// resource
-		//ComPtr<ID3D12Resource> VertexBuffer;
-		//ComPtr<ID3D12Resource> IndexBuffer;
-		//D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-		//D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-		//ComPtr<ID3D12Resource> VertexBufferUploadHeap;
-		//ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 	};
 }

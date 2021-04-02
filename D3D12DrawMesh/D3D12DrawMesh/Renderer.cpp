@@ -113,8 +113,13 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
     case WM_PAINT:
         if (pSample)
         {
-            pSample->OnUpdate();
-            RHI::GDynamicRHI->DrawMesh(Chair);
+			GDynamicRHI->FrameBegin();
+			//pSample->OnUpdate();
+            // 
+            //drawmesh
+			RHI::GDynamicRHI->DrawMesh(Chair);
+
+            RHI::GDynamicRHI->FrameEnd();
         }
         return 0;
 
@@ -149,6 +154,8 @@ void Renderer::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
     GDynamicRHI->UpLoadConstantBuffer(ConstantBufferSize, ConstantBufferData, PCbvDataBegin);
 
     GDynamicRHI->SyncFrame();
+
+
 }
 
 void Renderer::OnUpdate()

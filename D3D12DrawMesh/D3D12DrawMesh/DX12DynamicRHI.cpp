@@ -1,6 +1,7 @@
 #include "DX12DynamicRHI.h"
 #include "DXSampleHelper.h"
 #include "Renderer.h"
+#include "dxgidebug.h"
 
 namespace RHI
 {
@@ -85,6 +86,22 @@ namespace RHI
 			));
 		}
 
+		// Try to create debug factory
+		ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))))
+		{
+			CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&DxgiFactory));
+
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, true);
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
+		}
+		else
+		{
+			// Failed to create debug factory, create a normal one
+			CreateDXGIFactory1(IID_PPV_ARGS(&DxgiFactory));
+		}
+
+
 		// command queue
 		D3D12_COMMAND_QUEUE_DESC QueueDesc = {};
 		QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -127,9 +144,8 @@ namespace RHI
 		DrawCommandList.Create(Device);
 		GraphicsCommandLists.push_back(DrawCommandList);
 
-		FCommandListDx12 ResCommandList;
-		ResCommandList.Create(Device);
-		GraphicsCommandLists.push_back(ResCommandList);
+		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
+		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 
 		//root signature
 		CreateDX12RootSignature();
@@ -225,10 +241,6 @@ namespace RHI
 		FMeshPtr->VertexBufferView.BufferLocation = FMeshPtr->VertexBuffer->GetGPUVirtualAddress();
 		FMeshPtr->VertexBufferView.StrideInBytes = FMeshPtr->VertexStride;
 		FMeshPtr->VertexBufferView.SizeInBytes = FMeshPtr->VertexBufferSize;
-
-		// execute
-		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
@@ -575,52 +587,38 @@ namespace RHI
 		return MeshPtr;
 	}
 
-	void FDX12DynamicRHI::PopulateCommandList(FDX12Mesh* MeshPtr)
+	void FDX12DynamicRHI::FrameBegin()
 	{
-		GraphicsCommandLists[0].Reset(PipelineStateArray);
-
-		// Set necessary state.
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get());
-
-		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
-		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
-
-		// Indicate that the back buffer will be used as a render target.
-		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
+		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(DSVHeap->GetCPUDescriptorHandleForHeapStart());
-
+		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-
-		// Record commands.
-		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
-		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		GraphicsCommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&MeshPtr->IndexBufferView);
-		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &MeshPtr->VertexBufferView);
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
-		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(MeshPtr->IndexNum, 1, 0, 0, 0);
-
-		// Indicate that the back buffer will now be used to present.
-		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-		ThrowIfFailed(GraphicsCommandLists[0].CommandList->Close());
 	}
 
 	void FDX12DynamicRHI::DrawMesh(FMesh* MeshPtr)
 	{
-		// Record all the commands we need to render the scene into the command list.
-
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshPtr);
 
-		PopulateCommandList(DX12Mesh);
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get()); // need per frame?
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
+		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		GraphicsCommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
+		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
+		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexNum, 1, 0, 0, 0);
 
+		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	}
+
+	void FDX12DynamicRHI::FrameEnd()
+	{
 		// Execute the command list.
+		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
 		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
@@ -628,6 +626,8 @@ namespace RHI
 		ThrowIfFailed(SwapChain->Present(1, 0));
 
 		WaitForPreviousFrame();
+
+		GraphicsCommandLists[0].Reset(PipelineStateArray);
 	}
 
 	void FDX12DynamicRHI::WaitForPreviousFrame()
@@ -658,6 +658,7 @@ namespace RHI
 		}
 
 		WaitForPreviousFrame();
+		GraphicsCommandLists[0].Reset(PipelineStateArray);
 	}
 
 }

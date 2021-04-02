@@ -69,7 +69,9 @@ namespace RHI
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		// draw
+		virtual void FrameBegin() = 0;
 		virtual void DrawMesh(FMesh* MeshPtr) = 0;
+		virtual void FrameEnd() = 0;
 
 		// sync
 		virtual void SyncFrame() = 0;
