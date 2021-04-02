@@ -191,85 +191,80 @@ namespace RHI
 		ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&Factory)));
 	}
 
-	void FDX12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
-		ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData)
+	void FDX12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
 	{
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->VertexBufferSize),
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&VertexBuffer)));
+			IID_PPV_ARGS(&FMeshPtr->VertexBuffer)));
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->VertexBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&VertexBufferUploadHeap)));
+			IID_PPV_ARGS(&FMeshPtr->VertexBufferUploadHeap)));
 
-		NAME_D3D12_OBJECT(VertexBuffer);
+		NAME_D3D12_OBJECT(FMeshPtr->VertexBuffer);
 
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the vertex buffer.
 		D3D12_SUBRESOURCE_DATA vertexData = {};
-		vertexData.pData = PVertData;
-		vertexData.RowPitch = VertexBufferSize;
+		vertexData.pData = FMeshPtr->PVertData;
+		vertexData.RowPitch = FMeshPtr->VertexBufferSize;
 		vertexData.SlicePitch = vertexData.RowPitch;
 
-		UpdateSubresources<1>(CommandList.Get(), VertexBuffer.Get(), VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+		UpdateSubresources<1>(CommandList.Get(), FMeshPtr->VertexBuffer.Get(), FMeshPtr->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
+		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(FMeshPtr->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
 		// Initialize the vertex buffer view.
-		VertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
-		VertexBufferView.StrideInBytes = VertexStride;
-		VertexBufferView.SizeInBytes = VertexBufferSize;
+		FMeshPtr->VertexBufferView.BufferLocation = FMeshPtr->VertexBuffer->GetGPUVirtualAddress();
+		FMeshPtr->VertexBufferView.StrideInBytes = FMeshPtr->VertexStride;
+		FMeshPtr->VertexBufferView.SizeInBytes = FMeshPtr->VertexBufferSize;
 
 		// execute
 		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
 		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
+	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
 	{
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->IndexBufferSize),
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&IndexBuffer)));
+			IID_PPV_ARGS(&FMeshPtr->IndexBuffer)));
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->IndexBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&IndexBufferUploadHeap)));
+			IID_PPV_ARGS(&FMeshPtr->IndexBufferUploadHeap)));
 
-		NAME_D3D12_OBJECT(IndexBuffer);
+		NAME_D3D12_OBJECT(FMeshPtr->IndexBuffer);
 
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = PIndData;
-		indexData.RowPitch = IndexBufferSize;
+		indexData.pData = FMeshPtr->PIndtData;
+		indexData.RowPitch = FMeshPtr->IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
-		UpdateSubresources<1>(CommandList.Get(), IndexBuffer.Get(), IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+		UpdateSubresources<1>(CommandList.Get(), FMeshPtr->IndexBuffer.Get(), FMeshPtr->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
+		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(FMeshPtr->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
 		// Describe the index buffer view.
-		IndexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
-		IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		IndexBufferView.SizeInBytes = IndexBufferSize;
-
-		// execute
-		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		FMeshPtr->IndexBufferView.BufferLocation = FMeshPtr->IndexBuffer->GetGPUVirtualAddress();
+		FMeshPtr->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		FMeshPtr->IndexBufferView.SizeInBytes = FMeshPtr->IndexBufferSize;
 	}
 
 	void FDX12DynamicRHI::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
@@ -565,8 +560,8 @@ namespace RHI
 	void FDX12DynamicRHI::UpLoadMesh(FMesh* Mesh)
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Mesh);
-		UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->VertexBuffer, VertexBufferUploadHeap, DX12Mesh->VertexBufferSize, DX12Mesh->VertexStride, DX12Mesh->PVertData);
-		UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->IndexBuffer, IndexBufferUploadHeap, DX12Mesh->IndexBufferSize, DX12Mesh->PIndtData);
+		UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh);
+		UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh);
 		
 		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
@@ -606,8 +601,8 @@ namespace RHI
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		GraphicsCommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&IndexBufferView);
-		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &VertexBufferView);
+		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&MeshPtr->IndexBufferView);
+		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &MeshPtr->VertexBufferView);
 		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
 		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(MeshPtr->IndexNum, 1, 0, 0, 0);
 

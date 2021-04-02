@@ -10,6 +10,10 @@ namespace RHI
 	{
 		ComPtr<ID3D12Resource> VertexBuffer;
 		ComPtr<ID3D12Resource> IndexBuffer;
+		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
+		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
+		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
+		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 	};
 
 	struct FCommandListDx12
@@ -55,9 +59,7 @@ namespace RHI
 		FDX12DynamicRHI();
 		~FDX12DynamicRHI() = default;
 
-		/* new recognize */
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
-
 		virtual inline void GetBackBufferIndex() override { BackFrameIndex = SwapChain->GetCurrentBackBufferIndex(); }
 
 		//update resource
@@ -83,10 +85,8 @@ namespace RHI
 		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
 		void PopulateCommandList(FDX12Mesh* MeshPtr);
-		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
-			ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData);
-		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer,
-			ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData);
+		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
+		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap);
@@ -130,13 +130,12 @@ namespace RHI
 		ComPtr<ID3DBlob> VertexShader;
 		ComPtr<ID3DBlob> PixelShader;
 
-		// resource
-		ComPtr<ID3D12Resource> VertexBuffer;
-		ComPtr<ID3D12Resource> IndexBuffer;
-		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
-		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
-
+		//// resource
+		//ComPtr<ID3D12Resource> VertexBuffer;
+		//ComPtr<ID3D12Resource> IndexBuffer;
+		//D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
+		//D3D12_INDEX_BUFFER_VIEW IndexBufferView;
+		//ComPtr<ID3D12Resource> VertexBufferUploadHeap;
+		//ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 	};
 }
