@@ -12,7 +12,15 @@
 #include "stdafx.h"
 #include "Win32Application.h"
 
+using RHI::GDynamicRHI;
+using RHI::FMesh;
+
+static RHI::FMesh* Chair = nullptr;
+
 HWND Win32Application::m_hwnd = nullptr;
+FSceneConstantBuffer Win32Application::ConstantBufferData = {};
+UINT8* Win32Application::PCbvDataBegin = nullptr;
+Camera Win32Application::MainCamera = Camera();
 
 int Win32Application::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 {
@@ -51,6 +59,12 @@ int Win32Application::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
     // Initialize the sample. OnInit is defined in each child-implementation of DXSample.
     pSample->OnInit();
+
+	MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
+
+
+	LoadAssets(Chair, L"shaders.hlsl");
+
 
     ShowWindow(m_hwnd, nCmdShow);
 
@@ -105,7 +119,7 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         if (pSample)
         {
             pSample->OnUpdate();
-            pSample->OnRender();
+            RHI::GDynamicRHI->DrawMesh(Chair);
         }
         return 0;
 
@@ -116,4 +130,41 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 
     // Handle any messages the switch statement didn't.
     return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+void Win32Application::LoadAssets(FMesh* MeshPtr, std::wstring assetName)
+{
+	WCHAR assetsPath[512];
+	GetAssetsPath(assetsPath, _countof(assetsPath));
+    std::wstring m_assetsPath = assetsPath + assetName;
+
+	GDynamicRHI->CreateVertexShader(m_assetsPath.c_str());
+	GDynamicRHI->CreatePixelShader(m_assetsPath.c_str());
+
+	GDynamicRHI->InitPipeLine(); // TODO: open interface to allow more param
+
+	MeshPtr = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
+	GDynamicRHI->UpLoadMesh(MeshPtr);
+
+	// Create the constant buffer.
+	const UINT ConstantBufferSize = sizeof(FSceneConstantBuffer); // CB size is required to be 256-byte aligned.
+	GDynamicRHI->UpLoadConstantBuffer(ConstantBufferSize, ConstantBufferData, PCbvDataBegin);
+
+	GDynamicRHI->SyncFrame();
+}
+
+void Win32Application::OnUpdate()
+{
+	//Timer.Tick(NULL);
+
+	//MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
+
+	//XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
+	//XMMATRIX v = MainCamera.GetViewMatrix();
+	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
+
+	//// Compute the model-view-projection matrix.
+	//XMStoreFloat4x4(&ConstantBufferData.WorldViewProj, XMMatrixTranspose(m * v * p));
+
+	//memcpy(PCbvDataBegin, &ConstantBufferData, sizeof(ConstantBufferData));
 }

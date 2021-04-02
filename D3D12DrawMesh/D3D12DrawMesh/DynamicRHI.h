@@ -6,10 +6,9 @@ namespace RHI
 	using namespace DirectX;
 
 	class FDynamicRHI;
-	class D3D12DynamicRHI;
 
 	/** A global pointer to the dynamically bound RHI implementation. */
-	extern std::shared_ptr<FDynamicRHI> GDynamicRHI;
+	extern FDynamicRHI* GDynamicRHI;
 
 	struct FConstantBufferBase{};
 
@@ -17,7 +16,8 @@ namespace RHI
 	{
 		virtual void Init() {};
 
-		FMesh
+		FMesh() : PVertData(nullptr), PIndtData(nullptr), VertexBufferSize(0), VertexStride(0), IndexBufferSize(0), IndexNum(0){}
+		~FMesh() { free(PVertData); free(PIndtData);} // TODO: free nullptr will clapse
 
 		UINT8* PVertData;
 		UINT8* PIndtData;
@@ -27,45 +27,9 @@ namespace RHI
 		int IndexNum;
 	};
 
-	struct FDX12Mesh : public FMesh
-	{
-		ComPtr<ID3D12Resource> VertexBuffer;
-		ComPtr<ID3D12Resource> IndexBuffer;
-	};
-
 	struct FRHIPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
-	};
-
-	struct FDX12PSOInitializer : public FRHIPSOInitializer
-	{
-	public:
-		FDX12PSOInitializer();
-		FDX12PSOInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription, /*ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,*/
-			const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc);
-
-		void InitPsoInitializer() override
-		{
-
-		}
-
-		struct DXGI_SAMPLE_DESC
-		{
-			UINT Count;
-			UINT Quality;
-		};
-
-		D3D12_INPUT_LAYOUT_DESC InputLayout;
-		D3D12_RASTERIZER_DESC RasterizerState;
-		D3D12_BLEND_DESC BlendState;
-		D3D12_DEPTH_STENCIL_DESC DepthStencilState;
-		UINT SampleMask;
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE PrimitiveTopologyType;
-		UINT NumRenderTargets;
-		DXGI_FORMAT RTVFormats[8];
-		DXGI_FORMAT DSVFormat;
-		DXGI_SAMPLE_DESC SampleDesc;
 	};
 
 	enum
@@ -100,198 +64,19 @@ namespace RHI
 		virtual void InitPipeLine() = 0;
 
 		// mesh
-		virtual std::shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) = 0;
-		virtual void UpLoadMesh(FMesh* Mesh) = 0;
-
-		/* old recognize, which is wrong */
-		virtual void EnableDebug(UINT& DxgiFactoryFlags) = 0;
-		virtual void CreateFactory(bool FactoryFlags) = 0; //TODO: dont know is there a factory notion in other api, so put it here right now.
-		virtual void CreateDevice(bool HasWarpDevice) = 0;
-
-		virtual void CreateCommandQueue() = 0;
-		virtual ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() = 0;
-		virtual ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator) = 0;
-		virtual void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList) = 0;
-		virtual void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData) = 0;
-		virtual void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData) = 0;
-		virtual void ExecuteCommand(ID3D12CommandList* PpCommandLists) = 0;
-
-		virtual void CreateSwapChain(UINT FrameCount, UINT Width, UINT Height) = 0;
-		virtual void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps) = 0;
-		virtual void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount) = 0;
-		virtual void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap) = 0;
-		virtual void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height) = 0;
-		virtual void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version) = 0;
-
-		virtual UINT GetEnableShaderDebugFlags() = 0;
 		virtual void CreateVertexShader(LPCWSTR FileName) = 0;
 		virtual void CreatePixelShader(LPCWSTR FileName) = 0;
-		virtual D3D12_RASTERIZER_DESC CreateRasterizerStateDesc() = 0;
-		virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc() = 0;
-		virtual D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
-			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS) = 0;
-		virtual ComPtr<ID3D12PipelineState> CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
-		virtual void CreateDX12RootSignature() = 0;
-		virtual void CreateGPUFence(ComPtr<ID3D12Fence>& Fence) = 0;
+		virtual FMesh* CreateMesh(const std::string& BinFileName) = 0;
+		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
-		virtual void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false) = 0;
+		// draw
+		virtual void DrawMesh(FMesh* MeshPtr) = 0;
 
+		// sync
+		virtual void SyncFrame() = 0;
 	public:
-		virtual ComPtr<ID3D12DescriptorHeap>& GetRTVHeapRef() = 0;
-		virtual ComPtr<ID3D12DescriptorHeap>& GetDSVHeapRef() = 0;
-		virtual ComPtr<ID3D12DescriptorHeap>& GetCBVSRVHeapRef() = 0;
-		virtual ComPtr<ID3D12Device>& GetDeviceRef() = 0;
-		virtual ComPtr<ID3D12CommandQueue>& GetCommandQueueRef() = 0;
-		virtual ComPtr<ID3D12RootSignature>& GetRootSignatureRef() = 0;
-		virtual ComPtr<ID3D12Resource>& GetVertexBufferRef() = 0;
-		virtual ComPtr<ID3D12Resource>& GetIndexBufferRef() = 0;
-		virtual ComPtr<ID3D12Resource>& GetConstantBufferRef() = 0;
-		virtual ComPtr<ID3D12Resource>* GetRTVRef() = 0;
-		virtual ComPtr<ID3D12Resource>& GetDSVRef() = 0;
-		virtual D3D12_VERTEX_BUFFER_VIEW& GetVBVRef() = 0;
-		virtual D3D12_INDEX_BUFFER_VIEW& GetIBVRef() = 0;
-		virtual ComPtr<IDXGISwapChain3>& GetSwapChainRef() = 0;
-		virtual UINT& GetBackBufferIndexRef() = 0;
-		virtual ComPtr<ID3DBlob> GetVS() = 0;
-		virtual ComPtr<ID3DBlob> GetPS() = 0;
-		virtual ComPtr<ID3D12PipelineState>* GetPSOArray() = 0;
 
 	protected:
 		FRHIPSOInitializer* PsoInitializer;
-	};
-
-	class D3D12DynamicRHI : public FDynamicRHI
-	{
-	public:
-		D3D12DynamicRHI();
-		~D3D12DynamicRHI() = default;
-
-		/* new recognize */
-		void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
-
-		virtual inline void GetBackBufferIndex() { BackFrameIndex = GDynamicRHI->GetSwapChainRef()->GetCurrentBackBufferIndex(); }
-
-		//update resource
-		void CreateVertexShader(LPCWSTR FileName) override;
-		void CreatePixelShader(LPCWSTR FileName) override;
-		void CreateRenderTarget() override;
-		void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
-
-		// pipeline
-		void InitPipeLine() override;
-
-		struct FCommandListDx12
-		{
-			ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
-			ComPtr<ID3D12GraphicsCommandList> CommandList;
-			//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
-
-			void Create(ComPtr<ID3D12Device> Device);
-			void Reset();
-		};
-		std::vector<FCommandListDx12> GraphicsCommandLists;
-
-		// mesh
-		std::shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) override
-		{
-			std::shared_ptr<FMesh> MeshPtr = std::make_shared<FMesh>();
-			ReadStaticMeshBinary(BinFileName, MeshPtr->PVertData, MeshPtr->PIndtData, MeshPtr->VertexBufferSize, MeshPtr->VertexStride, MeshPtr->IndexBufferSize, MeshPtr->IndexNum);
-			return MeshPtr;
-		}
-
-		void UpLoadMesh(FMesh* Mesh) override
-		{
-			FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Mesh);
-			UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->VertexBuffer, VertexBufferUploadHeap, DX12Mesh->VertexBufferSize, DX12Mesh->VertexStride, DX12Mesh->PVertData);
-			UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, GDynamicRHI->GetIndexBufferRef(), IndexBufferUploadHeap, Mesh->IndexBufferSize, Mesh->PIndtData);
-		}
-
-		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
-
-		/* old recognize, which is wrong */
-		void EnableDebug(UINT& DxgiFactoryFlags) override;
-		void CreateFactory(bool FactoryFlags) override;
-		void CreateDevice(bool HasWarpDevice) override;
-
-		void CreateCommandQueue() override;
-		ComPtr<ID3D12CommandAllocator> CreateCommandAllocator() override;
-		ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator) override;
-		void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList) override;
-		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer, ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData) override;
-		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData) override;
-		void ExecuteCommand(ID3D12CommandList* PpCommandLists) { }; // TODO: finish this
-
-		void CreateSwapChain(UINT FrameCount, UINT Width, UINT Height) override;
-		void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps) override;
-		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount) override;
-		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap) override;
-		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height) override;
-		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version) override;
-
-		UINT GetEnableShaderDebugFlags() override;
-
-		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc() override;
-		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc() override;
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
-			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS) override;
-		ComPtr<ID3D12PipelineState> CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
-		void DX12UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin);
-		void CreateDX12RootSignature() override;
-		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence) override;
-
-		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false) override;
-
-	public:
-		ComPtr<ID3D12DescriptorHeap>& GetRTVHeapRef() { return RTVHeap; }
-		ComPtr<ID3D12DescriptorHeap>& GetDSVHeapRef() { return DSVHeap; }
-		ComPtr<ID3D12DescriptorHeap>& GetCBVSRVHeapRef() { return CBVSRVHeap; }
-		ComPtr<ID3D12Device>& GetDeviceRef() { return Device; };
-		ComPtr<ID3D12CommandQueue>& GetCommandQueueRef() { return CommandQueue; }
-		ComPtr<ID3D12RootSignature>& GetRootSignatureRef() { return RootSignature; };
-		ComPtr<ID3D12Resource>& GetVertexBufferRef() { return VertexBuffer; };
-		ComPtr<ID3D12Resource>& GetIndexBufferRef() { return IndexBuffer; };
-		ComPtr<ID3D12Resource>& GetConstantBufferRef() { return ConstantBuffer; };
-		ComPtr<ID3D12Resource>* GetRTVRef() { return RenderTargets; }
-		ComPtr<ID3D12Resource>& GetDSVRef() { return DepthStencil; }
-		D3D12_VERTEX_BUFFER_VIEW& GetVBVRef() { return VertexBufferView; }
-		D3D12_INDEX_BUFFER_VIEW& GetIBVRef() { return IndexBufferView; }
-		ComPtr<IDXGISwapChain3>& GetSwapChainRef() { return SwapChain; }
-		UINT& GetBackBufferIndexRef() { return BackFrameIndex; }
-		ComPtr<ID3DBlob> GetVS() { return VertexShader; }
-		ComPtr<ID3DBlob> GetPS() { return PixelShader; }
-		ComPtr<ID3D12PipelineState>* GetPSOArray() { return PipelineStateArray; }
-
-	private:
-		ComPtr<ID3D12Device> Device;
-		ComPtr<IDXGIFactory4> Factory;
-		ComPtr<IDXGISwapChain3> SwapChain;
-		ComPtr<ID3D12CommandQueue> CommandQueue;
-
-		// Pipeline objects.
-		ComPtr<ID3D12Resource> RenderTargets[3]; // TODO: hard coding to 3
-		ComPtr<ID3D12RootSignature> RootSignature;
-		ComPtr<ID3D12DescriptorHeap> RTVHeap;
-		ComPtr<ID3D12DescriptorHeap> DSVHeap;
-		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
-		ComPtr<ID3D12Resource> DepthStencil;
-		ComPtr<ID3D12PipelineState> PipelineStateArray[10];
-
-		// App resources.
-		ComPtr<ID3D12Resource> VertexBuffer;
-		ComPtr<ID3D12Resource> IndexBuffer;
-		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-		ComPtr<ID3D12Resource> ConstantBuffer;
-		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
-		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
-		ComPtr<ID3DBlob> VertexShader;
-		ComPtr<ID3DBlob> PixelShader;
-
-		// Synchronization objects.
-		UINT BackFrameIndex;
-		HANDLE FenceEventRHI;
-		UINT64 GPUFenceValueRHI;
-		ComPtr<ID3D12Fence> FenceGPURHI;
-
 	};
 }

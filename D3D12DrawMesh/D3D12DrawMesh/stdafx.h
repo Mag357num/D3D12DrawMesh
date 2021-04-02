@@ -38,5 +38,7 @@
 #include <shellapi.h>
 #include "assert.h" 
 
-#include "Win32Application.h"
 #include "string.h"
+
+using Microsoft::WRL::ComPtr;
+
