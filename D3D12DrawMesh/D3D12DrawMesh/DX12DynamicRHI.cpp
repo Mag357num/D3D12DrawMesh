@@ -596,7 +596,6 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
 	}
 
 	void FDX12DynamicRHI::DrawMesh(FMesh* MeshPtr)
@@ -612,11 +611,12 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
 		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexNum, 1, 0, 0, 0);
 
-		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
+		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
 		// Execute the command list.
 		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };

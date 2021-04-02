@@ -115,8 +115,6 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         {
 			GDynamicRHI->FrameBegin();
 			//pSample->OnUpdate();
-            // 
-            //drawmesh
 			RHI::GDynamicRHI->DrawMesh(Chair);
 
             RHI::GDynamicRHI->FrameEnd();
