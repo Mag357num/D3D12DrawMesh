@@ -59,7 +59,6 @@ namespace RHI
 		virtual void GetBackBufferIndex() = 0;
 
 		//update resource
-		virtual void CreateRenderTarget() = 0;
 		virtual void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) = 0; // Up Load ConstantBufferView To Heap
 
 		// pipeline

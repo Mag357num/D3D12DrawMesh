@@ -63,51 +63,36 @@ namespace RHI
 		//update resource
 		void CreateVertexShader(LPCWSTR FileName) override;
 		void CreatePixelShader(LPCWSTR FileName) override;
-		void CreateRenderTarget() override;
 		void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
-
+		
 		// pipeline
 		void InitPipeLine() override;
-
 		std::vector<FCommandListDx12> GraphicsCommandLists;
-
+		
 		// mesh
 		FMesh* CreateMesh(const std::string& BinFileName) override;
 		void UpLoadMesh(FMesh* Mesh) override;
 		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 
 		// draw
-		void PopulateCommandList(FDX12Mesh* MeshPtr);
 		void WaitForPreviousFrame();
 		void DrawMesh(FMesh* MeshPtr) override;
 
 		// sync
 		void SyncFrame() override;
 
-		/* old recognize, which is wrong */
-		void EnableDebug(UINT& DxgiFactoryFlags);
-		void CreateFactory(bool FactoryFlags);
-		void CreateDevice(bool HasWarpDevice);
-
-		void CreateCommandQueue();
-		ComPtr<ID3D12CommandAllocator> CreateCommandAllocator();
-		ComPtr<ID3D12GraphicsCommandList> CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator);
-		void CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList);
+	private:
+		void PopulateCommandList(FDX12Mesh* MeshPtr);
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
 			ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer,
 			ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData);
-		void ExecuteCommand(ID3D12CommandList* PpCommandLists) { }; // TODO: finish this
-
-		void CreateSwapChain(UINT FrameCount, UINT Width, UINT Height);
 		void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap);
 		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height);
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
-
 		UINT GetEnableShaderDebugFlags();
-
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
@@ -116,44 +101,42 @@ namespace RHI
 		void DX12UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize, const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin);
 		void CreateDX12RootSignature();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
-
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
 
 	private:
+		// RHI attributes
 		ComPtr<ID3D12Device> Device;
 		ComPtr<IDXGIFactory4> Factory;
 		ComPtr<IDXGISwapChain3> SwapChain;
 		ComPtr<ID3D12CommandQueue> CommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-
-		// Pipeline objects.
 		ComPtr<ID3D12Resource> RenderTargets[3]; // TODO: hard coding to 3
 		ComPtr<ID3D12RootSignature> RootSignature;
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
-		ComPtr<ID3D12Resource> DepthStencil;
-		ComPtr<ID3D12PipelineState> PipelineStateArray[10];
-
-		// App resources.
-		ComPtr<ID3D12Resource> VertexBuffer;
-		ComPtr<ID3D12Resource> IndexBuffer;
-		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-		ComPtr<ID3D12Resource> ConstantBuffer;
-		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
-		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
-		ComPtr<ID3DBlob> VertexShader;
-		ComPtr<ID3DBlob> PixelShader;
-
-		// Synchronization objects.
 		UINT BackFrameIndex;
 		HANDLE FenceEvent;
 		UINT64 FenceValue;
 		ComPtr<ID3D12Fence> Fence;
-
 		UINT ResoWidth;
 		UINT ResoHeight;
+
+		// may changes attributes
+		ComPtr<ID3D12Resource> DepthStencil;
+		ComPtr<ID3D12PipelineState> PipelineStateArray[10];
+		ComPtr<ID3D12Resource> ConstantBuffer;
+		ComPtr<ID3DBlob> VertexShader;
+		ComPtr<ID3DBlob> PixelShader;
+
+		// resource
+		ComPtr<ID3D12Resource> VertexBuffer;
+		ComPtr<ID3D12Resource> IndexBuffer;
+		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
+		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
+		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
+		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
+
 	};
 }

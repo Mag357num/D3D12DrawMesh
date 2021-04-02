@@ -61,13 +61,63 @@ namespace RHI
 		Viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight));
 		ScissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(ResoWidth), static_cast<LONG>(ResoHeight));
 
-		CreateDevice(UseWarpDevice);
-		CreateCommandQueue();
-		CreateSwapChain(BufferFrameCount, ResoWidth, ResoHeight);
+		//create device
+		if (UseWarpDevice)
+		{
+			ComPtr<IDXGIAdapter> warpAdapter;
+			ThrowIfFailed(Factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
+
+			ThrowIfFailed(D3D12CreateDevice(
+				warpAdapter.Get(),
+				D3D_FEATURE_LEVEL_11_0,
+				IID_PPV_ARGS(&Device)
+			));
+		}
+		else
+		{
+			ComPtr<IDXGIAdapter1> hardwareAdapter;
+			GetHardwareAdapter(Factory.Get(), &hardwareAdapter);
+
+			ThrowIfFailed(D3D12CreateDevice(
+				hardwareAdapter.Get(),
+				D3D_FEATURE_LEVEL_11_0,
+				IID_PPV_ARGS(&Device)
+			));
+		}
+
+		// command queue
+		D3D12_COMMAND_QUEUE_DESC QueueDesc = {};
+		QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+		ThrowIfFailed(Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&CommandQueue)));
+
+		//swapchain
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+		swapChainDesc.BufferCount = BufferFrameCount;
+		swapChainDesc.Width = ResoWidth;
+		swapChainDesc.Height = ResoHeight;
+		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.SampleDesc.Count = 1;
+
+		ComPtr<IDXGISwapChain1> swapChain;
+		ThrowIfFailed(Factory->CreateSwapChainForHwnd(
+			CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+			Renderer::GetHwnd(),
+			&swapChainDesc,
+			nullptr,
+			nullptr,
+			&swapChain
+		));
+
+		ThrowIfFailed(Factory->MakeWindowAssociation(Renderer::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+		ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
 		GetBackBufferIndex();
 
 		// heaps
-		CreateRenderTarget();
+		CreateDescriptorHeaps(BUFFRING_NUM, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
+		CreateRTVToHeaps(RTVHeap, BUFFRING_NUM);
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
 		CreateDSVToHeaps(DepthStencil, DSVHeap, ResoWidth, ResoHeight);
@@ -112,12 +162,6 @@ namespace RHI
 		DX12UpdateConstantBuffer(ConstantBuffer, CBSize, CBData, CBVSRVHeap, PCbvDataBegin);
 	}
 
-	void FDX12DynamicRHI::CreateRenderTarget()
-	{
-		CreateDescriptorHeaps(BUFFRING_NUM, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
-		CreateRTVToHeaps(RTVHeap, BUFFRING_NUM);
-	}
-
 	void FDX12DynamicRHI::InitPipeLine()
 	{
 		FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
@@ -130,13 +174,7 @@ namespace RHI
 	FDX12DynamicRHI::FDX12DynamicRHI()
 	{
 		UINT dxgiFactoryFlags = 0;
-		EnableDebug(dxgiFactoryFlags);
-		CreateFactory(dxgiFactoryFlags);
-	}
-
-	void FDX12DynamicRHI::EnableDebug(UINT& DxgiFactoryFlags)
-	{
-#if defined(_DEBUG)
+		#if defined(_DEBUG)
 		// Enable the debug layer (requires the Graphics Tools "optional feature").
 		// NOTE: Enabling the debug layer after device creation will invalidate the active device.
 		{
@@ -146,69 +184,11 @@ namespace RHI
 				debugController->EnableDebugLayer();
 
 				// Enable additional debug layers.
-				DxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+				dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 			}
 		}
-#endif
-	}
-
-	void FDX12DynamicRHI::CreateFactory(bool FactoryFlags)
-	{
-		ThrowIfFailed(CreateDXGIFactory2(FactoryFlags, IID_PPV_ARGS(&Factory)));
-	}
-
-	void FDX12DynamicRHI::CreateDevice(bool HasWarpDevice)
-	{
-		if (HasWarpDevice)
-		{
-			ComPtr<IDXGIAdapter> warpAdapter;
-			ThrowIfFailed(Factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
-
-			ThrowIfFailed(D3D12CreateDevice(
-				warpAdapter.Get(),
-				D3D_FEATURE_LEVEL_11_0,
-				IID_PPV_ARGS(&Device)
-			));
-		}
-		else
-		{
-			ComPtr<IDXGIAdapter1> hardwareAdapter;
-			GetHardwareAdapter(Factory.Get(), &hardwareAdapter);
-
-			ThrowIfFailed(D3D12CreateDevice(
-				hardwareAdapter.Get(),
-				D3D_FEATURE_LEVEL_11_0,
-				IID_PPV_ARGS(&Device)
-			));
-		}
-	}
-
-	void FDX12DynamicRHI::CreateCommandQueue()
-	{
-		// Describe and create the command queue.
-		D3D12_COMMAND_QUEUE_DESC QueueDesc = {};
-		QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-		QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		ThrowIfFailed(Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&CommandQueue)));
-	}
-
-	ComPtr<ID3D12CommandAllocator> FDX12DynamicRHI::CreateCommandAllocator()
-	{
-		ComPtr<ID3D12CommandAllocator> CommandAllocator;
-		ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&CommandAllocator)));
-		return CommandAllocator;
-	}
-
-	ComPtr<ID3D12GraphicsCommandList> FDX12DynamicRHI::CreateCommandList(ComPtr<ID3D12CommandAllocator> CommandAllocator)
-	{
-		ComPtr<ID3D12GraphicsCommandList> CommandList;
-		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, CommandAllocator.Get(), nullptr, IID_PPV_ARGS(&CommandList)));
-		return CommandList;
-	}
-
-	void FDX12DynamicRHI::CloseCommandList(ComPtr<ID3D12GraphicsCommandList> CommandList)
-	{
-		ThrowIfFailed(CommandList->Close());
+		#endif
+		ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&Factory)));
 	}
 
 	void FDX12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
@@ -290,34 +270,6 @@ namespace RHI
 		// execute
 		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
 		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	}
-
-	void FDX12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height)
-	{
-		// Describe and create the swap chain.
-		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.BufferCount = FrameCount;
-		swapChainDesc.Width = Width;
-		swapChainDesc.Height = Height;
-		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		swapChainDesc.SampleDesc.Count = 1;
-
-		ComPtr<IDXGISwapChain1> swapChain;
-		ThrowIfFailed(Factory->CreateSwapChainForHwnd(
-			CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-			Renderer::GetHwnd(),
-			&swapChainDesc,
-			nullptr,
-			nullptr,
-			&swapChain
-		));
-
-		// This sample does not support fullscreen transitions.
-		ThrowIfFailed(Factory->MakeWindowAssociation(Renderer::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-
-		ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
 	}
 
 	void FDX12DynamicRHI::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
@@ -616,10 +568,9 @@ namespace RHI
 		UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->VertexBuffer, VertexBufferUploadHeap, DX12Mesh->VertexBufferSize, DX12Mesh->VertexStride, DX12Mesh->PVertData);
 		UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->IndexBuffer, IndexBufferUploadHeap, DX12Mesh->IndexBufferSize, DX12Mesh->PIndtData);
 		
-		CloseCommandList(GraphicsCommandLists[0].CommandList);
+		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
 		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
 	}
 
 	FMesh* FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
