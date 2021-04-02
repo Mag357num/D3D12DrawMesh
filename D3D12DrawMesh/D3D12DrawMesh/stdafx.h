@@ -31,6 +31,7 @@
 #include "d3dx12.h"
 #include <pix.h>
 #include <cmath>
+#include <fstream>
 
 #include <string>
 #include <wrl.h>
@@ -38,3 +39,4 @@
 #include "assert.h" 
 
 #include "Win32Application.h"
+#include "string.h"

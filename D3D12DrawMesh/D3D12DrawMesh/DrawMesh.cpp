@@ -44,43 +44,6 @@ void FDrawMesh::ReadCameraBinary(const string & BinFileName, XMFLOAT3 & Location
 	Fin.close();
 }
 
-void FDrawMesh::ReadStaticMeshBinary(const string & BinFileName, UINT8 *& PVertData, UINT8 *& PIndtData, int & VertexBufferSize, int & VertexStride, int & IndexBufferSize)
-{
-	std::ifstream Fin(BinFileName, std::ios::binary);
-
-	if (!Fin.is_open())
-	{
-		throw std::exception("open file faild.");
-	}
-
-	Fin.read((char*)&VertexStride, sizeof(int));
-
-	Fin.read((char*)&VertexBufferSize, sizeof(int));
-	VertexBufferSize *= static_cast<size_t>(VertexStride);
-
-	if (VertexBufferSize > 0)
-	{
-		PVertData = reinterpret_cast<UINT8*>(malloc(VertexBufferSize));
-		Fin.read((char*)PVertData, VertexBufferSize);
-	}
-	else
-	{
-		throw std::exception();
-	}
-
-	Fin.read((char*)&IndexBufferSize, sizeof(int));
-	IndexNum = IndexBufferSize;
-	IndexBufferSize *= sizeof(int);
-
-	if (IndexBufferSize > 0)
-	{
-		PIndtData = reinterpret_cast<UINT8*>(malloc(IndexBufferSize));
-		Fin.read((char*)PIndtData, IndexBufferSize);
-	}
-
-	Fin.close();
-}
-
 void FDrawMesh::OnInit()
 {
 	//read cam binary
@@ -124,19 +87,22 @@ void FDrawMesh::LoadAssets()
 	GDynamicRHI->CloseCommandList(MainCommandList);
 
 	//read binary
-	UINT8* PVertData = nullptr;
-	UINT8* PIndtData = nullptr;
-	int VertexBufferSize;
-	int VertexStride;
-	int IndexBufferSize;
-	ReadStaticMeshBinary("StaticMeshBinary_.dat", PVertData, PIndtData, VertexBufferSize, VertexStride, IndexBufferSize);
+	//UINT8* PVertData = nullptr;
+	//UINT8* PIndtData = nullptr;
+	//int VertexBufferSize;
+	//int VertexStride;
+	//int IndexBufferSize;
+	//ReadStaticMeshBinary("StaticMeshBinary_.dat", PVertData, PIndtData, VertexBufferSize, VertexStride, IndexBufferSize);
 
-	//Create the vertex buffer.
-	// TODO: add this method to a class of RHICommandList
-	GDynamicRHI->UpdateVertexBuffer(ResourceCommitCommandList, GDynamicRHI->GetVertexBufferRef(), VertexBufferUploadHeap, VertexBufferSize, VertexStride, PVertData);
+	std::shared_ptr<FMesh> Chair = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
+	GDynamicRHI->UpLoadMesh(Chair.get());
 
-	// Create the index buffer.
-	GDynamicRHI->UpdateIndexBuffer(ResourceCommitCommandList, GDynamicRHI->GetIndexBufferRef(), IndexBufferUploadHeap, IndexBufferSize, PIndtData);
+	////Create the vertex buffer.
+	//// TODO: add this method to a class of RHICommandList
+	//GDynamicRHI->UpdateVertexBuffer(ResourceCommitCommandList, GDynamicRHI->GetVertexBufferRef(), VertexBufferUploadHeap, VertexBufferSize, VertexStride, PVertData);
+
+	//// Create the index buffer.
+	//GDynamicRHI->UpdateIndexBuffer(ResourceCommitCommandList, GDynamicRHI->GetIndexBufferRef(), IndexBufferUploadHeap, IndexBufferSize, PIndtData);
 
 	free(PVertData);
 	free(PIndtData);

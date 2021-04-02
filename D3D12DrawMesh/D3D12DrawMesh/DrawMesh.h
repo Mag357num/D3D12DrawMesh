@@ -49,8 +49,7 @@ public:
 	void OnKeyDown(UINT8 Key) override;
 	void OnKeyUp(UINT8 Key) override;
 
-	void ReadCameraBinary(const string & BinFileName, XMFLOAT3 & Location, XMFLOAT3 & Dir, float & Fov, float & Aspect, XMFLOAT4 & Rotator);
-	void ReadStaticMeshBinary(const string & BinFileName, UINT8 *& PVertData, UINT8 *& PIndtData, int & VertexBufferSize, int & VertexStride, int & IndexBufferSize);
+	void ReadCameraBinary(const string& BinFileName, XMFLOAT3& Location, XMFLOAT3& Dir, float& Fov, float& Aspect, XMFLOAT4& Rotator);
 
 private:
 	static const UINT BufferFrameCount = 2;

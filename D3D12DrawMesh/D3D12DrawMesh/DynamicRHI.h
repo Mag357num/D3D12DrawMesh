@@ -11,16 +11,23 @@ namespace RHI
 	/** A global pointer to the dynamically bound RHI implementation. */
 	extern std::shared_ptr<FDynamicRHI> GDynamicRHI;
 
-	struct FConstantBufferBase
-	{
-	};
+	struct FConstantBufferBase{};
 
 	struct FMesh
 	{
+		virtual void Init() {};
 
+		FMesh
+
+		UINT8* PVertData;
+		UINT8* PIndtData;
+		int VertexBufferSize;
+		int VertexStride;
+		int IndexBufferSize;
+		int IndexNum;
 	};
 
-	struct FMeshDx12 : public FMesh
+	struct FDX12Mesh : public FMesh
 	{
 		ComPtr<ID3D12Resource> VertexBuffer;
 		ComPtr<ID3D12Resource> IndexBuffer;
@@ -29,7 +36,6 @@ namespace RHI
 	struct FRHIPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
-
 	};
 
 	struct FDX12PSOInitializer : public FRHIPSOInitializer
@@ -94,8 +100,8 @@ namespace RHI
 		virtual void InitPipeLine() = 0;
 
 		// mesh
-		virtual void UpLoadMesh(FMesh Mesh) = 0;
-
+		virtual std::shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) = 0;
+		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		/* old recognize, which is wrong */
 		virtual void EnableDebug(UINT& DxgiFactoryFlags) = 0;
@@ -152,7 +158,6 @@ namespace RHI
 
 	protected:
 		FRHIPSOInitializer* PsoInitializer;
-		FMesh* Mesh;
 	};
 
 	class D3D12DynamicRHI : public FDynamicRHI
@@ -187,12 +192,21 @@ namespace RHI
 		std::vector<FCommandListDx12> GraphicsCommandLists;
 
 		// mesh
-		void UpLoadMesh(FMesh Mesh) override
+		std::shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) override
 		{
-
+			std::shared_ptr<FMesh> MeshPtr = std::make_shared<FMesh>();
+			ReadStaticMeshBinary(BinFileName, MeshPtr->PVertData, MeshPtr->PIndtData, MeshPtr->VertexBufferSize, MeshPtr->VertexStride, MeshPtr->IndexBufferSize, MeshPtr->IndexNum);
+			return MeshPtr;
 		}
 
+		void UpLoadMesh(FMesh* Mesh) override
+		{
+			FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Mesh);
+			UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->VertexBuffer, VertexBufferUploadHeap, DX12Mesh->VertexBufferSize, DX12Mesh->VertexStride, DX12Mesh->PVertData);
+			UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, GDynamicRHI->GetIndexBufferRef(), IndexBufferUploadHeap, Mesh->IndexBufferSize, Mesh->PIndtData);
+		}
 
+		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 
 		/* old recognize, which is wrong */
 		void EnableDebug(UINT& DxgiFactoryFlags) override;
@@ -261,8 +275,6 @@ namespace RHI
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
 		ComPtr<ID3D12Resource> DepthStencil;
 		ComPtr<ID3D12PipelineState> PipelineStateArray[10];
-
-
 
 		// App resources.
 		ComPtr<ID3D12Resource> VertexBuffer;

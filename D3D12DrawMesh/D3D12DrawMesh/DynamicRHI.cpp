@@ -86,6 +86,7 @@ void D3D12DynamicRHI::RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT Re
 
 	// pso initializer
 	PsoInitializer = new FDX12PSOInitializer();
+
 }
 
 void D3D12DynamicRHI::FCommandListDx12::Reset()
@@ -566,4 +567,41 @@ void D3D12DynamicRHI::CreateDX12RootSignature()
 void D3D12DynamicRHI::CreateGPUFence(ComPtr<ID3D12Fence>& Fence)
 {
 	ThrowIfFailed(GDynamicRHI->GetDeviceRef()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
+}
+
+void D3D12DynamicRHI::ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
+{
+	std::ifstream Fin(BinFileName, std::ios::binary);
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("open file faild.");
+	}
+
+	Fin.read((char*)&VertexStride, sizeof(int));
+
+	Fin.read((char*)&VertexBufferSize, sizeof(int));
+	VertexBufferSize *= static_cast<size_t>(VertexStride);
+
+	if (VertexBufferSize > 0)
+	{
+		PVertData = reinterpret_cast<UINT8*>(malloc(VertexBufferSize));
+		Fin.read((char*)PVertData, VertexBufferSize);
+	}
+	else
+	{
+		throw std::exception();
+	}
+
+	Fin.read((char*)&IndexBufferSize, sizeof(int));
+	IndexNum = IndexBufferSize;
+	IndexBufferSize *= sizeof(int);
+
+	if (IndexBufferSize > 0)
+	{
+		PIndtData = reinterpret_cast<UINT8*>(malloc(IndexBufferSize));
+		Fin.read((char*)PIndtData, IndexBufferSize);
+	}
+
+	Fin.close();
 }
