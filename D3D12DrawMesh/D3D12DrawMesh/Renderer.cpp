@@ -62,9 +62,7 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
     MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 
-
     LoadAssets(Chair, L"shaders.hlsl");
-
 
     ShowWindow(m_hwnd, nCmdShow);
 

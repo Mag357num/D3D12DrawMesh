@@ -12,6 +12,16 @@ namespace RHI
 		ComPtr<ID3D12Resource> IndexBuffer;
 	};
 
+	struct FCommandListDx12
+	{
+		ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
+		ComPtr<ID3D12GraphicsCommandList> CommandList;
+		//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
+
+		void Create(ComPtr<ID3D12Device> Device);
+		void Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray);
+	};
+
 	struct FDX12PSOInitializer : public FRHIPSOInitializer
 	{
 	public:
@@ -59,15 +69,6 @@ namespace RHI
 		// pipeline
 		void InitPipeLine() override;
 
-		struct FCommandListDx12
-		{
-			ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
-			ComPtr<ID3D12GraphicsCommandList> CommandList;
-			//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
-
-			void Create(ComPtr<ID3D12Device> Device);
-			void Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray);
-		};
 		std::vector<FCommandListDx12> GraphicsCommandLists;
 
 		// mesh

@@ -84,7 +84,7 @@ namespace RHI
 		PsoInitializer = new FDX12PSOInitializer();
 	}
 
-	void FDX12DynamicRHI::FCommandListDx12::Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray)
+	void FCommandListDx12::Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray)
 	{
 		for (int i = 0; i < BUFFRING_NUM; i++)
 		{
@@ -94,7 +94,7 @@ namespace RHI
 		ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), PipelineStateArray[0].Get()));
 	}
 
-	void FDX12DynamicRHI::FCommandListDx12::Create(ComPtr<ID3D12Device> Device)
+	void FCommandListDx12::Create(ComPtr<ID3D12Device> Device)
 	{
 		for (int i = 0; i < BUFFRING_NUM; i++)
 		{
