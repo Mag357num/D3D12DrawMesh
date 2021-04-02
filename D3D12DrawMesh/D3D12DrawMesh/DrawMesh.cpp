@@ -52,8 +52,6 @@ void FDrawMesh::OnInit()
 
 	FDynamicRHI::CreateRHI();
 	GDynamicRHI->RHIInit(m_useWarpDevice, BufferFrameCount, ResoWidth, ResoHeight);
-
-
 }
 
 

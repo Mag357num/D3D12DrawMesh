@@ -36,13 +36,9 @@ namespace RHI
 	}
 
 	FDX12PSOInitializer::FDX12PSOInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
-		/*ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,*/
 		const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
 	{
 		InputLayout = VertexDescription;
-		//pRootSignature = RootSignature;
-		//this->VS = VS;
-		//this->PS = PS;
 		RasterizerState = rasterizerStateDesc;
 		BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 		DepthStencilState = depthStencilDesc;
@@ -590,27 +586,27 @@ namespace RHI
 	void FDX12DynamicRHI::FrameBegin()
 	{
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(DSVHeap->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle(DSVHeap->GetCPUDescriptorHandleForHeapStart());
 		GraphicsCommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsvHandle);
+		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
+		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	void FDX12DynamicRHI::DrawMesh(FMesh* MeshPtr)
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshPtr);
 
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get()); // need per frame?
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get()); // TODO: need per frame?
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CbvHandle);
 		GraphicsCommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		GraphicsCommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		GraphicsCommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
 		GraphicsCommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexNum, 1, 0, 0, 0);
-
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
@@ -624,9 +620,7 @@ namespace RHI
 
 		// Present the frame.
 		ThrowIfFailed(SwapChain->Present(1, 0));
-
 		WaitForPreviousFrame();
-
 		GraphicsCommandLists[0].Reset(PipelineStateArray);
 	}
 

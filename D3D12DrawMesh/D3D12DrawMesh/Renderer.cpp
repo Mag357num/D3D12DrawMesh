@@ -152,8 +152,6 @@ void Renderer::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
     GDynamicRHI->UpLoadConstantBuffer(ConstantBufferSize, ConstantBufferData, PCbvDataBegin);
 
     GDynamicRHI->SyncFrame();
-
-
 }
 
 void Renderer::OnUpdate()
