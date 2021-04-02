@@ -53,9 +53,7 @@ namespace RHI
 
 		/* new recognize */
 		static void CreateRHI();
-
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) = 0; // factory, device, command, swapchain,
-		
 		virtual void GetBackBufferIndex() = 0;
 
 		//update resource

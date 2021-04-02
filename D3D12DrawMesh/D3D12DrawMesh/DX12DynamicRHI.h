@@ -56,32 +56,32 @@ namespace RHI
 		~FDX12DynamicRHI() = default;
 
 		/* new recognize */
-		void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
+		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
 
-		virtual inline void GetBackBufferIndex() { BackFrameIndex = SwapChain->GetCurrentBackBufferIndex(); }
+		virtual inline void GetBackBufferIndex() override { BackFrameIndex = SwapChain->GetCurrentBackBufferIndex(); }
 
 		//update resource
-		void CreateVertexShader(LPCWSTR FileName) override;
-		void CreatePixelShader(LPCWSTR FileName) override;
-		void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
+		virtual void CreateVertexShader(LPCWSTR FileName) override;
+		virtual void CreatePixelShader(LPCWSTR FileName) override;
+		virtual void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
 		
 		// pipeline
-		void InitPipeLine() override;
+		virtual void InitPipeLine() override;
 		std::vector<FCommandListDx12> GraphicsCommandLists;
 		
 		// mesh
 		FMesh* CreateMesh(const std::string& BinFileName) override;
-		void UpLoadMesh(FMesh* Mesh) override;
-		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
+		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// draw
-		void WaitForPreviousFrame();
-		void DrawMesh(FMesh* MeshPtr) override;
+		virtual void DrawMesh(FMesh* MeshPtr) override;
 
 		// sync
-		void SyncFrame() override;
+		virtual void SyncFrame() override;
 
 	private:
+		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
+		void WaitForPreviousFrame();
 		void PopulateCommandList(FDX12Mesh* MeshPtr);
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& VertexBuffer,
 			ComPtr<ID3D12Resource>& VertexBufferUploadHeap, UINT VertexBufferSize, UINT VertexStride, UINT8* PVertData);
