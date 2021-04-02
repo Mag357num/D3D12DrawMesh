@@ -12,6 +12,8 @@ namespace RHI
 
 	struct FConstantBufferBase{};
 
+	struct FShader {};
+
 	struct FMesh
 	{
 		virtual void Init() {};

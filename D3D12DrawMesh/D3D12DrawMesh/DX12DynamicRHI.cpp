@@ -58,8 +58,8 @@ namespace RHI
 		this->ResoWidth = ResoWidth;
 		this->ResoHeight = ResoHeight;
 
-		CD3DX12_VIEWPORT Viewport(0.0f, 0.0f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight));
-		CD3DX12_RECT ScissorRect(0, 0, static_cast<LONG>(ResoWidth), static_cast<LONG>(ResoHeight));
+		Viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight));
+		ScissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(ResoWidth), static_cast<LONG>(ResoHeight));
 
 		CreateDevice(UseWarpDevice);
 		CreateCommandQueue();
@@ -73,9 +73,13 @@ namespace RHI
 		CreateDSVToHeaps(DepthStencil, DSVHeap, ResoWidth, ResoHeight);
 
 		// command
-		FCommandListDx12 CommandList;
-		CommandList.Create(Device);
-		GraphicsCommandLists.push_back(CommandList);
+		FCommandListDx12 DrawCommandList;
+		DrawCommandList.Create(Device);
+		GraphicsCommandLists.push_back(DrawCommandList);
+
+		FCommandListDx12 ResCommandList;
+		ResCommandList.Create(Device);
+		GraphicsCommandLists.push_back(ResCommandList);
 
 		//root signature
 		CreateDX12RootSignature();
@@ -101,7 +105,6 @@ namespace RHI
 			ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Allocators[i])));
 		}
 		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
-		CommandList->Close();
 	}
 
 	void FDX12DynamicRHI::UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin)
@@ -245,8 +248,8 @@ namespace RHI
 		VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// execute
-		ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
+		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, ComPtr<ID3D12Resource>& IndexBuffer, ComPtr<ID3D12Resource>& IndexBufferUploadHeap, UINT IndexBufferSize, UINT8* PIndData)
@@ -285,8 +288,8 @@ namespace RHI
 		IndexBufferView.SizeInBytes = IndexBufferSize;
 
 		// execute
-		ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
-		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		//ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
+		//CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	void FDX12DynamicRHI::CreateSwapChain(UINT FrameCount, UINT Width, UINT Height)
@@ -612,6 +615,11 @@ namespace RHI
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Mesh);
 		UpdateVertexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->VertexBuffer, VertexBufferUploadHeap, DX12Mesh->VertexBufferSize, DX12Mesh->VertexStride, DX12Mesh->PVertData);
 		UpdateIndexBuffer(GraphicsCommandLists[0].CommandList, DX12Mesh->IndexBuffer, IndexBufferUploadHeap, DX12Mesh->IndexBufferSize, DX12Mesh->PIndtData);
+		
+		CloseCommandList(GraphicsCommandLists[0].CommandList);
+		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
+		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
 	}
 
 	FMesh* FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
@@ -662,7 +670,9 @@ namespace RHI
 	{
 		// Record all the commands we need to render the scene into the command list.
 
-		PopulateCommandList(dynamic_cast<FDX12Mesh*>(MeshPtr));
+		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshPtr);
+
+		PopulateCommandList(DX12Mesh);
 
 		// Execute the command list.
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
@@ -676,22 +686,14 @@ namespace RHI
 
 	void FDX12DynamicRHI::WaitForPreviousFrame()
 	{
-		// WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
-		// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-		// sample illustrates how to use fences for efficient resource usage and to
-		// maximize GPU utilization.
+		const UINT64 fence = FenceValue; //m_fenceValue: CPU fence value
+		ThrowIfFailed(CommandQueue->Signal(Fence.Get(), fence)); // set a fence in GPU
+		FenceValue++;
 
-		// Signal and increment the fence value.
-		const UINT64 fence = FenceValueGPURHI; //m_fenceValue: CPU fence value
-		ThrowIfFailed(CommandQueue->Signal(FenceGPURHI.Get(), fence)); // set a fence in GPU
-		FenceValueGPURHI++;
-
-		// Wait until the previous frame is finished.
-		// GetCompletedValue(): get the fence index that GPU still in( regard GPU in a runways with many fence )
-		if (FenceGPURHI->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
+		if (Fence->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
 		{
-			ThrowIfFailed(FenceGPURHI->SetEventOnCompletion(fence, FenceEventGPURHI)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
-			WaitForSingleObject(FenceEventGPURHI, INFINITE); // CPU wait
+			ThrowIfFailed(Fence->SetEventOnCompletion(fence, FenceEvent)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
+			WaitForSingleObject(FenceEvent, INFINITE); // CPU wait
 		}
 
 		BackFrameIndex = SwapChain->GetCurrentBackBufferIndex();
@@ -699,12 +701,12 @@ namespace RHI
 
 	void FDX12DynamicRHI::SyncFrame()
 	{
-		CreateGPUFence(FenceGPURHI);
-		FenceValueGPURHI = 1;
+		CreateGPUFence(Fence);
+		FenceValue = 1;
 
 		// Create an event handle to use for frame synchronization.
-		FenceEventGPURHI = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		if (FenceEventGPURHI == nullptr)
+		FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		if (FenceEvent == nullptr)
 		{
 			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 		}

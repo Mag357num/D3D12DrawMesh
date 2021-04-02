@@ -57,11 +57,8 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
         hInstance,
         pSample);
 
-    // Initialize the sample. OnInit is defined in each child-implementation of DXSample.
     pSample->OnInit();
-
     MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
-
     LoadAssets(Chair, L"shaders.hlsl");
 
     ShowWindow(m_hwnd, nCmdShow);
@@ -136,15 +133,18 @@ void Renderer::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
     GetAssetsPath(assetsPath, _countof(assetsPath));
     std::wstring m_assetsPath = assetsPath + assetName;
 
+    // create mesh
     GDynamicRHI->CreateVertexShader(m_assetsPath.c_str());
     GDynamicRHI->CreatePixelShader(m_assetsPath.c_str());
 
-    GDynamicRHI->InitPipeLine(); // TODO: open interface to allow more param
+    // create pso
+    GDynamicRHI->InitPipeLine();
 
+    // upload mesh
     MeshPtr = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
     GDynamicRHI->UpLoadMesh(MeshPtr);
 
-    // Create the constant buffer.
+    // upload constantbuffer
     const UINT ConstantBufferSize = sizeof(FSceneConstantBuffer); // CB size is required to be 256-byte aligned.
     GDynamicRHI->UpLoadConstantBuffer(ConstantBufferSize, ConstantBufferData, PCbvDataBegin);
 

@@ -19,9 +19,7 @@ using namespace RHI;
 using RHI::GDynamicRHI;
 
 FDrawMesh::FDrawMesh(UINT Width, UINT Height, std::wstring Name) :
-	DXSample(Width, Height, Name),
-	Viewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height)),
-	ScissorRect(0, 0, static_cast<LONG>(Width), static_cast<LONG>(Height))
+	DXSample(Width, Height, Name)
 {
 }
 

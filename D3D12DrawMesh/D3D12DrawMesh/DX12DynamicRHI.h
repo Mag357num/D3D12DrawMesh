@@ -149,9 +149,9 @@ namespace RHI
 
 		// Synchronization objects.
 		UINT BackFrameIndex;
-		HANDLE FenceEventGPURHI;
-		UINT64 FenceValueGPURHI;
-		ComPtr<ID3D12Fence> FenceGPURHI;
+		HANDLE FenceEvent;
+		UINT64 FenceValue;
+		ComPtr<ID3D12Fence> Fence;
 
 		UINT ResoWidth;
 		UINT ResoHeight;

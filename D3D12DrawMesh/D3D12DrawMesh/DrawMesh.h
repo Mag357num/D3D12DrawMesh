@@ -48,8 +48,6 @@ public:
 private:
 	static const UINT BufferFrameCount = 2;
 
-	CD3DX12_VIEWPORT Viewport;
-	CD3DX12_RECT ScissorRect;
 	UINT IndexNum;
 	ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 	ComPtr<ID3D12Resource> IndexBufferUploadHeap;
