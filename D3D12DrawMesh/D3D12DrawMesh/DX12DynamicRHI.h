@@ -6,6 +6,32 @@ namespace RHI
 {
 	using namespace DirectX;
 
+	struct FDX12Shader : public FShader
+	{
+		ComPtr<ID3DBlob> Shader;
+	};
+
+	struct FCBData
+	{
+		XMFLOAT4X4 worldViewProj;
+		float padding[48]; // Padding so the constant buffer is 256-byte aligned.
+	};
+	static_assert((sizeof(FCBData) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+
+	struct FDX12CB : public FCB
+	{
+		ComPtr<ID3D12Resource> CBObj;
+		FCBData CBData;
+		UINT8* PDataBegin;
+	};
+
+	struct FDX12MeshRes : public FMeshRes
+	{
+		ComPtr<ID3D12PipelineState> PSObj;
+		ComPtr<ID3D12RootSignature> RootSignature;
+		FDX12CB CB;
+	};
+
 	struct FDX12Mesh : public FMesh
 	{
 		ComPtr<ID3D12Resource> VertexBuffer;
@@ -23,7 +49,7 @@ namespace RHI
 		//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
 
 		void Create(ComPtr<ID3D12Device> Device);
-		void Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray);
+		void Reset();
 	};
 
 	struct FDX12PSOInitializer : public FRHIPSOInitializer
@@ -59,31 +85,34 @@ namespace RHI
 		FDX12DynamicRHI();
 		~FDX12DynamicRHI() = default;
 
+		// init
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
-		virtual inline void GetBackBufferIndex() override { BackFrameIndex = SwapChain->GetCurrentBackBufferIndex(); }
-
-		//update resource
-		virtual void CreateVertexShader(LPCWSTR FileName) override;
-		virtual void CreatePixelShader(LPCWSTR FileName) override;
-		virtual void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) override;
-		
-		// pipeline
-		virtual void InitPipeLine() override;
 		std::vector<FCommandListDx12> GraphicsCommandLists;
+
+		// pso
+		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes) override;
 		
 		// mesh
 		FMesh* CreateMesh(const std::string& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
+		// mesh res
+		virtual FShader* CreateVertexShader(LPCWSTR FileName) override;
+		virtual FShader* CreatePixelShader(LPCWSTR FileName) override;
+		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
+		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) override;
+
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawMesh(FMesh* MeshPtr) override;
+		virtual void DrawScene(FScene Scene) override;
+		virtual void DrawActor(FActor* Actor) override;
 		virtual void FrameEnd() override;
 
 		// sync
 		virtual void SyncFrame() override;
 
 	private:
+		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
 		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
@@ -98,10 +127,9 @@ namespace RHI
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
-		ComPtr<ID3D12PipelineState> CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
-		void DX12UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize,
-			const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin);
-		void CreateDX12RootSignature();
+		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
+		void DX12UpdateConstantBuffer(FDX12MeshRes* DX12MeshRes, ComPtr<ID3D12DescriptorHeap>& Heap);
+		ComPtr<ID3D12RootSignature> CreateDX12RootSig_1CB_VS();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
 
@@ -110,12 +138,12 @@ namespace RHI
 		ComPtr<ID3D12Device> Device;
 		ComPtr<IDXGIFactory4> DxgiFactory;
 		ComPtr<IDXGIFactory4> Factory;
-		ComPtr<IDXGISwapChain3> SwapChain;
-		ComPtr<ID3D12CommandQueue> CommandQueue;
+		ComPtr<IDXGISwapChain3> RHISwapChain;
+		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
 		ComPtr<ID3D12Resource> RenderTargets[3]; // TODO: hard coding to 3
-		ComPtr<ID3D12RootSignature> RootSignature;
+		//ComPtr<ID3D12RootSignature> RootSignature;
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
@@ -128,9 +156,9 @@ namespace RHI
 
 		// may changes attributes
 		ComPtr<ID3D12Resource> DepthStencil;
-		ComPtr<ID3D12PipelineState> PipelineStateArray[10];
-		ComPtr<ID3D12Resource> ConstantBuffer;
-		ComPtr<ID3DBlob> VertexShader;
-		ComPtr<ID3DBlob> PixelShader;
+		//ComPtr<ID3D12PipelineState> PipelineStateArray[10];
+		//ComPtr<ID3D12Resource> ConstantBuffer;
+		//ComPtr<ID3DBlob> VertexShader;
+		//ComPtr<ID3DBlob> PixelShader;
 	};
 }

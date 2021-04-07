@@ -49,9 +49,6 @@ void FDrawMesh::OnInit()
 	float Aspect;
 	XMFLOAT4 Rotator;
 	ReadCameraBinary("SingleCameraBinary_.dat", Location, Dir, Fov, Aspect, Rotator);
-
-	//FDynamicRHI::CreateRHI();
-	//GDynamicRHI->RHIInit(m_useWarpDevice, BufferFrameCount, ResoWidth, ResoHeight);
 }
 
 

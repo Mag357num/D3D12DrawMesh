@@ -14,11 +14,13 @@
 
 using RHI::GDynamicRHI;
 using RHI::FMesh;
+using RHI::FScene;
+using RHI::FActor;
+using RHI::FMeshRes;
 
-static RHI::FMesh* Chair = nullptr;
+static RHI::FScene Scene = FScene();
 
 HWND Renderer::m_hwnd = nullptr;
-FSceneConstantBuffer Renderer::ConstantBufferData = {};
 UINT8* Renderer::PCbvDataBegin = nullptr;
 Camera Renderer::MainCamera = Camera();
 StepTimer Renderer::Timer = StepTimer();
@@ -61,11 +63,32 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
     pSample->OnInit();
 
+
+
+    // 1. init(command, swapchain, heaps)
 	RHI::FDynamicRHI::CreateRHI();
 	GDynamicRHI->RHIInit(false, 2, 1280, 720);
-
     MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
-    LoadAssets(Chair, L"shaders.hlsl");
+
+    // 2. load scene
+    Scene;
+
+    // 3. create actor( mesh + mesh resource )
+	FMesh* Mesh = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
+    GDynamicRHI->UpLoadMesh(Mesh);
+    FMeshRes* MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
+	FActor Actor;
+	Actor.Mesh = Mesh;
+	Actor.MeshRes = MeshRes;
+	Scene.Actors.push_back(Actor);
+	GDynamicRHI->SyncFrame();
+
+    // 4. draw scene
+    // code below
+
+
+
+
 
     ShowWindow(m_hwnd, nCmdShow);
 
@@ -120,8 +143,8 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         if (pSample)
         {
 			GDynamicRHI->FrameBegin();
-			OnUpdate();
-			RHI::GDynamicRHI->DrawMesh(Chair);
+			//OnUpdate();
+			RHI::GDynamicRHI->DrawScene(Scene);
 
             RHI::GDynamicRHI->FrameEnd();
         }
@@ -136,42 +159,18 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void Renderer::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
-{
-    WCHAR assetsPath[512];
-    GetAssetsPath(assetsPath, _countof(assetsPath));
-    std::wstring m_assetsPath = assetsPath + assetName;
-
-    // create mesh
-    GDynamicRHI->CreateVertexShader(m_assetsPath.c_str());
-    GDynamicRHI->CreatePixelShader(m_assetsPath.c_str());
-
-    // create pso
-    GDynamicRHI->InitPipeLine();
-
-    // upload mesh
-    MeshPtr = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
-    GDynamicRHI->UpLoadMesh(MeshPtr);
-
-    // upload constantbuffer
-    const UINT ConstantBufferSize = sizeof(FSceneConstantBuffer); // CB size is required to be 256-byte aligned.
-    GDynamicRHI->UpLoadConstantBuffer(ConstantBufferSize, ConstantBufferData, PCbvDataBegin);
-
-    GDynamicRHI->SyncFrame();
-}
-
 void Renderer::OnUpdate()
 {
-    Timer.Tick(NULL);
+ //   Timer.Tick(NULL);
 
-    MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
+ //   MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 
-    XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
-    XMMATRIX v = MainCamera.GetViewMatrix();
-	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280/720); // TODO: hard coding
-	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
+ //   XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
+ //   XMMATRIX v = MainCamera.GetViewMatrix();
+	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280/720); // TODO: hard coding
+	////XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
 
-    XMStoreFloat4x4(&ConstantBufferData.WorldViewProj, XMMatrixTranspose(m * v * p));
+ //   XMStoreFloat4x4(&ConstantBufferData.WorldViewProj, XMMatrixTranspose(m * v * p));
 
-    memcpy(PCbvDataBegin, &ConstantBufferData, sizeof(ConstantBufferData));
+ //   memcpy(PCbvDataBegin, &ConstantBufferData, sizeof(ConstantBufferData));
 }

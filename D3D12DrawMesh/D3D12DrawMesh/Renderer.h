@@ -23,13 +23,6 @@ using RHI::FMesh;
 
 class DXSample;
 
-struct FSceneConstantBuffer : public RHI::FConstantBufferBase
-{
-	XMFLOAT4X4 WorldViewProj;
-	float Padding[48]; // Padding so the constant buffer is 256-byte aligned.
-};
-static_assert((sizeof(FSceneConstantBuffer) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
-
 class Renderer
 {
 public:
@@ -38,12 +31,10 @@ public:
 
 protected:
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	static void LoadAssets(FMesh*& MeshPtr, std::wstring assetName);
 	static void OnUpdate();
 
 private:
 	static HWND m_hwnd;
-	static FSceneConstantBuffer ConstantBufferData;
 	static UINT8* PCbvDataBegin;
 	static StepTimer Timer;
 	static Camera MainCamera;

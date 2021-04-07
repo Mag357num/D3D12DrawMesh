@@ -7,12 +7,14 @@ namespace RHI
 
 	class FDynamicRHI;
 
-	/** A global pointer to the dynamically bound RHI implementation. */
 	extern FDynamicRHI* GDynamicRHI;
 
-	struct FConstantBufferBase{};
+	//struct FConstantBufferBase{};
 
-	struct FShader {};
+	struct FShader
+	{
+		virtual void Init() {};
+	};
 
 	struct FMesh
 	{
@@ -29,9 +31,29 @@ namespace RHI
 		int IndexNum;
 	};
 
+	struct FMeshRes
+	{
+		virtual void Init() {};
+	};
+
+	struct FActor
+	{
+		FMesh* Mesh;
+		FMeshRes* MeshRes;
+	};
+
+	struct FScene
+	{
+		std::vector<FActor> Actors;
+	};
+
 	struct FRHIPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
+	};
+
+	struct FCB
+	{
 	};
 
 	enum
@@ -43,6 +65,11 @@ namespace RHI
 		MAX_HEAP_DEPTHSTENCILS = 32,
 	};
 
+	enum class SHADER_FLAGS
+	{
+		CB1_SR0 = 1, // use 1 cb, 0 sr
+	};
+
 	class FDynamicRHI
 	{
 	public:
@@ -51,33 +78,30 @@ namespace RHI
 
 		static FDynamicRHI* DRHI;
 
-		/* new recognize */
+		// init
 		static void CreateRHI();
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) = 0; // factory, device, command, swapchain,
-		virtual void GetBackBufferIndex() = 0;
 
-		//update resource
-		virtual void UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin) = 0; // Up Load ConstantBufferView To Heap
-
-		// pipeline
-		virtual void InitPipeLine() = 0;
+		// pso
+		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
 
 		// mesh
-		virtual void CreateVertexShader(LPCWSTR FileName) = 0;
-		virtual void CreatePixelShader(LPCWSTR FileName) = 0;
 		virtual FMesh* CreateMesh(const std::string& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
+		// mesh res
+		virtual FShader* CreateVertexShader(LPCWSTR FileName) = 0;
+		virtual FShader* CreatePixelShader(LPCWSTR FileName) = 0;
+		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
+		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) = 0;
+
 		// draw
 		virtual void FrameBegin() = 0;
-		virtual void DrawMesh(FMesh* MeshPtr) = 0;
+		virtual void DrawScene(FScene Scene) = 0;
+		virtual void DrawActor(FActor* Actor) = 0;
 		virtual void FrameEnd() = 0;
 
 		// sync
 		virtual void SyncFrame() = 0;
-	public:
-
-	protected:
-		FRHIPSOInitializer* PsoInitializer;
 	};
 }

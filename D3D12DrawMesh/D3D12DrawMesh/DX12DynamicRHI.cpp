@@ -102,7 +102,7 @@ namespace RHI
 		D3D12_COMMAND_QUEUE_DESC QueueDesc = {};
 		QueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		QueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-		ThrowIfFailed(Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&CommandQueue)));
+		ThrowIfFailed(Device->CreateCommandQueue(&QueueDesc, IID_PPV_ARGS(&RHICommandQueue)));
 
 		//swapchain
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -114,18 +114,18 @@ namespace RHI
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.SampleDesc.Count = 1;
 
-		ComPtr<IDXGISwapChain1> swapChain;
+		ComPtr<IDXGISwapChain1> SwapChain;
 		ThrowIfFailed(Factory->CreateSwapChainForHwnd(
-			CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+			RHICommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
 			Renderer::GetHwnd(),
 			&swapChainDesc,
 			nullptr,
 			nullptr,
-			&swapChain
+			&SwapChain
 		));
 
 		ThrowIfFailed(Factory->MakeWindowAssociation(Renderer::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
-		ThrowIfFailed(swapChain.As(&SwapChain)); // convert different version of swapchain type
+		ThrowIfFailed(SwapChain.As(&RHISwapChain)); // convert different version of swapchain type
 		GetBackBufferIndex();
 
 		// heaps
@@ -140,24 +140,20 @@ namespace RHI
 		DrawCommandList.Create(Device);
 		GraphicsCommandLists.push_back(DrawCommandList);
 
+		// other things
 		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
 		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 
-		//root signature
-		CreateDX12RootSignature();
-
-		// pso initializer
-		PsoInitializer = new FDX12PSOInitializer();
 	}
 
-	void FCommandListDx12::Reset(ComPtr<ID3D12PipelineState>* PipelineStateArray)
+	void FCommandListDx12::Reset()
 	{
 		for (int i = 0; i < BUFFRING_NUM; i++)
 		{
 			ThrowIfFailed(Allocators[i]->Reset());
 		}
 
-		ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), PipelineStateArray[0].Get()));
+		ThrowIfFailed(CommandList->Reset(Allocators[0].Get(), NULL));
 	}
 
 	void FCommandListDx12::Create(ComPtr<ID3D12Device> Device)
@@ -169,18 +165,33 @@ namespace RHI
 		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
 	}
 
-	void FDX12DynamicRHI::UpLoadConstantBuffer(const UINT& CBSize, const FConstantBufferBase& CBData, UINT8*& PCbvDataBegin)
+	void FDX12DynamicRHI::CreateConstantBufferToMeshRes(FMeshRes* MeshRes)
 	{
-		DX12UpdateConstantBuffer(ConstantBuffer, CBSize, CBData, CBVSRVHeap, PCbvDataBegin);
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		DX12UpdateConstantBuffer(DX12MeshRes, CBVSRVHeap);
 	}
 
-	void FDX12DynamicRHI::InitPipeLine()
+	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
 	{
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		FDX12Shader* DX12VS = dynamic_cast<FDX12Shader*>(VS);
+		FDX12Shader* DX12PS = dynamic_cast<FDX12Shader*>(PS);
+
+		if (rootFlags == SHADER_FLAGS::CB1_SR0)
+		{
+			DX12MeshRes->RootSignature = CreateDX12RootSig_1CB_VS();
+		}
+		else
+		{
+			throw std::exception(" didnt assign rootsignature! ");
+		}
+
 		FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(*Dx12Initializer,
-			RootSignature.Get(), CD3DX12_SHADER_BYTECODE(VertexShader.Get()),
-			CD3DX12_SHADER_BYTECODE(PixelShader.Get()));
-		PipelineStateArray[0] = CreateGraphicsPipelineState(PsoDesc); // TODO: hard coding
+			DX12MeshRes->RootSignature.Get(), CD3DX12_SHADER_BYTECODE(DX12VS->Shader.Get()),
+			CD3DX12_SHADER_BYTECODE(DX12PS->Shader.Get()));
+
+		DX12MeshRes->PSObj = CreatePSO(PsoDesc);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -203,40 +214,40 @@ namespace RHI
 		ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&Factory)));
 	}
 
-	void FDX12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
+	void FDX12DynamicRHI::UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* Mesh)
 	{
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->VertexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(Mesh->VertexBufferSize),
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&FMeshPtr->VertexBuffer)));
+			IID_PPV_ARGS(&Mesh->VertexBuffer)));
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->VertexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(Mesh->VertexBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&FMeshPtr->VertexBufferUploadHeap)));
+			IID_PPV_ARGS(&Mesh->VertexBufferUploadHeap)));
 
-		NAME_D3D12_OBJECT(FMeshPtr->VertexBuffer);
+		NAME_D3D12_OBJECT(Mesh->VertexBuffer);
 
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the vertex buffer.
 		D3D12_SUBRESOURCE_DATA vertexData = {};
-		vertexData.pData = FMeshPtr->PVertData;
-		vertexData.RowPitch = FMeshPtr->VertexBufferSize;
+		vertexData.pData = Mesh->PVertData;
+		vertexData.RowPitch = Mesh->VertexBufferSize;
 		vertexData.SlicePitch = vertexData.RowPitch;
 
-		UpdateSubresources<1>(CommandList.Get(), FMeshPtr->VertexBuffer.Get(), FMeshPtr->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(FMeshPtr->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+		UpdateSubresources<1>(CommandList.Get(), Mesh->VertexBuffer.Get(), Mesh->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
+		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Mesh->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
 		// Initialize the vertex buffer view.
-		FMeshPtr->VertexBufferView.BufferLocation = FMeshPtr->VertexBuffer->GetGPUVirtualAddress();
-		FMeshPtr->VertexBufferView.StrideInBytes = FMeshPtr->VertexStride;
-		FMeshPtr->VertexBufferView.SizeInBytes = FMeshPtr->VertexBufferSize;
+		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
+		Mesh->VertexBufferView.StrideInBytes = Mesh->VertexStride;
+		Mesh->VertexBufferView.SizeInBytes = Mesh->VertexBufferSize;
 	}
 
 	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
@@ -290,7 +301,7 @@ namespace RHI
 
 		for (UINT n = 0; n < FrameCount; n++)
 		{
-			ThrowIfFailed(SwapChain->GetBuffer(n, IID_PPV_ARGS(&RenderTargets[n])));
+			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&RenderTargets[n])));
 			Device->CreateRenderTargetView(RenderTargets[n].Get(), nullptr, HeapsHandle);
 			HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		}
@@ -349,14 +360,41 @@ namespace RHI
 		return compileFlags;
 	}
 
-	void FDX12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
+	FMeshRes* FDX12DynamicRHI::CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags)
 	{
-		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &VertexShader, nullptr));
+		FMeshRes* MeshRes = new FDX12MeshRes();
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+
+		// 1. create pso
+		WCHAR assetsPath[512];
+		GetAssetsPath(assetsPath, _countof(assetsPath));
+		std::wstring m_assetsPath = assetsPath + FileName;
+		FShader* VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
+		FShader* PS = CreatePixelShader(m_assetsPath.c_str());
+		FRHIPSOInitializer* initializer = new FDX12PSOInitializer();
+		InitPipeLineToMeshRes(VS, PS, flags, initializer, MeshRes);
+		delete initializer;
+
+		// 2. create cb
+		CreateConstantBufferToMeshRes(MeshRes);
+
+		return MeshRes;
 	}
 
-	void FDX12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
+	FShader* FDX12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
 	{
-		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &PixelShader, nullptr));
+		FShader* Shader = new FDX12Shader();
+		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader);
+		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		return Shader;
+	}
+
+	FShader* FDX12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
+	{
+		FShader* Shader = new FDX12Shader();
+		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader);
+		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		return Shader;
 	}
 
 	D3D12_RASTERIZER_DESC FDX12DynamicRHI::CreateRasterizerStateDesc()
@@ -395,23 +433,26 @@ namespace RHI
 		return psoDesc;
 	}
 
-	ComPtr<ID3D12PipelineState> FDX12DynamicRHI::CreateGraphicsPipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
+	ComPtr<ID3D12PipelineState> FDX12DynamicRHI::CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
 	{
 		ComPtr<ID3D12PipelineState> PipelineState;
 		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&PipelineState)));
 		return PipelineState;
 	}
 
-	void FDX12DynamicRHI::DX12UpdateConstantBuffer(ComPtr<ID3D12Resource>& ConstantBuffer, const UINT& ConstantBufferSize,
-		const FConstantBufferBase& ConstantBufferData, ComPtr<ID3D12DescriptorHeap>& Heap, UINT8*& PCbvDataBegin)
+	void FDX12DynamicRHI::DX12UpdateConstantBuffer(FDX12MeshRes* DX12MeshRes, ComPtr<ID3D12DescriptorHeap>& Heap)
 	{
+		ComPtr<ID3D12Resource>& ConstantBuffer = DX12MeshRes->CB.CBObj;
+		UINT ConstantBufferSize = sizeof(FCBData);
+		UINT8* PCbvDataBegin = DX12MeshRes->CB.PDataBegin;
+		
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
 			&CD3DX12_RESOURCE_DESC::Buffer(ConstantBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&ConstantBuffer)));
+			IID_PPV_ARGS(&DX12MeshRes->CB.CBObj)));
 
 		NAME_D3D12_OBJECT(ConstantBuffer);
 
@@ -427,7 +468,7 @@ namespace RHI
 		// Map: resource give cpu the right to dynamic manipulate(memcpy) it, and forbid gpu to manipulate it, until Unmap occur.
 		// resource->Map(subresource, cpuReadRange, cpuVirtualAdress )
 		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&PCbvDataBegin)));
-		memcpy(PCbvDataBegin, &ConstantBufferData, ConstantBufferSize);
+		memcpy(PCbvDataBegin, &DX12MeshRes->CB.CBData, ConstantBufferSize);
 	}
 
 	_Use_decl_annotations_
@@ -495,8 +536,9 @@ namespace RHI
 		*ppAdapter = adapter.Detach();
 	}
 
-	void FDX12DynamicRHI::CreateDX12RootSignature()
+	ComPtr<ID3D12RootSignature> FDX12DynamicRHI::CreateDX12RootSig_1CB_VS()
 	{
+		ComPtr<ID3D12RootSignature> RootSignature;
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
 		ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
@@ -521,6 +563,7 @@ namespace RHI
 		ComPtr<ID3DBlob> Error;
 		ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
 		ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
+		return RootSignature;
 	}
 
 	void FDX12DynamicRHI::CreateGPUFence(ComPtr<ID3D12Fence>& Fence)
@@ -573,7 +616,7 @@ namespace RHI
 		
 		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
-		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		RHICommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
 	FMesh* FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
@@ -594,11 +637,21 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
-	void FDX12DynamicRHI::DrawMesh(FMesh* MeshPtr)
+	void FDX12DynamicRHI::DrawScene(FScene Scene)
 	{
-		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshPtr);
+		for (auto i : Scene.Actors)
+		{
+			DrawActor(&i);
+		}
+	}
 
-		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(RootSignature.Get()); // TODO: need per frame?
+	void FDX12DynamicRHI::DrawActor(FActor* Actor)
+	{
+		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Actor->Mesh);
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes);
+
+		GraphicsCommandLists[0].CommandList->SetPipelineState(DX12MeshRes->PSObj.Get());
+		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		GraphicsCommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(CBVSRVHeap->GetGPUDescriptorHandleForHeapStart());
@@ -616,18 +669,18 @@ namespace RHI
 		// Execute the command list.
 		GraphicsCommandLists[0].CommandList->Close();
 		ID3D12CommandList* ppCommandLists[] = { GraphicsCommandLists[0].CommandList.Get() };
-		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		RHICommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
 		// Present the frame.
-		ThrowIfFailed(SwapChain->Present(1, 0));
+		ThrowIfFailed(RHISwapChain->Present(1, 0));
 		WaitForPreviousFrame();
-		GraphicsCommandLists[0].Reset(PipelineStateArray);
+		GraphicsCommandLists[0].Reset();
 	}
 
 	void FDX12DynamicRHI::WaitForPreviousFrame()
 	{
 		const UINT64 fence = FenceValue; //m_fenceValue: CPU fence value
-		ThrowIfFailed(CommandQueue->Signal(Fence.Get(), fence)); // set a fence in GPU
+		ThrowIfFailed(RHICommandQueue->Signal(Fence.Get(), fence)); // set a fence in GPU
 		FenceValue++;
 
 		if (Fence->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
@@ -636,7 +689,7 @@ namespace RHI
 			WaitForSingleObject(FenceEvent, INFINITE); // CPU wait
 		}
 
-		BackFrameIndex = SwapChain->GetCurrentBackBufferIndex();
+		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
 	void FDX12DynamicRHI::SyncFrame()
@@ -651,7 +704,7 @@ namespace RHI
 			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 		}
 		WaitForPreviousFrame();
-		GraphicsCommandLists[0].Reset(PipelineStateArray);
+		GraphicsCommandLists[0].Reset();
 	}
 
 }
