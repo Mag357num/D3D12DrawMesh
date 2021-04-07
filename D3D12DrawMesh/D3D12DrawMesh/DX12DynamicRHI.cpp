@@ -139,11 +139,6 @@ namespace RHI
 		FCommandListDx12 DrawCommandList;
 		DrawCommandList.Create(Device);
 		GraphicsCommandLists.push_back(DrawCommandList);
-
-		// other things
-		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
-		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
-
 	}
 
 	void FCommandListDx12::Reset()
@@ -641,13 +636,14 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsvHandle);
 		GraphicsCommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		GraphicsCommandLists[0].CommandList->RSSetViewports(1, &Viewport);
+		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 	}
 
-	void FDX12DynamicRHI::DrawScene(FScene Scene, FCBData* wvp)
+	void FDX12DynamicRHI::DrawScene(FScene Scene)
 	{
 		for (auto i : Scene.Actors)
 		{
-			UpdateConstantBufferInMeshRes(i->MeshRes, wvp);
 			DrawActor(i);
 		}
 	}
@@ -721,5 +717,6 @@ namespace RHI
 		delete DX12MeshRes->PS;
 		delete DX12MeshRes;
 		delete Actor->Mesh;
+		delete Actor;
 	}
 }

@@ -22,8 +22,6 @@ namespace RHI
 	{
 		ComPtr<ID3D12PipelineState> PSObj;
 		ComPtr<ID3D12RootSignature> RootSignature;
-		FShader* VS;
-		FShader* PS;
 		FDX12CB CB;
 	};
 
@@ -100,7 +98,7 @@ namespace RHI
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawScene(FScene Scene, FCBData* wvp) override;
+		virtual void DrawScene(FScene Scene) override;
 		virtual void DrawActor(FActor* Actor) override;
 		virtual void FrameEnd() override;
 

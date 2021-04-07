@@ -3,6 +3,13 @@
 
 namespace RHI
 {
+	/*
+	* TODO:
+	1. 使用ComPtr、share_ptr解决内存泄露
+	2. *漫游系统重新搭建起来
+	3. *绘制场景
+	*/
+
 	using namespace DirectX;
 
 	class FDynamicRHI;
@@ -38,7 +45,12 @@ namespace RHI
 
 	struct FMeshRes
 	{
-		virtual void Init() {};
+		FMeshRes() : WorldTrans(XMMatrixTranslation(0.f, 0.f, 0.f)), VS(nullptr), PS(nullptr) {}
+		virtual void init() {};
+
+		XMMATRIX WorldTrans;
+		FShader* VS;
+		FShader* PS;
 	};
 
 	struct FActor
@@ -103,7 +115,7 @@ namespace RHI
 
 		// draw
 		virtual void FrameBegin() = 0;
-		virtual void DrawScene(FScene Scene, FCBData* wvp) = 0;
+		virtual void DrawScene(FScene Scene) = 0;
 		virtual void DrawActor(FActor* Actor) = 0;
 		virtual void FrameEnd() = 0;
 
