@@ -10,7 +10,7 @@
 //*********************************************************
 
 #include "stdafx.h"
-#include "DrawMesh.h"
+#include "DXSample.h"
 
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
