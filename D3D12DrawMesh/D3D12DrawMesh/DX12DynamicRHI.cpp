@@ -171,6 +171,12 @@ namespace RHI
 		DX12UpdateConstantBuffer(DX12MeshRes, CBVSRVHeap);
 	}
 
+	void FDX12DynamicRHI::UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data)
+	{
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		memcpy(DX12MeshRes->CB.PDataBegin, Data->BufferData, Data->BufferSize);
+	}
+
 	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
 	{
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
@@ -250,40 +256,40 @@ namespace RHI
 		Mesh->VertexBufferView.SizeInBytes = Mesh->VertexBufferSize;
 	}
 
-	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr)
+	void FDX12DynamicRHI::UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* Mesh)
 	{
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->IndexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(Mesh->IndexBufferSize),
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&FMeshPtr->IndexBuffer)));
+			IID_PPV_ARGS(&Mesh->IndexBuffer)));
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(FMeshPtr->IndexBufferSize),
+			&CD3DX12_RESOURCE_DESC::Buffer(Mesh->IndexBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&FMeshPtr->IndexBufferUploadHeap)));
+			IID_PPV_ARGS(&Mesh->IndexBufferUploadHeap)));
 
-		NAME_D3D12_OBJECT(FMeshPtr->IndexBuffer);
+		NAME_D3D12_OBJECT(Mesh->IndexBuffer);
 
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = FMeshPtr->PIndtData;
-		indexData.RowPitch = FMeshPtr->IndexBufferSize;
+		indexData.pData = Mesh->PIndtData;
+		indexData.RowPitch = Mesh->IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
-		UpdateSubresources<1>(CommandList.Get(), FMeshPtr->IndexBuffer.Get(), FMeshPtr->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(FMeshPtr->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+		UpdateSubresources<1>(CommandList.Get(), Mesh->IndexBuffer.Get(), Mesh->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
+		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Mesh->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
 		// Describe the index buffer view.
-		FMeshPtr->IndexBufferView.BufferLocation = FMeshPtr->IndexBuffer->GetGPUVirtualAddress();
-		FMeshPtr->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		FMeshPtr->IndexBufferView.SizeInBytes = FMeshPtr->IndexBufferSize;
+		Mesh->IndexBufferView.BufferLocation = Mesh->IndexBuffer->GetGPUVirtualAddress();
+		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		Mesh->IndexBufferView.SizeInBytes = Mesh->IndexBufferSize;
 	}
 
 	void FDX12DynamicRHI::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
@@ -443,9 +449,9 @@ namespace RHI
 	void FDX12DynamicRHI::DX12UpdateConstantBuffer(FDX12MeshRes* DX12MeshRes, ComPtr<ID3D12DescriptorHeap>& Heap)
 	{
 		ComPtr<ID3D12Resource>& ConstantBuffer = DX12MeshRes->CB.CBObj;
-		UINT ConstantBufferSize = sizeof(FCBData);
-		UINT8* PCbvDataBegin = DX12MeshRes->CB.PDataBegin;
-		
+		UINT8*& PCbvDataBegin = DX12MeshRes->CB.PDataBegin;
+		UINT ConstantBufferSize = DX12MeshRes->CB.CBData.BufferSize;
+
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,
@@ -637,11 +643,12 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->ClearDepthStencilView(DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
-	void FDX12DynamicRHI::DrawScene(FScene Scene)
+	void FDX12DynamicRHI::DrawScene(FScene Scene, FCBData* wvp)
 	{
 		for (auto i : Scene.Actors)
 		{
-			DrawActor(&i);
+			UpdateConstantBufferInMeshRes(i->MeshRes, wvp);
+			DrawActor(i);
 		}
 	}
 

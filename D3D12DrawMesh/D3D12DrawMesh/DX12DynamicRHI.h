@@ -11,12 +11,12 @@ namespace RHI
 		ComPtr<ID3DBlob> Shader;
 	};
 
-	struct FCBData
-	{
-		XMFLOAT4X4 worldViewProj;
-		float padding[48]; // Padding so the constant buffer is 256-byte aligned.
-	};
-	static_assert((sizeof(FCBData) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+	//struct FDX12CBData : public FCBData
+	//{
+	//	XMFLOAT4X4 worldViewProj;
+	//	float padding[46]; // Padding so the constant buffer is 256-byte aligned.
+	//};
+	//static_assert((sizeof(FDX12CBData) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
 
 	struct FDX12CB : public FCB
 	{
@@ -101,10 +101,11 @@ namespace RHI
 		virtual FShader* CreatePixelShader(LPCWSTR FileName) override;
 		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
 		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) override;
+		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawScene(FScene Scene) override;
+		virtual void DrawScene(FScene Scene, FCBData* wvp) override;
 		virtual void DrawActor(FActor* Actor) override;
 		virtual void FrameEnd() override;
 
@@ -143,7 +144,6 @@ namespace RHI
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
 		ComPtr<ID3D12Resource> RenderTargets[3]; // TODO: hard coding to 3
-		//ComPtr<ID3D12RootSignature> RootSignature;
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
@@ -156,9 +156,5 @@ namespace RHI
 
 		// may changes attributes
 		ComPtr<ID3D12Resource> DepthStencil;
-		//ComPtr<ID3D12PipelineState> PipelineStateArray[10];
-		//ComPtr<ID3D12Resource> ConstantBuffer;
-		//ComPtr<ID3DBlob> VertexShader;
-		//ComPtr<ID3DBlob> PixelShader;
 	};
 }

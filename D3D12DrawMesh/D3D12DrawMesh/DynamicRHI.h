@@ -9,7 +9,12 @@ namespace RHI
 
 	extern FDynamicRHI* GDynamicRHI;
 
-	//struct FConstantBufferBase{};
+	struct FCBData 
+	{
+		FCBData() : BufferData(nullptr), BufferSize(256) {};
+		void* BufferData;
+		UINT BufferSize;
+	};
 
 	struct FShader
 	{
@@ -44,7 +49,7 @@ namespace RHI
 
 	struct FScene
 	{
-		std::vector<FActor> Actors;
+		std::vector<FActor*> Actors;
 	};
 
 	struct FRHIPSOInitializer
@@ -94,10 +99,11 @@ namespace RHI
 		virtual FShader* CreatePixelShader(LPCWSTR FileName) = 0;
 		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
 		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) = 0;
+		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) = 0;
 
 		// draw
 		virtual void FrameBegin() = 0;
-		virtual void DrawScene(FScene Scene) = 0;
+		virtual void DrawScene(FScene Scene, FCBData* wvp) = 0;
 		virtual void DrawActor(FActor* Actor) = 0;
 		virtual void FrameEnd() = 0;
 

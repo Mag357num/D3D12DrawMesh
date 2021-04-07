@@ -26,8 +26,8 @@ public:
     virtual void OnDestroy() = 0;
 
     // Samples override the event handlers to handle specific messages.
-    virtual void OnKeyDown(UINT8 /*key*/)   {}
-    virtual void OnKeyUp(UINT8 /*key*/)     {}
+    virtual void OnKeyDown(UINT8 key)   {}
+    virtual void OnKeyUp(UINT8 key)     {}
 
     // Accessors.
     UINT GetWidth() const           { return ResoWidth; }
