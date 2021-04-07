@@ -64,8 +64,6 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
         hInstance,
         pSample);
 
-    pSample->OnInit();
-
     // 1. init(command, swapchain, heaps)
 	RHI::FDynamicRHI::CreateRHI();
 	GDynamicRHI->RHIInit(false, 2, Width, Height);
