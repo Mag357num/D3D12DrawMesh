@@ -66,11 +66,9 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 
     pSample->OnInit();
 
-
-
     // 1. init(command, swapchain, heaps)
 	RHI::FDynamicRHI::CreateRHI();
-	GDynamicRHI->RHIInit(false, 2, 1280, 720);
+	GDynamicRHI->RHIInit(false, 2, Width, Height);
     MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 
     // 2. load scene
@@ -144,6 +142,7 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         {
 			GDynamicRHI->FrameBegin();
 			OnUpdate();
+
             RHI::FCBData Data;
             Data.BufferData = reinterpret_cast<void*>(&WorldViewProj);
             Data.BufferSize = sizeof(WorldViewProj);
