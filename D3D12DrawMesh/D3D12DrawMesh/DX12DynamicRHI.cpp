@@ -650,7 +650,6 @@ namespace RHI
 		{
 			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 		}
-
 		WaitForPreviousFrame();
 		GraphicsCommandLists[0].Reset(PipelineStateArray);
 	}

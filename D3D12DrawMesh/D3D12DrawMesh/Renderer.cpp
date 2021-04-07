@@ -21,6 +21,8 @@ HWND Renderer::m_hwnd = nullptr;
 FSceneConstantBuffer Renderer::ConstantBufferData = {};
 UINT8* Renderer::PCbvDataBegin = nullptr;
 Camera Renderer::MainCamera = Camera();
+StepTimer Renderer::Timer = StepTimer();
+
 
 int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 {
@@ -58,6 +60,10 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
         pSample);
 
     pSample->OnInit();
+
+	RHI::FDynamicRHI::CreateRHI();
+	GDynamicRHI->RHIInit(false, 2, 1280, 720);
+
     MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
     LoadAssets(Chair, L"shaders.hlsl");
 
@@ -114,7 +120,7 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         if (pSample)
         {
 			GDynamicRHI->FrameBegin();
-			//pSample->OnUpdate();
+			OnUpdate();
 			RHI::GDynamicRHI->DrawMesh(Chair);
 
             RHI::GDynamicRHI->FrameEnd();
@@ -156,16 +162,16 @@ void Renderer::LoadAssets(FMesh*& MeshPtr, std::wstring assetName)
 
 void Renderer::OnUpdate()
 {
-    //Timer.Tick(NULL);
+    Timer.Tick(NULL);
 
-    //MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
+    MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 
-    //XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
-    //XMMATRIX v = MainCamera.GetViewMatrix();
-    //XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
+    XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
+    XMMATRIX v = MainCamera.GetViewMatrix();
+	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280/720); // TODO: hard coding
+	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
 
-    //// Compute the model-view-projection matrix.
-    //XMStoreFloat4x4(&ConstantBufferData.WorldViewProj, XMMatrixTranspose(m * v * p));
+    XMStoreFloat4x4(&ConstantBufferData.WorldViewProj, XMMatrixTranspose(m * v * p));
 
-    //memcpy(PCbvDataBegin, &ConstantBufferData, sizeof(ConstantBufferData));
+    memcpy(PCbvDataBegin, &ConstantBufferData, sizeof(ConstantBufferData));
 }
