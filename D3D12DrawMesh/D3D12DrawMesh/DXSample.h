@@ -13,6 +13,7 @@
 
 #include "DXSampleHelper.h"
 #include "Renderer.h"
+#include "SimpleCamera.h"
 
 class DXSample
 {
@@ -26,8 +27,15 @@ public:
     virtual void OnDestroy() = 0;
 
     // Samples override the event handlers to handle specific messages.
-    virtual void OnKeyDown(UINT8 key)   {}
-    virtual void OnKeyUp(UINT8 key)     {}
+    void OnKeyDown(UINT8 key, Camera Cam)
+    {
+        Cam.OnKeyUp(key);
+    }
+
+    void OnKeyUp(UINT8 key, Camera Cam)
+    {
+        Cam.OnKeyUp(key);
+    }
 
     // Accessors.
     UINT GetWidth() const           { return ResoWidth; }

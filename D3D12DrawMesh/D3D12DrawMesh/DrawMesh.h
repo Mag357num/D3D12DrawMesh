@@ -40,8 +40,6 @@ public:
 	void OnUpdate() override {};
 	void OnRender() override {};
 	void OnDestroy() override;
-	void OnKeyDown(UINT8 Key) override;
-	void OnKeyUp(UINT8 Key) override;
 
 	void ReadCameraBinary(const string& BinFileName, XMFLOAT3& Location, XMFLOAT3& Dir, float& Fov, float& Aspect, XMFLOAT4& Rotator);
 

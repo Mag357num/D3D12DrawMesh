@@ -128,14 +128,14 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
     case WM_KEYDOWN:
         if (pSample)
         {
-            pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            pSample->OnKeyDown(static_cast<UINT8>(wParam), MainCamera);
         }
         return 0;
 
     case WM_KEYUP:
         if (pSample)
         {
-            pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            pSample->OnKeyUp(static_cast<UINT8>(wParam), MainCamera);
         }
         return 0;
 
@@ -145,6 +145,7 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			GDynamicRHI->FrameBegin();
 
 			OnUpdate();
+
             RHI::FCBData Data;
             Data.BufferData = reinterpret_cast<void*>(&WorldViewProj);
             Data.BufferSize = sizeof(WorldViewProj);
@@ -171,7 +172,7 @@ void Renderer::OnUpdate()
 
     XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
     XMMATRIX v = MainCamera.GetViewMatrix();
-	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280/720); // TODO: hard coding
+	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280.f / 720.f); // TODO: hard coding
 	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
 
     XMStoreFloat4x4(&WorldViewProj, XMMatrixTranspose(m * v * p));

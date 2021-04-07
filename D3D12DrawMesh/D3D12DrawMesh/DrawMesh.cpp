@@ -60,13 +60,3 @@ void FDrawMesh::OnDestroy()
 
 	//CloseHandle(FenceEvent);
 }
-
-void FDrawMesh::OnKeyDown(UINT8 Key)
-{
-	//MainCamera.OnKeyDown(Key);
-}
-
-void FDrawMesh::OnKeyUp(UINT8 Key)
-{
-	//MainCamera.OnKeyUp(Key);
-}
