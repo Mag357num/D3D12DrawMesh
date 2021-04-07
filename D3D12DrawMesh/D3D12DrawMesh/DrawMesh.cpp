@@ -50,13 +50,3 @@ void FDrawMesh::OnInit()
 	XMFLOAT4 Rotator;
 	ReadCameraBinary("SingleCameraBinary_.dat", Location, Dir, Fov, Aspect, Rotator);
 }
-
-
-void FDrawMesh::OnDestroy()
-{
-	// Ensure that the GPU is no longer referencing resources that are about to be
-	// cleaned up by the destructor.
-	//WaitForPreviousFrame(); // TODO: Uncomment this
-
-	//CloseHandle(FenceEvent);
-}

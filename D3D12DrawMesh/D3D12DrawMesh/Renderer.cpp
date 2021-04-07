@@ -25,6 +25,9 @@ UINT8* Renderer::PCbvDataBegin = nullptr;
 Camera Renderer::MainCamera = Camera();
 StepTimer Renderer::Timer = StepTimer();
 XMFLOAT4X4 Renderer::WorldViewProj = XMFLOAT4X4();
+UINT Renderer::Width = 1280;
+UINT Renderer::Height = 720;
+float Renderer::AspectRatio = float(Width) / float(Height);
 
 int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 {
@@ -86,10 +89,6 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
     // 4. draw scene
     // code below
 
-
-
-
-
     ShowWindow(m_hwnd, nCmdShow);
 
     // Main sample loop.
@@ -104,7 +103,8 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
         }
     }
 
-    pSample->OnDestroy();
+    OnDestroy();
+    delete GDynamicRHI;
 
     // Return this part of the WM_QUIT message to Windows.
     return static_cast<char>(msg.wParam);
@@ -143,9 +143,7 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
         if (pSample)
         {
 			GDynamicRHI->FrameBegin();
-
 			OnUpdate();
-
             RHI::FCBData Data;
             Data.BufferData = reinterpret_cast<void*>(&WorldViewProj);
             Data.BufferSize = sizeof(WorldViewProj);
@@ -170,10 +168,16 @@ void Renderer::OnUpdate()
 
     MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 
-    XMMATRIX m = XMMatrixTranslation(0.f, 0.f, 0.f);
-    XMMATRIX v = MainCamera.GetViewMatrix();
-	XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, 1280.f / 720.f); // TODO: hard coding
-	//XMMATRIX p = MainCamera.GetProjectionMatrix(0.8f, m_aspectRatio);
+    XMMATRIX W = XMMatrixTranslation(0.f, 0.f, 0.f);
+    XMMATRIX V = MainCamera.GetViewMatrix();
+	XMMATRIX P = MainCamera.GetProjectionMatrix(0.8f, AspectRatio);
+    XMStoreFloat4x4(&WorldViewProj, XMMatrixTranspose(W * V * P));
+}
 
-    XMStoreFloat4x4(&WorldViewProj, XMMatrixTranspose(m * v * p));
+void Renderer::OnDestroy()
+{
+	for (auto i : Scene.Actors)
+	{
+        GDynamicRHI->ReleActor(i);
+	}
 }

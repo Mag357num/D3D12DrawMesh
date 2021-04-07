@@ -375,10 +375,10 @@ namespace RHI
 		WCHAR assetsPath[512];
 		GetAssetsPath(assetsPath, _countof(assetsPath));
 		std::wstring m_assetsPath = assetsPath + FileName;
-		FShader* VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
-		FShader* PS = CreatePixelShader(m_assetsPath.c_str());
+		DX12MeshRes->VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
+		DX12MeshRes->PS = CreatePixelShader(m_assetsPath.c_str());
 		FRHIPSOInitializer* initializer = new FDX12PSOInitializer();
-		InitPipeLineToMeshRes(VS, PS, flags, initializer, MeshRes);
+		InitPipeLineToMeshRes(DX12MeshRes->VS, DX12MeshRes->PS, flags, initializer, MeshRes);
 		delete initializer;
 
 		// 2. create cb
@@ -627,9 +627,9 @@ namespace RHI
 
 	FMesh* FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
 	{
-		FMesh* MeshPtr = new FDX12Mesh();
-		ReadStaticMeshBinary(BinFileName, MeshPtr->PVertData, MeshPtr->PIndtData, MeshPtr->VertexBufferSize, MeshPtr->VertexStride, MeshPtr->IndexBufferSize, MeshPtr->IndexNum);
-		return MeshPtr;
+		FMesh* Mesh = new FDX12Mesh();
+		ReadStaticMeshBinary(BinFileName, Mesh->PVertData, Mesh->PIndtData, Mesh->VertexBufferSize, Mesh->VertexStride, Mesh->IndexBufferSize, Mesh->IndexNum);
+		return Mesh;
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -713,5 +713,15 @@ namespace RHI
 		WaitForPreviousFrame();
 		GraphicsCommandLists[0].Reset();
 	}
+
+	void FDX12DynamicRHI::ReleActor(FActor* Actor)
+	{
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes);
+		delete DX12MeshRes->VS;
+		delete DX12MeshRes->PS;
+		delete DX12MeshRes;
+		delete Actor->Mesh;
+	}
+
 
 }

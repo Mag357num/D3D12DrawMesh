@@ -32,6 +32,7 @@ public:
 protected:
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static void OnUpdate();
+	static void OnDestroy();
 
 private:
 	static HWND m_hwnd;
@@ -39,4 +40,7 @@ private:
 	static StepTimer Timer;
 	static Camera MainCamera;
 	static XMFLOAT4X4 WorldViewProj;
+	static UINT Width;
+	static UINT Height;
+	static float AspectRatio;
 };

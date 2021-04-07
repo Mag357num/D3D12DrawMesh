@@ -109,5 +109,8 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() = 0;
+
+		// release
+		virtual void ReleActor(FActor* Actor) = 0;
 	};
 }

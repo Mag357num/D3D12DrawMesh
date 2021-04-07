@@ -39,7 +39,7 @@ public:
 	void OnInit() override;
 	void OnUpdate() override {};
 	void OnRender() override {};
-	void OnDestroy() override;
+	void OnDestroy() override {};
 
 	void ReadCameraBinary(const string& BinFileName, XMFLOAT3& Location, XMFLOAT3& Dir, float& Fov, float& Aspect, XMFLOAT4& Rotator);
 
@@ -49,5 +49,4 @@ private:
 	UINT IndexNum;
 	ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 	ComPtr<ID3D12Resource> IndexBufferUploadHeap;
-
 };

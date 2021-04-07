@@ -29,6 +29,8 @@ namespace RHI
 	{
 		ComPtr<ID3D12PipelineState> PSObj;
 		ComPtr<ID3D12RootSignature> RootSignature;
+		FShader* VS;
+		FShader* PS;
 		FDX12CB CB;
 	};
 
@@ -111,6 +113,9 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() override;
+
+		// release
+		virtual void ReleActor(FActor* Actor) override;
 
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
