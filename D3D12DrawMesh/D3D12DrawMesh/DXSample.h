@@ -21,10 +21,10 @@ public:
     DXSample(UINT width, UINT height, std::wstring name);
     ~DXSample();
 
-    void OnInit();
-    void OnUpdate();
-    void OnRender();
-    void OnDestroy();
+    void OnInit() {};
+    void OnUpdate() {};
+    void OnRender() {};
+    void OnDestroy() {};
 
     // Samples override the event handlers to handle specific messages.
     void OnKeyDown(UINT8 key, Camera Cam)
