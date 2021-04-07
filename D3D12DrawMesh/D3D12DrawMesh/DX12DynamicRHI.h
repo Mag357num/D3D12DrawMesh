@@ -11,13 +11,6 @@ namespace RHI
 		ComPtr<ID3DBlob> Shader;
 	};
 
-	//struct FDX12CBData : public FCBData
-	//{
-	//	XMFLOAT4X4 worldViewProj;
-	//	float padding[46]; // Padding so the constant buffer is 256-byte aligned.
-	//};
-	//static_assert((sizeof(FDX12CBData) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
-
 	struct FDX12CB : public FCB
 	{
 		ComPtr<ID3D12Resource> CBObj;

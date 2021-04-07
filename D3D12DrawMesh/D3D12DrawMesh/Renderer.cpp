@@ -158,7 +158,6 @@ void Renderer::OnUpdate()
     Timer.Tick(NULL);
 
     MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
-
     XMMATRIX W = XMMatrixTranslation(0.f, 0.f, 0.f);
     XMMATRIX V = MainCamera.GetViewMatrix();
 	XMMATRIX P = MainCamera.GetProjectionMatrix(0.8f, AspectRatio);
