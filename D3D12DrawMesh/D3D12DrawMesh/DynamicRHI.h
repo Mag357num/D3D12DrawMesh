@@ -9,11 +9,11 @@ namespace RHI
 {
 	/*
 	* TODO:
-	* 1. 贴图+采样器
-	* 2. 多线程
-	* 3. 漫游系统重新搭建起来, cb报错的问题
-	* 4. 绘制场景
-	* 5. blinn phone
+	* 1. 贴图+采样器(四月第二周)
+	* 2. 多线程(四月第二周)
+	* 3. 漫游系统重新搭建起来, cb报错的问题(四月第二周)
+	* 4. 绘制场景(四月第三周)
+	* 5. 灯(shadowMap) + blinn phone(四月第三周)
 	*/
 
 	using namespace DirectX;
