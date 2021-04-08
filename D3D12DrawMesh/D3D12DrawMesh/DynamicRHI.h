@@ -1,6 +1,10 @@
 #pragma once
 #include "stdafx.h"
 
+using std::shared_ptr;
+using std::make_shared;
+using std::dynamic_pointer_cast;
+
 namespace RHI
 {
 	/*
@@ -14,7 +18,7 @@ namespace RHI
 
 	class FDynamicRHI;
 
-	extern FDynamicRHI* GDynamicRHI;
+	extern shared_ptr<FDynamicRHI> GDynamicRHI;
 
 	struct FCBData 
 	{
@@ -49,22 +53,22 @@ namespace RHI
 		virtual void init() {};
 
 		XMMATRIX WorldTrans;
-		FShader* VS;
-		FShader* PS;
+		shared_ptr<FShader> VS;
+		shared_ptr<FShader> PS;
 	};
 
 	struct FActor
 	{
-		FMesh* Mesh;
-		FMeshRes* MeshRes;
+		shared_ptr<FMesh> Mesh;
+		shared_ptr<FMeshRes> MeshRes;
 	};
 
 	struct FScene
 	{
-		std::vector<FActor*> Actors;
+		std::vector< shared_ptr<FActor>> Actors;
 	};
 
-	struct FRHIPSOInitializer
+	struct FPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
 	};
@@ -100,16 +104,16 @@ namespace RHI
 		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) = 0; // factory, device, command, swapchain,
 
 		// pso
-		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
+		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
 
 		// mesh
-		virtual FMesh* CreateMesh(const std::string& BinFileName) = 0;
+		virtual shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		// mesh res
-		virtual FShader* CreateVertexShader(LPCWSTR FileName) = 0;
-		virtual FShader* CreatePixelShader(LPCWSTR FileName) = 0;
-		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
+		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) = 0;
+		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) = 0;
+		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
 		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) = 0;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) = 0;
 
@@ -122,7 +126,5 @@ namespace RHI
 		// sync
 		virtual void SyncFrame() = 0;
 
-		// release
-		virtual void ReleActor(FActor* Actor) = 0;
 	};
 }

@@ -172,7 +172,7 @@ namespace RHI
 		memcpy(DX12MeshRes->CB.PDataBegin, Data->BufferData, Data->BufferSize);
 	}
 
-	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
+	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
 	{
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
 		FDX12Shader* DX12VS = dynamic_cast<FDX12Shader*>(VS);
@@ -361,10 +361,10 @@ namespace RHI
 		return compileFlags;
 	}
 
-	FMeshRes* FDX12DynamicRHI::CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags)
+	shared_ptr<FMeshRes> FDX12DynamicRHI::CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags)
 	{
-		FMeshRes* MeshRes = new FDX12MeshRes();
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes.get());
 
 		// 1. create pso
 		WCHAR assetsPath[512];
@@ -372,28 +372,27 @@ namespace RHI
 		std::wstring m_assetsPath = assetsPath + FileName;
 		DX12MeshRes->VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
 		DX12MeshRes->PS = CreatePixelShader(m_assetsPath.c_str());
-		FRHIPSOInitializer* initializer = new FDX12PSOInitializer();
-		InitPipeLineToMeshRes(DX12MeshRes->VS, DX12MeshRes->PS, flags, initializer, MeshRes);
-		delete initializer;
+		shared_ptr<FPSOInitializer> initializer = make_shared<FDX12PSOInitializer>();
+		InitPipeLineToMeshRes(DX12MeshRes->VS.get(), DX12MeshRes->PS.get(), flags, initializer.get(), MeshRes.get());
 
 		// 2. create cb
-		CreateConstantBufferToMeshRes(MeshRes);
+		CreateConstantBufferToMeshRes(MeshRes.get());
 
 		return MeshRes;
 	}
 
-	FShader* FDX12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
+	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
 	{
-		FShader* Shader = new FDX12Shader();
-		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader);
+		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
+		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
 		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
 		return Shader;
 	}
 
-	FShader* FDX12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
+	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
 	{
-		FShader* Shader = new FDX12Shader();
-		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader);
+		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
+		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
 		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
 		return Shader;
 	}
@@ -620,9 +619,9 @@ namespace RHI
 		RHICommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	FMesh* FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
+	shared_ptr<FMesh> FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
 	{
-		FMesh* Mesh = new FDX12Mesh();
+		shared_ptr<FMesh> Mesh = make_shared<FDX12Mesh>();
 		ReadStaticMeshBinary(BinFileName, Mesh->PVertData, Mesh->PIndtData, Mesh->VertexBufferSize, Mesh->VertexStride, Mesh->IndexBufferSize, Mesh->IndexNum);
 		return Mesh;
 	}
@@ -644,14 +643,14 @@ namespace RHI
 	{
 		for (auto i : Scene.Actors)
 		{
-			DrawActor(i);
+			DrawActor(i.get());
 		}
 	}
 
 	void FDX12DynamicRHI::DrawActor(FActor* Actor)
 	{
-		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Actor->Mesh);
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes);
+		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Actor->Mesh.get());
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes.get());
 
 		GraphicsCommandLists[0].CommandList->SetPipelineState(DX12MeshRes->PSObj.Get());
 		GraphicsCommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
@@ -710,13 +709,4 @@ namespace RHI
 		GraphicsCommandLists[0].Reset();
 	}
 
-	void FDX12DynamicRHI::ReleActor(FActor* Actor)
-	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes);
-		delete DX12MeshRes->VS;
-		delete DX12MeshRes->PS;
-		delete DX12MeshRes;
-		delete Actor->Mesh;
-		delete Actor;
-	}
 }

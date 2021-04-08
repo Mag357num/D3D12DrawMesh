@@ -45,7 +45,7 @@ namespace RHI
 		void Reset();
 	};
 
-	struct FDX12PSOInitializer : public FRHIPSOInitializer
+	struct FDX12PSOInitializer : public FPSOInitializer
 	{
 	public:
 		FDX12PSOInitializer();
@@ -83,16 +83,16 @@ namespace RHI
 		std::vector<FCommandListDx12> GraphicsCommandLists;
 
 		// pso
-		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FRHIPSOInitializer* PsoInitializer, FMeshRes* MeshRes) override;
+		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) override;
 		
 		// mesh
-		FMesh* CreateMesh(const std::string& BinFileName) override;
+		shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// mesh res
-		virtual FShader* CreateVertexShader(LPCWSTR FileName) override;
-		virtual FShader* CreatePixelShader(LPCWSTR FileName) override;
-		virtual FMeshRes* CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
+		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) override;
+		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) override;
+		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
 		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) override;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
@@ -104,9 +104,6 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() override;
-
-		// release
-		virtual void ReleActor(FActor* Actor) override;
 
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }

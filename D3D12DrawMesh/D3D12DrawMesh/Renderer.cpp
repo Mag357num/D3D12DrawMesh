@@ -67,10 +67,10 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 	Scene;
 
 	// 3. create actor( mesh + mesh resource )
-	FMesh* Mesh = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
-	GDynamicRHI->UpLoadMesh(Mesh);
-	FMeshRes* MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
-	FActor* Actor = new FActor();
+	shared_ptr<FMesh> Mesh = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
+	GDynamicRHI->UpLoadMesh(Mesh.get());
+	shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
+	shared_ptr<FActor> Actor = make_shared<FActor>();
 	Actor->Mesh = Mesh;
 	Actor->MeshRes = MeshRes;
 	Scene.Actors.push_back(Actor);
@@ -94,7 +94,6 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 	}
 
 	OnDestroy();
-	delete GDynamicRHI;
 
 	// Return this part of the WM_QUIT message to Windows.
 	return static_cast<char>(msg.wParam);
@@ -142,7 +141,7 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
 				RHI::FCBData Data;
 				Data.BufferData = reinterpret_cast<void*>(&Wvp);
 				Data.BufferSize = sizeof(Wvp);
-				GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes, &Data);
+				GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes.get(), &Data);
 			}
 
 			GDynamicRHI->DrawScene(Scene);
@@ -171,8 +170,5 @@ void Renderer::UpdateView()
 
 void Renderer::OnDestroy()
 {
-	for (auto i : Scene.Actors)
-	{
-		GDynamicRHI->ReleActor(i);
-	}
+
 }
