@@ -9,9 +9,11 @@ namespace RHI
 {
 	/*
 	* TODO:
-	1. 使用ComPtr、share_ptr解决内存泄露
-	2. *漫游系统重新搭建起来
-	3. *绘制场景
+	* 1. 贴图+采样器
+	* 2. 多线程
+	* 3. 漫游系统重新搭建起来, cb报错的问题
+	* 4. 绘制场景
+	* 5. blinn phone
 	*/
 
 	using namespace DirectX;

@@ -22,7 +22,7 @@ namespace RHI
 	{
 		ComPtr<ID3D12PipelineState> PSObj;
 		ComPtr<ID3D12RootSignature> RootSignature;
-		FDX12CB CB;
+		FDX12CB CB;  // TODO: move the no-dx12 type into FCB
 	};
 
 	struct FDX12Mesh : public FMesh
