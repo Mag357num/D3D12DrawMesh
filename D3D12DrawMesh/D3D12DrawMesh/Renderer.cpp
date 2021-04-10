@@ -67,7 +67,7 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 	Scene;
 
 	// 3. create actor( mesh + mesh resource )
-	shared_ptr<FMesh> Mesh = GDynamicRHI->CreateMesh("StaticMeshBinary_.dat");
+	shared_ptr<FMesh> Mesh = GDynamicRHI->PrepareMeshData("StaticMeshBinary_.dat");
 	GDynamicRHI->UpLoadMesh(Mesh.get());
 	shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
 	shared_ptr<FActor> Actor = make_shared<FActor>();

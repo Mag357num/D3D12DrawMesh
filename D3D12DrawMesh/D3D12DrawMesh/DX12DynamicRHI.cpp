@@ -619,7 +619,7 @@ namespace RHI
 		RHICommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	shared_ptr<FMesh> FDX12DynamicRHI::CreateMesh(const std::string& BinFileName)
+	shared_ptr<FMesh> FDX12DynamicRHI::PrepareMeshData(const std::string& BinFileName)
 	{
 		shared_ptr<FMesh> Mesh = make_shared<FDX12Mesh>();
 		ReadStaticMeshBinary(BinFileName, Mesh->PVertData, Mesh->PIndtData, Mesh->VertexBufferSize, Mesh->VertexStride, Mesh->IndexBufferSize, Mesh->IndexNum);

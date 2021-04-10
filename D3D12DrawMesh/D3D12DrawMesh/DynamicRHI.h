@@ -9,11 +9,12 @@ namespace RHI
 {
 	/*
 	* TODO:
-	* 1. 贴图+采样器(四月第二周)
+	* 1. 贴图+采样器(四月第二周)<解决cb, 贴图, 采样器放在哪的问题>
 	* 2. 多线程(四月第二周)
 	* 3. 漫游系统重新搭建起来, cb报错的问题(四月第二周)
 	* 4. 绘制场景(四月第三周)
 	* 5. 灯(shadowMap) + blinn phone(四月第三周)
+	* 6. 设置多重缓冲
 	*/
 
 	using namespace DirectX;
@@ -109,7 +110,7 @@ namespace RHI
 		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
 
 		// mesh
-		virtual shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) = 0;
+		virtual shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		// mesh res

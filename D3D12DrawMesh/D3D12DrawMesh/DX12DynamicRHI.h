@@ -86,7 +86,7 @@ namespace RHI
 		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) override;
 		
 		// mesh
-		shared_ptr<FMesh> CreateMesh(const std::string& BinFileName) override;
+		shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// mesh res
