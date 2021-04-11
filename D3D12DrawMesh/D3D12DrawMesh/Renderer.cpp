@@ -30,6 +30,8 @@ UINT Renderer::Height = 720;
 DXSample* Renderer::Sample = nullptr;
 float Renderer::AspectRatio = float(Width) / float(Height);
 int Renderer::CmdShow = 0;
+HANDLE Renderer::RenderEvents[10];
+HANDLE Renderer::RenderThread;
 
 void Renderer::Init( DXSample* pSample, HINSTANCE hInstance, int nCmdShow )
 {
@@ -61,19 +63,44 @@ void Renderer::Init( DXSample* pSample, HINSTANCE hInstance, int nCmdShow )
 		nullptr,        // We aren't using menus.
 		hInstance,
 		Sample);
+
+	// create render events
+	CreateEvents();
+
+	// create render thread
+	RenderThread = CreateThread( // is better to use _beginthreadex for creating thread
+		NULL,              // default security
+		0,                 // default stack size
+		Render,        // name of the thread function
+		NULL,              // no thread parameters
+		0,                 // default startup flags
+		NULL );
 };
 
-int Renderer::Render()
+int Renderer::Run()
 {
 	// 1. init(command, swapchain, heaps)
 	RHI::FDynamicRHI::CreateRHI();
-	GDynamicRHI->RHIInit(false, 2, Width, Height);
-	MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
+	GDynamicRHI->RHIInit( false, 2, Width, Height );
+	MainCamera.Init( { 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 } );
 
-	// 2. load scene
-	Scene;
+	// 2. start render thread
+	SetEvent( RenderEvents[0] );
 
-	// 3. create actor( mesh + mesh resource )
+	// wait for thread to end
+	WaitForSingleObject( RenderThread, INFINITE );
+
+	return 1;
+}
+
+DWORD WINAPI Renderer::Render( LPVOID lpParam )
+{
+	// waiting for thread start
+	WaitForSingleObject( RenderEvents[0], INFINITE );
+
+	//TODO: 1. load scene
+
+	// 2. create actor( mesh + mesh resource )
 	shared_ptr<FMesh> Mesh = GDynamicRHI->PrepareMeshData("StaticMeshBinary_.dat");
 	GDynamicRHI->UpLoadMesh(Mesh.get());
 	shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
@@ -83,13 +110,9 @@ int Renderer::Render()
 	Scene.Actors.push_back(Actor);
 	GDynamicRHI->SyncFrame();
 
-	// 4. draw scene
-	// code below
-
+	// 3. draw scene
 	ShowWindow(m_hwnd, CmdShow);
-
-	// Main sample loop.
-	MSG msg = {};
+	MSG msg = {}; // Main sample loop.
 	while (msg.message != WM_QUIT)
 	{
 		// Process any messages in the queue.
@@ -100,6 +123,7 @@ int Renderer::Render()
 		}
 	}
 
+	// 4. destroy
 	OnDestroy();
 
 	// Return this part of the WM_QUIT message to Windows.
@@ -176,4 +200,21 @@ void Renderer::UpdateView()
 void Renderer::OnDestroy()
 {
 
+}
+
+void Renderer::CreateEvents()
+{
+	RenderEvents[0] = CreateEvent(
+		NULL,               // default security attributes
+		TRUE,               // manual-reset event
+		FALSE,              // initial state is nonsignaled
+		TEXT( "StartRenderThread" )  // object name
+	);
+
+	RenderEvents[1] = CreateEvent(
+		NULL,               // default security attributes
+		TRUE,               // manual-reset event
+		FALSE,              // initial state is nonsignaled
+		TEXT( "StartUpdateMesh" )  // object name
+	);
 }

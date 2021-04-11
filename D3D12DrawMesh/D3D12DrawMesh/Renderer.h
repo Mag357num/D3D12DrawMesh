@@ -27,13 +27,15 @@ class Renderer
 {
 public:
 	static void Init( DXSample* pSample, HINSTANCE hInstance, int nCmdShow );
-	static int Render();
+	static int Run();
+	static DWORD WINAPI Render( LPVOID lpParam );
 	static HWND GetHwnd() { return m_hwnd; }
 
 protected:
 	static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static void UpdateView();
 	static void OnDestroy();
+	static void CreateEvents();
 
 private:
 	static int CmdShow;
@@ -46,4 +48,8 @@ private:
 	static UINT Width;
 	static UINT Height;
 	static float AspectRatio;
+
+	// multi-thread
+	static HANDLE RenderEvents[10];
+	static HANDLE RenderThread;
 };

@@ -17,5 +17,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     DXSample sample(1280, 720, L"D3D12 Hello Triangle");
 	Renderer::Init( &sample, hInstance, nCmdShow );
-	return Renderer::Render();
+	return Renderer::Run();
 }
