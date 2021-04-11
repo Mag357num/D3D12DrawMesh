@@ -16,5 +16,6 @@ _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     DXSample sample(1280, 720, L"D3D12 Hello Triangle");
-    return Renderer::Run(&sample, hInstance, nCmdShow);
+	Renderer::Init( &sample, hInstance, nCmdShow );
+	return Renderer::Render();
 }

@@ -26,7 +26,8 @@ class DXSample;
 class Renderer
 {
 public:
-	static int Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow);
+	static void Init( DXSample* pSample, HINSTANCE hInstance, int nCmdShow );
+	static int Render();
 	static HWND GetHwnd() { return m_hwnd; }
 
 protected:
@@ -35,6 +36,8 @@ protected:
 	static void OnDestroy();
 
 private:
+	static int CmdShow;
+	static DXSample* Sample;
 	static HWND m_hwnd;
 	static UINT8* PCbvDataBegin;
 	static StepTimer Timer;

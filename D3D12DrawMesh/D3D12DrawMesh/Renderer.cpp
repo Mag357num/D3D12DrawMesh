@@ -27,27 +27,31 @@ StepTimer Renderer::Timer = StepTimer();
 XMMATRIX Renderer::ViewProj = XMMATRIX();
 UINT Renderer::Width = 1280;
 UINT Renderer::Height = 720;
+DXSample* Renderer::Sample = nullptr;
 float Renderer::AspectRatio = float(Width) / float(Height);
+int Renderer::CmdShow = 0;
 
-int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
+void Renderer::Init( DXSample* pSample, HINSTANCE hInstance, int nCmdShow )
 {
+	Sample = pSample;
+	CmdShow = nCmdShow;
 	// Initialize the window class.
 	WNDCLASSEX windowClass = { 0 };
-	windowClass.cbSize = sizeof(WNDCLASSEX);
+	windowClass.cbSize = sizeof( WNDCLASSEX );
 	windowClass.style = CS_HREDRAW | CS_VREDRAW;
 	windowClass.lpfnWndProc = WindowProc;
 	windowClass.hInstance = hInstance;
-	windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	windowClass.hCursor = LoadCursor( NULL, IDC_ARROW );
 	windowClass.lpszClassName = L"DXSampleClass";
-	RegisterClassEx(&windowClass);
+	RegisterClassEx( &windowClass );
 
-	RECT windowRect = { 0, 0, static_cast<LONG>(pSample->GetWidth()), static_cast<LONG>(pSample->GetHeight()) };
-	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+	RECT windowRect = { 0, 0, static_cast<LONG>(Sample->GetWidth()), static_cast<LONG>(Sample->GetHeight()) };
+	AdjustWindowRect( &windowRect, WS_OVERLAPPEDWINDOW, FALSE );
 
 	// Create the window and store a handle to it.
 	m_hwnd = CreateWindow(
 		windowClass.lpszClassName,
-		pSample->GetTitle(),
+		Sample->GetTitle(),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -56,8 +60,11 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 		nullptr,        // We have no parent window.
 		nullptr,        // We aren't using menus.
 		hInstance,
-		pSample);
+		Sample);
+};
 
+int Renderer::Render()
+{
 	// 1. init(command, swapchain, heaps)
 	RHI::FDynamicRHI::CreateRHI();
 	GDynamicRHI->RHIInit(false, 2, Width, Height);
@@ -79,7 +86,7 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 	// 4. draw scene
 	// code below
 
-	ShowWindow(m_hwnd, nCmdShow);
+	ShowWindow(m_hwnd, CmdShow);
 
 	// Main sample loop.
 	MSG msg = {};
@@ -102,8 +109,6 @@ int Renderer::Run(DXSample* pSample, HINSTANCE hInstance, int nCmdShow)
 // Main message handler for the sample.
 LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	DXSample* pSample = reinterpret_cast<DXSample*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
 	switch (message)
 	{
 	case WM_CREATE:
@@ -115,21 +120,21 @@ LRESULT CALLBACK Renderer::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LP
 	return 0;
 
 	case WM_KEYDOWN:
-		if (pSample)
+		if (Sample)
 		{
-			pSample->OnKeyDown(static_cast<UINT8>(wParam), MainCamera);
+			Sample->OnKeyDown(static_cast<UINT8>(wParam), MainCamera);
 		}
 		return 0;
 
 	case WM_KEYUP:
-		if (pSample)
+		if (Sample)
 		{
-			pSample->OnKeyUp(static_cast<UINT8>(wParam), MainCamera);
+			Sample->OnKeyUp(static_cast<UINT8>(wParam), MainCamera);
 		}
 		return 0;
 
 	case WM_PAINT:
-		if (pSample)
+		if (Sample)
 		{
 			GDynamicRHI->FrameBegin();
 
