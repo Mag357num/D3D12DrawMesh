@@ -70,9 +70,10 @@ void FEngine::OnInit()
 
 void FEngine::OnUpdate()
 {
-	//UpdateMainCamera();
-	//FRenderThread::Get()->WaitForRenderThread();
-	//FRenderThread::Get()->UpdateFrameResources(CurrentScene);
+	UpdateMainCamera();
+	FRenderThread::Get()->WaitForRenderThread();
+	FRenderThread::Get()->UpdateFrameResources();
+
 
 	//XMMATRIX VPMatrix = UpdateMainCamera();
 	//for (auto i : Scene.Actors)

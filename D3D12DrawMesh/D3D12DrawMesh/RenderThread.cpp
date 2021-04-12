@@ -46,34 +46,29 @@ void FRenderThread::CreateResourceForScene(shared_ptr<FScene> Scene)
 		});
 }
 
-void FRenderThread::UpdateFrameResources(shared_ptr<FScene> Scene)
+void FRenderThread::UpdateFrameResources()
 {
-	RENDER_THREAD([this, Scene]()
+	RENDER_THREAD([this]()
 		{
-			FrameResourceManager->UpdateFrameResources(Scene);
+			FrameResourceManager->UpdateFrameResources();
 		});
 }
 
 void FRenderThread::RenderScene()
 {
-	//RENDER_THREAD([this]()
-	//	{
-	//	auto& FrameResource = FrameResourceManager->FrameResources[RHI->GetFramIndex()];
-	//	FSimpleRenderer Renderer;
-	//	Renderer.RenderScene(RHI, &FrameResource);
-	//	RenderCV.notify_all();
-	//	});
+	RENDER_THREAD([this]()
+		{
+			//auto& FrameResource = FrameResourceManager->FrameResources[RHI->GetFramIndex()];
+			//FSimpleRenderer Renderer;
+			//Renderer.RenderScene(RHI, &FrameResource);
+			//--FrameTaskNum;
+			//RenderCV.notify_all();
+		});
 }
 
 void FRenderThread::WaitForRenderThread()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);
-
-	// TODO:
-	int a = 1; 
-	if (a != 1)
-	{
-		RenderCV.wait(Lock);
-	}
-	a++;
+	RenderCV.wait(Lock, [this]() { return FrameTaskNum < RHI::GDynamicRHI->GetFramCount(); });
+	++FrameTaskNum;
 }

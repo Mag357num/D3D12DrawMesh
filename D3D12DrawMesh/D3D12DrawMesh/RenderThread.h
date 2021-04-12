@@ -7,6 +7,7 @@ class FRenderThread : public FTaskThread
 	shared_ptr<class FFrameResourceManager> FrameResourceManager;
 	std::condition_variable RenderCV;
 	std::mutex RenderMutex;
+	std::atomic_int32_t FrameTaskNum = 0;
 
 public:
 	FRenderThread();
@@ -18,7 +19,7 @@ public:
 	static FRenderThread* Get();
 
 	void CreateResourceForScene(shared_ptr<class FScene> Scene);
-	void UpdateFrameResources(shared_ptr<class FScene> Scene);
+	void UpdateFrameResources();
 	void RenderScene();
 	void WaitForRenderThread();
 };

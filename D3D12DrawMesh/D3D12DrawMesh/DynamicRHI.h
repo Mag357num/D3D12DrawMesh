@@ -56,6 +56,8 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() = 0;
+		virtual UINT GetFramCount() = 0;
+		//virtual UINT GetFramIndex() = 0;
 
 	};
 }

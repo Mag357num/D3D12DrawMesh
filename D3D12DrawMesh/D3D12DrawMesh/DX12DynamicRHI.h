@@ -74,7 +74,8 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() override;
-
+		virtual UINT GetFramCount() override { return FrameCount; }
+		//virtual UINT GetFramIndex() override { return FrameIndex; }
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
 		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
@@ -119,5 +120,7 @@ namespace RHI
 
 		// may changes attributes
 		ComPtr<ID3D12Resource> DepthStencil;
+
+		static const UINT FrameCount = 1;
 	};
 }
