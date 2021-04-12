@@ -58,9 +58,6 @@ private:
     // Window title.
     std::wstring m_title;
 
-    // cam
-	FCamera MainCamera;
-
     // timer
     StepTimer Timer;
 

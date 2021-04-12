@@ -41,10 +41,9 @@ FEngine::~FEngine()
 
 void FEngine::OnInit()
 {
-	MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
-
 	// TODO: refactor here. read a bin file to load scene
 	CurrentScene = make_shared<FScene>();
+	CurrentScene->GetCurrentCamera().Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
 	FRenderThread::Get()->CreateResourceForScene(CurrentScene);
@@ -102,6 +101,7 @@ DirectX::XMMATRIX FEngine::UpdateViewProj()
 {
 	Timer.Tick(NULL);
 
+	FCamera& MainCamera = CurrentScene->GetCurrentCamera();
 	MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 	XMMATRIX V = MainCamera.GetViewMatrix();
 	XMMATRIX P = MainCamera.GetProjectionMatrix(0.8f, float(ResoWidth)/float(ResoHeight));
@@ -110,12 +110,12 @@ DirectX::XMMATRIX FEngine::UpdateViewProj()
 
 void FEngine::OnKeyDown(UINT8 Key)
 {
-	MainCamera.OnKeyDown(Key);
+	CurrentScene->GetCurrentCamera().OnKeyDown(Key);
 }
 
 void FEngine::OnKeyUp(UINT8 Key)
 {
-	MainCamera.OnKeyUp(Key);
+	CurrentScene->GetCurrentCamera().OnKeyUp(Key);
 }
 
 //// Helper function for resolving the full path of assets.
