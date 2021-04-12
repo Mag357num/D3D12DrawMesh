@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
+#include "FScene.h"
 
 namespace RHI
 {

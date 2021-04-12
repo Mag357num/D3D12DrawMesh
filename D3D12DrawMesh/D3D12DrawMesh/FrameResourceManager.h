@@ -1,22 +1,13 @@
 #pragma once
 #include "RHIResource.h"
+#include "FScene.h"
 #include "stdafx.h"
 
 using namespace RHI;
 
-struct FActorRenderResource
+struct FFrameResourceManager
 {
-	std::shared_ptr<FMesh> Mesh;
-	std::shared_ptr<FMeshRes> MeshRes;
-};
+	shared_ptr<FScene> Scene;
 
-struct FFrameResource
-{
-	std::vector<FActorRenderResource> ActorRenderResources;
-};
-
-class FFrameResourceManager
-{
-public:
-	std::vector<FFrameResource> FrameResources;
+	void CreateRenderResourcesForScene(shared_ptr<FScene> SceneParam);
 };

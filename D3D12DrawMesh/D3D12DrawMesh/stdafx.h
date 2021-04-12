@@ -44,4 +44,6 @@ using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
 using std::make_shared;
 using std::dynamic_pointer_cast;
+using std::vector;
+using std::string;
 using namespace DirectX;

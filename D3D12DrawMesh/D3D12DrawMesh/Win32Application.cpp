@@ -14,7 +14,7 @@
 
 HWND Win32Application::m_hwnd = nullptr;
 
-int Win32Application::Run(Engine* pEngine, HINSTANCE hInstance, int nCmdShow)
+int Win32Application::Run(FEngine* pEngine, HINSTANCE hInstance, int nCmdShow)
 {
     // Initialize the window class.
     WNDCLASSEX windowClass = { 0 };
@@ -69,7 +69,7 @@ int Win32Application::Run(Engine* pEngine, HINSTANCE hInstance, int nCmdShow)
 // Main message handler for the sample.
 LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    Engine* pSample = reinterpret_cast<Engine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    FEngine* pSample = reinterpret_cast<FEngine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message)
     {

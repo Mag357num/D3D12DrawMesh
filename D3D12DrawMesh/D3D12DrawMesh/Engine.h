@@ -15,12 +15,16 @@
 #include "SimpleCamera.h"
 #include "DynamicRHI.h"
 #include "StepTimer.h"
+#include "FScene.h"
 
-class Engine
+class FEngine;
+extern FEngine* GEngine;
+
+class FEngine
 {
 public:
-    Engine(UINT width, UINT height, std::wstring name);
-    virtual ~Engine();
+    FEngine(UINT width, UINT height, std::wstring name);
+    virtual ~FEngine();
 
     void OnInit();
     void OnUpdate();
@@ -55,11 +59,11 @@ private:
     std::wstring m_title;
 
     // cam
-	Camera MainCamera;
+	FCamera MainCamera;
 
     // timer
     StepTimer Timer;
 
     // scene
-    RHI::FScene Scene;
+	shared_ptr <FScene> CurrentScene;
 };

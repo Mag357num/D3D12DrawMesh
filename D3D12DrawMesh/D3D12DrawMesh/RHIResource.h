@@ -40,19 +40,14 @@ namespace RHI
 		virtual void init() {};
 
 		XMMATRIX WorldTrans;
-		std::shared_ptr<FShader> VS;
-		std::shared_ptr<FShader> PS;
+		shared_ptr<FShader> VS;
+		shared_ptr<FShader> PS;
 	};
 
-	struct FActor : public FRHIResource
+	struct FActor : public FRHIResource //TODO: Actor do not store mesh and res data, but the obj mesh index, and pos
 	{
-		std::shared_ptr<FMesh> Mesh;
-		std::shared_ptr<FMeshRes> MeshRes;
-	};
-
-	struct FScene : public FRHIResource
-	{
-		std::vector< std::shared_ptr<FActor>> Actors;
+		shared_ptr<FMesh> Mesh;
+		shared_ptr<FMeshRes> MeshRes;
 	};
 
 	struct FPSOInitializer

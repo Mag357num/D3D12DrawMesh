@@ -12,6 +12,7 @@
 #include "stdafx.h"
 #include "Engine.h"
 #include "DynamicRHI.h"
+#include "RenderThread.h"
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
@@ -19,69 +20,85 @@ using RHI::FMesh;
 using RHI::FMeshRes;
 using RHI::FActor;
 
-Engine::Engine(UINT width, UINT height, std::wstring name) :
+FEngine* GEngine = nullptr;
+
+FEngine::FEngine(UINT width, UINT height, std::wstring name) :
     ResoWidth(width),
     ResoHeight(height),
     m_title(name),
     m_useWarpDevice(false)
 {
+	GEngine = this;
     WCHAR assetsPath[512];
     GetAssetsPath(assetsPath, _countof(assetsPath));
     m_assetsPath = assetsPath;
     m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 }
 
-Engine::~Engine()
+FEngine::~FEngine()
 {
 }
 
-void Engine::OnInit()
+void FEngine::OnInit()
 {
-	// 1. init(command, swapchain, heaps)
-	RHI::FDynamicRHI::CreateRHI();
-	GDynamicRHI->RHIInit(false, 2, ResoWidth, ResoHeight);
 	MainCamera.Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 
-	// 2. load res
-	shared_ptr<FMesh> Mesh = GDynamicRHI->PrepareMeshData("StaticMeshBinary_.dat");
-	GDynamicRHI->UpLoadMesh(Mesh.get());
-	shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
-	shared_ptr<FActor> Actor = make_shared<FActor>();
-	Actor->Mesh = Mesh;
-	Actor->MeshRes = MeshRes;
-	Scene.Actors.push_back(Actor);
+	// TODO: refactor here. read a bin file to load scene
+	CurrentScene = make_shared<FScene>();
+	FRenderThread::CreateRenderThread();
+	FRenderThread::Get()->Start();
+	FRenderThread::Get()->CreateResourceForScene(CurrentScene);
+
+	//// 1. init(command, swapchain, heaps)
+	//RHI::FDynamicRHI::CreateRHI();
+	//GDynamicRHI->RHIInit(false, 2, ResoWidth, ResoHeight);
+
+	//// 2. load res
+	//shared_ptr<FMesh> Mesh = GDynamicRHI->PrepareMeshData("StaticMeshBinary_.dat");
+	//GDynamicRHI->UpLoadMesh(Mesh.get());
+	//shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
+	//shared_ptr<FActor> Actor = make_shared<FActor>();
+	//Actor->Mesh = Mesh;
+	//Actor->MeshRes = MeshRes;
+	//Scene.Actors.push_back(Actor);
+
+	// 3. check whether or not GPU catch up CPU
 	GDynamicRHI->SyncFrame();
 
-	// 3. start render thread
 }
 
-void Engine::OnUpdate()
+void FEngine::OnUpdate()
 {
-	XMMATRIX VPMatrix = UpdateViewProj();
-	for (auto i : Scene.Actors)
-	{
-		XMFLOAT4X4 Wvp;
-		XMStoreFloat4x4(&Wvp, XMMatrixTranspose(i->MeshRes->WorldTrans * VPMatrix));
-		RHI::FCBData Data;
-		Data.BufferData = reinterpret_cast<void*>(&Wvp);
-		Data.BufferSize = sizeof(Wvp);
-		GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes.get(), &Data);
-	}
+	//XMMATRIX VPMatrix = UpdateViewProj();
+
+	//FRenderThread::Get()->WaitForRenderThread();
+	//FRenderThread::Get()->UpdateFrameResources(CurrentScene);
+
+	//XMMATRIX VPMatrix = UpdateViewProj();
+	//for (auto i : Scene.Actors)
+	//{
+	//	XMFLOAT4X4 Wvp;
+	//	XMStoreFloat4x4(&Wvp, XMMatrixTranspose(i->MeshRes->WorldTrans * VPMatrix));
+	//	RHI::FCBData Data;
+	//	Data.BufferData = reinterpret_cast<void*>(&Wvp);
+	//	Data.BufferSize = sizeof(Wvp);
+	//	GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes.get(), &Data);
+	//}
 }
 
-void Engine::OnRender()
+void FEngine::OnRender()
 {
-	GDynamicRHI->FrameBegin();
-	GDynamicRHI->DrawScene(Scene);
-	GDynamicRHI->FrameEnd();
+	//GDynamicRHI->FrameBegin();
+	//GDynamicRHI->DrawScene(Scene);
+	//GDynamicRHI->FrameEnd();
 }
 
-void Engine::OnDestroy()
+void FEngine::OnDestroy()
 {
 
 }
 
-DirectX::XMMATRIX Engine::UpdateViewProj()
+DirectX::XMMATRIX FEngine::UpdateViewProj()
 {
 	Timer.Tick(NULL);
 
@@ -91,12 +108,12 @@ DirectX::XMMATRIX Engine::UpdateViewProj()
 	return V * P;
 }
 
-void Engine::OnKeyDown(UINT8 Key)
+void FEngine::OnKeyDown(UINT8 Key)
 {
 	MainCamera.OnKeyDown(Key);
 }
 
-void Engine::OnKeyUp(UINT8 Key)
+void FEngine::OnKeyUp(UINT8 Key)
 {
 	MainCamera.OnKeyUp(Key);
 }

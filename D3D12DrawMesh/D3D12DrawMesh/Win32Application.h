@@ -13,12 +13,12 @@
 
 #include "Engine.h"
 
-class Engine;
+class FEngine;
 
 class Win32Application
 {
 public:
-    static int Run(Engine* pSample, HINSTANCE hInstance, int nCmdShow);
+    static int Run(FEngine* pSample, HINSTANCE hInstance, int nCmdShow);
     static HWND GetHwnd() { return m_hwnd; }
 
 protected:

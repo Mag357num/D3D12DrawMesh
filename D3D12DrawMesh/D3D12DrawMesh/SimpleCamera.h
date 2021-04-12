@@ -13,10 +13,10 @@
 
 using namespace DirectX;
 
-class Camera
+class FCamera
 {
 public:
-	Camera();
+	FCamera();
 
 	void		Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt);
 	void		Update(const float& ElapsedSeconds);

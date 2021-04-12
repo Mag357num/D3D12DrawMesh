@@ -14,7 +14,7 @@
 #include <cmath>
 #include "MathExtend.h"
 
-Camera::Camera():
+FCamera::FCamera():
 	InitialPosition(500, 0, 0),
 	Position(InitialPosition),
 	Yaw(XM_PI),
@@ -27,13 +27,13 @@ Camera::Camera():
 {
 }
 
-void Camera::GetEulerByLook(const XMFLOAT3& lookAt)
+void FCamera::GetEulerByLook(const XMFLOAT3& lookAt)
 {
 	Yaw = Atan2(lookAt.y, lookAt.x);
 	Pitch = Atan2(lookAt.z, sqrt(lookAt.x * lookAt.x + lookAt.y * lookAt.y));
 }
 
-void Camera::GetLookByEuler(const float& pitch, const float& yaw)
+void FCamera::GetLookByEuler(const float& pitch, const float& yaw)
 {
 	LookDirection.x = cosf(pitch) * cosf(yaw);
 	LookDirection.y = cosf(pitch) * sinf(yaw);
@@ -44,7 +44,7 @@ void Camera::GetLookByEuler(const float& pitch, const float& yaw)
 	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0;
 }
 
-void Camera::Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt)
+void FCamera::Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt)
 {
 	InitialPosition = position;
 	InitialUpDir = upDir;
@@ -58,17 +58,17 @@ void Camera::Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT
 	GetEulerByLook(lookAt);
 }
 
-void Camera::SetMoveSpeed(const float & UnitsPerSecond)
+void FCamera::SetMoveSpeed(const float & UnitsPerSecond)
 {
 	MoveSpeed = UnitsPerSecond;
 }
 
-void Camera::SetTurnSpeed(const float& RadiansPerSecond)
+void FCamera::SetTurnSpeed(const float& RadiansPerSecond)
 {
 	TurnSpeed = RadiansPerSecond;
 }
 
-void Camera::Reset()
+void FCamera::Reset()
 {
 	Position = InitialPosition;
 	UpDirection = InitialUpDir;
@@ -77,7 +77,7 @@ void Camera::Reset()
 	GetEulerByLook(LookDirection);
 }
 
-void Camera::Update(const float& ElapsedSeconds)
+void FCamera::Update(const float& ElapsedSeconds)
 {
 	XMFLOAT3 move(0, 0, 0);
 	float moveInterval = MoveSpeed * ElapsedSeconds;
@@ -112,17 +112,17 @@ void Camera::Update(const float& ElapsedSeconds)
 	GetLookByEuler(Pitch, Yaw);
 }
 
-XMMATRIX Camera::GetViewMatrix()
+XMMATRIX FCamera::GetViewMatrix()
 {
 	return XMMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
 }
 
-XMMATRIX Camera::GetProjectionMatrix(const float& fov, const float& aspectRatio, const float& nearPlane, const float& farPlane)
+XMMATRIX FCamera::GetProjectionMatrix(const float& fov, const float& aspectRatio, const float& nearPlane, const float& farPlane)
 {
 	return XMMatrixPerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
 }
 
-void Camera::OnKeyDown(const WPARAM& key)
+void FCamera::OnKeyDown(const WPARAM& key)
 {
 	switch (key)
 	{
@@ -162,7 +162,7 @@ void Camera::OnKeyDown(const WPARAM& key)
 	}
 }
 
-void Camera::OnKeyUp(const WPARAM& key)
+void FCamera::OnKeyUp(const WPARAM& key)
 {
 	switch (key)
 	{
