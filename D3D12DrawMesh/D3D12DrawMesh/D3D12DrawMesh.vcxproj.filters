@@ -54,6 +54,15 @@
     <ClInclude Include="Types.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FrameResourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RHIResource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

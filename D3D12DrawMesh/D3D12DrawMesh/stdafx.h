@@ -41,4 +41,7 @@
 #include "string.h"
 #include "Types.h"
 using Microsoft::WRL::ComPtr;
-
+using std::shared_ptr;
+using std::make_shared;
+using std::dynamic_pointer_cast;
+using namespace DirectX;

@@ -21,11 +21,14 @@
   <ItemGroup>
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DX12DynamicRHI.h" />
+    <ClInclude Include="DX12Resource.h" />
     <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="DynamicRHI.h" />
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="FrameResourceManager.h" />
     <ClInclude Include="MathExtend.h" />
     <ClInclude Include="RenderThread.h" />
+    <ClInclude Include="RHIResource.h" />
     <ClInclude Include="SimpleCamera.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
