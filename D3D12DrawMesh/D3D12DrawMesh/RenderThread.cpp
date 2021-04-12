@@ -14,7 +14,6 @@ void FRenderThread::Run()
 {
 	RHI::GDynamicRHI->CreateRHI();
 	RHI::GDynamicRHI->RHIInit(false, 2, GEngine->GetWidth(), GEngine->GetHeight());
-
 	FTaskThread::Run();
 }
 

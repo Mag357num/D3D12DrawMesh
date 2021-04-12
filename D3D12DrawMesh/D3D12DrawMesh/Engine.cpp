@@ -63,8 +63,8 @@ void FEngine::OnInit()
 	//Actor->MeshRes = MeshRes;
 	//Scene.Actors.push_back(Actor);
 
-	// 3. check whether or not GPU catch up CPU
-	GDynamicRHI->SyncFrame();
+	//// 3. check whether or not GPU catch up CPU
+	//GDynamicRHI->SyncFrame();
 
 }
 
