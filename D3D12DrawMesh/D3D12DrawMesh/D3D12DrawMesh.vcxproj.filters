@@ -18,9 +18,6 @@
     <ClInclude Include="d3dx12.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DXSample.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="DXSampleHelper.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -39,17 +36,26 @@
     <ClInclude Include="DynamicRHI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer.h">
+    <ClInclude Include="DX12DynamicRHI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DX12DynamicRHI.h">
+    <ClInclude Include="Win32Application.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DXSample.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -59,10 +65,19 @@
     <ClCompile Include="DynamicRHI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp">
+    <ClCompile Include="DX12DynamicRHI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="DX12DynamicRHI.cpp">
+    <ClCompile Include="Win32Application.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderThread.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

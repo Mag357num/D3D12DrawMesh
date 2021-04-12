@@ -7,16 +7,6 @@ using std::dynamic_pointer_cast;
 
 namespace RHI
 {
-	/*
-	* TODO:
-	* 1. 贴图+采样器(四月第二周)<解决cb, 贴图, 采样器放在哪的问题>
-	* 2. 多线程(四月第二周)
-	* 3. 漫游系统重新搭建起来, cb报错的问题(四月第二周)
-	* 4. 绘制场景(四月第三周)
-	* 5. 灯(shadowMap) + blinn phone(四月第三周)
-	* 6. 设置多重缓冲
-	*/
-
 	using namespace DirectX;
 
 	class FDynamicRHI;

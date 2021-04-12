@@ -21,22 +21,27 @@
   <ItemGroup>
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DX12DynamicRHI.h" />
-    <ClInclude Include="DXSample.h" />
     <ClInclude Include="DXSampleHelper.h" />
     <ClInclude Include="DynamicRHI.h" />
+    <ClInclude Include="Engine.h" />
     <ClInclude Include="MathExtend.h" />
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RenderThread.h" />
     <ClInclude Include="SimpleCamera.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="Types.h" />
+    <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DX12DynamicRHI.cpp" />
-    <ClCompile Include="DXSample.cpp" />
     <ClCompile Include="DynamicRHI.cpp" />
+    <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
+    <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

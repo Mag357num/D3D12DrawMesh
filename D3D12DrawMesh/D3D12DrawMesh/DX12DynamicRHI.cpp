@@ -1,7 +1,7 @@
 #include "DX12DynamicRHI.h"
 #include "DXSampleHelper.h"
-#include "Renderer.h"
 #include "dxgidebug.h"
+#include "Win32Application.h"
 
 namespace RHI
 {
@@ -117,14 +117,14 @@ namespace RHI
 		ComPtr<IDXGISwapChain1> SwapChain;
 		ThrowIfFailed(Factory->CreateSwapChainForHwnd(
 			RHICommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-			Renderer::GetHwnd(),
+			Win32Application::GetHwnd(),
 			&swapChainDesc,
 			nullptr,
 			nullptr,
 			&SwapChain
 		));
 
-		ThrowIfFailed(Factory->MakeWindowAssociation(Renderer::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
+		ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 		ThrowIfFailed(SwapChain.As(&RHISwapChain)); // convert different version of swapchain type
 		GetBackBufferIndex();
 

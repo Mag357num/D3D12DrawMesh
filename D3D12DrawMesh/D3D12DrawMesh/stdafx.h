@@ -39,6 +39,6 @@
 #include "assert.h" 
 
 #include "string.h"
-
+#include "Types.h"
 using Microsoft::WRL::ComPtr;
 

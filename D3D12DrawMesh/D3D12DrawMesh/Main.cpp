@@ -10,11 +10,12 @@
 //*********************************************************
 
 #include "stdafx.h"
-#include "DXSample.h"
+#include "Engine.h"
+#include "Win32Application.h"
 
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-    DXSample sample(1280, 720, L"D3D12 Hello Triangle");
-    return Renderer::Run(&sample, hInstance, nCmdShow);
+    Engine sample(1280, 720, L"D3D12 Hello Triangle");
+    return Win32Application::Run(&sample, hInstance, nCmdShow);
 }

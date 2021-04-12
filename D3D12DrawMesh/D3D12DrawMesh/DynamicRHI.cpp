@@ -1,6 +1,5 @@
 #include "DynamicRHI.h"
 #include "DXSampleHelper.h"
-#include "Renderer.h"
 #include "DX12DynamicRHI.h"
 
 using namespace RHI;
