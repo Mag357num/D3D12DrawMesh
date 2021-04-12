@@ -21,7 +21,7 @@ public:
 	void		Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt);
 	void		Update(const float& ElapsedSeconds);
 	XMMATRIX	GetViewMatrix();
-	XMMATRIX	GetProjectionMatrix(const float& fov, const float& aspectRatio, const float& nearPlane = 1.0f, const float& farPlane = 1000.0f);
+	XMMATRIX	GetProjectionMatrix(const float& nearPlane = 1.0f, const float& farPlane = 1000.0f);
 	void		SetMoveSpeed(const float & UnitsPerSecond);
 	void		SetTurnSpeed(const float& RadiansPerSecond);
 
@@ -30,6 +30,9 @@ public:
 
 	void		GetEulerByLook(const XMFLOAT3& lookAt);
 	void		GetLookByEuler(const float& pitch, const float& yaw);
+
+	void		SetFov(float FovParam) { Fov = FovParam; }
+	void		SetAspectRatio(float AspParam) { AspectRatio = AspParam; }
 
 private:
 	void Reset();
@@ -60,4 +63,7 @@ private:
 	float		TurnSpeed;				// Speed at which the camera turns, in radians per second.
 	float		Yaw;						// Relative to the +z axis.
 	float		Pitch;					// Relative to the xz plane.
+
+	float Fov = 90.0f;
+	float AspectRatio = 1.7777777f;
 };

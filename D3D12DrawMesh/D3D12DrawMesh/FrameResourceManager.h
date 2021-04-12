@@ -10,4 +10,5 @@ struct FFrameResourceManager
 	shared_ptr<FScene> Scene;
 
 	void CreateRenderResourcesForScene(shared_ptr<FScene> SceneParam);
+	void UpdateFrameResources(shared_ptr<FScene> SceneParam);
 };

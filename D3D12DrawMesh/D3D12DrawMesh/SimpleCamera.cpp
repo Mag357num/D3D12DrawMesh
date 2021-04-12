@@ -117,9 +117,9 @@ XMMATRIX FCamera::GetViewMatrix()
 	return XMMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
 }
 
-XMMATRIX FCamera::GetProjectionMatrix(const float& fov, const float& aspectRatio, const float& nearPlane, const float& farPlane)
+DirectX::XMMATRIX FCamera::GetProjectionMatrix(const float& nearPlane /*= 1.0f*/, const float& farPlane /*= 1000.0f*/)
 {
-	return XMMatrixPerspectiveFovLH(fov, aspectRatio, nearPlane, farPlane);
+	return XMMatrixPerspectiveFovLH(Fov, AspectRatio, nearPlane, farPlane);
 }
 
 void FCamera::OnKeyDown(const WPARAM& key)

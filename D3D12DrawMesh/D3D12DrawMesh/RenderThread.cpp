@@ -48,10 +48,10 @@ void FRenderThread::CreateResourceForScene(shared_ptr<FScene> Scene)
 
 void FRenderThread::UpdateFrameResources(shared_ptr<FScene> Scene)
 {
-	//RENDER_THREAD([this, Scene]()
-	//	{
-	//	FrameResourceManager->UpdateFrameResources(Scene, RHI->GetFramIndex());
-	//	});
+	RENDER_THREAD([this, Scene]()
+		{
+			FrameResourceManager->UpdateFrameResources(Scene);
+		});
 }
 
 void FRenderThread::RenderScene()
@@ -68,5 +68,12 @@ void FRenderThread::RenderScene()
 void FRenderThread::WaitForRenderThread()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);
-	RenderCV.wait(Lock);
+
+	// TODO:
+	int a = 1; 
+	if (a != 1)
+	{
+		RenderCV.wait(Lock);
+	}
+	a++;
 }

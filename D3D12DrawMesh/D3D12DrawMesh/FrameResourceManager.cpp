@@ -14,3 +14,20 @@ void FFrameResourceManager::CreateRenderResourcesForScene(shared_ptr<FScene> Sce
 
 	Scene = SceneParam;
 }
+
+void FFrameResourceManager::UpdateFrameResources(shared_ptr<FScene> SceneParam)
+{
+	//FCamera& MainCamera = SceneParam->GetCurrentCamera();
+	//XMMATRIX V = MainCamera.GetViewMatrix();
+	//XMMATRIX P = MainCamera.GetProjectionMatrix();
+	//XMMATRIX VPMatrix = V * P;
+	//for (auto i : Scene.Actors)
+	//{
+	//	XMFLOAT4X4 Wvp;
+	//	XMStoreFloat4x4(&Wvp, XMMatrixTranspose(i->MeshRes->WorldTrans * VPMatrix));
+	//	RHI::FCBData Data;
+	//	Data.BufferData = reinterpret_cast<void*>(&Wvp);
+	//	Data.BufferSize = sizeof(Wvp);
+	//	GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes.get(), &Data);
+	//}
+}

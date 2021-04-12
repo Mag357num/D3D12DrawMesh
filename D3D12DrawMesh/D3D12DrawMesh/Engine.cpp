@@ -33,6 +33,9 @@ FEngine::FEngine(UINT width, UINT height, std::wstring name) :
     GetAssetsPath(assetsPath, _countof(assetsPath));
     m_assetsPath = assetsPath;
     m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+	CurrentScene = make_shared<FScene>();
+	CurrentScene->GetCurrentCamera().SetAspectRatio(m_aspectRatio);
+	CurrentScene->GetCurrentCamera().SetFov(90.0f);
 }
 
 FEngine::~FEngine()
@@ -42,7 +45,6 @@ FEngine::~FEngine()
 void FEngine::OnInit()
 {
 	// TODO: refactor here. read a bin file to load scene
-	CurrentScene = make_shared<FScene>();
 	CurrentScene->GetCurrentCamera().Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
@@ -68,12 +70,11 @@ void FEngine::OnInit()
 
 void FEngine::OnUpdate()
 {
-	//XMMATRIX VPMatrix = UpdateViewProj();
-
+	//UpdateMainCamera();
 	//FRenderThread::Get()->WaitForRenderThread();
 	//FRenderThread::Get()->UpdateFrameResources(CurrentScene);
 
-	//XMMATRIX VPMatrix = UpdateViewProj();
+	//XMMATRIX VPMatrix = UpdateMainCamera();
 	//for (auto i : Scene.Actors)
 	//{
 	//	XMFLOAT4X4 Wvp;
@@ -97,15 +98,15 @@ void FEngine::OnDestroy()
 
 }
 
-DirectX::XMMATRIX FEngine::UpdateViewProj()
+void FEngine::UpdateMainCamera()
 {
 	Timer.Tick(NULL);
 
 	FCamera& MainCamera = CurrentScene->GetCurrentCamera();
 	MainCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
-	XMMATRIX V = MainCamera.GetViewMatrix();
-	XMMATRIX P = MainCamera.GetProjectionMatrix(0.8f, float(ResoWidth)/float(ResoHeight));
-	return V * P;
+	//XMMATRIX V = MainCamera.GetViewMatrix();
+	//XMMATRIX P = MainCamera.GetProjectionMatrix(0.8f, float(ResoWidth)/float(ResoHeight));
+	//return V * P;
 }
 
 void FEngine::OnKeyDown(UINT8 Key)

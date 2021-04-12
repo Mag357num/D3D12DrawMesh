@@ -31,7 +31,7 @@ public:
     void OnRender();
     void OnDestroy();
 
-	XMMATRIX UpdateViewProj();
+	void UpdateMainCamera();
 
     // Samples override the event handlers to handle specific messages.
 	void OnKeyDown(UINT8 Key);
