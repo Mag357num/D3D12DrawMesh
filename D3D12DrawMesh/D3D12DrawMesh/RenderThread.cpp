@@ -43,6 +43,7 @@ void FRenderThread::CreateResourceForScene(shared_ptr<FScene> Scene)
 	RENDER_THREAD([this, Scene]()
 		{
 			FrameResourceManager->CreateRenderResourcesForScene(Scene);
+			GDynamicRHI->SyncFrame();
 		});
 }
 

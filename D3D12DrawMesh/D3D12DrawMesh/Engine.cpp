@@ -65,7 +65,6 @@ void FEngine::OnInit()
 
 	//// 3. check whether or not GPU catch up CPU
 	//GDynamicRHI->SyncFrame();
-
 }
 
 void FEngine::OnUpdate()
@@ -89,6 +88,7 @@ void FEngine::OnUpdate()
 
 void FEngine::OnRender()
 {
+
 	FRenderThread::Get()->RenderScene();
 
 	//GDynamicRHI->FrameBegin();
