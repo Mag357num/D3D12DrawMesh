@@ -18,5 +18,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
     Engine sample(1280, 720, L"D3D12 Hello Triangle");
     return Win32Application::Run(&sample, hInstance, nCmdShow);
-	Renderer::Init( &sample, hInstance, nCmdShow );
 }
