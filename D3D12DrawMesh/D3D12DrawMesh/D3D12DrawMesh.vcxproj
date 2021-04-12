@@ -28,6 +28,7 @@
     <ClInclude Include="FrameResourceManager.h" />
     <ClInclude Include="FScene.h" />
     <ClInclude Include="MathExtend.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderThread.h" />
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="SimpleCamera.h" />
@@ -44,6 +45,7 @@
     <ClCompile Include="FrameResourceManager.cpp" />
     <ClCompile Include="FScene.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
     <ClCompile Include="Thread.cpp" />

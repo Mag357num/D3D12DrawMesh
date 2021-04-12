@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "RenderThread.h"
 #include "Engine.h"
+#include "Renderer.h"
 #include <cassert>
 
 FRenderThread::FRenderThread()
@@ -58,11 +59,10 @@ void FRenderThread::RenderScene()
 {
 	RENDER_THREAD([this]()
 		{
-			//auto& FrameResource = FrameResourceManager->FrameResources[RHI->GetFramIndex()];
-			//FSimpleRenderer Renderer;
-			//Renderer.RenderScene(RHI, &FrameResource);
-			//--FrameTaskNum;
-			//RenderCV.notify_all();
+			FRenderer Renderer;
+			Renderer.RenderScene(RHI::GDynamicRHI, FrameResourceManager);
+			--FrameTaskNum;
+			RenderCV.notify_all();
 		});
 }
 

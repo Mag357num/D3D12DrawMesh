@@ -89,6 +89,8 @@ void FEngine::OnUpdate()
 
 void FEngine::OnRender()
 {
+	FRenderThread::Get()->RenderScene();
+
 	//GDynamicRHI->FrameBegin();
 	//GDynamicRHI->DrawScene(Scene);
 	//GDynamicRHI->FrameEnd();
