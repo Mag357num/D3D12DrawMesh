@@ -98,7 +98,7 @@ void FEngine::OnRender()
 
 void FEngine::OnDestroy()
 {
-
+	FRenderThread::DestroyRenderThread();
 }
 
 void FEngine::UpdateMainCamera()
