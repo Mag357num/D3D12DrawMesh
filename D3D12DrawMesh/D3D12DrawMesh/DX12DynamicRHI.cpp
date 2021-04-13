@@ -50,7 +50,7 @@ namespace RHI
 		SampleDesc.Count = 1;
 	}
 
-	void FDX12DynamicRHI::RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight)
+	void FDX12DynamicRHI::RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight)
 	{
 		this->ResoWidth = ResoWidth;
 		this->ResoHeight = ResoHeight;
@@ -160,16 +160,17 @@ namespace RHI
 		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
 	}
 
-	void FDX12DynamicRHI::CreateConstantBufferToMeshRes(FMeshRes* MeshRes)
-	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
-		DX12UpdateConstantBuffer(DX12MeshRes, CBVSRVHeap);
+	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBufferToMeshRes(unsigned int Size)
+{
+		shared_ptr<FDX12CB> DX12CB = make_shared<FDX12CB>();
+		DX12CreateConstantBuffer(DX12CB.get(), Size, CBVSRVHeap);
+		return DX12CB;
 	}
 
 	void FDX12DynamicRHI::UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data)
 	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
-		memcpy(DX12MeshRes->CB.PDataBegin, Data->BufferData, Data->BufferSize);
+		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshRes->CB.get());
+		memcpy(DX12CB->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
 	}
 
 	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
@@ -376,7 +377,7 @@ namespace RHI
 		InitPipeLineToMeshRes(DX12MeshRes->VS.get(), DX12MeshRes->PS.get(), flags, initializer.get(), MeshRes.get());
 
 		// 2. create cb
-		CreateConstantBufferToMeshRes(MeshRes.get());
+		DX12MeshRes->CB = CreateConstantBufferToMeshRes(256);
 
 		return MeshRes;
 	}
@@ -439,11 +440,11 @@ namespace RHI
 		return PipelineState;
 	}
 
-	void FDX12DynamicRHI::DX12UpdateConstantBuffer(FDX12MeshRes* DX12MeshRes, ComPtr<ID3D12DescriptorHeap>& Heap)
+	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, UINT Size, ComPtr<ID3D12DescriptorHeap>& Heap)
 	{
-		ComPtr<ID3D12Resource>& ConstantBuffer = DX12MeshRes->CB.CBObj;
-		UINT8*& PCbvDataBegin = DX12MeshRes->CB.PDataBegin;
-		UINT ConstantBufferSize = DX12MeshRes->CB.CBData.BufferSize;
+		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBObj;
+		UINT8*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
+		UINT ConstantBufferSize = Size;
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -451,7 +452,7 @@ namespace RHI
 			&CD3DX12_RESOURCE_DESC::Buffer(ConstantBufferSize),
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&DX12MeshRes->CB.CBObj)));
+			IID_PPV_ARGS(&ConstantBuffer)));
 
 		NAME_D3D12_OBJECT(ConstantBuffer);
 
@@ -466,8 +467,7 @@ namespace RHI
 		CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
 		// Map: resource give cpu the right to dynamic manipulate(memcpy) it, and forbid gpu to manipulate it, until Unmap occur.
 		// resource->Map(subresource, cpuReadRange, cpuVirtualAdress )
-		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&PCbvDataBegin)));
-		memcpy(PCbvDataBegin, &DX12MeshRes->CB.CBData, ConstantBufferSize);
+		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&VirtualAddress)));
 	}
 
 	_Use_decl_annotations_
@@ -570,7 +570,8 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
+	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::string& BinFileName, void*& PVertData, void*& PIndtData,
+		int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
 	{
 		std::ifstream Fin(BinFileName, std::ios::binary);
 

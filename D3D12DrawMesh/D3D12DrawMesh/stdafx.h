@@ -46,4 +46,4 @@ using std::make_shared;
 using std::dynamic_pointer_cast;
 using std::vector;
 using std::string;
-using namespace DirectX;
+using namespace DirectX; // TODO: namespace DirectX is platform dependent

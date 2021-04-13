@@ -9,6 +9,8 @@
 //
 //*********************************************************
 
+// TODO: make this class platform no dependent
+
 #include "stdafx.h"
 #include "SimpleCamera.h"
 #include <cmath>

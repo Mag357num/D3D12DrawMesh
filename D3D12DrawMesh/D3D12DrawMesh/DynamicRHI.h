@@ -32,7 +32,7 @@ namespace RHI
 
 		// init
 		static void CreateRHI();
-		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) = 0; // factory, device, command, swapchain,
+		virtual void RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight) = 0; // factory, device, command, swapchain,
 
 		// pso
 		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
@@ -45,7 +45,7 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) = 0;
 		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
-		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) = 0;
+		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(unsigned int Size) = 0;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) = 0;
 
 		// draw
@@ -56,8 +56,8 @@ namespace RHI
 
 		// sync
 		virtual void SyncFrame() = 0;
-		virtual UINT GetFramCount() = 0;
-		//virtual UINT GetFramIndex() = 0;
+		virtual unsigned int GetFramCount() = 0;
+		//virtual unsigned int GetFramIndex() = 0;
 
 	};
 }

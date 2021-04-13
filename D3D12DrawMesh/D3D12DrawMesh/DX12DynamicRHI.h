@@ -49,7 +49,7 @@ namespace RHI
 		~FDX12DynamicRHI() = default;
 
 		// init
-		virtual void RHIInit(bool UseWarpDevice, UINT BufferFrameCount, UINT ResoWidth, UINT ResoHeight) override;
+		virtual void RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight) override;
 		std::vector<FCommandListDx12> GraphicsCommandLists;
 
 		// pso
@@ -63,7 +63,7 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) override;
 		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
-		virtual void CreateConstantBufferToMeshRes(FMeshRes* MeshRes) override;
+		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(UINT Size) override;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
 		// draw
@@ -78,7 +78,7 @@ namespace RHI
 		//virtual UINT GetFramIndex() override { return FrameIndex; }
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
-		void ReadStaticMeshBinary(const std::string& BinFileName, UINT8*& PVertData, UINT8*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
+		void ReadStaticMeshBinary(const std::string& BinFileName, void*& PVertData, void*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
@@ -93,7 +93,7 @@ namespace RHI
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
 		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
-		void DX12UpdateConstantBuffer(FDX12MeshRes* DX12MeshRes, ComPtr<ID3D12DescriptorHeap>& Heap);
+		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, UINT Size, ComPtr<ID3D12DescriptorHeap>& Heap);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig_1CB_VS();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);

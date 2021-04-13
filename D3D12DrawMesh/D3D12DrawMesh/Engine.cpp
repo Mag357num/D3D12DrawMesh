@@ -22,7 +22,7 @@ using RHI::FActor;
 
 FEngine* GEngine = nullptr;
 
-FEngine::FEngine(UINT width, UINT height, std::wstring name) :
+FEngine::FEngine(unsigned int width, unsigned int height, std::wstring name) :
     ResoWidth(width),
     ResoHeight(height),
     m_title(name),
@@ -68,12 +68,12 @@ void FEngine::OnDestroy()
 	FRenderThread::DestroyRenderThread();
 }
 
-void FEngine::OnKeyDown(UINT8 Key)
+void FEngine::OnKeyDown(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera().OnKeyDown(Key);
 }
 
-void FEngine::OnKeyUp(UINT8 Key)
+void FEngine::OnKeyUp(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera().OnKeyUp(Key);
 }

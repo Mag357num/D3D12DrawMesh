@@ -13,15 +13,13 @@ namespace RHI
 	struct FDX12CB : public FCB
 	{
 		ComPtr<ID3D12Resource> CBObj;
-		FCBData CBData;
-		UINT8* PDataBegin;
+		UINT8* UploadBufferVirtualAddress;
 	};
 
 	struct FDX12MeshRes : public FMeshRes
 	{
 		ComPtr<ID3D12PipelineState> PSObj;
 		ComPtr<ID3D12RootSignature> RootSignature;
-		FDX12CB CB;  // TODO: move the no-dx12 type into FCB
 	};
 
 	struct FDX12Mesh : public FMesh

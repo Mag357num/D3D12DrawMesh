@@ -7,7 +7,7 @@ using uint32 = uint32_t;
 
 // using namespace DirectX;
 // using FVector = DirectX::XMFLOAT3;
-// using FMatrix = DirectX::XMMATRIX;
+ //using FMatrix = DirectX::XMMATRIX;
 // using FFloat4X4 = DirectX::XMFLOAT4X4;
 //using FVector = glm::vec3;
 //using FMatrix = glm::mat4;

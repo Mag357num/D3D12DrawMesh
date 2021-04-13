@@ -3,15 +3,35 @@
 
 namespace RHI
 {
-	class FRHIResource
+	struct FRotor
+	{
+		float Yaw;
+		float Pitch;
+		float Roll;
+	};
+
+	struct FMatrix
+	{
+		float Row0[4] = { 1, 0, 0, 0 };
+		float Row1[4] = { 0, 1, 0, 0 };
+		float Row2[4] = { 0, 0, 1, 0 };
+		float Row3[4] = { 0, 0, 0, 1 };
+	};
+
+	struct FRHIResource
 	{
 	};
 
 	struct FCBData : public FRHIResource
 	{
-		FCBData() : BufferData(nullptr), BufferSize(256) {};
-		void* BufferData;
-		UINT BufferSize;
+		FCBData() : DataBuffer(nullptr), BufferSize(256) {};
+		void* DataBuffer;
+		unsigned int BufferSize;
+	};
+
+	struct FCB : public FRHIResource
+	{
+		virtual void Init() {};
 	};
 
 	struct FShader : public FRHIResource
@@ -26,8 +46,8 @@ namespace RHI
 		FMesh() : PVertData(nullptr), PIndtData(nullptr), VertexBufferSize(0), VertexStride(0), IndexBufferSize(0), IndexNum(0) {}
 		~FMesh() { if (PVertData != nullptr) { free(PVertData); } if (PIndtData != nullptr) { free(PIndtData); } }
 
-		UINT8* PVertData;
-		UINT8* PIndtData;
+		void* PVertData;
+		void* PIndtData;
 		int VertexBufferSize;
 		int VertexStride;
 		int IndexBufferSize;
@@ -36,10 +56,11 @@ namespace RHI
 
 	struct FMeshRes : public FRHIResource
 	{
-		FMeshRes() : WorldTrans(XMMatrixTranslation(0.f, 0.f, 0.f)), VS(nullptr), PS(nullptr) {}
 		virtual void init() {};
 
-		XMMATRIX WorldTrans;
+		FMatrix WorldTrans; // TODO: XMMATRIX is platform dependent
+		FRotor Rotor;
+		shared_ptr<FCB> CB;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
@@ -53,10 +74,6 @@ namespace RHI
 	struct FPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
-	};
-
-	struct FCB : public FRHIResource
-	{
 	};
 
 	class FTexture : public FRHIResource
