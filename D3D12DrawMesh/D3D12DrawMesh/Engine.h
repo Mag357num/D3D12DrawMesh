@@ -41,6 +41,7 @@ public:
     UINT GetWidth() const { return ResoWidth; }
     UINT GetHeight() const { return ResoHeight; }
     const WCHAR* GetTitle() const { return m_title.c_str(); }
+    StepTimer& GetTimer() { return Timer; }
 
 protected:
     // Viewport dimensions.

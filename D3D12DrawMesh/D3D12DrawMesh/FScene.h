@@ -10,7 +10,8 @@ public:
 	vector<shared_ptr<RHI::FActor>> Actors;
 
 public:
+	void UpdateMainCamera(class FEngine* Engine);
 	FCamera& GetCurrentCamera() { return SceneCamera; }
 	vector<shared_ptr<RHI::FActor>>& GetActors() { return Actors; }
-	void UpdateActor();
+	void UpdateActor() { }
 };

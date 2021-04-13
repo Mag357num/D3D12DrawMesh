@@ -1,6 +1,9 @@
 #include "FScene.h"
+#include "Engine.h"
 
-void FScene::UpdateActor()
+void FScene::UpdateMainCamera(class FEngine* Engine)
 {
-
+	StepTimer& Timer = Engine->GetTimer();
+	Timer.Tick(NULL);
+	SceneCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
 }
