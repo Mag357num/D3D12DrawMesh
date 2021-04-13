@@ -20,22 +20,14 @@ void FFrameResourceManager::CreateRenderResourcesForScene(shared_ptr<FScene> Sce
 void FFrameResourceManager::UpdateFrameResources()
 {
 	FCamera& MainCamera = Scene->GetCurrentCamera();
-	XMMATRIX V = MainCamera.GetViewMatrix();
-	XMMATRIX P = MainCamera.GetProjectionMatrix();
-	XMMATRIX VPMatrix = V * P;
+	FMatrix V = MainCamera.GetViewMatrix();
+	FMatrix P = MainCamera.GetProjectionMatrix();
+	FMatrix VPMatrix = V * P;
 
 	for (auto i : Scene->GetActors())
 	{
-		XMFLOAT4X4 Wvp;
-		FMatrix W = i->MeshRes->WorldTrans;
-		XMMATRIX WorldMatrix
-		(
-			W.Row0[0], W.Row0[1], W.Row0[2], W.Row0[3],
-			W.Row1[0], W.Row1[1], W.Row1[2], W.Row1[3],
-			W.Row2[0], W.Row2[1], W.Row2[2], W.Row2[3],
-			W.Row3[0], W.Row3[1], W.Row3[2], W.Row3[3]
-		);
-		XMStoreFloat4x4(&Wvp, XMMatrixTranspose(WorldMatrix * VPMatrix));
+		FMatrix WorldMatrix = i->MeshRes->WorldTrans;
+		FMatrix Wvp = WorldMatrix* VPMatrix;
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
 		UpdateData.BufferSize = sizeof(Wvp);

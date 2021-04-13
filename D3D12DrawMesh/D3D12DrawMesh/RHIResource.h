@@ -3,20 +3,6 @@
 
 namespace RHI
 {
-	struct FRotor
-	{
-		float Yaw;
-		float Pitch;
-		float Roll;
-	};
-
-	struct FMatrix
-	{
-		float Row0[4] = { 1, 0, 0, 0 };
-		float Row1[4] = { 0, 1, 0, 0 };
-		float Row2[4] = { 0, 0, 1, 0 };
-		float Row3[4] = { 0, 0, 0, 1 };
-	};
 
 	struct FRHIResource
 	{
@@ -59,7 +45,7 @@ namespace RHI
 		virtual void init() {};
 
 		FMatrix WorldTrans; // TODO: XMMATRIX is platform dependent
-		FRotor Rotor;
+		FVector Rotor;
 		shared_ptr<FCB> CB;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
