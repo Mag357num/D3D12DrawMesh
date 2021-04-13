@@ -12,7 +12,7 @@
 cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 worldViewProj;
-    float4 padding[48];
+    float4 padding[12];
 };
 
 struct VSInput
