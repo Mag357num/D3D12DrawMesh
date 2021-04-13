@@ -427,7 +427,6 @@ namespace RHI
 		psoDesc.PrimitiveTopologyType = Initializer.PrimitiveTopologyType;
 		psoDesc.NumRenderTargets = Initializer.NumRenderTargets;
 		psoDesc.RTVFormats[0] = Initializer.RTVFormats[0];
-		//psoDesc.RTVFormats = Initializer.RTVFormats; // TODO: why error?
 		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		psoDesc.SampleDesc.Count = Initializer.SampleDesc.Count;
 		return psoDesc;

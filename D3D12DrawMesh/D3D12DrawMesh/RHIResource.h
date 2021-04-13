@@ -24,7 +24,7 @@ namespace RHI
 		virtual void Init() {};
 
 		FMesh() : PVertData(nullptr), PIndtData(nullptr), VertexBufferSize(0), VertexStride(0), IndexBufferSize(0), IndexNum(0) {}
-		~FMesh() { free(PVertData); free(PIndtData); } // TODO: free nullptr will clapse
+		~FMesh() { if (PVertData != nullptr) { free(PVertData); } if (PIndtData != nullptr) { free(PIndtData); } }
 
 		UINT8* PVertData;
 		UINT8* PIndtData;

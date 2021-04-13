@@ -5,10 +5,11 @@
 
 using namespace RHI;
 
-struct FFrameResourceManager
+class FFrameResourceManager
 {
+public:
 	shared_ptr<FScene> Scene;
-
+public:
 	void CreateRenderResourcesForScene(shared_ptr<FScene> SceneParam);
 	void UpdateFrameResources();
 };
