@@ -593,7 +593,8 @@ namespace RHI
 		for (uint32 i = 0; i < Scene->IndividualsNum; i++)
 		{
 			shared_ptr<FIndividual> Individual = make_shared<FIndividual>();
-
+			Individual->Mesh = make_shared<FMesh>();
+			Individual->MeshRes = make_shared<FMeshRes>();
 			ReadMeshFromIfstream(Fin, Individual->Mesh.get());
 			ReadMeshResFromIfstream(Fin, Individual->MeshRes.get());
 
@@ -681,6 +682,10 @@ namespace RHI
 
 	shared_ptr<RHI::FMesh> FDX12DynamicRHI::PrepareMeshData(const std::wstring& BinFileName)
 	{
+		// test scene file
+		shared_ptr<FScene> test = make_shared<FScene>();
+		ReadSceneFromBinary(L"Scene_.dat", test.get());
+
 		shared_ptr<FMesh> Mesh = make_shared<FDX12Mesh>();
 		ReadStaticMeshBinary(BinFileName, Mesh.get());
 		return Mesh;
