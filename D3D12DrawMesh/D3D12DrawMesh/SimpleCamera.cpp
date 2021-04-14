@@ -15,6 +15,7 @@
 #include "SimpleCamera.h"
 #include <cmath>
 #include "MathExtend.h"
+#include <gtc/matrix_transform.hpp>
 
 FCamera::FCamera():
 	InitialPosition(500, 0, 0),
@@ -29,35 +30,35 @@ FCamera::FCamera():
 {
 }
 
-void FCamera::GetEulerByLook(const XMFLOAT3& lookAt)
+void FCamera::GetEulerByLook(const FVector& LookAt)
 {
-	Yaw = Atan2(lookAt.y, lookAt.x);
-	Pitch = Atan2(lookAt.z, sqrt(lookAt.x * lookAt.x + lookAt.y * lookAt.y));
+	Yaw = Atan2(LookAt.y, LookAt.x);
+	Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
 }
 
-void FCamera::GetLookByEuler(const float& pitch, const float& yaw)
+void FCamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 {
-	LookDirection.x = cosf(pitch) * cosf(yaw);
-	LookDirection.y = cosf(pitch) * sinf(yaw);
-	LookDirection.z = sinf(pitch);
+	LookDirection.x = cosf(Pitch) * cosf(Yaw);
+	LookDirection.y = cosf(Pitch) * sinf(Yaw);
+	LookDirection.z = sinf(Pitch);
 
 	if (fabs(LookDirection.x) < 0.001f) LookDirection.x = 0;
 	if (fabs(LookDirection.y) < 0.001f) LookDirection.y = 0;
 	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0;
 }
 
-void FCamera::Init(const XMFLOAT3& position, const XMFLOAT3& upDir, const XMFLOAT3& lookAt)
+void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt)
 {
-	InitialPosition = position;
-	InitialUpDir = upDir;
-	InitialLookAt = lookAt;
+	InitialPosition = PositionParam;
+	InitialUpDir = UpDir;
+	InitialLookAt = LookAt;
 
-	Position = position;
-	UpDirection = upDir;
-	LookDirection = lookAt;
+	Position = PositionParam;
+	UpDirection = UpDir;
+	LookDirection = LookAt;
 
 	// regard the yaw start at x+ dir, pitch start at x+ dir, roll start at y+ dir.
-	GetEulerByLook(lookAt);
+	GetEulerByLook(LookAt);
 }
 
 void FCamera::SetMoveSpeed(const float & UnitsPerSecond)
@@ -81,7 +82,7 @@ void FCamera::Reset()
 
 void FCamera::Update(const float& ElapsedSeconds)
 {
-	XMFLOAT3 move(0, 0, 0);
+	FVector move(0, 0, 0);
 	float moveInterval = MoveSpeed * ElapsedSeconds;
 	float rotateInterval = TurnSpeed * ElapsedSeconds;
 
@@ -114,14 +115,16 @@ void FCamera::Update(const float& ElapsedSeconds)
 	GetLookByEuler(Pitch, Yaw);
 }
 
-XMMATRIX FCamera::GetViewMatrix()
+FMatrix FCamera::GetViewMatrix()
 {
-	return XMMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
+	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection);
+	//return FMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
 }
 
-DirectX::XMMATRIX FCamera::GetProjectionMatrix(const float& nearPlane /*= 1.0f*/, const float& farPlane /*= 1000.0f*/)
+FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/)
 {
-	return XMMatrixPerspectiveFovLH(Fov, AspectRatio, nearPlane, farPlane);
+	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+	//return FMatrixPerspectiveFovLH(Fov, AspectRatio, nearPlane, farPlane);
 }
 
 void FCamera::OnKeyDown(const WPARAM& key)

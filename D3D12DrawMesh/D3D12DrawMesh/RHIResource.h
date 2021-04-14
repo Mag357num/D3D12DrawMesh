@@ -44,7 +44,7 @@ namespace RHI
 	{
 		virtual void init() {};
 
-		FMatrix WorldTrans; // TODO: XMMATRIX is platform dependent
+		FMatrix WorldTrans = glm::mat4(1.0f);
 		FVector Rotor;
 		shared_ptr<FCB> CB;
 		shared_ptr<FShader> VS;

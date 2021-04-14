@@ -22,12 +22,15 @@ void FFrameResourceManager::UpdateFrameResources()
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix V = MainCamera.GetViewMatrix();
 	FMatrix P = MainCamera.GetProjectionMatrix();
-	FMatrix VPMatrix = V * P;
+	FMatrix VPMatrix = P * V;
+	//FMatrix VPMatrix = glm::transpose(P * V);
+	//FMatrix VPMatrix = V * P;
+	//FMatrix VPMatrix = glm::transpose(V * P);
 
 	for (auto i : Scene->GetActors())
 	{
 		FMatrix WorldMatrix = i->MeshRes->WorldTrans;
-		FMatrix Wvp = WorldMatrix* VPMatrix;
+		FMatrix Wvp = glm::transpose(VPMatrix * WorldMatrix);
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
 		UpdateData.BufferSize = sizeof(Wvp);
