@@ -28,11 +28,15 @@ void FRenderThread::Run()
 		if (Task != nullptr)
 		{
 			Task->DoTask();
-			DoRender();
 			{
 				std::lock_guard<std::mutex> Lock(Mutex);
 				Tasks.pop_front();
 			}
+		}
+
+		if (IsResLoaded)
+		{
+			DoRender();
 		}
 	}
 	Tasks.clear();
@@ -73,6 +77,7 @@ void FRenderThread::CreateResourceForScene(shared_ptr<FScene> Scene)
 		{
 			FrameResourceManager->CreateRenderResourcesForScene(Scene);
 			GDynamicRHI->SyncFrame();
+			IsResLoaded = true;
 		});
 }
 
