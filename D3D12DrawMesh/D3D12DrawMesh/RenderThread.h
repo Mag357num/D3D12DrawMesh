@@ -12,7 +12,6 @@ class FRenderThread : public FTaskThread
 public:
 	FRenderThread();
 	virtual void Run() override;
-	virtual void DoRender() override;
 
 	static void CreateRenderThread();
 	static void DestroyRenderThread();
@@ -23,6 +22,9 @@ public:
 	void UpdateFrameResources();
 	void RenderScene();
 	void WaitForRenderThread();
+
+private:
+	void DoRender();
 };
 
 #define RENDER_THREAD(...) FRenderThread::Get()->AddTask(__VA_ARGS__)

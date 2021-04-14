@@ -14,7 +14,28 @@ void FRenderThread::Run()
 {
 	RHI::GDynamicRHI->CreateRHI();
 	RHI::GDynamicRHI->RHIInit(false, 2, GEngine->GetWidth(), GEngine->GetHeight());
-	FTaskThread::Run();
+
+	while (IsRunning)
+	{
+		FThreadTask* Task = nullptr;
+		{
+			std::lock_guard<std::mutex> Lock(Mutex);
+			if (!Tasks.empty())
+			{
+				Task = &Tasks.front();
+			}
+		}
+		if (Task != nullptr)
+		{
+			Task->DoTask();
+			DoRender();
+			{
+				std::lock_guard<std::mutex> Lock(Mutex);
+				Tasks.pop_front();
+			}
+		}
+	}
+	Tasks.clear();
 }
 
 void FRenderThread::DoRender()

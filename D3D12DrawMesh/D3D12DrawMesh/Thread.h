@@ -53,7 +53,6 @@ protected:
 public:
 	FTaskThread(const std::string& _Name);
 	virtual void Run() override;
-	virtual void DoRender() = 0;
 
 	virtual void AddTask(TaskLambda&& Lambda);
 };

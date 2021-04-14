@@ -53,7 +53,6 @@ void FTaskThread::Run()
 		if (Task != nullptr)
 		{
 			Task->DoTask();
-			DoRender();
 			{
 				std::lock_guard<std::mutex> Lock(Mutex);
 				Tasks.pop_front();
