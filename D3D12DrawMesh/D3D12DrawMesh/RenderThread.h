@@ -12,6 +12,7 @@ class FRenderThread : public FTaskThread
 public:
 	FRenderThread();
 	virtual void Run() override;
+	virtual void DoRender() override;
 
 	static void CreateRenderThread();
 	static void DestroyRenderThread();

@@ -60,7 +60,7 @@ void FEngine::OnUpdate()
 
 void FEngine::OnRender()
 {
-	FRenderThread::Get()->RenderScene();
+	//FRenderThread::Get()->RenderScene();
 }
 
 void FEngine::OnDestroy()

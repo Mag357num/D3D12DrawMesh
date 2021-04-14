@@ -17,6 +17,14 @@ void FRenderThread::Run()
 	FTaskThread::Run();
 }
 
+void FRenderThread::DoRender()
+{
+	FRenderer Renderer;
+	Renderer.RenderScene(RHI::GDynamicRHI, FrameResourceManager);
+	--FrameTaskNum;
+	RenderCV.notify_all();
+}
+
 static FRenderThread* GRenderThread = nullptr;
 
 void FRenderThread::CreateRenderThread()
