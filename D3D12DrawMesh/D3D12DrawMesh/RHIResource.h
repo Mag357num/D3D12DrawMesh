@@ -23,6 +23,7 @@ namespace RHI
 	struct FShader : public FRHIResource
 	{
 		virtual void Init() {};
+		std::wstring FileName;
 	};
 
 	struct FMesh : public FRHIResource
@@ -40,18 +41,24 @@ namespace RHI
 		int IndexNum;
 	};
 
+	struct FTransform
+	{
+		FMatrix Translation = glm::mat4(1.0f); // TODO: changes to FVector
+		FVector Rotator;
+		FVector Scale;
+	};
+
 	struct FMeshRes : public FRHIResource
 	{
 		virtual void init() {};
 
-		FMatrix WorldTrans = glm::mat4(1.0f);
-		FVector Rotor;
+		FTransform Transform;
 		shared_ptr<FCB> CB;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
 
-	struct FActor : public FRHIResource //TODO: Actor do not store mesh and res data, but the obj mesh index, and pos
+	struct FIndividual : public FRHIResource //TODO: Actor do not store mesh and res data, but the obj mesh index, and pos
 	{
 		shared_ptr<FMesh> Mesh;
 		shared_ptr<FMeshRes> MeshRes;

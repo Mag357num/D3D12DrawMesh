@@ -54,8 +54,11 @@ namespace RHI
 		// pso
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
 		
+		// scene
+		virtual shared_ptr<FScene> PrepareSceneData(const std::wstring& BinFileName) override;
+
 		// mesh
-		shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) override;
+		virtual shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// mesh res
@@ -68,16 +71,20 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() override;
 		virtual void DrawScene(const FScene* Scene) override;
-		virtual void DrawActor(const FActor* Actor) override;
+		virtual void DrawActor(const FIndividual* Actor) override;
 		virtual void FrameEnd() override;
 
 		// sync
 		virtual void SyncFrame() override;
 		virtual uint32 GetFramCount() override { return FrameCount; }
 		//virtual uint32 GetFramIndex() override { return FrameIndex; }
+
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
-		void ReadStaticMeshBinary(const std::wstring& BinFileName, void*& PVertData, void*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
+		void ReadSceneFromBinary(const std::wstring& BinFileName, FScene* Scene);
+		void ReadStaticMeshBinary(const std::wstring& BinFileName, FMesh* Mesh);
+		void ReadMeshFromIfstream(std::ifstream& Fin, FMesh* Mesh);
+		void ReadMeshResFromIfstream(std::ifstream& Fin, FMeshRes* MeshRes);
 		void WaitForPreviousFrame();
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);

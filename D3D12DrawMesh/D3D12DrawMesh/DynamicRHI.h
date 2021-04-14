@@ -37,6 +37,9 @@ namespace RHI
 		// pso
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
 
+		// scene
+		virtual shared_ptr<FScene> PrepareSceneData(const std::wstring& BinFileName) = 0;
+
 		// mesh
 		virtual shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
@@ -51,7 +54,7 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() = 0;
 		virtual void DrawScene(const FScene* Scene) = 0;
-		virtual void DrawActor(const FActor* Actor) = 0;
+		virtual void DrawActor(const FIndividual* Actor) = 0;
 		virtual void FrameEnd() = 0;
 
 		// sync

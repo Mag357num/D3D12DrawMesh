@@ -18,7 +18,7 @@ using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
 using RHI::FMesh;
 using RHI::FMeshRes;
-using RHI::FActor;
+using RHI::FIndividual;
 
 FEngine* GEngine = nullptr;
 

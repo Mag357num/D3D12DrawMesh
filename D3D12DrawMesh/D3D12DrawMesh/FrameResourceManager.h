@@ -5,7 +5,7 @@
 
 using namespace RHI;
 
-class FFrameResourceManager
+class FFrameResourceManager // TODO: this now is actually ResourceManager, nothing to do with Frame Resource
 {
 public:
 	shared_ptr<FScene> Scene;

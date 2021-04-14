@@ -198,6 +198,13 @@ namespace RHI
 		DX12MeshRes->PSObj = CreatePSO(PsoDesc);
 	}
 
+	shared_ptr<FScene> FDX12DynamicRHI::PrepareSceneData(const std::wstring& BinFileName)
+	{
+		shared_ptr<FScene> Scene = make_shared<FScene>();
+		ReadSceneFromBinary(BinFileName, Scene.get());
+		return Scene;
+	}
+
 	FDX12DynamicRHI::FDX12DynamicRHI()
 	{
 		uint32 dxgiFactoryFlags = 0;
@@ -572,10 +579,51 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::wstring& BinFileName, void*& PVertData, void*& PIndtData,
-		int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
+	void FDX12DynamicRHI::ReadSceneFromBinary(const std::wstring& BinFileName, FScene* Scene)
 	{
 		std::ifstream Fin(BinFileName, std::ios::binary);
+
+		if (!Fin.is_open())
+		{
+			throw std::exception("open file faild.");
+		}
+
+		Fin.read((char*)&Scene->IndividualsNum, sizeof(int));
+
+		for (uint32 i = 0; i < Scene->IndividualsNum; i++)
+		{
+			shared_ptr<FIndividual> Individual = make_shared<FIndividual>();
+
+			ReadMeshFromIfstream(Fin, Individual->Mesh.get());
+			ReadMeshResFromIfstream(Fin, Individual->MeshRes.get());
+
+			Scene->Individuals.push_back(Individual);
+		}
+
+		Fin.close();
+	}
+
+	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::wstring& BinFileName, FMesh* Mesh)
+	{
+		std::ifstream Fin(BinFileName, std::ios::binary);
+
+		if (!Fin.is_open())
+		{
+			throw std::exception("open file faild.");
+		}
+
+		ReadMeshFromIfstream(Fin, Mesh);
+		Fin.close();
+	}
+
+	void FDX12DynamicRHI::ReadMeshFromIfstream(std::ifstream& Fin, FMesh* Mesh)
+	{
+		void*& PVertData = Mesh->PVertData;
+		void*& PIndtData = Mesh->PIndtData;
+		int& VertexBufferSize = Mesh->VertexBufferSize;
+		int& VertexStride = Mesh->VertexStride;
+		int& IndexBufferSize = Mesh->IndexBufferSize;
+		int& IndexNum = Mesh->IndexNum;
 
 		if (!Fin.is_open())
 		{
@@ -606,8 +654,18 @@ namespace RHI
 			PIndtData = reinterpret_cast<void*>(malloc(IndexBufferSize));
 			Fin.read((char*)PIndtData, IndexBufferSize);
 		}
+	}
 
-		Fin.close();
+	void FDX12DynamicRHI::ReadMeshResFromIfstream(std::ifstream& Fin, FMeshRes* MeshRes)
+	{
+		if (!Fin.is_open())
+		{
+			throw std::exception("open file faild.");
+		}
+
+		Fin.read((char*)&MeshRes->Transform.Translation, 3 * sizeof(float));
+		Fin.read((char*)&MeshRes->Transform.Rotator, 3 * sizeof(float));
+		Fin.read((char*)&MeshRes->Transform.Scale, 3 * sizeof(float));
 	}
 
 	void FDX12DynamicRHI::UpLoadMesh(FMesh* Mesh)
@@ -624,7 +682,7 @@ namespace RHI
 	shared_ptr<RHI::FMesh> FDX12DynamicRHI::PrepareMeshData(const std::wstring& BinFileName)
 	{
 		shared_ptr<FMesh> Mesh = make_shared<FDX12Mesh>();
-		ReadStaticMeshBinary(BinFileName, Mesh->PVertData, Mesh->PIndtData, Mesh->VertexBufferSize, Mesh->VertexStride, Mesh->IndexBufferSize, Mesh->IndexNum);
+		ReadStaticMeshBinary(BinFileName, Mesh.get());
 		return Mesh;
 	}
 
@@ -643,13 +701,13 @@ namespace RHI
 
 	void FDX12DynamicRHI::DrawScene(const FScene* Scene)
 	{
-		for (auto i : Scene->Actors)
+		for (auto i : Scene->Individuals)
 		{
 			DrawActor(i.get());
 		}
 	}
 
-	void FDX12DynamicRHI::DrawActor(const FActor* Actor)
+	void FDX12DynamicRHI::DrawActor(const FIndividual* Actor)
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Actor->Mesh.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes.get());
