@@ -50,7 +50,7 @@ namespace RHI
 		SampleDesc.Count = 1;
 	}
 
-	void FDX12DynamicRHI::RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight)
+	void FDX12DynamicRHI::RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight)
 	{
 		this->ResoWidth = ResoWidth;
 		this->ResoHeight = ResoHeight;
@@ -160,7 +160,7 @@ namespace RHI
 		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
 	}
 
-	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBufferToMeshRes(unsigned int Size)
+	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBufferToMeshRes(const uint32& Size)
 {
 		shared_ptr<FDX12CB> DX12CB = make_shared<FDX12CB>();
 		DX12CreateConstantBuffer(DX12CB.get(), Size, CBVSRVHeap);
@@ -173,9 +173,11 @@ namespace RHI
 		memcpy(DX12CB->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
 	}
 
-	void FDX12DynamicRHI::InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes)
+	void FDX12DynamicRHI::InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags)
 	{
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		FShader* VS = DX12MeshRes->VS.get();
+		FShader* PS = DX12MeshRes->PS.get();
 		FDX12Shader* DX12VS = dynamic_cast<FDX12Shader*>(VS);
 		FDX12Shader* DX12PS = dynamic_cast<FDX12Shader*>(PS);
 
@@ -198,7 +200,7 @@ namespace RHI
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
 	{
-		UINT dxgiFactoryFlags = 0;
+		uint32 dxgiFactoryFlags = 0;
 		#if defined(_DEBUG)
 		// Enable the debug layer (requires the Graphics Tools "optional feature").
 		// NOTE: Enabling the debug layer after device creation will invalidate the active device.
@@ -288,7 +290,7 @@ namespace RHI
 		Mesh->IndexBufferView.SizeInBytes = Mesh->IndexBufferSize;
 	}
 
-	void FDX12DynamicRHI::CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
+	void FDX12DynamicRHI::CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
 		HeapDesc.NumDescriptors = NumDescriptors;
@@ -297,11 +299,11 @@ namespace RHI
 		ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
 	}
 
-	void FDX12DynamicRHI::CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount)
+	void FDX12DynamicRHI::CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const uint32& FrameCount)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(Heap->GetCPUDescriptorHandleForHeapStart());
 
-		for (UINT n = 0; n < FrameCount; n++)
+		for (uint32 n = 0; n < FrameCount; n++)
 		{
 			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&RenderTargets[n])));
 			Device->CreateRenderTargetView(RenderTargets[n].Get(), nullptr, HeapsHandle);
@@ -314,7 +316,7 @@ namespace RHI
 		Device->CreateConstantBufferView(&CbvDesc, Heap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	void FDX12DynamicRHI::CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height)
+	void FDX12DynamicRHI::CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 Width, uint32 Height)
 	{
 		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -351,18 +353,18 @@ namespace RHI
 		}
 	}
 
-	UINT FDX12DynamicRHI::GetEnableShaderDebugFlags()
+	uint32 FDX12DynamicRHI::GetEnableShaderDebugFlags()
 	{
 #if defined(_DEBUG)
 		// Enable better shader debugging with the graphics debugging tools.
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+		uint32 compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #else
-		UINT compileFlags = 0;
+		uint32 compileFlags = 0;
 #endif
 		return compileFlags;
 	}
 
-	shared_ptr<FMeshRes> FDX12DynamicRHI::CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags)
+	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags)
 	{
 		shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes.get());
@@ -374,7 +376,7 @@ namespace RHI
 		DX12MeshRes->VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
 		DX12MeshRes->PS = CreatePixelShader(m_assetsPath.c_str());
 		shared_ptr<FPSOInitializer> initializer = make_shared<FDX12PSOInitializer>();
-		InitPipeLineToMeshRes(DX12MeshRes->VS.get(), DX12MeshRes->PS.get(), flags, initializer.get(), MeshRes.get());
+		InitPipeLineToMeshRes(MeshRes.get(), initializer.get(), flags);
 
 		// 2. create cb
 		DX12MeshRes->CB = CreateConstantBufferToMeshRes(256);
@@ -382,19 +384,19 @@ namespace RHI
 		return MeshRes;
 	}
 
-	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreateVertexShader(LPCWSTR FileName)
+	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreateVertexShader(const std::wstring& FileName)
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
 		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
-		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
 		return Shader;
 	}
 
-	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreatePixelShader(LPCWSTR FileName)
+	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreatePixelShader(const std::wstring& FileName)
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
 		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
-		ThrowIfFailed(D3DCompileFromFile(FileName, nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
 		return Shader;
 	}
 
@@ -440,11 +442,11 @@ namespace RHI
 		return PipelineState;
 	}
 
-	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, UINT Size, ComPtr<ID3D12DescriptorHeap>& Heap)
+	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size, ComPtr<ID3D12DescriptorHeap>& Heap)
 	{
 		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBObj;
-		UINT8*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
-		UINT ConstantBufferSize = Size;
+		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
+		uint32 ConstantBufferSize = Size;
 
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -484,7 +486,7 @@ namespace RHI
 		if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 		{
 			for (
-				UINT adapterIndex = 0;
+				uint32 adapterIndex = 0;
 				DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(
 					adapterIndex,
 					requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_UNSPECIFIED,
@@ -511,7 +513,7 @@ namespace RHI
 		}
 		else
 		{
-			for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &adapter); ++adapterIndex)
+			for (uint32 adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &adapter); ++adapterIndex)
 			{
 				DXGI_ADAPTER_DESC1 desc;
 				adapter->GetDesc1(&desc);
@@ -587,7 +589,7 @@ namespace RHI
 
 		if (VertexBufferSize > 0)
 		{
-			PVertData = reinterpret_cast<UINT8*>(malloc(VertexBufferSize));
+			PVertData = reinterpret_cast<void*>(malloc(VertexBufferSize));
 			Fin.read((char*)PVertData, VertexBufferSize);
 		}
 		else
@@ -601,7 +603,7 @@ namespace RHI
 
 		if (IndexBufferSize > 0)
 		{
-			PIndtData = reinterpret_cast<UINT8*>(malloc(IndexBufferSize));
+			PIndtData = reinterpret_cast<void*>(malloc(IndexBufferSize));
 			Fin.read((char*)PIndtData, IndexBufferSize);
 		}
 
@@ -639,15 +641,15 @@ namespace RHI
 		GraphicsCommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 	}
 
-	void FDX12DynamicRHI::DrawScene(FScene Scene)
+	void FDX12DynamicRHI::DrawScene(const FScene* Scene)
 	{
-		for (auto i : Scene.Actors)
+		for (auto i : Scene->Actors)
 		{
 			DrawActor(i.get());
 		}
 	}
 
-	void FDX12DynamicRHI::DrawActor(FActor* Actor)
+	void FDX12DynamicRHI::DrawActor(const FActor* Actor)
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(Actor->Mesh.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(Actor->MeshRes.get());
@@ -681,7 +683,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::WaitForPreviousFrame()
 	{
-		const UINT64 fence = FenceValue; //m_fenceValue: CPU fence value
+		const int fence = FenceValue; //m_fenceValue: CPU fence value
 		ThrowIfFailed(RHICommandQueue->Signal(Fence.Get(), fence)); // set a fence in GPU
 		FenceValue++;
 

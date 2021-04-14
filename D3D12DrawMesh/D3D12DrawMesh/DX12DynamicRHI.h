@@ -26,17 +26,17 @@ namespace RHI
 
 		struct DXGI_SAMPLE_DESC
 		{
-			UINT Count;
-			UINT Quality;
+			uint32 Count;
+			uint32 Quality;
 		};
 
 		D3D12_INPUT_LAYOUT_DESC InputLayout;
 		D3D12_RASTERIZER_DESC RasterizerState;
 		D3D12_BLEND_DESC BlendState;
 		D3D12_DEPTH_STENCIL_DESC DepthStencilState;
-		UINT SampleMask;
+		uint32 SampleMask;
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE PrimitiveTopologyType;
-		UINT NumRenderTargets;
+		uint32 NumRenderTargets;
 		DXGI_FORMAT RTVFormats[8];
 		DXGI_FORMAT DSVFormat;
 		DXGI_SAMPLE_DESC SampleDesc;
@@ -49,51 +49,50 @@ namespace RHI
 		~FDX12DynamicRHI() = default;
 
 		// init
-		virtual void RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight) override;
-		std::vector<FCommandListDx12> GraphicsCommandLists;
+		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight) override;
 
 		// pso
-		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) override;
+		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
 		
 		// mesh
 		shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// mesh res
-		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) override;
-		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) override;
-		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) override;
-		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(UINT Size) override;
+		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
+		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
+		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags) override;
+		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) override;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawScene(FScene Scene) override;
-		virtual void DrawActor(FActor* Actor) override;
+		virtual void DrawScene(const FScene* Scene) override;
+		virtual void DrawActor(const FActor* Actor) override;
 		virtual void FrameEnd() override;
 
 		// sync
 		virtual void SyncFrame() override;
-		virtual UINT GetFramCount() override { return FrameCount; }
-		//virtual UINT GetFramIndex() override { return FrameIndex; }
+		virtual uint32 GetFramCount() override { return FrameCount; }
+		//virtual uint32 GetFramIndex() override { return FrameIndex; }
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
 		void ReadStaticMeshBinary(const std::string& BinFileName, void*& PVertData, void*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
-		void CreateDescriptorHeaps(const UINT& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const UINT& FrameCount);
+		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
+		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const uint32& FrameCount);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap);
-		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, UINT Width, UINT Height);
+		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 Width, uint32 Height);
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
-		UINT GetEnableShaderDebugFlags();
+		uint32 GetEnableShaderDebugFlags();
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
 		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
-		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, UINT Size, ComPtr<ID3D12DescriptorHeap>& Heap);
+		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size, ComPtr<ID3D12DescriptorHeap>& Heap);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig_1CB_VS();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
@@ -111,16 +110,17 @@ namespace RHI
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
-		UINT BackFrameIndex;
+		uint32 BackFrameIndex;
 		HANDLE FenceEvent;
-		UINT64 FenceValue;
+		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
-		UINT ResoWidth;
-		UINT ResoHeight;
+		uint32 ResoWidth;
+		uint32 ResoHeight;
 
 		// may changes attributes
 		ComPtr<ID3D12Resource> DepthStencil;
+		std::vector<FCommandListDx12> GraphicsCommandLists;
 
-		static const UINT FrameCount = 1;
+		static const uint32 FrameCount = 1;
 	};
 }

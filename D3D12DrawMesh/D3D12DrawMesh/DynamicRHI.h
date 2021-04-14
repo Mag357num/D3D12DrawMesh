@@ -32,32 +32,32 @@ namespace RHI
 
 		// init
 		static void CreateRHI();
-		virtual void RHIInit(bool UseWarpDevice, unsigned int BufferFrameCount, unsigned int ResoWidth, unsigned int ResoHeight) = 0; // factory, device, command, swapchain,
+		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight) = 0;
 
 		// pso
-		virtual void InitPipeLineToMeshRes(FShader* VS, FShader* PS, SHADER_FLAGS rootFlags, FPSOInitializer* PsoInitializer, FMeshRes* MeshRes) = 0;
+		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
 
 		// mesh
 		virtual shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		// mesh res
-		virtual shared_ptr<FShader> CreateVertexShader(LPCWSTR FileName) = 0;
-		virtual shared_ptr<FShader> CreatePixelShader(LPCWSTR FileName) = 0;
-		virtual shared_ptr<FMeshRes> CreateMeshRes(std::wstring FileName, SHADER_FLAGS flags) = 0;
-		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(unsigned int Size) = 0;
+		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
+		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
+		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags) = 0;
+		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) = 0;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) = 0;
 
 		// draw
 		virtual void FrameBegin() = 0;
-		virtual void DrawScene(FScene Scene) = 0;
-		virtual void DrawActor(FActor* Actor) = 0;
+		virtual void DrawScene(const FScene* Scene) = 0;
+		virtual void DrawActor(const FActor* Actor) = 0;
 		virtual void FrameEnd() = 0;
 
 		// sync
 		virtual void SyncFrame() = 0;
-		virtual unsigned int GetFramCount() = 0;
-		//virtual unsigned int GetFramIndex() = 0;
+		virtual uint32 GetFramCount() = 0;
+		//virtual uint32 GetFramIndex() = 0;
 
 	};
 }

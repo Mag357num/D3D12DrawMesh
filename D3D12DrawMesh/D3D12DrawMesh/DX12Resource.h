@@ -13,7 +13,7 @@ namespace RHI
 	struct FDX12CB : public FCB
 	{
 		ComPtr<ID3D12Resource> CBObj;
-		UINT8* UploadBufferVirtualAddress;
+		void* UploadBufferVirtualAddress;
 	};
 
 	struct FDX12MeshRes : public FMeshRes

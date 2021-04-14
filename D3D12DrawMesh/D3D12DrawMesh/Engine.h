@@ -23,7 +23,7 @@ extern FEngine* GEngine;
 class FEngine
 {
 public:
-    FEngine(unsigned int width, unsigned int height, std::wstring name);
+    FEngine(uint32 width, uint32 height, std::wstring name);
     virtual ~FEngine();
 
     void OnInit();
@@ -38,15 +38,15 @@ public:
     void OnKeyUp(unsigned char Key);
 
     // Accessors.
-    unsigned int GetWidth() const { return ResoWidth; }
-    unsigned int GetHeight() const { return ResoHeight; }
+    uint32 GetWidth() const { return ResoWidth; }
+    uint32 GetHeight() const { return ResoHeight; }
     const wchar_t* GetTitle() const { return m_title.c_str(); }
     StepTimer& GetTimer() { return Timer; }
 
 protected:
     // Viewport dimensions.
-    unsigned int ResoWidth;
-    unsigned int ResoHeight;
+    uint32 ResoWidth;
+    uint32 ResoHeight;
     float m_aspectRatio;
 
     // Adapter info.

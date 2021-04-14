@@ -12,7 +12,7 @@ namespace RHI
 	{
 		FCBData() : DataBuffer(nullptr), BufferSize(256) {};
 		void* DataBuffer;
-		unsigned int BufferSize;
+		uint32 BufferSize;
 	};
 
 	struct FCB : public FRHIResource

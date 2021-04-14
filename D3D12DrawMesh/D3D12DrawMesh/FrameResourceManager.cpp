@@ -1,8 +1,6 @@
 #include "FrameResourceManager.h"
 #include "DynamicRHI.h"
 
-// TODO: make this class platform no dependent
-
 void FFrameResourceManager::CreateRenderResourcesForScene(shared_ptr<FScene> SceneParam)
 {
 	// TODO: delete this block code, and load scene outside by bin file.
@@ -23,9 +21,6 @@ void FFrameResourceManager::UpdateFrameResources()
 	FMatrix V = MainCamera.GetViewMatrix();
 	FMatrix P = MainCamera.GetProjectionMatrix();
 	FMatrix VPMatrix = P * V;
-	//FMatrix VPMatrix = glm::transpose(P * V);
-	//FMatrix VPMatrix = V * P;
-	//FMatrix VPMatrix = glm::transpose(V * P);
 
 	for (auto i : Scene->GetActors())
 	{

@@ -9,8 +9,6 @@
 //
 //*********************************************************
 
-// TODO: make this class platform no dependent
-
 #include "stdafx.h"
 #include "SimpleCamera.h"
 #include <cmath>
@@ -118,13 +116,11 @@ void FCamera::Update(const float& ElapsedSeconds)
 FMatrix FCamera::GetViewMatrix()
 {
 	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection);
-	//return FMatrixLookToLH(XMLoadFloat3(&Position), XMLoadFloat3(&LookDirection), XMLoadFloat3(&UpDirection));
 }
 
 FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/)
 {
 	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
-	//return FMatrixPerspectiveFovLH(Fov, AspectRatio, nearPlane, farPlane);
 }
 
 void FCamera::OnKeyDown(const WPARAM& key)

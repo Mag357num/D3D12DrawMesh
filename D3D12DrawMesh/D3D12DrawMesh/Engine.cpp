@@ -22,7 +22,7 @@ using RHI::FActor;
 
 FEngine* GEngine = nullptr;
 
-FEngine::FEngine(unsigned int width, unsigned int height, std::wstring name) :
+FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
     ResoWidth(width),
     ResoHeight(height),
     m_title(name),

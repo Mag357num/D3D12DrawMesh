@@ -31,11 +31,11 @@ public:
 	void		GetEulerByLook(const FVector& LookAt);
 	void		GetLookByEuler(const float& Pitch, const float& Yaw);
 
-	void		SetFov(float FovParam) { Fov = FovParam; }
-	void		SetAspectRatio(float AspParam) { AspectRatio = AspParam; }
+	void		SetFov(const float& FovParam) { Fov = FovParam; }
+	void		SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
 
 private:
-	void Reset();
+	void		Reset();
 
 	struct KeysPressed
 	{
