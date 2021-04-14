@@ -55,7 +55,7 @@ namespace RHI
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
 		
 		// mesh
-		shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) override;
+		shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) override;
 		virtual void UpLoadMesh(FMesh* Mesh) override;
 
 		// mesh res
@@ -77,7 +77,7 @@ namespace RHI
 		//virtual uint32 GetFramIndex() override { return FrameIndex; }
 	private:
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
-		void ReadStaticMeshBinary(const std::string& BinFileName, void*& PVertData, void*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
+		void ReadStaticMeshBinary(const std::wstring& BinFileName, void*& PVertData, void*& PIndtData, int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum);
 		void WaitForPreviousFrame();
 		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
 		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);

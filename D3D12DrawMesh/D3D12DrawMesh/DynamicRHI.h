@@ -38,7 +38,7 @@ namespace RHI
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
 
 		// mesh
-		virtual shared_ptr<FMesh> PrepareMeshData(const std::string& BinFileName) = 0;
+		virtual shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) = 0;
 		virtual void UpLoadMesh(FMesh* Mesh) = 0;
 
 		// mesh res

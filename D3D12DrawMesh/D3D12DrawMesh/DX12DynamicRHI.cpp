@@ -572,7 +572,7 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::string& BinFileName, void*& PVertData, void*& PIndtData,
+	void FDX12DynamicRHI::ReadStaticMeshBinary(const std::wstring& BinFileName, void*& PVertData, void*& PIndtData,
 		int& VertexBufferSize, int& VertexStride, int& IndexBufferSize, int& IndexNum)
 	{
 		std::ifstream Fin(BinFileName, std::ios::binary);
@@ -621,7 +621,7 @@ namespace RHI
 		RHICommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	shared_ptr<FMesh> FDX12DynamicRHI::PrepareMeshData(const std::string& BinFileName)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::PrepareMeshData(const std::wstring& BinFileName)
 	{
 		shared_ptr<FMesh> Mesh = make_shared<FDX12Mesh>();
 		ReadStaticMeshBinary(BinFileName, Mesh->PVertData, Mesh->PIndtData, Mesh->VertexBufferSize, Mesh->VertexStride, Mesh->IndexBufferSize, Mesh->IndexNum);
