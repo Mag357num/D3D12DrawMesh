@@ -40,13 +40,15 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameInde
 	const UINT MeshActorCount = Scene->MeshActors.size();
 	for (UINT MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex /*auto i : Scene->MeshActors*/)
 	{
-		FMatrix RotateMatrix;
 		const FMatrix Identity = glm::identity<FMatrix>();
-		//glm::rotate(); // TODO: add rotate
-		//FMatrix RotateMatrix = 
+		const FVector& Rotate = Scene->MeshActors[MeshIndex].Transform.Rotator;
+
+		FMatrix RotateMatrix = glm::rotate(Identity, glm::radians(Rotate.z), FVector(0, 0, 1)); // TODO:
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0));
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0));
 		FMatrix ScaleMatrix = glm::scale(Identity, Scene->MeshActors[MeshIndex].Transform.Scale);
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
-		FMatrix WorldMatrix = Identity * TranslateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
+		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 		FMatrix Wvp = glm::transpose(VPMatrix * WorldMatrix);
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
