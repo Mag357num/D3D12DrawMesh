@@ -135,6 +135,6 @@ namespace RHI
 		std::vector<FCommand> CommandLists;
 
 		static const uint32 FrameCount = 1;
-		UINT FrameIndex = 0; // TODO: only have one Frame
+		uint32 FrameIndex = 0; // TODO: only have one Frame
 	};
 }

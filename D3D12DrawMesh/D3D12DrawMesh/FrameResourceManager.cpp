@@ -10,9 +10,9 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Sce
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
-		const UINT MeshActorCount = Scene->MeshActors.size();
+		const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
 		FrameResource.MeshActorFrameResources.resize(MeshActorCount);
-		for (UINT MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
+		for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 		{
 			FMeshActorFrameResource& MeshActorFrameResource = FrameResource.MeshActorFrameResources[MeshIndex];
 			MeshActorFrameResource.MeshActorResIndex = MeshIndex;
@@ -37,19 +37,21 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameInde
 	FMatrix VPMatrix = P * V;
 
 	FFrameResource& FrameResource = FrameResources[FrameIndex];
-	const UINT MeshActorCount = Scene->MeshActors.size();
-	for (UINT MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex /*auto i : Scene->MeshActors*/)
+	const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
+	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
 		const FVector& Rotate = Scene->MeshActors[MeshIndex].Transform.Rotator;
 
-		FMatrix RotateMatrix = glm::rotate(Identity, glm::radians(Rotate.z), FVector(0, 0, 1)); // TODO:
+		FMatrix RotateMatrix = glm::rotate(Identity, glm::radians(Rotate.z), FVector(0, 0, 1));
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0));
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0));
 		FMatrix ScaleMatrix = glm::scale(Identity, Scene->MeshActors[MeshIndex].Transform.Scale);
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
+
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 		FMatrix Wvp = glm::transpose(VPMatrix * WorldMatrix);
+
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
 		UpdateData.BufferSize = sizeof(Wvp);

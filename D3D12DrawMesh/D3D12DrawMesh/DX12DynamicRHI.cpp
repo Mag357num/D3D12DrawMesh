@@ -569,8 +569,8 @@ namespace RHI
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexCount = MeshActor.MeshLODs[0].GetIndices().size();
 
-		uint32 VertexBufferSize = MeshActor.MeshLODs[0].GetVertices().size() * sizeof(float);
-		uint32 IndexBufferSize = MeshActor.MeshLODs[0].GetIndices().size() * sizeof(uint32);
+		uint32 VertexBufferSize = static_cast<uint32>(MeshActor.MeshLODs[0].GetVertices().size() * sizeof(float));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 
