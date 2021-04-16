@@ -17,52 +17,37 @@ namespace RHI
 
 	struct FCB : public FRHIResource
 	{
-		virtual void Init() {};
+		virtual ~FCB() = default;
 	};
 
 	struct FShader : public FRHIResource
 	{
-		virtual void Init() {};
+		virtual ~FShader() = default;
 		std::wstring FileName;
 	};
 
 	struct FMesh : public FRHIResource
 	{
-		virtual void Init() {};
+		FMesh() = default;
+		virtual ~FMesh() = default;
 
-		FMesh() : PVertData(nullptr), PIndtData(nullptr), VertexBufferSize(0), VertexStride(0), IndexBufferSize(0), IndexNum(0) {}
-		~FMesh() { if (PVertData != nullptr) { free(PVertData); } if (PIndtData != nullptr) { free(PIndtData); } }
-
-		void* PVertData;
-		void* PIndtData;
-		int VertexBufferSize;
-		int VertexStride;
-		int IndexBufferSize;
-		int IndexNum;
-	};
-
-	struct FTransform
-	{
-		FMatrix Translation = glm::mat4(1.0f); // TODO: changes to FVector
-		FVector Rotator;
-		FVector Scale;
+		uint32 IndexCount;
 	};
 
 	struct FMeshRes : public FRHIResource
 	{
-		virtual void init() {};
+		virtual ~FMeshRes() = default;
 
-		FTransform Transform;
 		shared_ptr<FCB> CB;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
 
-	struct FIndividual : public FRHIResource //TODO: Actor do not store mesh and res data, but the obj mesh index, and pos
-	{
-		shared_ptr<FMesh> Mesh;
-		shared_ptr<FMeshRes> MeshRes;
-	};
+	//struct FIndividual : public FRHIResource //TODO: FIndividual do not store mesh and res data, but the obj mesh index, and pos
+	//{
+	//	shared_ptr<FMesh> Mesh;
+	//	shared_ptr<FMeshRes> MeshRes;
+	//};
 
 	struct FPSOInitializer
 	{

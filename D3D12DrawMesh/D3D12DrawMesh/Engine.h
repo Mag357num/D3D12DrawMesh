@@ -16,6 +16,7 @@
 #include "DynamicRHI.h"
 #include "StepTimer.h"
 #include "FScene.h"
+#include "AssetManager.h"
 
 class FEngine;
 extern FEngine* GEngine;
@@ -64,4 +65,7 @@ private:
 
     // scene
 	shared_ptr <FScene> CurrentScene;
+
+    // manager
+	shared_ptr<FAssetManager> AssetManager;
 };

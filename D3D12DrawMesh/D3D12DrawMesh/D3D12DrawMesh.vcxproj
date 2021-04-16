@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssetManager.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DX12DynamicRHI.h" />
     <ClInclude Include="DX12Resource.h" />
@@ -32,6 +33,7 @@
     <ClInclude Include="RenderThread.h" />
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="SimpleCamera.h" />
+    <ClInclude Include="StaticMeshActor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Thread.h" />
@@ -39,6 +41,7 @@
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="DX12DynamicRHI.cpp" />
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -48,6 +51,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
+    <ClCompile Include="StaticMeshActor.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>

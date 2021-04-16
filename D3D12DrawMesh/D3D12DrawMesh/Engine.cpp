@@ -18,7 +18,6 @@ using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
 using RHI::FMesh;
 using RHI::FMeshRes;
-using RHI::FIndividual;
 
 FEngine* GEngine = nullptr;
 
@@ -33,9 +32,13 @@ FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
     GetAssetsPath(assetsPath, _countof(assetsPath));
     m_assetsPath = assetsPath;
     m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+
+	AssetManager = make_shared<FAssetManager>();
+
 	CurrentScene = make_shared<FScene>();
 	CurrentScene->GetCurrentCamera().SetAspectRatio(m_aspectRatio);
 	CurrentScene->GetCurrentCamera().SetFov(0.8f);
+	CurrentScene->GetCurrentCamera().Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
 }
 
 FEngine::~FEngine()
@@ -45,7 +48,7 @@ FEngine::~FEngine()
 void FEngine::OnInit()
 {
 	// TODO: refactor here. read a bin file to load scene
-	CurrentScene->GetCurrentCamera().Init({ 500, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 });
+	AssetManager->LoadMeshesToScene(L"Scene_.dat", CurrentScene.get());
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
 	FRenderThread::Get()->CreateResourceForScene(CurrentScene);
@@ -55,7 +58,7 @@ void FEngine::OnUpdate()
 {
 	CurrentScene->UpdateMainCamera(GEngine);
 	FRenderThread::Get()->WaitForRenderThread();
-	FRenderThread::Get()->UpdateFrameResources();
+	FRenderThread::Get()->UpdateFrameResources(CurrentScene.get());
 }
 
 void FEngine::OnRender()

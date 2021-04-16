@@ -1,34 +1,57 @@
 #include "FrameResourceManager.h"
 #include "DynamicRHI.h"
+#include <gtc/matrix_transform.hpp>
 
-void FFrameResourceManager::CreateRenderResourcesForScene(shared_ptr<FScene> SceneParam)
+void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Scene, uint32 FrameCount)
 {
-	// TODO: delete this block code, and load scene outside by bin file.
-	shared_ptr<FMesh> Mesh = RHI::GDynamicRHI->PrepareMeshData(L"StaticMeshBinary_.dat"); // TODO: hard code
-	GDynamicRHI->UpLoadMesh(Mesh.get());
-	shared_ptr<FMeshRes> MeshRes = GDynamicRHI->CreateMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0); // TODO: hard code
-	shared_ptr<FIndividual> Actor = make_shared<FIndividual>();
-	Actor->Mesh = Mesh;
-	Actor->MeshRes = MeshRes;
-	SceneParam->Individuals.push_back(Actor);
+	//new
+	RHI::GDynamicRHI->BegineCreateResource();
+	FrameResources.resize(FrameCount);
+	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
+	{
+		FFrameResource& FrameResource = FrameResources[FrameIndex];
+		const UINT MeshActorCount = Scene->MeshActors.size();
+		FrameResource.MeshActorFrameResources.resize(MeshActorCount);
+		for (UINT MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
+		{
+			FMeshActorFrameResource& MeshActorFrameResource = FrameResource.MeshActorFrameResources[MeshIndex];
+			MeshActorFrameResource.MeshActorResIndex = MeshIndex;
+			FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
+			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
+		}
+	}
 
-	Scene = SceneParam;
+	RHI::GDynamicRHI->EndCreateResource();
 }
 
-void FFrameResourceManager::UpdateFrameResources()
+void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor)
+{
+	RHI::GDynamicRHI->CreateMeshForFrameResource(MeshActorFrameResource, MeshActor);
+}
+
+void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameIndex)
 {
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix V = MainCamera.GetViewMatrix();
-	FMatrix P = MainCamera.GetProjectionMatrix();
+	FMatrix P = MainCamera.GetProjectionMatrix(1.0f, 10000.0f);
 	FMatrix VPMatrix = P * V;
 
-	for (auto i : Scene->GetActors())
+	FFrameResource& FrameResource = FrameResources[FrameIndex];
+	const UINT MeshActorCount = Scene->MeshActors.size();
+	for (UINT MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex /*auto i : Scene->MeshActors*/)
 	{
-		FMatrix WorldMatrix = i->MeshRes->Transform.Translation; // TODO: only considered the translation
+		FMatrix RotateMatrix;
+		const FMatrix Identity = glm::identity<FMatrix>();
+		//glm::rotate(); // TODO: add rotate
+		//FMatrix RotateMatrix = 
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->MeshActors[MeshIndex].Transform.Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
+		FMatrix WorldMatrix = Identity * TranslateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 		FMatrix Wvp = glm::transpose(VPMatrix * WorldMatrix);
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
 		UpdateData.BufferSize = sizeof(Wvp);
-		GDynamicRHI->UpdateConstantBufferInMeshRes(i->MeshRes.get(), &UpdateData);
+		GDynamicRHI->UpdateConstantBufferInMeshRes(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
+			&UpdateData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}
 }

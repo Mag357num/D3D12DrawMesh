@@ -5,13 +5,19 @@
 
 namespace RHI
 {
-	struct FCommandListDx12
+	struct FCommand
 	{
-		ComPtr<ID3D12CommandAllocator> Allocators[BUFFRING_NUM]; // TODO: per commandlist with BUFFRING_NUM allocators, why?
+		FCommand(ComPtr<ID3D12CommandQueue> CQ) { CommandQueue = CQ; }
+
+		ComPtr<ID3D12CommandAllocator> Allocator;
 		ComPtr<ID3D12GraphicsCommandList> CommandList;
+		ComPtr<ID3D12CommandQueue> CommandQueue;
+
 		//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
 
 		void Create(ComPtr<ID3D12Device> Device);
+		void Close();
+		void Execute();
 		void Reset();
 	};
 
@@ -49,48 +55,46 @@ namespace RHI
 		~FDX12DynamicRHI() = default;
 
 		// init
-		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight) override;
+		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
+			const uint32& ResoHeight) override;
 
 		// pso
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
 		
-		// scene
-		virtual shared_ptr<FScene> PrepareSceneData(const std::wstring& BinFileName) override;
 
 		// mesh
-		virtual shared_ptr<FMesh> PrepareMeshData(const std::wstring& BinFileName) override;
-		virtual void UpLoadMesh(FMesh* Mesh) override;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor) override;
 
 		// mesh res
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
-		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags) override;
-		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) override;
+		//virtual void CreateMeshResObj(FMeshRes* MeshRes, const std::wstring& FileName, const SHADER_FLAGS& flags) override;
+		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size, uint32 ResIndex) override;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawScene(const FScene* Scene) override;
-		virtual void DrawActor(const FIndividual* Actor) override;
+		virtual void DrawFrame(const FFrameResource* FrameRes) override;
+		virtual void DrawMeshActor(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
 		// sync
-		virtual void SyncFrame() override;
-		virtual uint32 GetFramCount() override { return FrameCount; }
-		//virtual uint32 GetFramIndex() override { return FrameIndex; }
+		virtual void CreateFenceAndEvent() override;
+		virtual uint32 GetFrameCount() override { return FrameCount; }
+		virtual uint32 GetFramIndex() override { return FrameIndex; }
+		virtual void BegineCreateResource() override;
+		virtual void EndCreateResource() override;
 
 	private:
+		shared_ptr<FMesh> CommitMeshBuffer(FMeshActor& MeshActor);
+		shared_ptr<FMeshRes> CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags, uint32 ResIndex);
+
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
-		void ReadSceneFromBinary(const std::wstring& BinFileName, FScene* Scene);
-		void ReadStaticMeshBinary(const std::wstring& BinFileName, FMesh* Mesh);
-		void ReadMeshFromIfstream(std::ifstream& Fin, FMesh* Mesh);
-		void ReadMeshResFromIfstream(std::ifstream& Fin, FMeshRes* MeshRes);
-		void WaitForPreviousFrame();
-		void UpdateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
-		void UpdateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> CommandList, FDX12Mesh* FMeshPtr);
-		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
+		void WaitForExecuteComplete();
+		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
+			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const uint32& FrameCount);
-		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap);
+		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 ResIndex);
 		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 Width, uint32 Height);
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
 		uint32 GetEnableShaderDebugFlags();
@@ -99,10 +103,11 @@ namespace RHI
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
 		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
-		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size, ComPtr<ID3D12DescriptorHeap>& Heap);
+		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 ResIndex);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig_1CB_VS();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
-		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
+		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
+			bool requestHighPerformanceAdapter = false);
 
 	private:
 		// RHI attributes
@@ -118,16 +123,18 @@ namespace RHI
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
 		uint32 BackFrameIndex;
-		HANDLE FenceEvent;
-		int FenceValue;
-		ComPtr<ID3D12Fence> Fence;
 		uint32 ResoWidth;
 		uint32 ResoHeight;
 
+		HANDLE FenceEvent;
+		int FenceValue;
+		ComPtr<ID3D12Fence> Fence;
+
 		// may changes attributes
 		ComPtr<ID3D12Resource> DepthStencil;
-		std::vector<FCommandListDx12> GraphicsCommandLists;
+		std::vector<FCommand> CommandLists;
 
 		static const uint32 FrameCount = 1;
+		UINT FrameIndex = 0; // TODO: only have one Frame
 	};
 }

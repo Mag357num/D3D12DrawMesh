@@ -7,5 +7,5 @@ class FRenderer
 public:
 	virtual ~FRenderer() = default;
 
-	void RenderScene(shared_ptr<FDynamicRHI> RHI, shared_ptr<FFrameResourceManager> FrameRes);
+	void RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes);
 };
