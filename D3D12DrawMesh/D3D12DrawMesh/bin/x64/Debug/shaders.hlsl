@@ -11,8 +11,12 @@
 
 cbuffer SceneConstantBuffer : register(b0)
 {
-    float4x4 worldViewProj;
-    float4 padding[12];
+    float4x4 WVP;
+    float4x4 World;
+    float3 ViewDir;
+    float3 DirectionLightDir;
+    float3 DirectionLightColor;
+	float DirectionLightIntensity;
 };
 
 struct VSInput
@@ -27,6 +31,7 @@ struct VSInput
 struct PSInput
 {
     float4 position : SV_POSITION;
+	float3 normal : NORMAL;
     float4 color : COLOR;
 };
 
@@ -34,8 +39,10 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    result.position = mul(float4(input.position, 1.0f), worldViewProj);
+    result.position = mul(float4(input.position, 1.0f), WVP);
 	input.normal = (input.normal + 1)/2;
+
+    result.normal = normalize((float3)(mul(input.normal, World)));
     result.color = float4(input.normal, 1.0f);
 
     return result;

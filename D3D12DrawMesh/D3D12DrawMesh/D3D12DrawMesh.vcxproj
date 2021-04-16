@@ -28,6 +28,7 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FrameResourceManager.h" />
     <ClInclude Include="FScene.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="MathExtend.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderThread.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="FrameResourceManager.cpp" />
     <ClCompile Include="FScene.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderThread.cpp" />

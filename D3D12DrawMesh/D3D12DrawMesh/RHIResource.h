@@ -43,12 +43,6 @@ namespace RHI
 		shared_ptr<FShader> PS;
 	};
 
-	//struct FIndividual : public FRHIResource //TODO: FIndividual do not store mesh and res data, but the obj mesh index, and pos
-	//{
-	//	shared_ptr<FMesh> Mesh;
-	//	shared_ptr<FMeshRes> MeshRes;
-	//};
-
 	struct FPSOInitializer
 	{
 		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
@@ -60,5 +54,17 @@ namespace RHI
 
 	class FTexture2D : public FTexture
 	{
+	};
+
+	struct FBlinnPhongCB // 168 bytes
+	{
+		FMatrix WVP;
+		FMatrix World;
+
+		FVector ViewDir;
+
+		FVector DirectionLightDir;
+		FVector DirectionLightColor;
+		float DirectionLightIntensity;
 	};
 }

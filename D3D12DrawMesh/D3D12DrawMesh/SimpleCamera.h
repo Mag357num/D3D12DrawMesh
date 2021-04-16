@@ -34,6 +34,8 @@ public:
 	void		SetFov(const float& FovParam) { Fov = FovParam; }
 	void		SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
 
+	FVector		GetPosition() { return Position; }
+
 private:
 	void		Reset();
 

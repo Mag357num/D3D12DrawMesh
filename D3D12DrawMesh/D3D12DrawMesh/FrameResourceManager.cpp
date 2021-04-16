@@ -1,6 +1,7 @@
 #include "FrameResourceManager.h"
 #include "DynamicRHI.h"
 #include <gtc/matrix_transform.hpp>
+#include "RHIResource.h"
 
 void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Scene, uint32 FrameCount)
 {
@@ -46,15 +47,26 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameInde
 		FMatrix RotateMatrix = glm::rotate(Identity, glm::radians(Rotate.z), FVector(0, 0, 1));
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0));
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0));
+
 		FMatrix ScaleMatrix = glm::scale(Identity, Scene->MeshActors[MeshIndex].Transform.Scale);
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
-		FMatrix Wvp = glm::transpose(VPMatrix * WorldMatrix);
+		FMatrix WVP = glm::transpose(VPMatrix * WorldMatrix);
+
+		FBlinnPhongCB ConstantBufferData;
+		ConstantBufferData.WVP = WVP;
+		ConstantBufferData.World = WorldMatrix;
+
+		ConstantBufferData.ViewDir = Scene->SceneCamera.GetPosition();
+
+		ConstantBufferData.DirectionLightDir = Scene->DirectionLight.Dir;
+		ConstantBufferData.DirectionLightColor = Scene->DirectionLight.Color;
+		ConstantBufferData.DirectionLightIntensity = Scene->DirectionLight.Intensity;
 
 		RHI::FCBData UpdateData;
-		UpdateData.DataBuffer = reinterpret_cast<void*>(&Wvp);
-		UpdateData.BufferSize = sizeof(Wvp);
+		UpdateData.DataBuffer = reinterpret_cast<void*>(&ConstantBufferData);
+		UpdateData.BufferSize = sizeof(ConstantBufferData);
 		GDynamicRHI->UpdateConstantBufferInMeshRes(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
 			&UpdateData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}

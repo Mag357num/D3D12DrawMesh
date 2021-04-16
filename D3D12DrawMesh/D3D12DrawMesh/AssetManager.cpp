@@ -42,7 +42,7 @@ void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FMeshLOD& MeshLO
 	Fin.read((char*)&BufferElementSize, sizeof(int));
 	BufferByteSize = BufferElementSize * MeshLOD.GetVertexStride();
 
-	float VerticeSize = BufferByteSize / sizeof(float);
+	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
 	MeshLOD.GetVertices().resize(static_cast<int>(BufferByteSize / sizeof(float)));
 	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
