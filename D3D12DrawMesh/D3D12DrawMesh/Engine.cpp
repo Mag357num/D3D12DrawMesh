@@ -54,8 +54,8 @@ void FEngine::OnInit()
 
 void FEngine::OnUpdate()
 {
-	CurrentScene->UpdateMainCamera(GEngine);
 	FRenderThread::Get()->WaitForRenderThread();
+	CurrentScene->UpdateMainCamera(GEngine);
 	FRenderThread::Get()->UpdateFrameResources(CurrentScene.get());
 }
 

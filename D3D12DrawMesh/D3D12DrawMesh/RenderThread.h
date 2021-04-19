@@ -7,7 +7,7 @@ class FRenderThread : public FTaskThread
 	shared_ptr<class FFrameResourceManager> FrameResourceManager;
 	std::condition_variable RenderCV;
 	std::mutex RenderMutex;
-	std::atomic_int32_t FrameTaskNum = 0;
+	std::atomic_int32_t RenderTaskNum = 0;
 
 public:
 	FRenderThread();

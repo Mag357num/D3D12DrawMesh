@@ -45,10 +45,14 @@ void FRenderThread::DoRender()
 		return;
 	}
 
+	std::unique_lock<std::mutex> Lock(Mutex);
+	RenderCV.wait(Lock, [this]() { return RenderTaskNum > 0; });
+
 	FFrameResource& FrameResource = FrameResourceManager->FrameResources[GDynamicRHI->GetFramIndex()];
 	FRenderer Renderer;
 	Renderer.RenderScene(RHI::GDynamicRHI.get(), &FrameResource);
-	--FrameTaskNum;
+	--RenderTaskNum;
+
 	RenderCV.notify_all();
 }
 
@@ -103,6 +107,6 @@ void FRenderThread::UpdateFrameResources(FScene* Scene)
 void FRenderThread::WaitForRenderThread()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);
-	RenderCV.wait(Lock, [this]() { return FrameTaskNum < RHI::GDynamicRHI->GetFrameCount(); });
-	++FrameTaskNum;
+	RenderCV.wait(Lock, [this]() { return RenderTaskNum < RHI::GDynamicRHI->GetFrameCount(); });
+	++RenderTaskNum;
 }
