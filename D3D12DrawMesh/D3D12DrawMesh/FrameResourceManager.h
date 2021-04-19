@@ -26,7 +26,7 @@ public:
 	std::vector<FFrameResource> FrameResources;
 	//shared_ptr<FScene> FrameManagerScene; // TODO: remove
 public:
-	void CreateFrameResourcesFromScene(shared_ptr<FScene> Scene, uint32 FrameCount);
+	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, uint32 FrameIndex);
-	void CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor);
+	void CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor);
 };

@@ -3,7 +3,7 @@
 #include <gtc/matrix_transform.hpp>
 #include "RHIResource.h"
 
-void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Scene, uint32 FrameCount)
+void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount)
 {
 	//new
 	RHI::GDynamicRHI->BegineCreateResource();
@@ -17,7 +17,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Sce
 		{
 			FMeshActorFrameResource& MeshActorFrameResource = FrameResource.MeshActorFrameResources[MeshIndex];
 			MeshActorFrameResource.MeshActorResIndex = MeshIndex;
-			FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
+			const FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
 			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
 		}
 	}
@@ -25,7 +25,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(shared_ptr<FScene> Sce
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor)
+void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
 {
 	RHI::GDynamicRHI->CreateMeshForFrameResource(MeshActorFrameResource, MeshActor);
 }

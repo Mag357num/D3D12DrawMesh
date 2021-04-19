@@ -489,7 +489,7 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor)
+	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
 		MeshActorFrameResource.MeshToRender = CommitMeshBuffer(MeshActor);
 		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0, MeshActor.MeshActorIndex);
@@ -563,7 +563,7 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CommitMeshBuffer(FMeshActor& MeshActor)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CommitMeshBuffer(const FMeshActor& MeshActor)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexCount = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size());

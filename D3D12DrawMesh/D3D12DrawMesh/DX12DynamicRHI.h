@@ -63,7 +63,7 @@ namespace RHI
 		
 
 		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor) override;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// mesh res
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
@@ -86,7 +86,7 @@ namespace RHI
 		virtual void EndCreateResource() override;
 
 	private:
-		shared_ptr<FMesh> CommitMeshBuffer(FMeshActor& MeshActor);
+		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
 		shared_ptr<FMeshRes> CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags, uint32 ResIndex);
 
 		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }

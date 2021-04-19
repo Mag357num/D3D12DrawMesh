@@ -44,13 +44,13 @@ void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FMeshLOD& MeshLO
 
 	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
-	MeshLOD.GetVertices().resize(static_cast<int>(BufferByteSize / sizeof(float)));
+	MeshLOD.ResizeVertices(static_cast<int>(BufferByteSize / sizeof(float)));
 	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
 
 	Fin.read((char*)&BufferElementSize, sizeof(int));
 	BufferByteSize = BufferElementSize * sizeof(int);
 
-	MeshLOD.GetIndices().resize(BufferElementSize);
+	MeshLOD.ResizeIndices(BufferElementSize);
 	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
 }
 

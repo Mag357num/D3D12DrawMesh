@@ -40,7 +40,7 @@ namespace RHI
 		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
 
 		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, FMeshActor& MeshActor) = 0;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// mesh res
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;

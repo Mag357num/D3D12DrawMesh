@@ -14,9 +14,11 @@ public:
 	FMeshLOD() = default;
 	~FMeshLOD() = default;
 
-	vector<float>& GetVertices() { return Vertices; }
-	vector<uint32>& GetIndices() { return Indices; }
-	uint32& GetVertexStride() { return VertexStride; }
+	void ResizeVertices(uint32 Size) { Vertices.resize(Size); }
+	void ResizeIndices(uint32 Size) { Indices.resize(Size); }
+	const vector<float>& GetVertices() const { return Vertices; }
+	const vector<uint32>& GetIndices() const { return Indices; }
+	const uint32& GetVertexStride() const { return VertexStride; }
 
 public:
 	uint32 VertexStride;
