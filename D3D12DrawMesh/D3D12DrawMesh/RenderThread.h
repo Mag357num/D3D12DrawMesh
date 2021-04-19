@@ -8,7 +8,6 @@ class FRenderThread : public FTaskThread
 	std::condition_variable RenderCV;
 	std::mutex RenderMutex;
 	std::atomic_int32_t FrameTaskNum = 0;
-	bool IsResLoaded = false;
 
 public:
 	FRenderThread();

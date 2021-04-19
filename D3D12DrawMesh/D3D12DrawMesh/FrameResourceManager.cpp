@@ -7,7 +7,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 {
 	//new
 	RHI::GDynamicRHI->BegineCreateResource();
-	FrameResources.resize(FrameCount);
+	FrameResources.resize(FrameCount); // TODO: should move to init(), resize the FrameResources according to double buffering frame or triple
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];

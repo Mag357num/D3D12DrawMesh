@@ -33,16 +33,18 @@ void FRenderThread::Run()
 			}
 		}
 
-		if (IsResLoaded)
-		{
-			DoRender();
-		}
+		DoRender();
 	}
 	Tasks.clear();
 }
 
 void FRenderThread::DoRender()
 {
+	if(FrameResourceManager->FrameResources.size() == 0)
+	{
+		return;
+	}
+
 	FFrameResource& FrameResource = FrameResourceManager->FrameResources[GDynamicRHI->GetFramIndex()];
 	FRenderer Renderer;
 	Renderer.RenderScene(RHI::GDynamicRHI.get(), &FrameResource);
@@ -76,7 +78,6 @@ void FRenderThread::CreateResourceForScene(shared_ptr<FScene> Scene)
 	RENDER_THREAD([this, Scene]()
 		{
 			FrameResourceManager->CreateFrameResourcesFromScene(Scene, GDynamicRHI->GetFrameCount());
-			IsResLoaded = true;
 		});
 }
 
