@@ -89,15 +89,26 @@ void FCamera::Update(const float& ElapsedSeconds)
 
 	FVector2 MouseRotateInterval = MouseSensibility * (MouseCurrentPosition - MouseFirstPosition);
 
-	// wasd for looking direction
+	// wasd for movement
 	if (Keys.w)
-		Pitch += KeyRotateInterval;
+	{
+		Move.x += MoveInterval * cos(Pitch);
+		Move.z += MoveInterval * sin(Pitch);
+	}
 	if (Keys.s)
-		Pitch -= KeyRotateInterval;
-	if (Keys.a)
-		Yaw -= KeyRotateInterval;
+	{
+		Move.x -= MoveInterval * cos(Pitch);
+		Move.z -= MoveInterval * sin(Pitch);
+	}
 	if (Keys.d)
-		Yaw += KeyRotateInterval;
+	{
+		Move.y += MoveInterval;
+	}
+	if (Keys.a)
+	{
+		Move.y -= MoveInterval;
+	}
+
 	
 	// qe for move up and down
 	if (Keys.q)
@@ -134,10 +145,6 @@ void FCamera::Update(const float& ElapsedSeconds)
 	Position.x += Move.x * cos(Pitch) * cos(Yaw) - Move.y * cos(Pitch) * sin(Yaw);
 	Position.y += Move.x * cos(Pitch) * sin(Yaw) + Move.y * cos(Pitch) * cos(Yaw);
 	Position.z += Move.z;
-
-	//Position.x += Move.x * cos(Yaw);
-	//Position.y += Move.x * sin(Yaw);
-	//Position.z += Move.z;
 
 	MouseFirstPosition = MouseCurrentPosition;
 
@@ -236,7 +243,6 @@ void FCamera::OnRightButtonDown(const uint32& x, const uint32& y)
 	IsMouseDown = true;
 	MouseFirstPosition = { static_cast<float>(x), static_cast<float>(y) };
 	MouseCurrentPosition = MouseFirstPosition;
-
 }
 
 void FCamera::OnRightButtonUp()
