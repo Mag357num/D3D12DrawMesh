@@ -45,7 +45,7 @@ void FCamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0;
 }
 
-void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt)
+void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio)
 {
 	InitialPosition = PositionParam;
 	InitialUpDir = UpDir;
@@ -57,6 +57,9 @@ void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVe
 
 	// regard the yaw start at x+ dir, pitch start at x+ dir, roll start at y+ dir.
 	GetEulerByLook(LookAt);
+
+	SetFov(Fov);
+	SetAspectRatio(AspectRatio);
 }
 
 void FCamera::SetMoveSpeed(const float & UnitsPerSecond)
@@ -113,12 +116,12 @@ void FCamera::Update(const float& ElapsedSeconds)
 	GetLookByEuler(Pitch, Yaw);
 }
 
-FMatrix FCamera::GetViewMatrix()
+FMatrix FCamera::GetViewMatrix() const
 {
 	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection);
 }
 
-FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/)
+FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
 {
 	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
 }

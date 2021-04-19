@@ -36,9 +36,7 @@ FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
 	AssetManager = make_shared<FAssetManager>();
 
 	CurrentScene = make_shared<FScene>();
-	CurrentScene->GetCurrentCamera().SetAspectRatio(m_aspectRatio);
-	CurrentScene->GetCurrentCamera().SetFov(0.8f);
-	CurrentScene->GetCurrentCamera().Init({ 700, -100, 150 }, { 0, 0, 1 }, { -1, 0, 0 });
+	CurrentScene->SetCurrentCamera({ 1000, -100, 150 }, { 0, 0, 1 }, { -1, 0, 0 }, 0.8f, m_aspectRatio);
 }
 
 FEngine::~FEngine()

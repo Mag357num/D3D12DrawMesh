@@ -27,6 +27,6 @@ public:
 	//shared_ptr<FScene> FrameManagerScene; // TODO: remove
 public:
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
-	void UpdateFrameResources(FScene* Scene, uint32 FrameIndex);
+	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 	void CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor);
 };

@@ -14,5 +14,6 @@ public:
 
 public:
 	void UpdateMainCamera(class FEngine* Engine);
+	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio) { return SceneCamera.Init(PositionParam, UpDir, LookAt, Fov, AspectRatio); }
 	FCamera& GetCurrentCamera() { return SceneCamera; }
 };

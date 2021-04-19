@@ -18,10 +18,10 @@ class FCamera
 public:
 	FCamera();
 
-	void		Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt);
+	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
 	void		Update(const float& ElapsedSeconds);
-	FMatrix		GetViewMatrix();
-	FMatrix		GetProjectionMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f);
+	FMatrix		GetViewMatrix() const;
+	FMatrix		GetProjectionMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	void		SetMoveSpeed(const float & UnitsPerSecond);
 	void		SetTurnSpeed(const float& RadiansPerSecond);
 

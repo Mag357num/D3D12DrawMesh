@@ -30,7 +30,7 @@ void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResourc
 	RHI::GDynamicRHI->CreateMeshForFrameResource(MeshActorFrameResource, MeshActor);
 }
 
-void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameIndex)
+void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix V = MainCamera.GetViewMatrix();
