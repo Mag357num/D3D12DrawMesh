@@ -69,7 +69,7 @@ int Win32Application::Run(FEngine* pEngine, HINSTANCE hInstance, int nCmdShow)
 // Main message handler for the sample.
 LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    FEngine* pSample = reinterpret_cast<FEngine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    FEngine* pEngine = reinterpret_cast<FEngine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     switch (message)
     {
@@ -82,24 +82,24 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         return 0;
 
     case WM_KEYDOWN:
-        if (pSample)
+        if (pEngine)
         {
-            pSample->OnKeyDown(static_cast<UINT8>(wParam));
+            pEngine->OnKeyDown(static_cast<UINT8>(wParam));
         }
         return 0;
 
     case WM_KEYUP:
-        if (pSample)
+        if (pEngine)
         {
-            pSample->OnKeyUp(static_cast<UINT8>(wParam));
+            pEngine->OnKeyUp(static_cast<UINT8>(wParam));
         }
         return 0;
 
     case WM_PAINT:
-        if (pSample)
+        if (pEngine)
         {
-            pSample->OnUpdate();
-            pSample->OnRender();
+            pEngine->OnUpdate();
+            pEngine->OnRender();
         }
         return 0;
 
