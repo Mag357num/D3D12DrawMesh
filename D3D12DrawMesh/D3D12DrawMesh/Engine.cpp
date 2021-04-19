@@ -9,7 +9,6 @@
 //
 //*********************************************************
 
-#include "stdafx.h"
 #include "Engine.h"
 #include "DynamicRHI.h"
 #include "RenderThread.h"

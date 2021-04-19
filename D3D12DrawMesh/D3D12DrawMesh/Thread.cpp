@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Thread.h"
 
 FThread::FThread(const std::string& _Name) : Name(_Name)

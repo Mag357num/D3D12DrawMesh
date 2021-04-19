@@ -9,7 +9,6 @@
 //
 //*********************************************************
 
-#include "stdafx.h"
 #include "SimpleCamera.h"
 #include <cmath>
 #include "MathExtend.h"

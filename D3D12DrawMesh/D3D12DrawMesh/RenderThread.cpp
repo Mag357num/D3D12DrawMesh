@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "RenderThread.h"
 #include "Engine.h"
 #include "Renderer.h"

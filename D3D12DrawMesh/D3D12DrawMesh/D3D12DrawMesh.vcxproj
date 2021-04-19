@@ -42,7 +42,9 @@
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AssetManager.cpp" />
+    <ClCompile Include="AssetManager.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="DX12DynamicRHI.cpp" />
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -54,6 +56,9 @@
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
@@ -162,6 +167,8 @@
       <ConformanceMode>false</ConformanceMode>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAsWinRT>false</CompileAsWinRT>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
