@@ -56,15 +56,18 @@ namespace RHI
 	{
 	};
 
+	#pragma pack(1)
 	struct FBlinnPhongCB // 168 bytes
 	{
 		FMatrix WVP;
 		FMatrix World;
+		FMatrix Rotator;
 
-		FVector ViewDir;
+		FVector4 CamEye;
 
-		FVector DirectionLightDir;
-		FVector DirectionLightColor;
+		FVector4 DirectionLightDir;
+		FVector4 DirectionLightColor;
 		float DirectionLightIntensity;
 	};
+	#pragma pack()
 }

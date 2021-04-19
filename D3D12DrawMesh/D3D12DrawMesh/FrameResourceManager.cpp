@@ -42,11 +42,12 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameInde
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FVector& Rotate = Scene->MeshActors[MeshIndex].Transform.Rotator;
+		const FVector& Rotate = Scene->MeshActors[MeshIndex].Transform.Rotator; // x roll y pitch z yaw
 
-		FMatrix RotateMatrix = glm::rotate(Identity, glm::radians(Rotate.z), FVector(0, 0, 1));
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0));
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0));
+		FMatrix RotateMatrix = Identity;
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0)); // roll
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0)); // pitch
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.z), FVector(0, 0, 1)); // yaw
 
 		FMatrix ScaleMatrix = glm::scale(Identity, Scene->MeshActors[MeshIndex].Transform.Scale);
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
@@ -54,14 +55,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, uint32 FrameInde
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 		FMatrix WVP = glm::transpose(VPMatrix * WorldMatrix);
 
+		FVector4 test = { 1, 0, 0, 1 };
+		FVector4 result = RotateMatrix * test;
+
 		FBlinnPhongCB ConstantBufferData;
 		ConstantBufferData.WVP = WVP;
-		ConstantBufferData.World = WorldMatrix;
+		ConstantBufferData.World = glm::transpose(WorldMatrix);
+		ConstantBufferData.Rotator = glm::transpose(Identity * RotateMatrix);
 
-		ConstantBufferData.ViewDir = Scene->SceneCamera.GetPosition();
+		FVector CamPos = Scene->SceneCamera.GetPosition();
+		ConstantBufferData.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
 
-		ConstantBufferData.DirectionLightDir = Scene->DirectionLight.Dir;
-		ConstantBufferData.DirectionLightColor = Scene->DirectionLight.Color;
+		ConstantBufferData.DirectionLightDir = FVector4(Scene->DirectionLight.Dir.x, Scene->DirectionLight.Dir.y, Scene->DirectionLight.Dir.z, 1.0f);
+		ConstantBufferData.DirectionLightColor = FVector4(Scene->DirectionLight.Color.x, Scene->DirectionLight.Color.y, Scene->DirectionLight.Color.z, 1.0f);
 		ConstantBufferData.DirectionLightIntensity = Scene->DirectionLight.Intensity;
 
 		RHI::FCBData UpdateData;
