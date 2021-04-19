@@ -95,6 +95,31 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
         }
         return 0;
 
+	case WM_RBUTTONDOWN:
+		if (pEngine)
+		{
+			UINT x = LOWORD(lParam);
+			UINT y = HIWORD(lParam);
+			pEngine->OnRightButtonDown(x, y);
+		}
+		return 0;
+
+	case WM_RBUTTONUP:
+		if (pEngine)
+		{
+			pEngine->OnRightButtonUp();
+		}
+		return 0;
+
+	case WM_MOUSEMOVE:
+		if (pEngine && static_cast<UINT8>(wParam) == MK_RBUTTON)
+		{
+			UINT x = LOWORD(lParam);
+			UINT y = HIWORD(lParam);
+			pEngine->OnMouseMove(x, y);
+		}
+		return 0;
+
     case WM_PAINT:
         if (pEngine)
         {

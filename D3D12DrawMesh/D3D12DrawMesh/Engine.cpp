@@ -24,19 +24,19 @@ FEngine* GEngine = nullptr;
 FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
     ResoWidth(width),
     ResoHeight(height),
-    m_title(name),
-    m_useWarpDevice(false)
+    Title(name),
+    IsUseWarpDevice(false)
 {
 	GEngine = this;
     WCHAR assetsPath[512];
     GetAssetsPath(assetsPath, _countof(assetsPath));
-    m_assetsPath = assetsPath;
-    m_aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+    AssetsPath = assetsPath;
+    AspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
 	AssetManager = make_shared<FAssetManager>();
 
 	CurrentScene = make_shared<FScene>();
-	CurrentScene->SetCurrentCamera({ 1000, -100, 150 }, { 0, 0, 1 }, { -1, 0, 0 }, 0.8f, m_aspectRatio);
+	CurrentScene->SetCurrentCamera({ 1000, -100, 150 }, { 0, 0, 1 }, { -1, 0, 0 }, 0.8f, AspectRatio);
 }
 
 FEngine::~FEngine()
@@ -77,4 +77,19 @@ void FEngine::OnKeyDown(unsigned char Key)
 void FEngine::OnKeyUp(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera().OnKeyUp(Key);
+}
+
+void FEngine::OnMouseMove(uint32 x, uint32 y)
+{
+	CurrentScene->GetCurrentCamera().OnMouseMove(x, y);
+}
+
+void FEngine::OnRightButtonDown(uint32 x, uint32 y)
+{
+	CurrentScene->GetCurrentCamera().OnRightButtonDown(x, y);
+}
+
+void FEngine::OnRightButtonUp()
+{
+	CurrentScene->GetCurrentCamera().OnRightButtonUp();
 }

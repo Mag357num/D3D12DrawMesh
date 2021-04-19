@@ -36,29 +36,32 @@ public:
 
     // Samples override the event handlers to handle specific messages.
 	void OnKeyDown(unsigned char Key);
-    void OnKeyUp(unsigned char Key);
+	void OnKeyUp(unsigned char Key);
+    void OnMouseMove(uint32 x, uint32 y);
+	void OnRightButtonDown(uint32 x, uint32 y);
+	void OnRightButtonUp();
 
     // Accessors.
     uint32 GetWidth() const { return ResoWidth; }
     uint32 GetHeight() const { return ResoHeight; }
-    const wchar_t* GetTitle() const { return m_title.c_str(); }
+    const wchar_t* GetTitle() const { return Title.c_str(); }
     StepTimer& GetTimer() { return Timer; }
 
 protected:
     // Viewport dimensions.
     uint32 ResoWidth;
     uint32 ResoHeight;
-    float m_aspectRatio;
+    float AspectRatio;
 
     // Adapter info.
-    bool m_useWarpDevice;
+    bool IsUseWarpDevice;
 
 private:
     // Root assets path.
-    std::wstring m_assetsPath;
+    std::wstring AssetsPath;
 
     // Window title.
-    std::wstring m_title;
+    std::wstring Title;
 
     // timer
     StepTimer Timer;

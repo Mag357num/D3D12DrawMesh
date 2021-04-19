@@ -5,6 +5,7 @@
 #include <ext/matrix_float4x4.hpp>
 using uint32 = uint32_t;
 using uint64 = uint64_t;
+using FVector2 = glm::vec2;
 using FVector = glm::vec3;
 using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;

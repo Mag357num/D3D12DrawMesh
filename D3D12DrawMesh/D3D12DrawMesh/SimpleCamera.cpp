@@ -22,7 +22,8 @@ FCamera::FCamera():
 	Pitch(0.0f),
 	LookDirection(-1, 0, 0),
 	UpDirection(0, 0, 1),
-	MoveSpeed(100.0f),
+	MoveSpeed(300.0f),
+	MouseSensibility(0.001f),
 	TurnSpeed(XM_PIDIV2),
 	Keys{}
 {
@@ -83,35 +84,63 @@ void FCamera::Reset()
 
 void FCamera::Update(const float& ElapsedSeconds)
 {
-	FVector move(0, 0, 0);
-	float moveInterval = MoveSpeed * ElapsedSeconds;
-	float rotateInterval = TurnSpeed * ElapsedSeconds;
+	FVector Move(0.f, 0.f, 0.f);
+	float MoveInterval = MoveSpeed * ElapsedSeconds;
+	float KeyRotateInterval = TurnSpeed * ElapsedSeconds;
 
-	if (Keys.a)
-		move.y -= moveInterval;
-	if (Keys.d)
-		move.y += moveInterval;
+	FVector2 MouseRotateInterval = MouseSensibility * (MouseCurrentPosition - MouseFirstPosition);
+
+	// wasd for looking direction
 	if (Keys.w)
-		move.x += moveInterval;
+		Pitch += KeyRotateInterval;
 	if (Keys.s)
-		move.x -= moveInterval;
+		Pitch -= KeyRotateInterval;
+	if (Keys.a)
+		Yaw -= KeyRotateInterval;
+	if (Keys.d)
+		Yaw += KeyRotateInterval;
+	
+	// qe for move up and down
 	if (Keys.q)
-		move.z += moveInterval;
+		Move.z -= MoveInterval;
 	if (Keys.e)
-		move.z -= moveInterval;
+		Move.z += MoveInterval;
 
+	// press down mouse for looking direction
+	if (IsMouseDown && IsMouseMove)
+		Yaw += MouseRotateInterval.x;
+	if (IsMouseDown && IsMouseMove)
+		Pitch -= MouseRotateInterval.y;
+
+	// up down left right for movement
 	if (Keys.up)
-		Pitch += rotateInterval;
+	{
+		Move.x += MoveInterval * cos(Pitch);
+		Move.z += MoveInterval * sin(Pitch);
+	}
 	if (Keys.down)
-		Pitch -= rotateInterval;
-	if (Keys.left)
-		Yaw -= rotateInterval;
+	{
+		Move.x -= MoveInterval * cos(Pitch);
+		Move.z -= MoveInterval * sin(Pitch);
+	}
 	if (Keys.right)
-		Yaw += rotateInterval;
+	{
+		Move.y += MoveInterval;
+	}
+	if (Keys.left)
+	{
+		Move.y -= MoveInterval;
+	}
 
-	Position.x += move.x * cos(Yaw) - move.y * sin(Yaw);
-	Position.y += move.x * sin(Yaw) + move.y * cos(Yaw);
-	Position.z += move.z;
+	Position.x += Move.x * cos(Pitch) * cos(Yaw) - Move.y * cos(Pitch) * sin(Yaw);
+	Position.y += Move.x * cos(Pitch) * sin(Yaw) + Move.y * cos(Pitch) * cos(Yaw);
+	Position.z += Move.z;
+
+	//Position.x += Move.x * cos(Yaw);
+	//Position.y += Move.x * sin(Yaw);
+	//Position.z += Move.z;
+
+	MouseFirstPosition = MouseCurrentPosition;
 
 	GetLookByEuler(Pitch, Yaw);
 }
@@ -126,7 +155,7 @@ FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const fl
 	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
 }
 
-void FCamera::OnKeyDown(const WPARAM& key)
+void FCamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
 {
 	switch (key)
 	{
@@ -200,5 +229,27 @@ void FCamera::OnKeyUp(const WPARAM& key)
 	case VK_DOWN:
 		Keys.down = false;
 		break;
+	}
+}
+
+void FCamera::OnRightButtonDown(const uint32& x, const uint32& y)
+{
+	IsMouseDown = true;
+	MouseFirstPosition = { static_cast<float>(x), static_cast<float>(y) };
+	MouseCurrentPosition = MouseFirstPosition;
+
+}
+
+void FCamera::OnRightButtonUp()
+{
+	IsMouseDown = false;
+}
+
+void FCamera::OnMouseMove(const uint32& x, const uint32& y)
+{
+	if (IsMouseDown)
+	{
+		IsMouseMove = true;
+		MouseCurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
 	}
 }

@@ -18,7 +18,7 @@ class FCamera
 public:
 	FCamera();
 
-	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
+	void		Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
 	void		Update(const float& ElapsedSeconds);
 	FMatrix		GetViewMatrix() const;
 	FMatrix		GetProjectionMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
@@ -27,6 +27,10 @@ public:
 
 	void		OnKeyDown(const WPARAM& key);
 	void		OnKeyUp(const WPARAM& key);
+
+	void		OnRightButtonDown(const uint32& x, const uint32& y);
+	void		OnRightButtonUp();
+	void		OnMouseMove(const uint32& x, const uint32& y);
 
 	void		GetEulerByLook(const FVector& LookAt);
 	void		GetLookByEuler(const float& Pitch, const float& Yaw);
@@ -61,8 +65,13 @@ private:
 	FVector		LookDirection;
 	FVector		UpDirection;
 	KeysPressed	Keys;
+	FVector2	MouseCurrentPosition;
+	FVector2	MouseFirstPosition;
+	bool		IsMouseDown;
+	bool		IsMouseMove;
 	float		MoveSpeed;				// Speed at which the camera moves, in units per second.
 	float		TurnSpeed;				// Speed at which the camera turns, in radians per second.
+	float		MouseSensibility;
 	float		Yaw;						// Relative to the +z axis.
 	float		Pitch;					// Relative to the xz plane.
 
