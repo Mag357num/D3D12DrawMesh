@@ -122,11 +122,8 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
     case WM_PAINT:
         if (pEngine)
         {
-			OutputDebugStringA("OnUpdata start\n");
             pEngine->OnUpdate();
-            OutputDebugStringA("OnUpdata finish\n");
             pEngine->OnRender();
-			OutputDebugStringA("OnRender finish\n");
 		}
         return 0;
 
