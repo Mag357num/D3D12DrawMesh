@@ -89,7 +89,6 @@ namespace RHI
 
 		//texture
 		virtual shared_ptr<FTexture> CreateEmptyTexture() override;
-		virtual void CommitShadowMap(FRHIResource* ShadowMap) override;
 
 	private:
 		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
@@ -99,9 +98,15 @@ namespace RHI
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRTVToHeaps(ComPtr<ID3D12DescriptorHeap>& Heap, const uint32& FrameCount);
+		void CreateRTVToHeaps(const uint32& FrameCount);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
-		void CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 Width, uint32 Height);
+		void CreateDSVToHeaps();
+		void CreateSRVToHeaps(ComPtr<ID3D12Resource>& ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
+		void CommitShadowMap();
+		void CreateShadowMapToDSVHeaps();
+		void CreateShadowMapToCBVSRVHeaps();
+
+
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
 		uint32 GetEnableShaderDebugFlags();
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
@@ -131,18 +136,22 @@ namespace RHI
 		uint32 BackFrameIndex;
 		uint32 ResoWidth;
 		uint32 ResoHeight;
+		std::vector<FCommand> CommandLists;
 
+		//sync
 		HANDLE FenceEvent;
 		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
 
-		// may changes attributes
-		ComPtr<ID3D12Resource> DepthStencil;
-		std::vector<FCommand> CommandLists;
-
+		// frame resource
+		ComPtr<ID3D12Resource> DepthStencilBuffer;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE DSVHandle;
+		ComPtr<ID3D12Resource> ShadowMap;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowDepthViewHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapGPUHandleForCBVSRV;
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
-
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForCBVSRV;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGPUHandleForCBVSRV;
 	};

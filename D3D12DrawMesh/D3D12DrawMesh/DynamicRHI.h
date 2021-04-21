@@ -66,6 +66,5 @@ namespace RHI
 
 		// texture
 		virtual shared_ptr<FTexture> CreateEmptyTexture() = 0;
-		virtual void CommitShadowMap(FRHIResource* ShadowMap) = 0;
 	};
 }

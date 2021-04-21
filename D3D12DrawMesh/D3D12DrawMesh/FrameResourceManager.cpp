@@ -12,9 +12,6 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
-		FrameResource.CreateEmptyShadowMap();
-		FrameResource.CommitShadowMap();
-
 		const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
 		FrameResource.MeshActorFrameResources.resize(MeshActorCount);
 		for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
@@ -80,19 +77,4 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		GDynamicRHI->UpdateConstantBufferInMeshRes(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
 			&UpdateData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}
-}
-
-void FFrameResource::CreateEmptyShadowMap()
-{
-	ShadowMap = RHI::GDynamicRHI->CreateEmptyTexture();
-}
-
-void FFrameResource::CommitShadowMap()
-{
-	if(ShadowMap == nullptr)
-	{
-		return;
-	}
-
-	RHI::GDynamicRHI->CommitShadowMap(ShadowMap.get());
 }

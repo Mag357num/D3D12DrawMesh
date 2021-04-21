@@ -20,9 +20,6 @@ class FFrameResource
 public:
 	shared_ptr<FRHIResource> ShadowMap;
 	std::vector<FMeshActorFrameResource> MeshActorFrameResources;
-public:
-	void CreateEmptyShadowMap();
-	void CommitShadowMap();
 };
 
 class FFrameResourceManager // TODO: this now is actually ResourceManager, nothing to do with Frame Resource
