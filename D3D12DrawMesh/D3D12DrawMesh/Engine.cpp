@@ -35,7 +35,7 @@ FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
 	AssetManager = make_shared<FAssetManager>();
 
 	CurrentScene = make_shared<FScene>();
-	CurrentScene->SetCurrentCamera({ 1000, -100, 150 }, { 0, 0, 1 }, { -1, 0, 0 }, 0.8f, AspectRatio);
+	CurrentScene->SetCurrentCamera({ 27.f, -228.f, 122.f }, { 0.f, 0.f, 1.f }, { 1.f, 0.f, 0.f }, 0.8f, AspectRatio);
 }
 
 FEngine::~FEngine()
