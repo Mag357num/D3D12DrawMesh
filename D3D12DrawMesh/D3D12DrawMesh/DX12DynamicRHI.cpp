@@ -587,6 +587,7 @@ namespace RHI
 		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap);
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);

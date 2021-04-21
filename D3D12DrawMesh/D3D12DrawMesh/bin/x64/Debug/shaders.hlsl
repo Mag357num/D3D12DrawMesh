@@ -51,7 +51,8 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	float3 viewDir = normalize(CamEye - input.worldpos);
-	float3 halfWay = normalize(viewDir + normalize(DirectionLightDir * -1.f));
+	float3 dir = normalize(DirectionLightDir * -1.f);
+	float3 halfWay = normalize(viewDir + dir);
 
 	float dot1 = dot(input.normal, halfWay);
 
