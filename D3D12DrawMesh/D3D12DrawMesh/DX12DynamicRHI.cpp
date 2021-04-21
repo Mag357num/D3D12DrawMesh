@@ -132,7 +132,11 @@ namespace RHI
 		// heaps
 		CreateDescriptorHeaps(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
 		CreateRTVToHeaps(RTVHeap, 2);
+
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
+		LastCPUHandleForCBVSRV = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastGPUHandleForCBVSRV = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
+
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
 		CreateDSVToHeaps(DepthStencil, DSVHeap, ResoWidth, ResoHeight);
 
@@ -168,10 +172,10 @@ namespace RHI
 		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBufferToMeshRes(const uint32& Size, uint32 ResIndex)
+	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBufferToMeshRes(const uint32& Size)
 {
 		shared_ptr<FDX12CB> DX12CB = make_shared<FDX12CB>();
-		DX12CreateConstantBuffer(DX12CB.get(), Size, CBVSRVHeap, ResIndex);
+		DX12CreateConstantBuffer(DX12CB.get(), Size);
 		return DX12CB;
 	}
 
@@ -247,11 +251,13 @@ namespace RHI
 		}
 	}
 
-	void FDX12DynamicRHI::CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 ResIndex)
+	void FDX12DynamicRHI::CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB)
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(Heap->GetCPUDescriptorHandleForHeapStart());
-		HeapsHandle.Offset(ResIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		Device->CreateConstantBufferView(&CbvDesc, HeapsHandle);
+		Device->CreateConstantBufferView(&CbvDesc, LastCPUHandleForCBVSRV);
+		FDX12CB->GPUHandleInHeap = LastGPUHandleForCBVSRV;
+
+		LastCPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		LastGPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
 	void FDX12DynamicRHI::CreateDSVToHeaps(ComPtr<ID3D12Resource>& DepthStencilBuffer, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 Width, uint32 Height)
@@ -360,7 +366,7 @@ namespace RHI
 		return PipelineState;
 	}
 
-	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size, ComPtr<ID3D12DescriptorHeap>& Heap, uint32 ResIndex)
+	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
 	{
 		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBObj;
 		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
@@ -380,7 +386,7 @@ namespace RHI
 		D3D12_CONSTANT_BUFFER_VIEW_DESC CbvDesc = {};
 		CbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
 		CbvDesc.SizeInBytes = ConstantBufferSize;
-		CreateCBVToHeaps(CbvDesc, Heap, ResIndex);
+		CreateCBVToHeaps(CbvDesc, FDX12CB);
 
 		// Map and initialize the constant buffer. We don't unmap this until the
 		// app closes. Keeping things mapped for the lifetime of the resource is okay.
@@ -492,7 +498,7 @@ namespace RHI
 	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
 		MeshActorFrameResource.MeshToRender = CommitMeshBuffer(MeshActor);
-		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0, MeshActor.MeshActorIndex);
+		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -538,8 +544,10 @@ namespace RHI
 		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		CD3DX12_GPU_DESCRIPTOR_HANDLE CbvHandle(CBVSRVHeap->GetGPUDescriptorHandleForHeapStart(), MeshActor.MeshActorResIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CbvHandle);
+
+		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap);
+
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
@@ -665,7 +673,7 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags, uint32 ResIndex)
+	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags)
 	{
 		shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes.get());
@@ -680,7 +688,7 @@ namespace RHI
 		InitPipeLineToMeshRes(MeshRes.get(), initializer.get(), flags);
 
 		// 2. create cb
-		DX12MeshRes->CB = CreateConstantBufferToMeshRes(256, ResIndex);
+		DX12MeshRes->CB = CreateConstantBufferToMeshRes(256);
 
 		return MeshRes;
 	}

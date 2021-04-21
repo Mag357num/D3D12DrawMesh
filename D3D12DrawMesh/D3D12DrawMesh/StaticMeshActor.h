@@ -32,7 +32,7 @@ public:
 	FMeshActor() = default;
 	~FMeshActor() = default;
 
-	uint32 MeshActorIndex;
+	uint32 MeshActorIndex; // TODO: index is deprecated
 	FTransform Transform;
 	vector<FMeshLOD> MeshLODs;
 };

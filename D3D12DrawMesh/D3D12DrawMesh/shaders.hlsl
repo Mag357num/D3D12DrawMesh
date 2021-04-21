@@ -52,13 +52,14 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	float ks = 1.5f;
-	float shine = 10.f;
 	float3 viewDir = CamEye - input.worldpos;
 	float3 halfWay = normalize(viewDir + DirectionLightDir * -1.f);
+
+	float ks = 0.0f;
+	float shine = 10.f;
 	float4 specularColor = ks * float4(DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.0), shine);
 
-	float kd = 0.5f;
+	float kd = 0.0f;
 	float difuseColor = kd * float4(DirectionLightColor, 1.f) * max(dot(input.normal, DirectionLightDir * -1.f), 0.0);
 
 	float ambientFactor = 0.1f;

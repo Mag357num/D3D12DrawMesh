@@ -7,7 +7,7 @@ struct FDirectionLight
 	FVector Color = { 1, 1, 1 };
 	float Intensity = 1.0f;
 
-	FVector Dir = { 0, 0, -1 };
+	FVector Dir = { -1, 0, 0 };
 };
 
 struct FPointLight

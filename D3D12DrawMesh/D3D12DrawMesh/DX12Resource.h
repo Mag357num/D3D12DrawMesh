@@ -19,6 +19,7 @@ namespace RHI
 	{
 		ComPtr<ID3D12Resource> CBObj;
 		void* UploadBufferVirtualAddress;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandleInHeap;
 	};
 
 	struct FDX12MeshRes : public FMeshRes
