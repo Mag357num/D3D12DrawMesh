@@ -75,7 +75,9 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() override;
 		virtual void DrawFrame(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActor(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
 		// sync
@@ -84,6 +86,10 @@ namespace RHI
 		virtual uint32 GetFramIndex() override { return FrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
+
+		//texture
+		virtual shared_ptr<FTexture> CreateEmptyTexture() override;
+		virtual void CommitShadowMap(FRHIResource* ShadowMap) override;
 
 	private:
 		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);

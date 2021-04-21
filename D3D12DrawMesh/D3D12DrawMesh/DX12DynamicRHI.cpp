@@ -516,11 +516,16 @@ namespace RHI
 	{
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
-			DrawMeshActor(i);
+			// before: no shadowmap
+			DrawMeshActorNoShadow(i);
+
+			// after: with shadowmap
+			DrawMeshActorShadowPass(i);
+			DrawMeshActorBasePass(i);
 		}
 	}
 
-	void FDX12DynamicRHI::DrawMeshActor(const FMeshActorFrameResource& MeshActor)
+	void FDX12DynamicRHI::DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle(DSVHeap->GetCPUDescriptorHandleForHeapStart());
@@ -539,6 +544,16 @@ namespace RHI
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
 		CommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexCount, 1, 0, 0, 0);
+	}
+
+	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
+	{
+
+	}
+
+	void FDX12DynamicRHI::DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor)
+	{
+
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
@@ -695,4 +710,41 @@ namespace RHI
 		WaitForExecuteComplete();
 	}
 
+	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateEmptyTexture()
+	{
+		return make_shared<RHI::FDX12Texture>();
+	}
+
+	void FDX12DynamicRHI::CommitShadowMap(FRHIResource* ShadowMap)
+	{
+		FDX12Texture* DX12ShadowMap = dynamic_cast<FDX12Texture*>(ShadowMap);
+
+		CD3DX12_RESOURCE_DESC shadowTexDesc(
+			D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+			0,
+			static_cast<UINT>(ResoWidth),
+			static_cast<UINT>(ResoHeight),
+			1,
+			1,
+			DXGI_FORMAT_R32_TYPELESS,
+			1,
+			0,
+			D3D12_TEXTURE_LAYOUT_UNKNOWN,
+			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
+		D3D12_CLEAR_VALUE clearValue;        // Performance tip: Tell the runtime at resource creation the desired clear value.
+		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
+
+		ThrowIfFailed(Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE,
+			&shadowTexDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS(&DX12ShadowMap->Texture)));
+
+		NAME_D3D12_OBJECT(DX12ShadowMap->Texture);
+	}
 }

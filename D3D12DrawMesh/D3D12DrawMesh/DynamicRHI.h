@@ -29,7 +29,7 @@ namespace RHI
 		FDynamicRHI() = default;
 		~FDynamicRHI() = default;
 
-		static FDynamicRHI* DRHI;
+		static FDynamicRHI* DRHI; //TODO: remove
 
 		// init
 		static void CreateRHI();
@@ -52,7 +52,9 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() = 0;
 		virtual void DrawFrame(const FFrameResource* FrameRes) = 0;
-		virtual void DrawMeshActor(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void FrameEnd() = 0;
 
 		// sync
@@ -61,5 +63,9 @@ namespace RHI
 		virtual uint32 GetFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
+
+		// texture
+		virtual shared_ptr<FTexture> CreateEmptyTexture() = 0;
+		virtual void CommitShadowMap(FRHIResource* ShadowMap) = 0;
 	};
 }

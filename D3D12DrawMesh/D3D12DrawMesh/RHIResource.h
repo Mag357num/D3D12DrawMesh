@@ -6,6 +6,7 @@ namespace RHI
 
 	struct FRHIResource
 	{
+		virtual ~FRHIResource() = default;
 	};
 
 	struct FCBData : public FRHIResource

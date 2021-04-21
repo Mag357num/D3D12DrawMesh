@@ -5,6 +5,11 @@
 
 namespace RHI
 {
+	struct FDX12Texture : public FTexture
+	{
+		ComPtr<ID3D12Resource> Texture;
+	};
+
 	struct FDX12Shader : public FShader
 	{
 		ComPtr<ID3DBlob> Shader;
