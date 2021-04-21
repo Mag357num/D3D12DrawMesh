@@ -50,26 +50,22 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	float3 viewDir = normalize(CamEye - input.worldpos);
+	float3 viewDir = CamEye - input.worldpos.xyz;
+	viewDir = normalize(viewDir);
 	float3 dir = normalize(DirectionLightDir * -1.f);
 	float3 halfWay = normalize(viewDir + dir);
 
-	float dot1 = dot(input.normal, halfWay);
-
-	float ks = 1.5f;
+	float ks = 15.f;
 	float shine = 10.f;
 	float4 specularColor = ks * float4(DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 
 	float kd = 0.0f;
-	float difuseColor = kd * float4(DirectionLightColor, 1.f) * max(dot(input.normal, DirectionLightDir * -1.f), 0.f);
+	float4 difuseColor = kd * float4(DirectionLightColor, 1.f) * max(dot(input.normal, DirectionLightDir * -1.f), 0.f);
 
-	float ambientFactor = 0.1f;
+	float ambientFactor = 0.0f;
 	float4 ambientColor = ambientFactor * float4(DirectionLightColor, 1.f);
 
-	float Color = ambientColor + difuseColor + specularColor;
+	float4 Color = ambientColor + difuseColor + specularColor;
 
-	// return Color;
-	return float4(max(dot1, 0.f), 0.f, 0.f, 1.0f);
-	// return float4((input.normal+1)/2, 1.0f); // normal is right
-	// return float4(halfWay, 1.0f);
+	return Color;
 }
