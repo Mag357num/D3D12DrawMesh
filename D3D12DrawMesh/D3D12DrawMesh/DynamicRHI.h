@@ -18,6 +18,13 @@ namespace RHI
 		MAX_HEAP_DEPTHSTENCILS = 32,
 	};
 
+	enum class FSamplerType
+	{
+		CLAMP = 0,
+		WARP = 1,
+		MIRROR = 2,
+	};
+
 	enum class SHADER_FLAGS
 	{
 		CB1_SR0 = 1, // use 1 cb, 0 sr

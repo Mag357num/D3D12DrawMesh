@@ -9,6 +9,8 @@
 //
 //*********************************************************
 
+SamplerState sampleClamp : register(s0);
+
 struct LightState
 {
     float3 DirectionLightColor;

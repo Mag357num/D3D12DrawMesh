@@ -99,8 +99,9 @@ namespace RHI
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRTVToHeaps(const uint32& FrameCount);
-		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateDSVToHeaps();
+		void CreateSamplerToHeaps(FSamplerType Type);
+		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSRVToHeaps(ComPtr<ID3D12Resource>& ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CommitShadowMap();
 		void CreateShadowMapToDSVHeaps();
@@ -133,6 +134,7 @@ namespace RHI
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
+		ComPtr<ID3D12DescriptorHeap> SamplerHeap;
 		uint32 BackFrameIndex;
 		uint32 ResoWidth;
 		uint32 ResoHeight;

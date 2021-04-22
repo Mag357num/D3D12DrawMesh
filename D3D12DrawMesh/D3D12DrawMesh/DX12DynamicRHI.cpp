@@ -133,7 +133,7 @@ namespace RHI
 		CommitShadowMap();
 
 		// heaps
-		CreateDescriptorHeaps(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
+		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
 		CreateRTVToHeaps(2);
 
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
@@ -145,6 +145,9 @@ namespace RHI
 		LastCPUHandleForDSV = DSVHeap->GetCPUDescriptorHandleForHeapStart();
 		CreateDSVToHeaps();
 		CreateShadowMapToDSVHeaps();
+
+		CreateDescriptorHeaps(MAX_HEAP_SAMPLERS, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, SamplerHeap);
+		CreateSamplerToHeaps(FSamplerType::CLAMP);
 
 		// command
 		FCommand DrawCommandList(RHICommandQueue); // TODO: no need to use the FCommandListDx12, one commandlist is enough for use
@@ -293,6 +296,37 @@ namespace RHI
 		DSVHandle = LastCPUHandleForDSV;
 
 		LastCPUHandleForDSV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
+	}
+
+	void FDX12DynamicRHI::CreateSamplerToHeaps(FSamplerType Type)
+	{
+		D3D12_SAMPLER_DESC SamplerDesc = {};
+		if (Type == FSamplerType::CLAMP)
+		{
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		}
+		else if(Type == FSamplerType::WARP)
+		{
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		}
+		else
+		{
+			throw std::exception("do not have this type of sampler");
+		}
+		SamplerDesc.MipLODBias = 0.0f;
+		SamplerDesc.MaxAnisotropy = 1;
+		SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		SamplerDesc.BorderColor[0] = SamplerDesc.BorderColor[1] = SamplerDesc.BorderColor[2] = SamplerDesc.BorderColor[3] = 0;
+		SamplerDesc.MinLOD = 0;
+		SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+		Device->CreateSampler(&SamplerDesc, SamplerHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
 	void FDX12DynamicRHI::CreateShadowMapToDSVHeaps()
@@ -509,11 +543,16 @@ namespace RHI
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
 		ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
-		CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+		CD3DX12_ROOT_PARAMETER1 rootParameters[3];
 
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
+
 		rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
+		rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 
 		// Allow input layout and deny uneccessary access to certain pipeline stages.
 		D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
@@ -585,8 +624,9 @@ namespace RHI
 
 		CommandLists[0].CommandList->SetPipelineState(DX12MeshRes->PSObj.Get());
 		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart());
 
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap);
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
