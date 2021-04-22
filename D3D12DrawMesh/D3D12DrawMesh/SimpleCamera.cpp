@@ -15,14 +15,16 @@
 #include <gtc/matrix_transform.hpp>
 
 FCamera::FCamera():
-	InitialPosition(500, 0, 0),
+	InitialPosition(500.f, 0.f, 0.f),
 	Position(InitialPosition),
 	Yaw(XM_PI),
 	Pitch(0.0f),
-	LookDirection(-1, 0, 0),
-	UpDirection(0, 0, 1),
+	LookDirection(-1.f, 0.f, 0.f),
+	UpDirection(0.f, 0.f, 1.f),
 	MoveSpeed(300.0f),
-	MouseSensibility(0.001f),
+	MouseSensibility(0.005f),
+	Fov(90.f),
+	AspectRatio(1.7777777f),
 	TurnSpeed(XM_PIDIV2),
 	Keys{}
 {
@@ -40,9 +42,9 @@ void FCamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 	LookDirection.y = cosf(Pitch) * sinf(Yaw);
 	LookDirection.z = sinf(Pitch);
 
-	if (fabs(LookDirection.x) < 0.001f) LookDirection.x = 0;
-	if (fabs(LookDirection.y) < 0.001f) LookDirection.y = 0;
-	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0;
+	if (fabs(LookDirection.x) < 0.001f) LookDirection.x = 0.f;
+	if (fabs(LookDirection.y) < 0.001f) LookDirection.y = 0.f;
+	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0.f;
 }
 
 void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio)

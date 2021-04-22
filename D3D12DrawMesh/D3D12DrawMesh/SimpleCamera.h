@@ -75,6 +75,6 @@ private:
 	float		Yaw;						// Relative to the +z axis.
 	float		Pitch;					// Relative to the xz plane.
 
-	float		Fov = 90.0f;
-	float		AspectRatio = 1.7777777f;
+	float		Fov;
+	float		AspectRatio;
 };
