@@ -13,7 +13,6 @@ cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 WVP;
     float4x4 World;
-    float4x4 Rotator;
     float3 CamEye;
     float3 DirectionLightDir;
     float3 DirectionLightColor;
@@ -43,7 +42,7 @@ PSInput VSMain(VSInput input)
 
     result.position = mul(float4(input.position, 1.0f), WVP);
 	result.worldpos = mul(float4(input.position, 1.0f), World);
-    result.normal = normalize(mul(float4(input.normal, 1.0f), Rotator).xyz);
+    result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 
     return result;
 }

@@ -57,18 +57,28 @@ namespace RHI
 	{
 	};
 
-	#pragma pack(1)
-	struct FBlinnPhongCB // 168 bytes
+	struct FBlinnPhongCB
 	{
 		FMatrix WVP;
 		FMatrix World;
-		FMatrix Rotator;
+
+		FVector4 CamEye;
+		FVector4 DirectionLightDir;
+		FVector DirectionLightColor; // CamEye and DirectionLightDir use FVector4 but DirectionLightColor use FVector is becuase of the hlsl packing rules
+		float DirectionLightIntensity; // that is hlsl variable cant straddle between two float4, if use FVector, some data may cant read in hlsl
+	};
+
+	struct FShadowMapCB // BlinnPhong
+	{
+		FMatrix WVP; // in shadow pass is light wvp, in base pass is camera wvp
+		FMatrix World;
 
 		FVector4 CamEye;
 
-		FVector4 DirectionLightDir;
-		FVector4 DirectionLightColor;
+		FVector DirectionLightDir;
+		bool IsShadowMap;
+		FVector DirectionLightColor;
 		float DirectionLightIntensity;
 	};
-	#pragma pack()
+
 }
