@@ -68,16 +68,12 @@ namespace RHI
 
 	struct FShadowMapCB // BlinnPhong
 	{
-		FMatrix WVP; // in shadow pass is light wvp, in base pass is camera wvp
+		FMatrix CameraVP;
+		FMatrix LightVP;
 		FMatrix World;
-
-		FVector CamEye;
+		FVector4 CamEye;
+		FDirectionLight Light;
 		bool IsShadowMap;
-
-
-		FVector4 DirectionLightDir;
-		FVector DirectionLightColor;
-		float DirectionLightIntensity;
 	};
 
 }
