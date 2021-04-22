@@ -576,6 +576,26 @@ namespace RHI
 
 	void FDX12DynamicRHI::DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor)
 	{
+		//FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
+		//FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
+		//FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
+
+		//CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		//CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DSVHandle);
+
+		//CommandLists[0].CommandList->SetPipelineState(DX12MeshRes->PSObj.Get());
+		//CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
+		//ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
+		//CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap);
+		//CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
+		//CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
+		//CommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexCount, 1, 0, 0, 0);
+	}
+
+	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
+	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
 		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
@@ -592,11 +612,6 @@ namespace RHI
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
 		CommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexCount, 1, 0, 0, 0);
-	}
-
-	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
-	{
-
 	}
 
 	void FDX12DynamicRHI::DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor)
