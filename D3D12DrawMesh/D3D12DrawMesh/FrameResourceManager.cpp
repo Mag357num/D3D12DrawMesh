@@ -54,12 +54,11 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->MeshActors[MeshIndex].Transform.Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
-		FMatrix WVP = glm::transpose(VPMatrix * WorldMatrix);
-		FMatrix CameraVP = glm::transpose(VPMatrix);
 
-		FBlinnPhongCB ConstantBufferData;
-		ConstantBufferData.CameraVP = CameraVP;
+		FShadowMapCB ConstantBufferData;
 		ConstantBufferData.World = glm::transpose(WorldMatrix);
+		ConstantBufferData.CameraVP = glm::transpose(VPMatrix);
+		ConstantBufferData.LightVP = glm::transpose(VPMatrix);
 
 		FVector CamPos = Scene->SceneCamera.GetPosition();
 		ConstantBufferData.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);

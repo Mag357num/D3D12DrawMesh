@@ -60,17 +60,17 @@ namespace RHI
 
 	struct FBlinnPhongCB
 	{
-		FMatrix CameraVP;
 		FMatrix World;
+		FMatrix CameraVP;
 		FVector4 CamEye;
 		FDirectionLight Light;
 	};
 
 	struct FShadowMapCB // BlinnPhong
 	{
+		FMatrix World;
 		FMatrix CameraVP;
 		FMatrix LightVP;
-		FMatrix World;
 		FVector4 CamEye;
 		FDirectionLight Light;
 		bool IsShadowMap;

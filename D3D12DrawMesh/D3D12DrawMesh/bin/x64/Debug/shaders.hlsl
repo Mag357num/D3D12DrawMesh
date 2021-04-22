@@ -18,10 +18,12 @@ struct LightState
 
 cbuffer SceneConstantBuffer : register(b0)
 {
-    float4x4 CameraVP;
     float4x4 World;
+    float4x4 CameraVP;
+	float4x4 LightVP;
     float4 CamEye;
 	LightState Light;
+	bool IsShadowPass;
 };
 
 struct VSInput
