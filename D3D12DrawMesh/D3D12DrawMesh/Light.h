@@ -2,18 +2,26 @@
 #include "stdafx.h"
 #include "Types.h"
 
-struct FDirectionLight
+struct FBaseLight
 {
-	FVector Color = { 1, 1, 1 };
+	FVector Color = { 1.f, 1.f, 1.f };
 	float Intensity = 1.0f;
-
-	FVector Dir = { -1, 0, 0 };
 };
 
-struct FPointLight
+struct FDirectionLight : public FBaseLight
 {
-	FVector Color = { 1, 1, 1 };
-	float Intensity = 1.0f;
+	FVector Dir = { -1.f, 0.f, 0.f };
+};
 
-	FVector Location = { 0, 0, 0 };
+struct FPointLight : public FBaseLight
+{
+	FVector Position = { 0.f, 0.f, 0.f };
+
+	struct
+	{
+		float Constant;
+		float Linear;
+		float Exp;
+	} Attenuation;
+
 };
