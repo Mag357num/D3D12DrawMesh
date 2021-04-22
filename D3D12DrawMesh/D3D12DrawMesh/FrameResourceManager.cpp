@@ -55,9 +55,10 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 		FMatrix WVP = glm::transpose(VPMatrix * WorldMatrix);
+		FMatrix CameraVP = glm::transpose(VPMatrix);
 
 		FBlinnPhongCB ConstantBufferData;
-		ConstantBufferData.WVP = WVP;
+		ConstantBufferData.CameraVP = CameraVP;
 		ConstantBufferData.World = glm::transpose(WorldMatrix);
 
 		FVector CamPos = Scene->SceneCamera.GetPosition();

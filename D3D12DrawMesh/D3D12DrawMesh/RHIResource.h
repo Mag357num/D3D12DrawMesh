@@ -60,7 +60,7 @@ namespace RHI
 
 	struct FBlinnPhongCB
 	{
-		FMatrix WVP;
+		FMatrix CameraVP;
 		FMatrix World;
 		FVector4 CamEye;
 		FDirectionLight Light;

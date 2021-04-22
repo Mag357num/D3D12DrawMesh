@@ -18,7 +18,7 @@ struct LightState
 
 cbuffer SceneConstantBuffer : register(b0)
 {
-    float4x4 WVP;
+    float4x4 CameraVP;
     float4x4 World;
     float4 CamEye;
 	LightState Light;
@@ -45,8 +45,9 @@ PSInput VSMain(VSInput input)
 {
     PSInput result;
 
-    result.position = mul(float4(input.position, 1.0f), WVP);
-	result.worldpos = mul(float4(input.position, 1.0f), World);
+    result.position = mul(float4(input.position, 1.0f), World);
+	result.worldpos = result.position;
+    result.position = mul(result.position, CameraVP);
     result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 
     return result;
