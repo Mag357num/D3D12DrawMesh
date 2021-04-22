@@ -9,14 +9,19 @@
 //
 //*********************************************************
 
+struct LightState
+{
+    float3 DirectionLightColor;
+	float DirectionLightIntensity;
+    float4 DirectionLightDir;
+};
+
 cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 WVP;
     float4x4 World;
-    float3 CamEye;
-    float3 DirectionLightDir;
-    float3 DirectionLightColor;
-	float DirectionLightIntensity;
+    float4 CamEye;
+	LightState Light;
 };
 
 struct VSInput
@@ -50,20 +55,20 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	input.normal = normalize(input.normal);
-	float3 viewDir = CamEye - input.worldpos.xyz;
+	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
 	viewDir = normalize(viewDir);
-	float3 dir = normalize(DirectionLightDir * -1.f);
+	float3 dir = normalize(Light.DirectionLightDir * -1.f);
 	float3 halfWay = normalize(viewDir + dir);
 
 	float ks = 15.f;
 	float shine = 10.f;
-	float4 specularColor = ks * float4(DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
+	float4 specularColor = ks * float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 
 	float kd = 0.0f;
-	float4 difuseColor = kd * float4(DirectionLightColor, 1.f) * max(dot(input.normal, DirectionLightDir * -1.f), 0.f);
+	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir * -1.f), 0.f);
 
 	float ambientFactor = 0.0f;
-	float4 ambientColor = ambientFactor * float4(DirectionLightColor, 1.f);
+	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float4 Color = ambientColor + difuseColor + specularColor;
 

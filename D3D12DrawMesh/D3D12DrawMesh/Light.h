@@ -10,7 +10,9 @@ struct FBaseLight
 
 struct FDirectionLight : public FBaseLight
 {
-	FVector Dir = { -1.f, 0.f, 0.f };
+	// CamEye and DirectionLightDir use FVector4 but DirectionLightColor use FVector is becuase of the hlsl packing rules
+	// that is hlsl variable cant straddle between two float4, if use FVector, some data may cant read in hlsl
+	FVector4 Dir = { -1.f, 0.f, 0.f, 0.f };
 };
 
 struct FPointLight : public FBaseLight

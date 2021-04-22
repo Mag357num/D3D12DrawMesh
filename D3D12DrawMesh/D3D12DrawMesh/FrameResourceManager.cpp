@@ -63,9 +63,9 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FVector CamPos = Scene->SceneCamera.GetPosition();
 		ConstantBufferData.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
 
-		ConstantBufferData.DirectionLightDir = FVector4(Scene->DirectionLight.Dir.x, Scene->DirectionLight.Dir.y, Scene->DirectionLight.Dir.z, 1.0f);
-		ConstantBufferData.DirectionLightColor = FVector4(Scene->DirectionLight.Color.x, Scene->DirectionLight.Color.y, Scene->DirectionLight.Color.z, 1.0f);
-		ConstantBufferData.DirectionLightIntensity = Scene->DirectionLight.Intensity;
+		ConstantBufferData.Light.Dir = Scene->DirectionLight.Dir;
+		ConstantBufferData.Light.Color = Scene->DirectionLight.Color;
+		ConstantBufferData.Light.Intensity = Scene->DirectionLight.Intensity;
 
 		RHI::FCBData UpdateData;
 		UpdateData.DataBuffer = reinterpret_cast<void*>(&ConstantBufferData);

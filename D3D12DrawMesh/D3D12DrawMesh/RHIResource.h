@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "Light.h"
 
 namespace RHI
 {
@@ -61,11 +62,8 @@ namespace RHI
 	{
 		FMatrix WVP;
 		FMatrix World;
-
 		FVector4 CamEye;
-		FVector4 DirectionLightDir;
-		FVector DirectionLightColor; // CamEye and DirectionLightDir use FVector4 but DirectionLightColor use FVector is becuase of the hlsl packing rules
-		float DirectionLightIntensity; // that is hlsl variable cant straddle between two float4, if use FVector, some data may cant read in hlsl
+		FDirectionLight Light;
 	};
 
 	struct FShadowMapCB // BlinnPhong
@@ -73,10 +71,11 @@ namespace RHI
 		FMatrix WVP; // in shadow pass is light wvp, in base pass is camera wvp
 		FMatrix World;
 
-		FVector4 CamEye;
-
-		FVector DirectionLightDir;
+		FVector CamEye;
 		bool IsShadowMap;
+
+
+		FVector4 DirectionLightDir;
 		FVector DirectionLightColor;
 		float DirectionLightIntensity;
 	};
