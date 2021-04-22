@@ -9,6 +9,7 @@
 //
 //*********************************************************
 
+Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
 struct LightState
