@@ -17,7 +17,7 @@ namespace RHI
 
 	struct FDX12CB : public FCB
 	{
-		ComPtr<ID3D12Resource> CBObj;
+		ComPtr<ID3D12Resource> CBRes;
 		void* UploadBufferVirtualAddress;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandleInHeap;
 	};

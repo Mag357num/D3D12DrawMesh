@@ -40,7 +40,8 @@ namespace RHI
 	{
 		virtual ~FMeshRes() = default;
 
-		shared_ptr<FCB> CB;
+		shared_ptr<FCB> BaseCB;
+		shared_ptr<FCB> ShadowCB;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
@@ -61,7 +62,7 @@ namespace RHI
 	struct FBlinnPhongCB
 	{
 		FMatrix World;
-		FMatrix CameraVP;
+		FMatrix ViewProj;
 		FVector4 CamEye;
 		FDirectionLight Light;
 	};
@@ -69,11 +70,11 @@ namespace RHI
 	struct FShadowMapCB // BlinnPhong
 	{
 		FMatrix World;
-		FMatrix CameraVP;
-		FMatrix LightVP;
+		FMatrix CamViewProj;
+		FMatrix LightViewOrtho;
 		FVector4 CamEye;
 		FDirectionLight Light;
-		bool IsShadowMap;
+		BOOL IsShadowMap; // TODO: BOOL is win dependent?
 	};
 
 }

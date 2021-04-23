@@ -190,10 +190,13 @@ namespace RHI
 		return DX12CB;
 	}
 
-	void FDX12DynamicRHI::UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data)
+	void FDX12DynamicRHI::UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData)
 	{
-		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshRes->CB.get());
-		memcpy(DX12CB->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
+		FDX12CB* DX12BaseCB = dynamic_cast<FDX12CB*>(MeshRes->BaseCB.get());
+		FDX12CB* DX12ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get());
+
+		memcpy(DX12BaseCB->UploadBufferVirtualAddress, BaseData->DataBuffer, BaseData->BufferSize);
+		memcpy(DX12ShadowCB->UploadBufferVirtualAddress, ShadowData->DataBuffer, ShadowData->BufferSize);
 	}
 
 	void FDX12DynamicRHI::InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags)
@@ -466,8 +469,8 @@ namespace RHI
 
 	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
 	{
-		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBObj;
-		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
+		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBRes;
+		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress; // TODO: UploadBufferVirtualAddress is nullptr
 		uint32 ConstantBufferSize = Size;
 
 		ThrowIfFailed(Device->CreateCommittedResource(
@@ -638,7 +641,7 @@ namespace RHI
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
-		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
+		FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->ShadowCB.get()); // shadow cb
 
 		// set render target to nullptr, dsv to shadow texture
 		CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &ShadowDepthViewHandle);
@@ -650,7 +653,7 @@ namespace RHI
 		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap); // cb
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, NullGPUHandle); // shadow map texture
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
 
@@ -664,7 +667,7 @@ namespace RHI
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
-		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
+		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->BaseCB.get()); // base pass cb
 
 		// rendertarget
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
@@ -811,7 +814,8 @@ namespace RHI
 		InitPipeLineToMeshRes(MeshRes.get(), initializer.get(), flags);
 
 		// 2. create cb
-		DX12MeshRes->CB = CreateConstantBufferToMeshRes(256);
+		DX12MeshRes->BaseCB = CreateConstantBufferToMeshRes(256);
+		DX12MeshRes->ShadowCB = CreateConstantBufferToMeshRes(256);
 
 		return MeshRes;
 	}

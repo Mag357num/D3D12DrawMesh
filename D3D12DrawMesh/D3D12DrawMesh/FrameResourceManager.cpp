@@ -34,9 +34,17 @@ void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResourc
 void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
 	FCamera& MainCamera = Scene->GetCurrentCamera();
-	FMatrix V = MainCamera.GetViewMatrix();
-	FMatrix P = MainCamera.GetProjectionMatrix(1.0f, 10000.0f);
-	FMatrix VPMatrix = P * V;
+	FMatrix CamView = MainCamera.GetViewMatrix();
+	FMatrix CamProj = MainCamera.GetProjectionMatrix(1.0f, 10000.0f);
+	FMatrix CamViewProj = CamProj * CamView;
+
+	FVector LightPos = { 1000.f, 0.f, 500.f };
+	FVector LightTarget = { 0.f, 0.f, 0.f };
+	FVector LightUpDir = { 0.f, 0.f, 1.f };
+	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
+	FMatrix LightOrtho = glm::perspectiveFovLH_ZO(90.f, 1.77777777f, 1.0f, 1.0f, 10000.0f);
+	//FMatrix LightOrtho = glm::orthoLH_ZO();
+	FMatrix LightViewOrtho = LightOrtho * LightView;
 
 	FFrameResource& FrameResource = FrameResources[FrameIndex];
 	const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
@@ -55,22 +63,34 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
-		FShadowMapCB ConstantBufferData;
-		ConstantBufferData.World = glm::transpose(WorldMatrix);
-		ConstantBufferData.CameraVP = glm::transpose(VPMatrix);
-		ConstantBufferData.LightVP = glm::transpose(VPMatrix);
+		// base pass cb
+		FShadowMapCB BaseCB;
+		BaseCB.World = glm::transpose(WorldMatrix);
+		BaseCB.CamViewProj = glm::transpose(CamViewProj);
+		BaseCB.LightViewOrtho = glm::transpose(LightViewOrtho);
 
 		FVector CamPos = Scene->SceneCamera.GetPosition();
-		ConstantBufferData.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
+		BaseCB.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
 
-		ConstantBufferData.Light.Dir = Scene->DirectionLight.Dir;
-		ConstantBufferData.Light.Color = Scene->DirectionLight.Color;
-		ConstantBufferData.Light.Intensity = Scene->DirectionLight.Intensity;
+		BaseCB.Light.Dir = Scene->DirectionLight.Dir;
+		BaseCB.Light.Color = Scene->DirectionLight.Color;
+		BaseCB.Light.Intensity = Scene->DirectionLight.Intensity;
+		BaseCB.IsShadowMap = FALSE;
 
-		RHI::FCBData UpdateData;
-		UpdateData.DataBuffer = reinterpret_cast<void*>(&ConstantBufferData);
-		UpdateData.BufferSize = sizeof(ConstantBufferData);
+		RHI::FCBData BasePassData;
+		BasePassData.DataBuffer = reinterpret_cast<void*>(&BaseCB);
+		BasePassData.BufferSize = sizeof(BaseCB);
+
+		// shadow pass cb
+		FShadowMapCB ShadowCB = BaseCB;
+		ShadowCB.CamViewProj = glm::transpose(LightViewOrtho);
+		ShadowCB.IsShadowMap = TRUE;
+
+		RHI::FCBData ShadowPassData;
+		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCB);
+		ShadowPassData.BufferSize = sizeof(ShadowCB);
+
 		GDynamicRHI->UpdateConstantBufferInMeshRes(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
-			&UpdateData); // MeshActor in Scene reflect to MeshActorFrameResource by order
+			&BasePassData, &ShadowPassData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}
 }

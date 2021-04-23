@@ -155,7 +155,7 @@ void FCamera::Update(const float& ElapsedSeconds)
 
 FMatrix FCamera::GetViewMatrix() const
 {
-	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection);
+	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection); // TODO: camera didnt update upDir
 }
 
 FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const

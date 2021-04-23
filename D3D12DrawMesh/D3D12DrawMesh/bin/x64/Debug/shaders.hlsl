@@ -31,7 +31,7 @@ cbuffer SceneConstantBuffer : register(b0)
 	bool IsShadowPass;
 };
 
-float4 CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
+float CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
 {
     float4 LightSpacePos = vPosWorld;
     LightSpacePos = mul(LightSpacePos, LightVP);
@@ -43,7 +43,7 @@ float4 CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
 
     float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
 
-    float2 ShadowMapDims = float2(1280.0f, 720.0f); // need to keep in sync with .cpp file
+    float2 ShadowMapDims = float2(1280.0f, 720.0f); // TODO: need to keep in sync with .cpp file
     float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
     SubPixelCoords.xy = frac(ShadowMapDims * ShadowTexCoord);
     SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
@@ -91,6 +91,11 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
+	if(IsShadowPass)
+	{
+		return float4(1.f, 1.f, 1.f, 1.f);
+	}
+
 	input.normal = normalize(input.normal);
 	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
 	viewDir = normalize(viewDir);
