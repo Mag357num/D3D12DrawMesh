@@ -436,3 +436,6 @@ D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/BlinnPhong/shaders.hlsl
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/BlinnPhong/SingleCameraBinary_.dat
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/BlinnPhong/StaticMeshBinary_.dat
 D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/D3D12DrawMesh.tlog/link.write.1.tlog
+D3D12DrawMesh/.vs/D3D12DrawMesh/v16/ipch/AutoPCH/2e6ded3cb1727dd4/ENGINE.ipch
+D3D12DrawMesh/.vs/D3D12DrawMesh/v16/ipch/AutoPCH/7cc81cade2e4b252/RENDERTHREAD.ipch
+D3D12DrawMesh/.vs/D3D12DrawMesh/v16/ipch/AutoPCH/8927cd52015a6e45/ASSETMANAGER.ipch
