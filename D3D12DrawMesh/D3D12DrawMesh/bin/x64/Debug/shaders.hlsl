@@ -12,7 +12,7 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
-#define SHADOW_DEPTH_BIAS 0.00505f
+#define SHADOW_DEPTH_BIAS 0.0002f
 
 struct LightState
 {
@@ -44,7 +44,10 @@ float CalcUnshadowedAmountPCF2x2(float4 PosWorld)
 
     float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
 
-    float2 ShadowMapDims = float2(4000.0f, 4000.0f); // TODO: need to keep in sync with .cpp file
+	uint width, height, numMips;
+    shadowMap.GetDimensions(0, width, height, numMips);
+    float2 ShadowMapDims = float2(width, height);
+
     float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
     SubPixelCoords.xy = frac(ShadowMapDims * ShadowTexCoord);
     SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
@@ -107,10 +110,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float shine = 10.f;
 	float4 specularColor = ks * float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 
-	float kd = 0.0f;
+	float kd = 0.3f;
 	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
 
-	float ambientFactor = 0.05f;
+	float ambientFactor = 0.02f;
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float4 Color = ambientColor + difuseColor + specularColor;

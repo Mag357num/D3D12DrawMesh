@@ -413,7 +413,18 @@ namespace RHI
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
 		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
-		ThrowIfFailed(D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		ID3DBlob* ErrorMsg = nullptr;
+		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, &ErrorMsg);
+		if (FAILED(HR))
+		{
+			if (ErrorMsg)
+			{
+				OutputDebugStringA((char*)ErrorMsg->GetBufferPointer());
+			}
+
+			throw HR;
+		}
+
 		return Shader;
 	}
 
@@ -421,7 +432,17 @@ namespace RHI
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
 		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
-		ThrowIfFailed(D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr));
+		ID3DBlob* ErrorMsg = nullptr;
+		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr);
+		if (FAILED(HR))
+		{
+			if (ErrorMsg)
+			{
+				OutputDebugStringA((char*)ErrorMsg->GetBufferPointer());
+			}
+
+			throw HR;
+		}
 		return Shader;
 	}
 
@@ -613,8 +634,6 @@ namespace RHI
 		CommandLists[0].Reset();
 
 		// common set
-		CommandLists[0].CommandList->RSSetViewports(1, &Viewport);
-		CommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -647,6 +666,12 @@ namespace RHI
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
 		FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->ShadowCB.get()); // shadow cb
 
+		// viewport scissorect
+		D3D12_VIEWPORT ShadowViewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(8192), static_cast<float>(8192));
+		D3D12_RECT ShadowScissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(8192), static_cast<LONG>(8192));
+		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
+		CommandLists[0].CommandList->RSSetScissorRects(1, &ShadowScissorRect);
+
 		// set render target to nullptr, dsv to shadow texture
 		CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &ShadowDepthViewHandle);
 
@@ -672,6 +697,10 @@ namespace RHI
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
 		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->BaseCB.get()); // base pass cb
+
+		// viewport scissorect
+		CommandLists[0].CommandList->RSSetViewports(1, &Viewport);
+		CommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
 
 		// rendertarget
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
@@ -859,8 +888,8 @@ namespace RHI
 		CD3DX12_RESOURCE_DESC shadowTexDesc(
 			D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 			0,
-			static_cast<UINT>(ResoWidth), // TODO: hard coding
-			static_cast<UINT>(ResoHeight), // TODO: hard coding
+			static_cast<UINT>(8192), // TODO: hard coding
+			static_cast<UINT>(8192), // TODO: hard coding
 			1,
 			1,
 			DXGI_FORMAT_R32_TYPELESS,
