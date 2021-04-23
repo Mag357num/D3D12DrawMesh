@@ -12,6 +12,8 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
+#define SHADOW_DEPTH_BIAS 0.00005f
+
 struct LightState
 {
     float3 DirectionLightColor;
@@ -28,6 +30,35 @@ cbuffer SceneConstantBuffer : register(b0)
 	LightState Light;
 	bool IsShadowPass;
 };
+
+float4 CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
+{
+    float4 LightSpacePos = vPosWorld;
+    LightSpacePos = mul(LightSpacePos, LightVP);
+
+    LightSpacePos.xyz /= LightSpacePos.w;
+
+    float2 ShadowTexCoord = 0.5f * LightSpacePos.xy + 0.5f;
+    ShadowTexCoord.y = 1.0f - ShadowTexCoord.y;
+
+    float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
+
+    float2 ShadowMapDims = float2(1280.0f, 720.0f); // need to keep in sync with .cpp file
+    float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    SubPixelCoords.xy = frac(ShadowMapDims * ShadowTexCoord);
+    SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
+    float4 BilinearWeights = SubPixelCoords.zxzx * SubPixelCoords.wwyy;
+
+    float2 TexelUnits = 1.0f / ShadowMapDims;
+    float4 ShadowDepths;
+    ShadowDepths.x = shadowMap.Sample(sampleClamp, ShadowTexCoord);
+    ShadowDepths.y = shadowMap.Sample(sampleClamp, ShadowTexCoord + float2(TexelUnits.x, 0.0f));
+    ShadowDepths.z = shadowMap.Sample(sampleClamp, ShadowTexCoord + float2(0.0f, TexelUnits.y));
+    ShadowDepths.w = shadowMap.Sample(sampleClamp, ShadowTexCoord + TexelUnits);
+
+    float4 ShadowTests = (ShadowDepths >= LightSpaceDepth) ? 1.0f : 0.0f;
+    return dot(BilinearWeights, ShadowTests);
+}
 
 struct VSInput
 {
