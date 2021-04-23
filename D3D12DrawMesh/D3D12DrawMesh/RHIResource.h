@@ -71,10 +71,11 @@ namespace RHI
 	{
 		FMatrix World;
 		FMatrix CamViewProj;
-		FMatrix LightViewOrtho;
+		FMatrix LightViewProj;
 		FVector4 CamEye;
 		FDirectionLight Light;
 		BOOL IsShadowMap; // TODO: BOOL is win dependent?
+		float padding[3];
 	};
 
 }

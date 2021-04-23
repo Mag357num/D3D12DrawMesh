@@ -12,13 +12,14 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
-#define SHADOW_DEPTH_BIAS 0.00005f
+#define SHADOW_DEPTH_BIAS 0.00505f
 
 struct LightState
 {
     float3 DirectionLightColor;
 	float DirectionLightIntensity;
-    float4 DirectionLightDir;
+    float3 DirectionLightDir;
+	float padding;
 };
 
 cbuffer SceneConstantBuffer : register(b0)
@@ -31,9 +32,9 @@ cbuffer SceneConstantBuffer : register(b0)
 	bool IsShadowPass;
 };
 
-float CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
+float CalcUnshadowedAmountPCF2x2(float4 PosWorld)
 {
-    float4 LightSpacePos = vPosWorld;
+    float4 LightSpacePos = PosWorld;
     LightSpacePos = mul(LightSpacePos, LightVP);
 
     LightSpacePos.xyz /= LightSpacePos.w;
@@ -43,7 +44,7 @@ float CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
 
     float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
 
-    float2 ShadowMapDims = float2(1280.0f, 720.0f); // TODO: need to keep in sync with .cpp file
+    float2 ShadowMapDims = float2(4000.0f, 4000.0f); // TODO: need to keep in sync with .cpp file
     float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
     SubPixelCoords.xy = frac(ShadowMapDims * ShadowTexCoord);
     SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
@@ -56,7 +57,7 @@ float CalcUnshadowedAmountPCF2x2(int lightIndex, float4 vPosWorld)
     ShadowDepths.z = shadowMap.Sample(sampleClamp, ShadowTexCoord + float2(0.0f, TexelUnits.y));
     ShadowDepths.w = shadowMap.Sample(sampleClamp, ShadowTexCoord + TexelUnits);
 
-    float4 ShadowTests = (ShadowDepths >= LightSpaceDepth) ? 1.0f : 0.0f;
+    float4 ShadowTests = (ShadowDepths > LightSpaceDepth) ? 1.0f : 0.0f;
     return dot(BilinearWeights, ShadowTests);
 }
 
@@ -102,17 +103,19 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float3 dir = normalize(Light.DirectionLightDir * -1.f);
 	float3 halfWay = normalize(viewDir + dir);
 
-	float ks = 15.f;
+	float ks = 1.5f;
 	float shine = 10.f;
 	float4 specularColor = ks * float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 
 	float kd = 0.0f;
 	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
 
-	float ambientFactor = 0.0f;
+	float ambientFactor = 0.05f;
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float4 Color = ambientColor + difuseColor + specularColor;
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.worldpos);
+	Color *= ShadowFactor;
 
 	return Color;
 }

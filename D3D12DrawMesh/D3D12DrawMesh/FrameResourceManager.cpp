@@ -35,16 +35,17 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix CamView = MainCamera.GetViewMatrix();
-	FMatrix CamProj = MainCamera.GetProjectionMatrix(1.0f, 10000.0f);
+	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
 	FMatrix CamViewProj = CamProj * CamView;
 
-	FVector LightPos = { 1000.f, 0.f, 500.f };
-	FVector LightTarget = { 0.f, 0.f, 0.f };
+	// TODO: change the way to build Light Cam
+	FVector LightPos = { 700.f, 0.f, 700.f };
+	FVector LightTarget = LightPos + Scene->DirectionLight.Dir;
 	FVector LightUpDir = { 0.f, 0.f, 1.f };
+
 	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
-	FMatrix LightOrtho = glm::perspectiveFovLH_ZO(90.f, 1.77777777f, 1.0f, 1.0f, 10000.0f);
-	//FMatrix LightOrtho = glm::orthoLH_ZO();
-	FMatrix LightViewOrtho = LightOrtho * LightView;
+	FMatrix LightProj = glm::orthoLH_ZO(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f);
+	FMatrix LightViewProj = LightProj * LightView;
 
 	FFrameResource& FrameResource = FrameResources[FrameIndex];
 	const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
@@ -67,7 +68,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FShadowMapCB BaseCB;
 		BaseCB.World = glm::transpose(WorldMatrix);
 		BaseCB.CamViewProj = glm::transpose(CamViewProj);
-		BaseCB.LightViewOrtho = glm::transpose(LightViewOrtho);
+		BaseCB.LightViewProj = glm::transpose(LightViewProj);
 
 		FVector CamPos = Scene->SceneCamera.GetPosition();
 		BaseCB.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
@@ -83,7 +84,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 		// shadow pass cb
 		FShadowMapCB ShadowCB = BaseCB;
-		ShadowCB.CamViewProj = glm::transpose(LightViewOrtho);
+		ShadowCB.CamViewProj = glm::transpose(LightViewProj);
 		ShadowCB.IsShadowMap = TRUE;
 
 		RHI::FCBData ShadowPassData;

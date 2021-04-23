@@ -158,9 +158,14 @@ FMatrix FCamera::GetViewMatrix() const
 	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection); // TODO: camera didnt update upDir
 }
 
-FMatrix FCamera::GetProjectionMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+FMatrix FCamera::GetPerspProjMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
 {
 	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+}
+
+FMatrix FCamera::GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+{
+	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
 }
 
 void FCamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent

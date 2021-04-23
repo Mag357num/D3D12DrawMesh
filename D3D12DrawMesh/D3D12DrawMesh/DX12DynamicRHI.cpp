@@ -631,10 +631,14 @@ namespace RHI
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
 			DrawMeshActorShadowPass(i);
-			CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-			DrawMeshActorBasePass(i);
-			CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 		}
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+		for (auto i : FrameRes->MeshActorFrameResources)
+		{
+			DrawMeshActorBasePass(i);
+		}
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 	}
 
 	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
@@ -855,8 +859,8 @@ namespace RHI
 		CD3DX12_RESOURCE_DESC shadowTexDesc(
 			D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 			0,
-			static_cast<UINT>(ResoWidth),
-			static_cast<UINT>(ResoHeight),
+			static_cast<UINT>(ResoWidth), // TODO: hard coding
+			static_cast<UINT>(ResoHeight), // TODO: hard coding
 			1,
 			1,
 			DXGI_FORMAT_R32_TYPELESS,

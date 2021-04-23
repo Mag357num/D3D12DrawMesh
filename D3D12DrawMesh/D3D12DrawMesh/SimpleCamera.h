@@ -21,7 +21,9 @@ public:
 	void		Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
 	void		Update(const float& ElapsedSeconds);
 	FMatrix		GetViewMatrix() const;
-	FMatrix		GetProjectionMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
+	FMatrix		GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
+	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top 
+		,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	void		SetMoveSpeed(const float & UnitsPerSecond);
 	void		SetTurnSpeed(const float& RadiansPerSecond);
 
