@@ -39,8 +39,8 @@ float CalcUnshadowedAmountPCF2x2(float4 PosWorld)
 
     LightSpacePos.xyz /= LightSpacePos.w;
 
-    float2 ShadowTexCoord = 0.5f * LightSpacePos.xy + 0.5f;
-    ShadowTexCoord.y = 1.0f - ShadowTexCoord.y;
+    float2 TexCoord = 0.5f * LightSpacePos.xy + 0.5f;
+    TexCoord.y = 1.0f - TexCoord.y;
 
     float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
 
@@ -49,16 +49,16 @@ float CalcUnshadowedAmountPCF2x2(float4 PosWorld)
     float2 ShadowMapDims = float2(width, height);
 
     float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    SubPixelCoords.xy = frac(ShadowMapDims * ShadowTexCoord);
+    SubPixelCoords.xy = frac(ShadowMapDims * TexCoord);
     SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
     float4 BilinearWeights = SubPixelCoords.zxzx * SubPixelCoords.wwyy;
 
     float2 TexelUnits = 1.0f / ShadowMapDims;
     float4 ShadowDepths;
-    ShadowDepths.x = shadowMap.Sample(sampleClamp, ShadowTexCoord);
-    ShadowDepths.y = shadowMap.Sample(sampleClamp, ShadowTexCoord + float2(TexelUnits.x, 0.0f));
-    ShadowDepths.z = shadowMap.Sample(sampleClamp, ShadowTexCoord + float2(0.0f, TexelUnits.y));
-    ShadowDepths.w = shadowMap.Sample(sampleClamp, ShadowTexCoord + TexelUnits);
+    ShadowDepths.x = shadowMap.Sample(sampleClamp, TexCoord);
+    ShadowDepths.y = shadowMap.Sample(sampleClamp, TexCoord + float2(TexelUnits.x, 0.0f));
+    ShadowDepths.z = shadowMap.Sample(sampleClamp, TexCoord + float2(0.0f, TexelUnits.y));
+    ShadowDepths.w = shadowMap.Sample(sampleClamp, TexCoord + TexelUnits);
 
     float4 ShadowTests = (ShadowDepths > LightSpaceDepth) ? 1.0f : 0.0f;
     return dot(BilinearWeights, ShadowTests);
@@ -120,5 +120,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.worldpos);
 	Color *= ShadowFactor;
 
-	return Color;
+	return float4(1.f, 1.f, 1.f, 1.f)*ShadowFactor;
 }
