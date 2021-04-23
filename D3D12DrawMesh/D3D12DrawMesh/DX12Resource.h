@@ -24,7 +24,8 @@ namespace RHI
 
 	struct FDX12MeshRes : public FMeshRes
 	{
-		ComPtr<ID3D12PipelineState> PSObj;
+		ComPtr<ID3D12PipelineState> BasePSO;
+		ComPtr<ID3D12PipelineState> ShadowPSO;
 		ComPtr<ID3D12RootSignature> RootSignature;
 	};
 

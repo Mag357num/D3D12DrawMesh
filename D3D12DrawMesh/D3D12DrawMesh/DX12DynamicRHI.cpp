@@ -139,6 +139,8 @@ namespace RHI
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
 		LastCPUHandleForCBVSRV = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
 		LastGPUHandleForCBVSRV = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
+
+		CreateNullMapToCBVSRVHeaps();
 		CreateShadowMapToCBVSRVHeaps();
 
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
@@ -202,21 +204,28 @@ namespace RHI
 		FDX12Shader* DX12VS = dynamic_cast<FDX12Shader*>(VS);
 		FDX12Shader* DX12PS = dynamic_cast<FDX12Shader*>(PS);
 
-		if (rootFlags == SHADER_FLAGS::CB1_SR0)
+		if (rootFlags == SHADER_FLAGS::CB0_SR1_Sa2)
 		{
-			DX12MeshRes->RootSignature = CreateDX12RootSig_1CB_VS();
+			DX12MeshRes->RootSignature = CreateDX12RootSig_CB0_SR1_Sa2();
 		}
 		else
 		{
 			throw std::exception(" didnt assign rootsignature! ");
 		}
 
+		// create bass pass pso
 		FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(*Dx12Initializer,
 			DX12MeshRes->RootSignature.Get(), CD3DX12_SHADER_BYTECODE(DX12VS->Shader.Get()),
 			CD3DX12_SHADER_BYTECODE(DX12PS->Shader.Get()));
+		DX12MeshRes->BasePSO = CreatePSO(PsoDesc);
 
-		DX12MeshRes->PSObj = CreatePSO(PsoDesc);
+		// create shadow pass pso
+		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
+		PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+		PsoDesc.NumRenderTargets = 0;
+
+		DX12MeshRes->ShadowPSO = CreatePSO(PsoDesc);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -337,9 +346,22 @@ namespace RHI
 		depthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		depthStencilViewDesc.Texture2D.MipSlice = 0;
 
-		Device->CreateDepthStencilView(ShadowMap.Get(), &depthStencilViewDesc, LastCPUHandleForDSV);
+		Device->CreateDepthStencilView(DX12ShadowMap.Get(), &depthStencilViewDesc, LastCPUHandleForDSV);
 		ShadowDepthViewHandle = LastCPUHandleForDSV;
 		LastCPUHandleForDSV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
+	}
+
+	void FDX12DynamicRHI::CreateNullMapToCBVSRVHeaps()
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		nullSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		nullSrvDesc.Texture2D.MipLevels = 1;
+		nullSrvDesc.Texture2D.MostDetailedMip = 0;
+		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		CreateSRVToHeaps(nullptr, nullSrvDesc, NullGPUHandle);
 	}
 
 	void FDX12DynamicRHI::CreateShadowMapToCBVSRVHeaps()
@@ -350,12 +372,12 @@ namespace RHI
 		shadowSrvDesc.Texture2D.MipLevels = 1;
 		shadowSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-		CreateSRVToHeaps(ShadowMap, shadowSrvDesc, ShadowMapGPUHandleForCBVSRV);
+		CreateSRVToHeaps(DX12ShadowMap.Get(), shadowSrvDesc, ShadowMapGPUHandleForCBVSRV);
 	}
 
-	void FDX12DynamicRHI::CreateSRVToHeaps(ComPtr<ID3D12Resource>& ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle)
+	void FDX12DynamicRHI::CreateSRVToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle)
 	{
-		Device->CreateShaderResourceView(ShaderResource.Get(), &SrvDesc, LastCPUHandleForCBVSRV);
+		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCPUHandleForCBVSRV);
 		Handle = LastGPUHandleForCBVSRV;
 
 		LastCPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
@@ -537,7 +559,7 @@ namespace RHI
 		*ppAdapter = adapter.Detach();
 	}
 
-	ComPtr<ID3D12RootSignature> FDX12DynamicRHI::CreateDX12RootSig_1CB_VS()
+	ComPtr<ID3D12RootSignature> FDX12DynamicRHI::CreateDX12RootSig_CB0_SR1_Sa2()
 	{
 		ComPtr<ID3D12RootSignature> RootSignature;
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
@@ -579,7 +601,7 @@ namespace RHI
 	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
 		MeshActorFrameResource.MeshToRender = CommitMeshBuffer(MeshActor);
-		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB1_SR0);
+		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB0_SR1_Sa2);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -598,49 +620,71 @@ namespace RHI
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		CommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
 		CommandLists[0].CommandList->ClearDepthStencilView(DSVHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(ShadowDepthViewHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	void FDX12DynamicRHI::DrawFrame(const FFrameResource* FrameRes)
 	{
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
-			// before: no shadowmap
-			DrawMeshActorNoShadow(i);
-
-			// after: with shadowmap
 			DrawMeshActorShadowPass(i);
+			CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 			DrawMeshActorBasePass(i);
+			CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 		}
 	}
 
-	void FDX12DynamicRHI::DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor)
+	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
 	{
 		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
 		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DSVHandle);
+		// set render target to nullptr, dsv to shadow texture
+		CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &ShadowDepthViewHandle);
 
-		CommandLists[0].CommandList->SetPipelineState(DX12MeshRes->PSObj.Get());
+		// use shadow pso
+		CommandLists[0].CommandList->SetPipelineState(DX12MeshRes->ShadowPSO.Get());
+
+		// root signature
 		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get() };
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap); // cb
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, NullGPUHandle); // shadow map texture
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
 
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap);
+		// set mesh
 		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
 		CommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexCount, 1, 0, 0, 0);
 	}
 
-	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
-	{
-
-	}
-
 	void FDX12DynamicRHI::DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor)
 	{
+		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
+		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->CB.get());
 
+		// rendertarget
+		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DSVHandle);
+
+		// pso
+		CommandLists[0].CommandList->SetPipelineState(DX12MeshRes->BasePSO.Get());
+
+		// root signature
+		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
+		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap); // cb
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, ShadowMapGPUHandleForCBVSRV); // shadow map texture
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
+
+		// set mesh
+		CommandLists[0].CommandList->IASetIndexBuffer(&DX12Mesh->IndexBufferView);
+		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &DX12Mesh->VertexBufferView);
+		CommandLists[0].CommandList->DrawIndexedInstanced(DX12Mesh->IndexCount, 1, 0, 0, 0);
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
@@ -828,8 +872,8 @@ namespace RHI
 			&shadowTexDesc,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&clearValue,
-			IID_PPV_ARGS(&ShadowMap)));
+			IID_PPV_ARGS(&DX12ShadowMap)));
 
-		NAME_D3D12_OBJECT(ShadowMap);
+		NAME_D3D12_OBJECT(DX12ShadowMap);
 	}
 }

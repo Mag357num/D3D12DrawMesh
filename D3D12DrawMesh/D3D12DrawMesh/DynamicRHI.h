@@ -27,7 +27,7 @@ namespace RHI
 
 	enum class SHADER_FLAGS
 	{
-		CB1_SR0 = 1, // use 1 cb, 0 sr
+		CB0_SR1_Sa2 = 1,
 	};
 
 	class FDynamicRHI
@@ -59,7 +59,6 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() = 0;
 		virtual void DrawFrame(const FFrameResource* FrameRes) = 0;
-		virtual void DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void FrameEnd() = 0;

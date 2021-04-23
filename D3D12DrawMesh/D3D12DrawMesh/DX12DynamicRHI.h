@@ -68,14 +68,12 @@ namespace RHI
 		// mesh res
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
-		//virtual void CreateMeshResObj(FMeshRes* MeshRes, const std::wstring& FileName, const SHADER_FLAGS& flags) override;
 		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) override;
 		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* Data) override;
 
 		// draw
 		virtual void FrameBegin() override;
 		virtual void DrawFrame(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActorNoShadow(const FMeshActorFrameResource& MeshActor) override;
 		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
@@ -102,9 +100,10 @@ namespace RHI
 		void CreateDSVToHeaps();
 		void CreateSamplerToHeaps(FSamplerType Type);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
-		void CreateSRVToHeaps(ComPtr<ID3D12Resource>& ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
+		void CreateSRVToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CommitShadowMap();
 		void CreateShadowMapToDSVHeaps();
+		void CreateNullMapToCBVSRVHeaps();
 		void CreateShadowMapToCBVSRVHeaps();
 
 
@@ -116,7 +115,7 @@ namespace RHI
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
 		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
-		ComPtr<ID3D12RootSignature> CreateDX12RootSig_1CB_VS();
+		ComPtr<ID3D12RootSignature> CreateDX12RootSig_CB0_SR1_Sa2();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
 			bool requestHighPerformanceAdapter = false);
@@ -148,9 +147,10 @@ namespace RHI
 		// frame resource
 		ComPtr<ID3D12Resource> DepthStencilBuffer;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE DSVHandle;
-		ComPtr<ID3D12Resource> ShadowMap;
+		ComPtr<ID3D12Resource> DX12ShadowMap;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowDepthViewHandle;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapGPUHandleForCBVSRV;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE NullGPUHandle;
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;

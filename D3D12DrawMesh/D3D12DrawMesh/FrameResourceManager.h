@@ -18,7 +18,6 @@ struct FMeshActorFrameResource
 class FFrameResource
 {
 public:
-	shared_ptr<FRHIResource> ShadowMap;
 	std::vector<FMeshActorFrameResource> MeshActorFrameResources;
 };
 
