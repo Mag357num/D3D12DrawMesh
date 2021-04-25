@@ -12,7 +12,6 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
-#define SHADOW_DEPTH_BIAS 0.0002f
 
 struct LightState
 {
@@ -32,10 +31,10 @@ cbuffer SceneConstantBuffer : register(b0)
 	bool IsShadowPass;
 };
 
-float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos)
+float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
 {
     float2 TexCoord = ScreenSpacePos.xy;
-    float ActualDepth = ScreenSpacePos.z - SHADOW_DEPTH_BIAS;
+    float ActualDepth = ScreenSpacePos.z - bias;
 
 	uint width, height, numMips;
     shadowMap.GetDimensions(0, width, height, numMips);
@@ -113,11 +112,12 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float kd = 0.3f;
 	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
 
-	float ambientFactor = 0.02f;
+	float ambientFactor = 0.2f;
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
-	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH);
+	float bias = max(0.005f * (1.0f - abs(dot(input.normal, Light.DirectionLightDir))), 0.00005f);
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH, bias);
 	float4 FrameBuffer = (ambientColor + ShadowFactor * (difuseColor + specularColor)) * input.color ;
 
-	return FrameBuffer;
+	return ambientColor;
 }

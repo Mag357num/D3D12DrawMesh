@@ -39,7 +39,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	// TODO: change the way to build Light Cam
 	FVector LightPos = { 450.f, 0.f, 450.f };
-	FVector LightTarget = LightPos + Scene->DirectionLight.Dir;
+	FVector LightDirNored = glm::normalize(Scene->DirectionLight.Dir);
+	FVector LightTarget = LightPos + LightDirNored;
 	FVector LightUpDir = { 0.f, 0.f, 1.f };
 
 	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
@@ -76,7 +77,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FVector CamPos = Scene->SceneCamera.GetPosition();
 		BaseCB.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
 
-		BaseCB.Light.Dir = Scene->DirectionLight.Dir;
+		BaseCB.Light.Dir = LightDirNored;
 		BaseCB.Light.Color = Scene->DirectionLight.Color;
 		BaseCB.Light.Intensity = Scene->DirectionLight.Intensity;
 		BaseCB.IsShadowMap = FALSE;
