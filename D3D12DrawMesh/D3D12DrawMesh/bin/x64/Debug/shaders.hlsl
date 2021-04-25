@@ -32,29 +32,28 @@ cbuffer SceneConstantBuffer : register(b0)
 	bool IsShadowPass;
 };
 
-float CalcUnshadowedAmountPCF2x2(float4 LightSpacePos)
+float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos)
 {
-    float2 TexCoord = LightSpacePos.xy;
-
-    float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
+    float2 TexCoord = ScreenSpacePos.xy;
+    float ActualDepth = ScreenSpacePos.z - SHADOW_DEPTH_BIAS;
 
 	uint width, height, numMips;
     shadowMap.GetDimensions(0, width, height, numMips);
     float2 ShadowMapDims = float2(width, height);
 
-    float4 SubPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    SubPixelCoords.xy = frac(ShadowMapDims * TexCoord);
-    SubPixelCoords.zw = 1.0f - SubPixelCoords.xy;
-    float4 BilinearWeights = SubPixelCoords.zxzx * SubPixelCoords.wwyy;
+    float4 PixelCoordFrac = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    PixelCoordFrac.xy = frac(ShadowMapDims * TexCoord);
+    PixelCoordFrac.zw = 1.0f - PixelCoordFrac.xy;
+    float4 BilinearWeights = PixelCoordFrac.zxzx * PixelCoordFrac.wwyy;
 
     float2 TexelUnits = 1.0f / ShadowMapDims;
-    float4 ShadowDepths;
-    ShadowDepths.x = shadowMap.Sample(sampleClamp, TexCoord);
-    ShadowDepths.y = shadowMap.Sample(sampleClamp, TexCoord + float2(TexelUnits.x, 0.0f));
-    ShadowDepths.z = shadowMap.Sample(sampleClamp, TexCoord + float2(0.0f, TexelUnits.y));
-    ShadowDepths.w = shadowMap.Sample(sampleClamp, TexCoord + TexelUnits);
+    float4 SampleDepths;
+    SampleDepths.x = shadowMap.Sample(sampleClamp, TexCoord);
+    SampleDepths.y = shadowMap.Sample(sampleClamp, TexCoord + float2(TexelUnits.x, 0.0f));
+    SampleDepths.z = shadowMap.Sample(sampleClamp, TexCoord + float2(0.0f, TexelUnits.y));
+    SampleDepths.w = shadowMap.Sample(sampleClamp, TexCoord + TexelUnits);
 
-    float4 ShadowTests = (ShadowDepths > LightSpaceDepth) ? 1.0f : 0.0f;
+    float4 ShadowTests = (SampleDepths > ActualDepth) ? 1.0f : 0.0f;
     return dot(BilinearWeights, ShadowTests);
 }
 
