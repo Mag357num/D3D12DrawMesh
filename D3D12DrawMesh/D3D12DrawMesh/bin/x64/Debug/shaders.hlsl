@@ -83,6 +83,7 @@ PSInput VSMain(VSInput input)
 	result.worldpos = result.position;
     result.position = mul(result.worldpos, CameraVP);
     result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
+	result.color = float4(1.f, 1.f, 1.f, 1.f);
 
 	if(!IsShadowPass)
 	{
@@ -115,9 +116,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float ambientFactor = 0.02f;
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
-	float4 Color = ambientColor + difuseColor + specularColor;
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH);
-	Color *= ShadowFactor;
+	float4 FrameBuffer = (ambientColor + ShadowFactor * (difuseColor + specularColor)) * input.color ;
 
-	return Color;
+	return FrameBuffer;
 }
