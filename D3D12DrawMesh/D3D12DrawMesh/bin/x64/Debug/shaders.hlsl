@@ -114,12 +114,12 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float kd = 0.3f;
 	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
 
-	float ambientFactor = 0.2f;
+	float ambientFactor = 0.02f;
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, Light.DirectionLightDir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH, bias);
-	float4 FrameBuffer = (ambientColor + ShadowFactor * (difuseColor + specularColor)) * input.color ;
+	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
 
 	return FrameBuffer;
 }
