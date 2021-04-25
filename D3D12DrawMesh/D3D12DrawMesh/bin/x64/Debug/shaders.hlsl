@@ -26,21 +26,15 @@ cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 World;
     float4x4 CameraVP;
-	float4x4 LightVP;
+	float4x4 ShadowTransForm;
     float4 CamEye;
 	LightState Light;
 	bool IsShadowPass;
 };
 
-float CalcUnshadowedAmountPCF2x2(float4 PosWorld)
+float CalcUnshadowedAmountPCF2x2(float4 LightSpacePos)
 {
-    float4 LightSpacePos = PosWorld;
-    LightSpacePos = mul(LightSpacePos, LightVP);
-
-    LightSpacePos.xyz /= LightSpacePos.w;
-
-    float2 TexCoord = 0.5f * LightSpacePos.xy + 0.5f;
-    TexCoord.y = 1.0f - TexCoord.y;
+    float2 TexCoord = LightSpacePos.xy;
 
     float LightSpaceDepth = LightSpacePos.z - SHADOW_DEPTH_BIAS;
 
@@ -77,6 +71,7 @@ struct PSInput
 {
     float4 position : SV_POSITION;
     float4 worldpos : POSITION;
+	float4 shadowPosH :POSITION1;
 	float3 normal : NORMAL;
     float4 color : COLOR;
 };
@@ -87,8 +82,13 @@ PSInput VSMain(VSInput input)
 
     result.position = mul(float4(input.position, 1.0f), World);
 	result.worldpos = result.position;
-    result.position = mul(result.position, CameraVP);
+    result.position = mul(result.worldpos, CameraVP);
     result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
+
+	if(!IsShadowPass)
+	{
+		result.shadowPosH = mul(result.worldpos, ShadowTransForm);
+	}
 
     return result;
 }
@@ -117,7 +117,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float4 Color = ambientColor + difuseColor + specularColor;
-	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.worldpos);
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH);
 	Color *= ShadowFactor;
 
 	return Color;

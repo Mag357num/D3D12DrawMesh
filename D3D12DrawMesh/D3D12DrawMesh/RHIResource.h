@@ -71,7 +71,7 @@ namespace RHI
 	{
 		FMatrix World;
 		FMatrix CamViewProj;
-		FMatrix LightViewProj;
+		FMatrix ShadowTransForm;
 		FVector4 CamEye;
 		FDirectionLight Light;
 		BOOL IsShadowMap; // TODO: BOOL is win dependent?
