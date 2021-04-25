@@ -119,5 +119,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH, bias);
 	float4 FrameBuffer = (ambientColor + ShadowFactor * (difuseColor + specularColor)) * input.color ;
 
-	return ambientColor;
+	return FrameBuffer;
 }
