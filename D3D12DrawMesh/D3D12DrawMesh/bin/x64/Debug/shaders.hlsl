@@ -120,5 +120,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.worldpos);
 	Color *= ShadowFactor;
 
-	return float4(1.f, 1.f, 1.f, 1.f)*ShadowFactor;
+	return Color;
 }
