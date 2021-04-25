@@ -36,16 +36,20 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix CamView = MainCamera.GetViewMatrix();
 	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
-	FMatrix CamViewProj = CamProj * CamView;
 
 	// TODO: change the way to build Light Cam
-	FVector LightPos = { 700.f, 0.f, 700.f };
-	FVector LightTarget = LightPos + Scene->DirectionLight.Dir;
+	FVector LightPos = { 450.f, 0.f, 450.f };
+	FVector LightDirNored = glm::normalize(Scene->DirectionLight.Dir);
+	FVector LightTarget = LightPos + LightDirNored;
 	FVector LightUpDir = { 0.f, 0.f, 1.f };
 
 	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
 	FMatrix LightProj = glm::orthoLH_ZO(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f);
-	FMatrix LightViewProj = LightProj * LightView;
+	FMatrix LightScr(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
 
 	FFrameResource& FrameResource = FrameResources[FrameIndex];
 	const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
@@ -67,13 +71,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		// base pass cb
 		FShadowMapCB BaseCB;
 		BaseCB.World = glm::transpose(WorldMatrix);
-		BaseCB.CamViewProj = glm::transpose(CamViewProj);
-		BaseCB.LightViewProj = glm::transpose(LightViewProj);
+		BaseCB.CamViewProj = glm::transpose(CamProj * CamView);
+		BaseCB.ShadowTransForm = glm::transpose(LightScr * LightProj * LightView);
 
 		FVector CamPos = Scene->SceneCamera.GetPosition();
 		BaseCB.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
 
-		BaseCB.Light.Dir = Scene->DirectionLight.Dir;
+		BaseCB.Light.Dir = LightDirNored;
 		BaseCB.Light.Color = Scene->DirectionLight.Color;
 		BaseCB.Light.Intensity = Scene->DirectionLight.Intensity;
 		BaseCB.IsShadowMap = FALSE;
@@ -84,7 +88,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 		// shadow pass cb
 		FShadowMapCB ShadowCB = BaseCB;
-		ShadowCB.CamViewProj = glm::transpose(LightViewProj);
+		ShadowCB.CamViewProj = glm::transpose(LightProj * LightView);
 		ShadowCB.IsShadowMap = TRUE;
 
 		RHI::FCBData ShadowPassData;

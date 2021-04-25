@@ -315,7 +315,7 @@ namespace RHI
 		D3D12_SAMPLER_DESC SamplerDesc = {};
 		if (Type == FSamplerType::CLAMP)
 		{
-			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
