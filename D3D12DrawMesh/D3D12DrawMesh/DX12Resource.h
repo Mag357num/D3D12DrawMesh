@@ -10,6 +10,21 @@ namespace RHI
 		ComPtr<ID3D12Resource> Texture;
 	};
 
+	struct FDX12CPUHandle : public FHandle
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle;
+	};
+
+	struct FDX12GPUHandle : public FHandle
+	{
+		CD3DX12_GPU_DESCRIPTOR_HANDLE Handle;
+	};
+
+	struct FDX12Rasterizer : public FRasterizer
+	{
+		ComPtr<ID3D12PipelineState> PSO;
+	};
+
 	struct FDX12Shader : public FShader
 	{
 		ComPtr<ID3DBlob> Shader;
@@ -24,8 +39,8 @@ namespace RHI
 
 	struct FDX12MeshRes : public FMeshRes
 	{
-		ComPtr<ID3D12PipelineState> BasePSO;
-		ComPtr<ID3D12PipelineState> ShadowPSO;
+		//ComPtr<ID3D12PipelineState> BasePSO;
+		//ComPtr<ID3D12PipelineState> ShadowPSO;
 		ComPtr<ID3D12RootSignature> RootSignature;
 	};
 

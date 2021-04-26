@@ -20,7 +20,6 @@ public:
 
 	void CreateResourceForScene(shared_ptr<class FScene> Scene);
 	void UpdateFrameResources(FScene* Scene);
-	void RenderScene();
 	void WaitForRenderThread();
 
 private:

@@ -109,7 +109,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float shine = 10.f;
 	float4 specularColor;
 	specularColor = ks *  float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
-	specularColor *= smoothstep(0.f, 0.12f, dot(input.normal, dir));
+	specularColor *= dot(input.normal, dir);
 
 	float kd = 0.3f;
 	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);

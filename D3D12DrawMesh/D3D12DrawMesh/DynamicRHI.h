@@ -43,22 +43,45 @@ namespace RHI
 		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
 			const uint32& ResoHeight) = 0;
 
+		// Input Assembler
+		virtual void SetMeshBuffer(FMesh* Mesh) = 0;
+
+		// Resource Create
+		virtual shared_ptr<FMesh> CreateMeshBuffer(const FMeshActor& MeshActor) = 0;
+		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
+		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
+		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
+		virtual shared_ptr<FTexture> CreateTexture() = 0;
+		virtual shared_ptr<FHandle> CreateSRV(FTexture* Texture) = 0;
+
+		// Resource process
+		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
+
+		// Transform, Shader
+		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
+		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) = 0;
+
+		// Rasterizer
+		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
+		virtual void SetRasterizer(FRasterizer* Ras) = 0;
+
+		// Output Merger
+		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
+
+
+
+
+
 		// pso
-		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
+		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
 
 		// mesh
 		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
-		// mesh res
-		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
-		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
-		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) = 0;
-		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
-
 		// draw
 		virtual void FrameBegin() = 0;
 		virtual void DrawFrame(const FFrameResource* FrameRes) = 0;
-		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorShadowPass(const FFrameResource* FrameRes, const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void FrameEnd() = 0;
 
@@ -69,7 +92,6 @@ namespace RHI
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 
-		// texture
-		virtual shared_ptr<FTexture> CreateEmptyTexture() = 0;
+
 	};
 }
