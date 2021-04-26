@@ -21,7 +21,7 @@ namespace RHI
 		void Reset();
 	};
 
-	struct FDX12PSOInitializer : public FPSOInitializer
+	struct FDX12PSOInitializer : public FRACreater
 	{
 	public:
 		FDX12PSOInitializer();
@@ -58,23 +58,43 @@ namespace RHI
 		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
 			const uint32& ResoHeight) override;
 
+		// Input Assembler
+		virtual void SetMeshBuffer(FMesh* Mesh) override;
+
+		// Resource Create
+		virtual shared_ptr<FMesh> CreateMeshBuffer(const FMeshActor& MeshActor) override;
+		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
+		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
+		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
+		virtual shared_ptr<FTexture> CreateTexture() override;
+		virtual shared_ptr<FHandle> CreateSRV(FTexture* Texture) override;
+
+		// Resource process
+		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
+
+		// Transform, Shader
+		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
+		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) override;
+
+		// Rasterizer
+		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
+		virtual void SetRasterizer(FRasterizer* Ras) override;
+
+		// Output Merger
+		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;
+
+
+
 		// pso
-		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FPSOInitializer* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
-		
+		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
 
 		// mesh
 		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
-		// mesh res
-		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
-		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
-		virtual shared_ptr<FCB> CreateConstantBufferToMeshRes(const uint32& Size) override;
-		virtual void UpdateConstantBufferInMeshRes(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
-
 		// draw
 		virtual void FrameBegin() override;
 		virtual void DrawFrame(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorShadowPass(const FFrameResource* FrameRes, const FMeshActorFrameResource& MeshActor) override;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
@@ -86,7 +106,7 @@ namespace RHI
 		virtual void EndCreateResource() override;
 
 		//texture
-		virtual shared_ptr<FTexture> CreateEmptyTexture() override;
+		virtual shared_ptr<FTexture> CreateTexture() override;
 
 	private:
 		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
@@ -103,7 +123,7 @@ namespace RHI
 		void CreateSRVToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CommitShadowMap();
 		void CreateShadowMapToDSVHeaps();
-		void CreateNullMapToCBVSRVHeaps();
+		void CreateNullMapToCBVSRVHeaps(CD3DX12_GPU_DESCRIPTOR_HANDLE Handle);
 		void CreateShadowMapToCBVSRVHeaps();
 
 
@@ -113,7 +133,6 @@ namespace RHI
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
 			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
-		ComPtr<ID3D12PipelineState> CreatePSO(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc);
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig_CB0_SR1_Sa2();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
@@ -150,7 +169,6 @@ namespace RHI
 		ComPtr<ID3D12Resource> DX12ShadowMap;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowDepthViewHandle;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapGPUHandleForCBVSRV;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE NullGPUHandle;
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;

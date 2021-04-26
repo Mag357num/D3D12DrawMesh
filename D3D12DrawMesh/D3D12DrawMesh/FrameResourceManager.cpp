@@ -21,6 +21,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			const FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
 			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
 		}
+		FrameResource.NullTextureHandle = GDynamicRHI->CreateSRV(nullptr);
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
@@ -95,7 +96,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCB);
 		ShadowPassData.BufferSize = sizeof(ShadowCB);
 
-		GDynamicRHI->UpdateConstantBufferInMeshRes(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
+		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
 			&BasePassData, &ShadowPassData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}
 }

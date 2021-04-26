@@ -19,6 +19,7 @@ class FFrameResource
 {
 public:
 	std::vector<FMeshActorFrameResource> MeshActorFrameResources;
+	shared_ptr<FHandle> NullTextureHandle;
 };
 
 class FFrameResourceManager // TODO: this now is actually ResourceManager, nothing to do with Frame Resource
