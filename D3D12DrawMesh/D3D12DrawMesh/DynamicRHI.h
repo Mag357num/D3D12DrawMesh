@@ -51,8 +51,7 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
-		virtual shared_ptr<FTexture> CreateTexture() = 0;
-		virtual shared_ptr<FHandle> CreateSRV(FTexture* Texture) = 0;
+		virtual shared_ptr<FTexture> CreateTexture(FResourceDesc* Desc) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;

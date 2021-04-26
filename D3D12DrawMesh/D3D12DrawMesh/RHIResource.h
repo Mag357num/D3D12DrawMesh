@@ -55,12 +55,14 @@ namespace RHI
 
 	struct FRACreater
 	{
-		virtual void InitPsoInitializer(/*FInputLayout InputLayout, FRHIShader Shader*/) = 0;
+		virtual void InitPsoInitializer() = 0;
 	};
 
-	struct FHandle : public FRHIResource
+	struct FResourceDesc
 	{
+		virtual ~FResourceDesc() = default;
 	};
+
 
 	//enum class FSRV_DIMENSION;
 	//enum class FDSV_DIMENSION;

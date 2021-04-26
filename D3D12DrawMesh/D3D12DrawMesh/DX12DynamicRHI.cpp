@@ -140,12 +140,11 @@ namespace RHI
 		LastCPUHandleForCBVSRV = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
 		LastGPUHandleForCBVSRV = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
 
-		CreateNullMapToCBVSRVHeaps();
 		CreateShadowMapToCBVSRVHeaps();
 
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
 		LastCPUHandleForDSV = DSVHeap->GetCPUDescriptorHandleForHeapStart();
-		CreateDSVToHeaps();
+		CreateDSVToHeaps_TODO(); // TODO: change to use a FTexture
 		CreateShadowMapToDSVHeaps();
 
 		CreateDescriptorHeaps(MAX_HEAP_SAMPLERS, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, SamplerHeap);
@@ -329,12 +328,11 @@ namespace RHI
 		LastGPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
-	void FDX12DynamicRHI::CreateDSVToHeaps()
+	void FDX12DynamicRHI::CreateDSVToHeaps_TODO()
 {
 		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
 
 		D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
 		depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
@@ -395,24 +393,10 @@ namespace RHI
 		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
 		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		depthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 		Device->CreateDepthStencilView(DX12ShadowMap.Get(), &depthStencilViewDesc, LastCPUHandleForDSV);
 		ShadowDepthViewHandle = LastCPUHandleForDSV;
 		LastCPUHandleForDSV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
-	}
-
-	void FDX12DynamicRHI::CreateNullMapToCBVSRVHeaps()
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
-		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		nullSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		nullSrvDesc.Texture2D.MipLevels = 1;
-		nullSrvDesc.Texture2D.MostDetailedMip = 0;
-		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-		CreateSRVToHeaps(nullptr, nullSrvDesc, NullGPUHandle);
 	}
 
 	void FDX12DynamicRHI::CreateShadowMapToCBVSRVHeaps()
@@ -728,7 +712,6 @@ namespace RHI
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, NullGPUHandle); // shadow map texture
 		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
 
 		// set mesh
@@ -919,28 +902,32 @@ namespace RHI
 		WaitForExecuteComplete();
 	}
 
-	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture()
-	{
-		return make_shared<RHI::FDX12Texture>();
-	}
+	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FResourceDesc* Desc)
+{
+		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();
+		FDX12ResourceDesc* DX12ResDesc = dynamic_cast<FDX12ResourceDesc*>(Desc);
 
-	shared_ptr<RHI::FHandle> FDX12DynamicRHI::CreateSRV(FTexture* Texture)
-	{
-		shared_ptr<FDX12GPUHandle> Handle = make_shared<FDX12GPUHandle>();
-		FDX12Texture* DX12Texture = dynamic_cast<FDX12Texture*>(Texture);
+		D3D12_CLEAR_VALUE clearValue;
+		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC shadowSrvDesc = {};
-		shadowSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-		shadowSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		shadowSrvDesc.Texture2D.MipLevels = 1;
-		shadowSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
+			D3D12_HEAP_FLAG_NONE,
+			&DX12ResDesc->ResDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS( &Texture->Texture ) ) );
 
-		CreateSRVToHeaps(DX12Texture->Texture.Get(), shadowSrvDesc, Handle->Handle);
-		return Handle;
+
+
+
+		return Texture;
 	}
 
 	void FDX12DynamicRHI::CommitShadowMap()
-{
+	{
 		CD3DX12_RESOURCE_DESC shadowTexDesc(
 			D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 			0,
@@ -954,7 +941,7 @@ namespace RHI
 			D3D12_TEXTURE_LAYOUT_UNKNOWN,
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
-		D3D12_CLEAR_VALUE clearValue;        // Performance tip: Tell the runtime at resource creation the desired clear value.
+		D3D12_CLEAR_VALUE clearValue;
 		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
 		clearValue.DepthStencil.Depth = 1.0f;
 		clearValue.DepthStencil.Stencil = 0;

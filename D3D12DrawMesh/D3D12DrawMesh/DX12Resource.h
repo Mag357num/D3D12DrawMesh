@@ -7,17 +7,9 @@ namespace RHI
 {
 	struct FDX12Texture : public FTexture
 	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandle;
 		ComPtr<ID3D12Resource> Texture;
-	};
-
-	struct FDX12CPUHandle : public FHandle
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle;
-	};
-
-	struct FDX12GPUHandle : public FHandle
-	{
-		CD3DX12_GPU_DESCRIPTOR_HANDLE Handle;
 	};
 
 	struct FDX12Rasterizer : public FRasterizer
@@ -53,4 +45,10 @@ namespace RHI
 		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 	};
+
+	struct FDX12ResourceDesc : public FResourceDesc
+	{
+		CD3DX12_RESOURCE_DESC ResDesc;
+	};
+
 }

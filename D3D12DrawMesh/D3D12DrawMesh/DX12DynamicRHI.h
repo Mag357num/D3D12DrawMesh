@@ -66,8 +66,7 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
-		virtual shared_ptr<FTexture> CreateTexture() override;
-		virtual shared_ptr<FHandle> CreateSRV(FTexture* Texture) override;
+		virtual shared_ptr<FTexture> CreateTexture(FResourceDesc* Desc) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
@@ -114,13 +113,12 @@ namespace RHI
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRTVToHeaps(const uint32& FrameCount);
-		void CreateDSVToHeaps();
+		void CreateDSVToHeaps_TODO();
 		void CreateSamplerToHeaps(FSamplerType Type);
 		void CreateCBVToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSRVToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CommitShadowMap();
 		void CreateShadowMapToDSVHeaps();
-		void CreateNullMapToCBVSRVHeaps();
 		void CreateShadowMapToCBVSRVHeaps();
 
 
@@ -166,7 +164,6 @@ namespace RHI
 		ComPtr<ID3D12Resource> DX12ShadowMap;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowDepthViewHandle;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapGPUHandleForCBVSRV;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE NullGPUHandle;
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;
