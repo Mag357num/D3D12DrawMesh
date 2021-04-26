@@ -21,7 +21,6 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			const FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
 			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
 		}
-		FrameResource.NullTextureHandle = GDynamicRHI->CreateSRV(nullptr);
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();

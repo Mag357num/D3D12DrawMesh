@@ -140,7 +140,7 @@ namespace RHI
 		LastCPUHandleForCBVSRV = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
 		LastGPUHandleForCBVSRV = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
 
-		CreateNullMapToCBVSRVHeaps(TODO);
+		CreateNullMapToCBVSRVHeaps();
 		CreateShadowMapToCBVSRVHeaps();
 
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
@@ -184,16 +184,16 @@ namespace RHI
 
 	void FDX12DynamicRHI::SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture)
 	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
-		FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get()); // shadow cb
-		FDX12Texture* DX12Texture = dynamic_cast<FDX12Texture*>(Texture);
+		//FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		//FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get()); // shadow cb
+		//FDX12Texture* DX12Texture = dynamic_cast<FDX12Texture*>(Texture);
 
-		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
-		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, DX12Texture->Handle); // shadow map texture
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
+		//CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
+		//ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
+		//CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
+		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, DX12Texture->Handle); // shadow map texture
+		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
 	}
 
 	void FDX12DynamicRHI::SetRasterizer(FRasterizer* Ras)
@@ -402,8 +402,8 @@ namespace RHI
 		LastCPUHandleForDSV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
 	}
 
-	void FDX12DynamicRHI::CreateNullMapToCBVSRVHeaps(CD3DX12_GPU_DESCRIPTOR_HANDLE Handle)
-{
+	void FDX12DynamicRHI::CreateNullMapToCBVSRVHeaps()
+	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
 		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -412,7 +412,7 @@ namespace RHI
 		nullSrvDesc.Texture2D.MostDetailedMip = 0;
 		nullSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-		CreateSRVToHeaps(nullptr, nullSrvDesc, Handle);
+		CreateSRVToHeaps(nullptr, nullSrvDesc, NullGPUHandle);
 	}
 
 	void FDX12DynamicRHI::CreateShadowMapToCBVSRVHeaps()
@@ -697,7 +697,7 @@ namespace RHI
 	{
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
-			DrawMeshActorShadowPass(FrameRes, i);
+			DrawMeshActorShadowPass(i);
 		}
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
@@ -708,7 +708,7 @@ namespace RHI
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 	}
 
-	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FFrameResource* FrameRes, const FMeshActorFrameResource& MeshActor)
+	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
 	{
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
 		FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->ShadowCB.get()); // shadow cb
@@ -724,7 +724,12 @@ namespace RHI
 		GDynamicRHI->SetRasterizer(MeshActor.MeshResToRender->ShadowRas.get());
 
 		// root signature
-		GDynamicRHI->SetShaderSignature(MeshActor.MeshResToRender.get(), FrameRes->NullTexForShadow.get());
+		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
+		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, NullGPUHandle); // shadow map texture
+		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
 
 		// set mesh
 		GDynamicRHI->SetMeshBuffer(MeshActor.MeshToRender.get());

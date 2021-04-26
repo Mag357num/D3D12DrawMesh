@@ -94,7 +94,7 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() override;
 		virtual void DrawFrame(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActorShadowPass(const FFrameResource* FrameRes, const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
@@ -104,9 +104,6 @@ namespace RHI
 		virtual uint32 GetFramIndex() override { return FrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
-
-		//texture
-		virtual shared_ptr<FTexture> CreateTexture() override;
 
 	private:
 		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
@@ -123,7 +120,7 @@ namespace RHI
 		void CreateSRVToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CommitShadowMap();
 		void CreateShadowMapToDSVHeaps();
-		void CreateNullMapToCBVSRVHeaps(CD3DX12_GPU_DESCRIPTOR_HANDLE Handle);
+		void CreateNullMapToCBVSRVHeaps();
 		void CreateShadowMapToCBVSRVHeaps();
 
 
@@ -169,6 +166,7 @@ namespace RHI
 		ComPtr<ID3D12Resource> DX12ShadowMap;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowDepthViewHandle;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapGPUHandleForCBVSRV;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE NullGPUHandle;
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;

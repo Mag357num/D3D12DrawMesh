@@ -81,7 +81,7 @@ namespace RHI
 		// draw
 		virtual void FrameBegin() = 0;
 		virtual void DrawFrame(const FFrameResource* FrameRes) = 0;
-		virtual void DrawMeshActorShadowPass(const FFrameResource* FrameRes, const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void FrameEnd() = 0;
 
