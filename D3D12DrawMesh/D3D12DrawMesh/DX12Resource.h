@@ -7,9 +7,9 @@ namespace RHI
 {
 	struct FDX12Texture : public FTexture
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE CPUHandle;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandle;
-		ComPtr<ID3D12Resource> Texture;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvCpuHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvGpuHandle;
+		ComPtr<ID3D12Resource> DX12Texture;
 	};
 
 	struct FDX12Rasterizer : public FRasterizer

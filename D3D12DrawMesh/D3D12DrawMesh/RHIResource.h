@@ -94,8 +94,6 @@ namespace RHI
 	struct FTexture : public FRHIResource
 	{
 		virtual ~FTexture() = default;
-		
-		//FTextureInfo Info;
 	};
 
 	class FTexture2D : public FTexture
