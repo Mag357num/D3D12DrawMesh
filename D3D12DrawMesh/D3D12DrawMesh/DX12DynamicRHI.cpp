@@ -88,15 +88,13 @@ namespace RHI
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))))
 		{
 			CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&DxgiFactory));
-
 			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, true);
 			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, true);
 		}
 		else
 		{
-			// Failed to create debug factory, create a normal one
 			CreateDXGIFactory1(IID_PPV_ARGS(&DxgiFactory));
-		}
+		} // Failed to create debug factory, create a normal one
 
 
 		// command queue
@@ -120,52 +118,46 @@ namespace RHI
 		ThrowIfFailed(SwapChain.As(&RHISwapChain)); // convert different version of swapchain type
 		GetBackBufferIndex();
 
-		// create maps
-		FDX12ResourceDesc ShadowMapDesc; // shadow map
-		ShadowMapDesc.ResDesc = CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, ShadowMapSize, ShadowMapSize, 1, 1, DXGI_FORMAT_R32_TYPELESS, 1, 0, D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-		DX12ShadowMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(&ShadowMapDesc));
-
-		FDX12ResourceDesc DepthStencilMapResDesc; // create depth stencil map
-		DepthStencilMapResDesc.ResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, ResoWidth, ResoHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-		DX12DepthStencilMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(&DepthStencilMapResDesc));
-		NAME_D3D12_OBJECT(DX12DepthStencilMap->DX12Texture);
-
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
-		CreateRtvToHeaps(2);
+		LastCpuHandleRT = RTVHeap->GetCPUDescriptorHandleForHeapStart();
 
 		// SRV CBV heaps
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
-		LastCPUHandleForCBVSRV = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
-		LastGPUHandleForCBVSRV = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
+		LastCpuHandleCbvSrv = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastGpuHandleForCbvSrv = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
 
 		// DSV heaps
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
-		LastCPUHandleForDSV = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastCpuHandleDsv = DSVHeap->GetCPUDescriptorHandleForHeapStart();
 
-		// sampler
+		// sampler heaps
 		CreateDescriptorHeaps(MAX_HEAP_SAMPLERS, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, SamplerHeap);
-		CreateSamplerToHeaps(FSamplerType::CLAMP);
+		LastCpuHandleSampler = SamplerHeap->GetCPUDescriptorHandleForHeapStart();
+		LastGpuHandleSampler = SamplerHeap->GetGPUDescriptorHandleForHeapStart();
+
+		// create necessary maps
+		FTextureType ShadowMapType = FTextureType::SHADOW_MAP;
+		DX12ShadowMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(ShadowMapType));
+
+		FTextureType DepthStenciType = FTextureType::DEPTH_STENCIL_MAP;
+		DX12DepthStencilMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(DepthStenciType));
+		NAME_D3D12_OBJECT(DX12DepthStencilMap->DX12Texture);
+
+		// sampler to sampler heaps
+		DX12Sampler = dynamic_pointer_cast<FDX12Sampler>(CreateAndCommitSampler(FSamplerType::CLAMP));
 
 		// shadow map to srv
-		D3D12_SHADER_RESOURCE_VIEW_DESC shadowSrvDesc = {};
-		shadowSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-		shadowSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		shadowSrvDesc.Texture2D.MipLevels = 1;
-		shadowSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		CreateSrvToHeaps(DX12ShadowMap->DX12Texture.Get(), shadowSrvDesc, ShadowMapSrvHandle);
+		FTexture* Tex = DX12ShadowMap.get();
+		CommitTextureAsView(Tex, FViewType::Srv);
 
 		// shadow map to dsv
-		D3D12_DEPTH_STENCIL_VIEW_DESC ShadowMapDsvDesc = {};
-		ShadowMapDsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		ShadowMapDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		CreateDsvToHeaps(DX12ShadowMap->DX12Texture.Get(), ShadowMapDsvDesc, ShadowMapDsvHandle);
+		Tex = DX12ShadowMap.get();
+		CommitTextureAsView(Tex, FViewType::Dsv);
 
-
-		D3D12_DEPTH_STENCIL_VIEW_DESC DepthStencilViewDesc = {};
-		DepthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		DepthStencilViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		CreateDsvToHeaps(DX12DepthStencilMap->DX12Texture.Get(), DepthStencilViewDesc, DsvHandle);
+		// ds map to dsv
+		Tex = DX12DepthStencilMap.get();
+		CommitTextureAsView(Tex, FViewType::Dsv);
 
 		// command
 		FCommand DrawCommandList(RHICommandQueue); // TODO: no need to use the FCommandListDx12, one commandlist is enough for use
@@ -224,6 +216,20 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetScissorRects(1, &ShadowScissorRect);
 	}
 
+	void FDX12DynamicRHI::SetRenderTarget(FRenderTarget* RT, FTexture* DsMap)
+	{
+		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(DsMap);
+		if (FDX12RenderTarget* DX12RT = dynamic_cast<FDX12RenderTarget*>(RT))
+		{
+			CommandLists[0].CommandList->OMSetRenderTargets(1, &DX12RT->Handle, FALSE, &DX12Tex->DsvHandle);
+		}
+		else
+		{
+			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DX12Tex->DsvHandle);
+		}
+		return;
+	}
+
 	void FCommand::Reset()
 	{
 		ThrowIfFailed(Allocator->Reset());
@@ -261,6 +267,53 @@ namespace RHI
 
 		memcpy(DX12BaseCB->UploadBufferVirtualAddress, BaseData->DataBuffer, BaseData->BufferSize);
 		memcpy(DX12ShadowCB->UploadBufferVirtualAddress, ShadowData->DataBuffer, ShadowData->BufferSize);
+	}
+
+	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)
+	{
+		ComPtr<ID3D12Resource> D3D12Resource;
+
+		if (FDX12Texture* DX12Res = dynamic_cast<FDX12Texture*>(Tex))
+		{
+			D3D12Resource = DX12Res->DX12Texture;
+		}
+		else
+		{
+			throw std::exception("transit texture state failed!");
+		}
+
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(D3D12Resource.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
+	}
+
+	void FDX12DynamicRHI::CommitTextureAsView(FTexture* Tex, FViewType Type)
+	{
+		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
+
+		switch (Type)
+		{
+		case RHI::FViewType::Dsv:
+		{
+			D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
+			Desc.Format = DXGI_FORMAT_D32_FLOAT;
+			Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+			CreateDsvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->DsvHandle);
+		}
+			break;
+		case RHI::FViewType::Srv:
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
+			Desc.Format = DXGI_FORMAT_R32_FLOAT;
+			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			Desc.Texture2D.MipLevels = 1;
+			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->SrvHandle);
+		}
+			break;
+		default:
+			break;
+		}
+
+		return;
 	}
 
 	void FDX12DynamicRHI::InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags)
@@ -324,7 +377,7 @@ namespace RHI
 		ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
 	}
 
-	void FDX12DynamicRHI::CreateRtvToHeaps(const uint32& FrameCount)
+	void FDX12DynamicRHI::CreateRtvToHeaps_deprecated(const uint32& FrameCount)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -338,57 +391,31 @@ namespace RHI
 
 	void FDX12DynamicRHI::CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB)
 	{
-		Device->CreateConstantBufferView(&CbvDesc, LastCPUHandleForCBVSRV);
-		FDX12CB->GPUHandleInHeap = LastGPUHandleForCBVSRV;
+		Device->CreateConstantBufferView(&CbvDesc, LastCpuHandleCbvSrv);
+		FDX12CB->GPUHandleInHeap = LastGpuHandleForCbvSrv;
 
-		LastCPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
-		LastGPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		LastCpuHandleCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastGpuHandleForCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
-	void FDX12DynamicRHI::CreateSamplerToHeaps(FSamplerType Type)
+	void FDX12DynamicRHI::CreateSamplerToHeaps_deprecated(FSamplerType Type)
 	{
-		D3D12_SAMPLER_DESC SamplerDesc = {};
-		if (Type == FSamplerType::CLAMP)
-		{
-			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		}
-		else if(Type == FSamplerType::WARP)
-		{
-			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		}
-		else
-		{
-			throw std::exception("do not have this type of sampler");
-		}
-		SamplerDesc.MipLODBias = 0.0f;
-		SamplerDesc.MaxAnisotropy = 1;
-		SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		SamplerDesc.BorderColor[0] = SamplerDesc.BorderColor[1] = SamplerDesc.BorderColor[2] = SamplerDesc.BorderColor[3] = 0;
-		SamplerDesc.MinLOD = 0;
-		SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-		Device->CreateSampler(&SamplerDesc, SamplerHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
 	void FDX12DynamicRHI::CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle)
 	{
-		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCPUHandleForCBVSRV);
-		Handle = LastGPUHandleForCBVSRV;  // srv need gpu handle
-		LastCPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
-		LastGPUHandleForCBVSRV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCpuHandleCbvSrv);
+		Handle = LastGpuHandleForCbvSrv;  // srv need gpu handle
+		LastCpuHandleCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastGpuHandleForCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
 	void FDX12DynamicRHI::CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle)
 	{
-		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCPUHandleForDSV);
-		Handle = LastCPUHandleForDSV; // dsv need cpu handle
-		LastCPUHandleForDSV.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
+		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCpuHandleDsv);
+		Handle = LastCpuHandleDsv; // dsv need cpu handle
+		LastCpuHandleDsv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
 	}
 
 	void FDX12DynamicRHI::ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version)
@@ -645,78 +672,34 @@ namespace RHI
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		CommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
-		CommandLists[0].CommandList->ClearDepthStencilView(DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-		CommandLists[0].CommandList->ClearDepthStencilView(ShadowMapDsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(DX12DepthStencilMap->DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(DX12ShadowMap->DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
-	void FDX12DynamicRHI::DrawFrame(const FFrameResource* FrameRes)
+	void FDX12DynamicRHI::DrawFrame_deprecated(const FFrameResource* FrameRes)
 	{
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
-			DrawMeshActorShadowPass(i);
+			DrawMeshActorShadowPass_deprecated(i);
 		}
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap->DX12Texture.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 		for (auto i : FrameRes->MeshActorFrameResources)
 		{
-			DrawMeshActorBasePass(i);
+			DrawMeshActorBasePass_deprecated(i);
 		}
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(DX12ShadowMap->DX12Texture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+
 	}
 
-	void FDX12DynamicRHI::DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor)
+	void FDX12DynamicRHI::DrawMeshActorShadowPass_deprecated(const FMeshActorFrameResource& MeshActor)
 	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
-		FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->ShadowCB.get()); // shadow cb
 
-		// viewport scissorect
-		SetViewport(0.0f, 0.0f, static_cast<float>(ShadowMapSize), static_cast<float>(ShadowMapSize), 0.f, 1.f);
-		SetScissor(0, 0, ShadowMapSize, ShadowMapSize);
-
-		// set render target to nullptr, dsv to shadow texture
-		CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &ShadowMapDsvHandle);
-
-		// use shadow pso
-		GDynamicRHI->SetRasterizer(MeshActor.MeshResToRender->ShadowRas.get());
-
-		// root signature
-		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
-		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
-
-		// set mesh
-		GDynamicRHI->SetMeshBuffer(MeshActor.MeshToRender.get());
 	}
 
-	void FDX12DynamicRHI::DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor)
+	void FDX12DynamicRHI::DrawMeshActorBasePass_deprecated(const FMeshActorFrameResource& MeshActor)
 	{
-		FDX12Mesh* DX12Mesh = dynamic_cast<FDX12Mesh*>(MeshActor.MeshToRender.get());
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshActor.MeshResToRender.get());
-		FDX12CB* DX12CB = dynamic_cast<FDX12CB*>(MeshActor.MeshResToRender->BaseCB.get()); // base pass cb
 
-		// viewport scissorect
-		CommandLists[0].CommandList->RSSetViewports(1, &Viewport);
-		CommandLists[0].CommandList->RSSetScissorRects(1, &ScissorRect);
-
-		// rendertarget
-		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsvHandle);
-
-		// pso
-		GDynamicRHI->SetRasterizer(MeshActor.MeshResToRender->BaseRas.get());
-
-		// root signature
-		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
-		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, DX12CB->GPUHandleInHeap); // cb
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, ShadowMapSrvHandle); // shadow map texture
-		CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
-
-		// set mesh
-		GDynamicRHI->SetMeshBuffer(MeshActor.MeshToRender.get());
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
@@ -874,10 +857,26 @@ namespace RHI
 		WaitForExecuteComplete();
 	}
 
-	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FResourceDesc* Desc)
+	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FTextureType Type)
 	{
 		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();
-		FDX12ResourceDesc* DX12ResDesc = dynamic_cast<FDX12ResourceDesc*>(Desc);
+		CD3DX12_RESOURCE_DESC Desc;
+
+		switch (Type)
+		{
+		case RHI::FTextureType::SHADOW_MAP:
+			Desc = CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, ShadowMapSize, ShadowMapSize, 1, 1, DXGI_FORMAT_R32_TYPELESS, 1, 0, D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			break;
+		case RHI::FTextureType::DEPTH_STENCIL_MAP:
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, ResoWidth, ResoHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			break;
+		case RHI::FTextureType::SHADER_RESOURCE:
+			// TODO
+			break;
+		default:
+			break;
+		}
+
 
 		D3D12_CLEAR_VALUE clearValue;
 		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
@@ -887,11 +886,65 @@ namespace RHI
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
 			D3D12_HEAP_FLAG_NONE,
-			&DX12ResDesc->ResDesc,
+			&Desc,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&clearValue,
 			IID_PPV_ARGS(&Texture->DX12Texture)));
 
 		return Texture;
+	}
+
+	shared_ptr<RHI::FSampler> FDX12DynamicRHI::CreateAndCommitSampler(FSamplerType Type)
+	{
+		shared_ptr <FDX12Sampler> DX12Sam = make_shared<FDX12Sampler>();
+		DX12Sam->Type = Type;
+
+		D3D12_SAMPLER_DESC SamplerDesc = {};
+		
+		switch (Type)
+		{
+		case RHI::FSamplerType::CLAMP:
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			break;
+
+		case RHI::FSamplerType::WARP:
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			break;
+
+		case RHI::FSamplerType::MIRROR:
+			break;
+		default:
+			break;
+		}
+		
+		SamplerDesc.MipLODBias = 0.0f;
+		SamplerDesc.MaxAnisotropy = 1;
+		SamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		SamplerDesc.BorderColor[0] = SamplerDesc.BorderColor[1] = SamplerDesc.BorderColor[2] = SamplerDesc.BorderColor[3] = 0;
+		SamplerDesc.MinLOD = 0;
+		SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+		Device->CreateSampler(&SamplerDesc, LastCpuHandleSampler);
+		DX12Sam->SamplerHandle = LastGpuHandleSampler;
+		LastCpuHandleSampler.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+		LastGpuHandleSampler.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+
+		return DX12Sam;
+	}
+
+	shared_ptr<RHI::FRenderTarget> FDX12DynamicRHI::CreateAndCommitRenderTarget(uint32 FrameCount)
+	{
+		shared_ptr<FDX12RenderTarget> DX12RT = make_shared<FDX12RenderTarget>();
+
+		ThrowIfFailed(RHISwapChain->GetBuffer(FrameCount, IID_PPV_ARGS(&DX12RT->DX12RT)));
+		Device->CreateRenderTargetView(DX12RT->DX12RT.Get(), nullptr, LastCpuHandleRT);
+		DX12RT->Handle = LastCpuHandleRT;
+		LastCpuHandleRT.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
 }

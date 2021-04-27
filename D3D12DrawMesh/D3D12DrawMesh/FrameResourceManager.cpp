@@ -2,6 +2,7 @@
 #include "DynamicRHI.h"
 #include <gtc/matrix_transform.hpp>
 #include "RHIResource.h"
+#include "DX12Resource.h"
 
 void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount)
 {
@@ -12,6 +13,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
+		// create mesh resource
 		const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
 		FrameResource.MeshActorFrameResources.resize(MeshActorCount);
 		for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
@@ -21,6 +23,26 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			const FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
 			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
 		}
+
+		// create shadow map
+		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP);
+
+		// create Ds map
+		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP);
+
+		// create sampler
+		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP);
+
+		// create rendertarget
+		for (uint32 i = 0; i < 3; i++)
+		{
+			FrameResource.RenderTargets[i] = GDynamicRHI->CreateAndCommitRenderTarget(i);
+		}
+
+		// commit maps
+		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Dsv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Srv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.DepthStencilMap.get(), FViewType::Dsv);
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();

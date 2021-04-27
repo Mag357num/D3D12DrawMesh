@@ -18,13 +18,6 @@ namespace RHI
 		MAX_HEAP_DEPTHSTENCILS = 32,
 	};
 
-	enum class FSamplerType
-	{
-		CLAMP = 0,
-		WARP = 1,
-		MIRROR = 2,
-	};
-
 	enum class SHADER_FLAGS
 	{
 		CB0_SR1_Sa2 = 1,
@@ -51,10 +44,14 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
-		virtual shared_ptr<FTexture> CreateTexture(FResourceDesc* Desc) = 0;
+		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type) = 0;
+		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
+		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget(uint32 FrameCount) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
+		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
+		virtual void CommitTextureAsView(FTexture* Tex, FViewType Type) = 0;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
@@ -66,7 +63,10 @@ namespace RHI
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
+		virtual void SetRenderTarget(FRenderTarget* RT, FTexture* DsMap) = 0;
 
+		// other
+		virtual uint32 GetBackBufferIndex() = 0;
 
 
 
@@ -79,9 +79,9 @@ namespace RHI
 
 		// draw
 		virtual void FrameBegin() = 0;
-		virtual void DrawFrame(const FFrameResource* FrameRes) = 0;
-		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) = 0;
-		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawFrame_deprecated(const FFrameResource* FrameRes) = 0;
+		virtual void DrawMeshActorShadowPass_deprecated(const FMeshActorFrameResource& MeshActor) = 0;
+		virtual void DrawMeshActorBasePass_deprecated(const FMeshActorFrameResource& MeshActor) = 0;
 		virtual void FrameEnd() = 0;
 
 		// sync

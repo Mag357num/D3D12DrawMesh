@@ -7,9 +7,21 @@ namespace RHI
 {
 	struct FDX12Texture : public FTexture
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvCpuHandle;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvGpuHandle;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle;
 		ComPtr<ID3D12Resource> DX12Texture;
+	};
+
+	struct FDX12Sampler : public FSampler
+	{
+		FSamplerType Type;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle;
+	};
+
+	struct FDX12RenderTarget : public FRenderTarget
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle;
+		ComPtr<ID3D12Resource> DX12RT;
 	};
 
 	struct FDX12Rasterizer : public FRasterizer
@@ -31,8 +43,6 @@ namespace RHI
 
 	struct FDX12MeshRes : public FMeshRes
 	{
-		//ComPtr<ID3D12PipelineState> BasePSO;
-		//ComPtr<ID3D12PipelineState> ShadowPSO;
 		ComPtr<ID3D12RootSignature> RootSignature;
 	};
 
@@ -45,10 +55,4 @@ namespace RHI
 		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
 	};
-
-	struct FDX12ResourceDesc : public FResourceDesc
-	{
-		CD3DX12_RESOURCE_DESC ResDesc;
-	};
-
 }

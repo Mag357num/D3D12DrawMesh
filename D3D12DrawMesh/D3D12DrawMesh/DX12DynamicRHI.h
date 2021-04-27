@@ -66,10 +66,14 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
-		virtual shared_ptr<FTexture> CreateTexture(FResourceDesc* Desc) override;
+		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type) override;
+		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
+		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget(uint32 FrameCount) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
+		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
+		virtual void CommitTextureAsView(FTexture* Tex, FViewType Type) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
@@ -81,6 +85,11 @@ namespace RHI
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;
+		virtual void SetRenderTarget(FRenderTarget* RT, FTexture* DsMap) override;
+		
+		// other
+		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
+
 
 
 
@@ -92,9 +101,9 @@ namespace RHI
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawFrame(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActorShadowPass(const FMeshActorFrameResource& MeshActor) override;
-		virtual void DrawMeshActorBasePass(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawFrame_deprecated(const FFrameResource* FrameRes) override;
+		virtual void DrawMeshActorShadowPass_deprecated(const FMeshActorFrameResource& MeshActor) override;
+		virtual void DrawMeshActorBasePass_deprecated(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
 		// sync
@@ -107,13 +116,11 @@ namespace RHI
 	private:
 		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
 		shared_ptr<FMeshRes> CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags);
-
-		inline void GetBackBufferIndex() { BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex(); }
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRtvToHeaps(const uint32& FrameCount);
-		void CreateSamplerToHeaps(FSamplerType Type);
+		void CreateRtvToHeaps_deprecated(const uint32& FrameCount);
+		void CreateSamplerToHeaps_deprecated(FSamplerType Type);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle);
@@ -156,17 +163,19 @@ namespace RHI
 
 		// frame resource
 		shared_ptr<FDX12Texture> DX12DepthStencilMap;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle;
 
 		shared_ptr<FDX12Texture> DX12ShadowMap;
 		uint32 ShadowMapSize = 8192;
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE ShadowMapDsvHandle;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE ShadowMapSrvHandle;
+		shared_ptr<FDX12Sampler> DX12Sampler;
+
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
-		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForDSV;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCPUHandleForCBVSRV;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGPUHandleForCBVSRV;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRT;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDsv;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleCbvSrv;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleForCbvSrv;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleSampler;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleSampler;
 	};
 }
