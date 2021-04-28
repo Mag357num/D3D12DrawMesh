@@ -44,7 +44,6 @@ FEngine::~FEngine()
 
 void FEngine::OnInit()
 {
-	// TODO: refactor here. read a bin file to load scene
 	AssetManager->LoadMeshesToScene(L"Scene_.dat", CurrentScene.get());
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();

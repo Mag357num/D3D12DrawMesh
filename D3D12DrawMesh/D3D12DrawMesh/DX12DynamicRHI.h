@@ -13,8 +13,6 @@ namespace RHI
 		ComPtr<ID3D12GraphicsCommandList> CommandList;
 		ComPtr<ID3D12CommandQueue> CommandQueue;
 
-		//ComPtr<ID3D12Fence> Fence; // TODO: thread sync?
-
 		void Create(ComPtr<ID3D12Device> Device);
 		void Close();
 		void Execute();
@@ -145,7 +143,7 @@ namespace RHI
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-		ComPtr<ID3D12Resource> OutputRengerTargets[2]; // TODO: hard coding to 2
+		ComPtr<ID3D12Resource> BackBuffers[2]; // TODO: hard coding
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;

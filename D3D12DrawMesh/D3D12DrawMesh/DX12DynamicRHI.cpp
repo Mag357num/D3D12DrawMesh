@@ -119,12 +119,12 @@ namespace RHI
 		GetBackBufferIndex();
 
 		// RTV heaps
-		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
+		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap);
 		LastCpuHandleRT = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-		CreateRtvToHeaps(2);
+		CreateRtvToHeaps(2); //TODO: change the hard coding to double buffing.
 
 		// SRV CBV heaps
-		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
+		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap);
 		LastCpuHandleCbvSrv = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
 		LastGpuHandleForCbvSrv = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
 
@@ -138,7 +138,7 @@ namespace RHI
 		LastGpuHandleSampler = SamplerHeap->GetGPUDescriptorHandleForHeapStart();
 
 		// command
-		FCommand DrawCommandList(RHICommandQueue); // TODO: no need to use the FCommandListDx12, one commandlist is enough for use
+		FCommand DrawCommandList(RHICommandQueue);
 		DrawCommandList.Create(Device);
 		DrawCommandList.Close();
 		CommandLists.push_back(DrawCommandList);
@@ -188,6 +188,7 @@ namespace RHI
 		CommandLists[0].CommandList->SetPipelineState(DX12Ras->PSO.Get());
 	}
 
+	// some resource store at FMeshRes some store at FFrameResource
 	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes)
 	{
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
@@ -217,7 +218,6 @@ namespace RHI
 		default:
 			break;
 		}
-		
 	}
 
 	void FDX12DynamicRHI::SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom)
@@ -403,8 +403,8 @@ namespace RHI
 
 		for (uint32 n = 0; n < FrameCount; n++)
 		{
-			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&OutputRengerTargets[n])));
-			Device->CreateRenderTargetView(OutputRengerTargets[n].Get(), nullptr, HeapsHandle);
+			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n])));
+			Device->CreateRenderTargetView(BackBuffers[n].Get(), nullptr, HeapsHandle);
 			HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		}
 	}
@@ -537,7 +537,7 @@ namespace RHI
 	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
 	{
 		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBRes;
-		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress; // TODO: UploadBufferVirtualAddress is nullptr
+		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
 		uint32 ConstantBufferSize = Size;
 
 		ThrowIfFailed(Device->CreateCommittedResource(
@@ -681,7 +681,7 @@ namespace RHI
 
 		// common set
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(OutputRengerTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
@@ -690,7 +690,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(OutputRengerTargets[BackFrameIndex].Get(),
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		// Execute the command list.
@@ -857,7 +857,7 @@ namespace RHI
 			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			break;
 		case RHI::FTextureType::SHADER_RESOURCE:
-			// TODO
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			break;
 		default:
 			break;

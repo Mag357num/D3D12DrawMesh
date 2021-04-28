@@ -24,10 +24,10 @@ public:
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
-	//shared_ptr<FRenderTarget> RenderTargets2[3];
+
 };
 
-class FFrameResourceManager // TODO: this now is actually ResourceManager, nothing to do with Frame Resource
+class FFrameResourceManager
 {
 public:
 	std::vector<FFrameResource> FrameResources;

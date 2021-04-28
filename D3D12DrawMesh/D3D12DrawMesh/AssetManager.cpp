@@ -14,12 +14,11 @@ void FAssetManager::LoadMeshesToScene(const std::wstring& BinFileName, FScene* T
 	}
 
 	uint32 ActorNum;
-	Fin.read((char*)&ActorNum, sizeof(int)); // TODO: change to sizeof(uint32)
+	Fin.read((char*)&ActorNum, sizeof(uint32));
 	TargetScene->MeshActors.resize(ActorNum);
 
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		TargetScene->MeshActors[i].MeshActorIndex = i; // TODO: index is deprecated
 		TargetScene->MeshActors[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
 		ReadMeshLODFromIfstream(Fin, TargetScene->MeshActors[i].MeshLODs[0]);
 		ReadMeshTransFromIfstream(Fin, TargetScene->MeshActors[i].Transform);

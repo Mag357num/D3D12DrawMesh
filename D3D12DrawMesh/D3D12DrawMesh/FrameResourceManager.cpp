@@ -53,7 +53,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	FMatrix CamView = MainCamera.GetViewMatrix();
 	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
 
-	// TODO: change the way to build Light Cam
+	// TODO: change the way to build Light Cam, add a algorithm to calculate bounding box size
 	FVector LightPos = { 450.f, 0.f, 450.f };
 	FVector LightDirNored = glm::normalize(Scene->DirectionLight.Dir);
 	FVector LightTarget = LightPos + LightDirNored;

@@ -11,7 +11,6 @@ namespace RHI
 
 	enum
 	{
-		//BUFFRING_NUM = 2,
 		MAX_HEAP_SRV_CBV = 4096,
 		MAX_HEAP_SAMPLERS = 16,
 		MAX_HEAP_RENDERTARGETS = 128,
@@ -28,8 +27,6 @@ namespace RHI
 	public:
 		FDynamicRHI() = default;
 		~FDynamicRHI() = default;
-
-		static FDynamicRHI* DRHI; //TODO: remove
 
 		// init
 		static void CreateRHI();
