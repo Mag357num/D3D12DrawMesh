@@ -80,7 +80,7 @@ namespace RHI
 		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) override;
 
 		// Rasterizer
-		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
+		virtual shared_ptr<FRasterizer> CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
 		virtual void SetRasterizer(FRasterizer* Ras) override;
 
 		// shader
@@ -114,8 +114,8 @@ namespace RHI
 		virtual void EndCreateResource() override;
 
 	private:
-		shared_ptr<FMesh> CommitMeshBuffer(const FMeshActor& MeshActor);
-		shared_ptr<FMeshRes> CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags);
+		shared_ptr<FMesh> CommitMesh(const FMeshActor& MeshActor);
+		shared_ptr<FMeshRes> CommitMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags);
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
@@ -145,7 +145,7 @@ namespace RHI
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-		ComPtr<ID3D12Resource> RenderTargets[2]; // TODO: hard coding to 2
+		ComPtr<ID3D12Resource> OutputRengerTargets[2]; // TODO: hard coding to 2
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
@@ -159,13 +159,6 @@ namespace RHI
 		ComPtr<ID3D12Fence> Fence;
 
 		// frame resource
-		//shared_ptr<FDX12Texture> DX12DepthStencilMap;
-
-		//shared_ptr<FDX12Texture> DX12ShadowMap;
-		//uint32 ShadowMapSize = 8192;
-
-		//shared_ptr<FDX12Sampler> DX12Sampler;
-
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRT;

@@ -61,7 +61,7 @@ namespace RHI
 		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) = 0;
 
 		// Rasterizer
-		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
+		virtual shared_ptr<FRasterizer> CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
 		virtual void SetRasterizer(FRasterizer* Ras) = 0;
 
 		// Output Merger

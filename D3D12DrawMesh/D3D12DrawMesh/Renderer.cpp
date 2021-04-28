@@ -28,6 +28,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
 	RHI->SetRenderTarget(FPassType::BASE_PASS, FrameRes->DepthStencilMap.get());
+
 	for (auto i : FrameRes->MeshActorFrameResources)
 	{
 		// pso

@@ -137,29 +137,6 @@ namespace RHI
 		LastCpuHandleSampler = SamplerHeap->GetCPUDescriptorHandleForHeapStart();
 		LastGpuHandleSampler = SamplerHeap->GetGPUDescriptorHandleForHeapStart();
 
-		//// create necessary maps
-		//FTextureType ShadowMapType = FTextureType::SHADOW_MAP;
-		//DX12ShadowMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(ShadowMapType));
-
-		//FTextureType DepthStenciType = FTextureType::DEPTH_STENCIL_MAP;
-		//DX12DepthStencilMap = dynamic_pointer_cast<FDX12Texture>(CreateTexture(DepthStenciType));
-		//NAME_D3D12_OBJECT(DX12DepthStencilMap->DX12Texture);
-
-		//// sampler to sampler heaps
-		//DX12Sampler = dynamic_pointer_cast<FDX12Sampler>(CreateAndCommitSampler(FSamplerType::CLAMP));
-
-		//// shadow map to srv
-		//FTexture* Tex = DX12ShadowMap.get();
-		//CommitTextureAsView(Tex, FViewType::Srv);
-
-		//// shadow map to dsv
-		//Tex = DX12ShadowMap.get();
-		//CommitTextureAsView(Tex, FViewType::Dsv);
-
-		//// ds map to dsv
-		//Tex = DX12DepthStencilMap.get();
-		//CommitTextureAsView(Tex, FViewType::Dsv);
-
 		// command
 		FCommand DrawCommandList(RHICommandQueue); // TODO: no need to use the FCommandListDx12, one commandlist is enough for use
 		DrawCommandList.Create(Device);
@@ -381,14 +358,14 @@ namespace RHI
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(*Dx12Initializer,
 			DX12MeshRes->RootSignature.Get(), CD3DX12_SHADER_BYTECODE(DX12VS->Shader.Get()),
 			CD3DX12_SHADER_BYTECODE(DX12PS->Shader.Get()));
-		DX12MeshRes->BaseRas = CreateRasterizer(PsoDesc);
+		DX12MeshRes->BaseRas = CreateRasterizer2(PsoDesc);
 
 		// create shadow pass pso
 		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
 		PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 		PsoDesc.NumRenderTargets = 0;
 
-		DX12MeshRes->ShadowRas = CreateRasterizer(PsoDesc);
+		DX12MeshRes->ShadowRas = CreateRasterizer2(PsoDesc);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -426,8 +403,8 @@ namespace RHI
 
 		for (uint32 n = 0; n < FrameCount; n++)
 		{
-			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&RenderTargets[n])));
-			Device->CreateRenderTargetView(RenderTargets[n].Get(), nullptr, HeapsHandle);
+			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&OutputRengerTargets[n])));
+			Device->CreateRenderTargetView(OutputRengerTargets[n].Get(), nullptr, HeapsHandle);
 			HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		}
 	}
@@ -550,7 +527,7 @@ namespace RHI
 		return psoDesc;
 	}
 
-	shared_ptr<FRasterizer> FDX12DynamicRHI::CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
+	shared_ptr<FRasterizer> FDX12DynamicRHI::CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
 	{
 		shared_ptr<FDX12Rasterizer> Ras = make_shared<FDX12Rasterizer>();
 		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Ras->PSO)));
@@ -693,8 +670,8 @@ namespace RHI
 
 	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
-		MeshActorFrameResource.MeshToRender = CommitMeshBuffer(MeshActor);
-		MeshActorFrameResource.MeshResToRender = CommitMeshResBuffer(L"shaders.hlsl", RHI::SHADER_FLAGS::CB0_SR1_Sa2);
+		MeshActorFrameResource.MeshToRender = CommitMesh(MeshActor);
+		MeshActorFrameResource.MeshResToRender = CommitMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB0_SR1_Sa2);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -704,8 +681,7 @@ namespace RHI
 
 		// common set
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(OutputRengerTargets[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
@@ -714,7 +690,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(RenderTargets[BackFrameIndex].Get(),
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(OutputRengerTargets[BackFrameIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		// Execute the command list.
@@ -741,7 +717,7 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CommitMeshBuffer(const FMeshActor& MeshActor)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CommitMesh(const FMeshActor& MeshActor)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexNum = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size());
@@ -821,7 +797,7 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CommitMeshResBuffer(const std::wstring& FileName, const SHADER_FLAGS& flags)
+	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CommitMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags)
 	{
 		shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
 		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes.get());
