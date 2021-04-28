@@ -64,11 +64,6 @@ namespace RHI
 		virtual ~FSampler() = default;
 	};
 
-	struct FRenderTarget
-	{
-		virtual ~FRenderTarget() = default;
-	};
-
 	struct FBlinnPhongCB
 	{
 		FMatrix World;

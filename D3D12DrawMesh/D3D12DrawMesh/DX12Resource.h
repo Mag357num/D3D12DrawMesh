@@ -18,12 +18,6 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle;
 	};
 
-	struct FDX12RenderTarget : public FRenderTarget
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle;
-		ComPtr<ID3D12Resource> DX12RT;
-	};
-
 	struct FDX12Rasterizer : public FRasterizer
 	{
 		ComPtr<ID3D12PipelineState> PSO;

@@ -25,19 +25,13 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 		}
 
 		// create shadow map
-		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP);
+		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
 
 		// create Ds map
-		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP);
+		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
 
 		// create sampler
 		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP);
-
-		// create rendertarget
-		//for (uint32 i = 0; i < 2; i++)
-		//{
-		//	FrameResource.RenderTargets2[i] = GDynamicRHI->CreateAndCommitRenderTarget(i);
-		//}
 
 		// commit maps
 		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Dsv);

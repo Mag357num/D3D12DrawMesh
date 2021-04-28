@@ -66,14 +66,14 @@ namespace RHI
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
-		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type) override;
+		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
-		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget_deprecated(uint32 FrameCount) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FViewType Type) override;
+		virtual void ClearDepthStencil(FTexture* Tex) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
@@ -104,9 +104,6 @@ namespace RHI
 
 		// draw
 		virtual void FrameBegin() override;
-		virtual void DrawFrame_deprecated(const FFrameResource* FrameRes) override;
-		virtual void DrawMeshActorShadowPass_deprecated(const FMeshActorFrameResource& MeshActor) override;
-		virtual void DrawMeshActorBasePass_deprecated(const FMeshActorFrameResource& MeshActor) override;
 		virtual void FrameEnd() override;
 
 		// sync
@@ -123,7 +120,6 @@ namespace RHI
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRtvToHeaps(const uint32& FrameCount);
-		void CreateSamplerToHeaps_deprecated(FSamplerType Type);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle);
@@ -163,12 +159,12 @@ namespace RHI
 		ComPtr<ID3D12Fence> Fence;
 
 		// frame resource
-		shared_ptr<FDX12Texture> DX12DepthStencilMap;
+		//shared_ptr<FDX12Texture> DX12DepthStencilMap;
 
-		shared_ptr<FDX12Texture> DX12ShadowMap;
-		uint32 ShadowMapSize = 8192;
+		//shared_ptr<FDX12Texture> DX12ShadowMap;
+		//uint32 ShadowMapSize = 8192;
 
-		shared_ptr<FDX12Sampler> DX12Sampler;
+		//shared_ptr<FDX12Sampler> DX12Sampler;
 
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
