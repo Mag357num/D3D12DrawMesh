@@ -121,6 +121,7 @@ namespace RHI
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap); //TODO: change the hard coding to double buffing.
 		LastCpuHandleRT = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+		CreateRtvToHeaps(2);
 
 		// SRV CBV heaps
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap); // TODO: use max amout
@@ -210,24 +211,60 @@ namespace RHI
 		CommandLists[0].CommandList->SetPipelineState(DX12Ras->PSO.Get());
 	}
 
+	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes)
+	{
+		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
+		FDX12Sampler* DX12Sampler = dynamic_cast<FDX12Sampler*>(FrameRes->ClampSampler.get());
+		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(FrameRes->ShadowMap.get());
+
+		CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
+		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
+		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+
+		FDX12CB* CB;
+		switch (Type)
+		{
+		case RHI::FPassType::SHADOW_PASS:
+			CB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get());
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CB->GPUHandleInHeap); // cb
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, DX12Sampler->SamplerHandle); // sampler
+			break;
+
+		case RHI::FPassType::BASE_PASS:
+			CB = dynamic_cast<FDX12CB*>(MeshRes->BaseCB.get());
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, CB->GPUHandleInHeap); // cb
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, DX12Tex->SrvHandle); // shadow map texture
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, DX12Sampler->SamplerHandle); // sampler
+			break;
+
+		default:
+			break;
+		}
+		
+	}
+
 	void FDX12DynamicRHI::SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom)
 	{
 		D3D12_RECT ShadowScissorRect = CD3DX12_RECT(Left, Top, Right, Bottom);
 		CommandLists[0].CommandList->RSSetScissorRects(1, &ShadowScissorRect);
 	}
-
-	void FDX12DynamicRHI::SetRenderTarget(FRenderTarget* RT, FTexture* DsMap)
+	
+	void FDX12DynamicRHI::SetRenderTarget(FPassType Type, FTexture* DsMap)
 	{
-		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(DsMap);
-		if (FDX12RenderTarget* DX12RT = dynamic_cast<FDX12RenderTarget*>(RT))
+		FDX12Texture* DX12DsMap = dynamic_cast<FDX12Texture*>(DsMap);
+		switch (Type)
 		{
-			CommandLists[0].CommandList->OMSetRenderTargets(1, &DX12RT->Handle, FALSE, &DX12Tex->DsvHandle);
+		case RHI::FPassType::SHADOW_PASS:
+			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DX12DsMap->DsvHandle);
+
+			break;
+		case RHI::FPassType::BASE_PASS:
+			CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+			CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DX12DsMap->DsvHandle);
+			break;
+		default:
+			break;
 		}
-		else
-		{
-			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DX12Tex->DsvHandle);
-		}
-		return;
 	}
 
 	void FCommand::Reset()
@@ -377,7 +414,7 @@ namespace RHI
 		ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
 	}
 
-	void FDX12DynamicRHI::CreateRtvToHeaps_deprecated(const uint32& FrameCount)
+	void FDX12DynamicRHI::CreateRtvToHeaps(const uint32& FrameCount)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -938,7 +975,7 @@ namespace RHI
 		return DX12Sam;
 	}
 
-	shared_ptr<RHI::FRenderTarget> FDX12DynamicRHI::CreateAndCommitRenderTarget(uint32 FrameCount)
+	shared_ptr<RHI::FRenderTarget> FDX12DynamicRHI::CreateAndCommitRenderTarget_deprecated(uint32 FrameCount)
 	{
 		shared_ptr<FDX12RenderTarget> DX12RT = make_shared<FDX12RenderTarget>();
 
@@ -946,5 +983,7 @@ namespace RHI
 		Device->CreateRenderTargetView(DX12RT->DX12RT.Get(), nullptr, LastCpuHandleRT);
 		DX12RT->Handle = LastCpuHandleRT;
 		LastCpuHandleRT.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+
+		return DX12RT;
 	}
 }

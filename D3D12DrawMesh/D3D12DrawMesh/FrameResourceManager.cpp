@@ -34,10 +34,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP);
 
 		// create rendertarget
-		for (uint32 i = 0; i < 3; i++)
-		{
-			FrameResource.RenderTargets[i] = GDynamicRHI->CreateAndCommitRenderTarget(i);
-		}
+		//for (uint32 i = 0; i < 2; i++)
+		//{
+		//	FrameResource.RenderTargets2[i] = GDynamicRHI->CreateAndCommitRenderTarget(i);
+		//}
 
 		// commit maps
 		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Dsv);

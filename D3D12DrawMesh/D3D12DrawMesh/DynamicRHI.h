@@ -46,7 +46,7 @@ namespace RHI
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
-		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget(uint32 FrameCount) = 0;
+		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget_deprecated(uint32 FrameCount) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
@@ -57,17 +57,21 @@ namespace RHI
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
 		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) = 0;
 
+		// shader
+		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) = 0;
+
 		// Rasterizer
 		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
 		virtual void SetRasterizer(FRasterizer* Ras) = 0;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
-		virtual void SetRenderTarget(FRenderTarget* RT, FTexture* DsMap) = 0;
+		virtual void SetRenderTarget(FPassType Type, FTexture* DsMap) = 0;
 
 		// other
 		virtual uint32 GetBackBufferIndex() = 0;
-
+		inline uint32 GetWidth() { return ResoWidth; }
+		inline uint32 GetHeight() { return ResoHeight; }
 
 
 
@@ -91,6 +95,8 @@ namespace RHI
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 
-
+	protected:
+		uint32 ResoWidth;
+		uint32 ResoHeight;
 	};
 }

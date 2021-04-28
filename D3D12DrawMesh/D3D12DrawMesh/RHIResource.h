@@ -114,6 +114,12 @@ namespace RHI
 		SWAPCHAIN = 1,
 	};
 
+	enum class FPassType
+	{
+		SHADOW_PASS = 0,
+		BASE_PASS = 1,
+	};
+
 	enum class FRESOURCE_STATES
 	{
 		D3D12_RESOURCE_STATE_COMMON = 0,

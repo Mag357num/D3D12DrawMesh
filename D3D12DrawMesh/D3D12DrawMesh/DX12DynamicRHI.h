@@ -68,7 +68,7 @@ namespace RHI
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
-		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget(uint32 FrameCount) override;
+		virtual shared_ptr<FRenderTarget> CreateAndCommitRenderTarget_deprecated(uint32 FrameCount) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
@@ -83,9 +83,12 @@ namespace RHI
 		virtual shared_ptr<FRasterizer> CreateRasterizer(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
 		virtual void SetRasterizer(FRasterizer* Ras) override;
 
+		// shader
+		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) override;
+
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;
-		virtual void SetRenderTarget(FRenderTarget* RT, FTexture* DsMap) override;
+		virtual void SetRenderTarget(FPassType Type, FTexture* DsMap) override;
 		
 		// other
 		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
@@ -119,7 +122,7 @@ namespace RHI
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRtvToHeaps_deprecated(const uint32& FrameCount);
+		void CreateRtvToHeaps(const uint32& FrameCount);
 		void CreateSamplerToHeaps_deprecated(FSamplerType Type);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
@@ -146,14 +149,12 @@ namespace RHI
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-		ComPtr<ID3D12Resource> RenderTargets[3]; // TODO: hard coding to 3
+		ComPtr<ID3D12Resource> RenderTargets[2]; // TODO: hard coding to 2
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
 		ComPtr<ID3D12DescriptorHeap> SamplerHeap;
 		uint32 BackFrameIndex;
-		uint32 ResoWidth;
-		uint32 ResoHeight;
 		std::vector<FCommand> CommandLists;
 
 		//sync
