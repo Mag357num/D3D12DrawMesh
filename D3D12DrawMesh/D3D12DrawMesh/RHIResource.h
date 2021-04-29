@@ -7,9 +7,15 @@ namespace RHI
 	struct FRHIResource
 	{
 		virtual ~FRHIResource() = default;
+
+		template <typename T>
+		inline T* As() { return static_cast<T*>(this); }
+
+		template <typename T>
+		inline T* TryAs() { return dynamic_cast<T*>(this); }
 	};
 
-	struct FRasterizer : public FRHIResource
+	struct FPipelineState : public FRHIResource
 	{
 	};
 
@@ -39,8 +45,9 @@ namespace RHI
 	{
 		shared_ptr<FCB> BaseCB;
 		shared_ptr<FCB> ShadowCB;
-		shared_ptr<FRasterizer> BaseRas;
-		shared_ptr<FRasterizer> ShadowRas;
+		shared_ptr<FPipelineState> OutputPassPso;
+		shared_ptr<FPipelineState> SceneColorPso;
+		shared_ptr<FPipelineState> ShadowPassPso;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
@@ -87,13 +94,15 @@ namespace RHI
 	{
 		SHADOW_MAP = 0,
 		DEPTH_STENCIL_MAP = 1,
-		SHADER_RESOURCE = 2,
+		RENDER_TARGET = 2,
+		ORDINARY_SHADER_RESOURCE = 3, // for texture that only act as srv but not for ds, rt etc... should read from file
 	};
 
 	enum class FViewType
 	{
 		Dsv = 0,
 		Srv = 1,
+		Rtv = 2,
 	};
 
 	enum class FSamplerType
@@ -113,6 +122,19 @@ namespace RHI
 	{
 		SHADOW_PASS = 0,
 		BASE_PASS = 1,
+	};
+
+	enum class FRenderTargetType
+	{
+		BACK_BUFFER = 0,
+		TEXTURE = 1,
+	};
+
+	enum class FPipelineType
+	{
+		LDR_OUTPUT_RT = 0,
+		SHADOW_MAP_PL = 1,
+		SCENE_COLOR_PL = 2,
 	};
 
 	enum class FRESOURCE_STATES

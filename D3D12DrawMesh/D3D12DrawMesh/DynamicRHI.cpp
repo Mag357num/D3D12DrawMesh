@@ -7,7 +7,6 @@ using namespace RHI;
 // Globals.
 shared_ptr<FDynamicRHI> RHI::GDynamicRHI = nullptr;
 
-
 void FDynamicRHI::CreateRHI()
 {
 #if defined (_WINDOWS)

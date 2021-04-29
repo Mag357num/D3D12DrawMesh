@@ -8,6 +8,7 @@ namespace RHI
 {
 	class FDynamicRHI;
 	extern shared_ptr<FDynamicRHI> GDynamicRHI;
+	extern constexpr uint32 BACKBUFFER_NUM = 2;
 
 	enum
 	{
@@ -52,14 +53,14 @@ namespace RHI
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
-		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) = 0;
 
 		// shader
 		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) = 0;
 
-		// Rasterizer
-		virtual shared_ptr<FRasterizer> CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) = 0;
-		virtual void SetRasterizer(FRasterizer* Ras) = 0;
+		// Pipeline
+		virtual shared_ptr<FPipelineState> CreatePso(FPipelineType Type, FMeshRes* MeshRes) = 0;
+		virtual void InitPsoInMeshRes(FMeshRes* MeshRes, const SHADER_FLAGS& rootFlags) = 0;
+		virtual void ChoosePipelineState(FPipelineState* Pso) = 0;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
@@ -72,11 +73,8 @@ namespace RHI
 
 
 
-		// pso
-		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags) = 0;
-
 		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// draw
 		virtual void FrameBegin() = 0;

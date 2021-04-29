@@ -46,7 +46,7 @@ void FEngine::OnInit()
 {
 	AssetManager->LoadMeshesToScene(L"Scene_.dat", CurrentScene.get());
 	FRenderThread::CreateRenderThread();
-	FRenderThread::Get()->Start();
+	FRenderThread::Get()->Start(); // TODO: Start() will make DoRender invoked after every "one" task, which is not so right
 	FRenderThread::Get()->CreateResourceForScene(CurrentScene);
 }
 

@@ -4,45 +4,96 @@
 #include "RHIResource.h"
 #include "DX12Resource.h"
 
+void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
+{
+	FrameResources.resize(FrameCount);
+	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
+	{
+		FFrameResource& FrameResource = FrameResources[FrameIndex];
+
+		// create postprocess mesh
+
+
+		// create and commit shadow map
+		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
+		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Dsv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Srv);
+
+		// create and commit Ds map
+		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+		GDynamicRHI->CommitTextureAsView(FrameResource.DepthStencilMap.get(), FViewType::Dsv);
+
+		// create and commit sampler
+		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP);
+
+		// create and commit scene color
+		FrameResource.SceneColor = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+		GDynamicRHI->CommitTextureAsView(FrameResource.SceneColor.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.SceneColor.get(), FViewType::Srv);
+
+		// create and commit bloom down and up texture
+		FrameResource.BloomSetup = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+		GDynamicRHI->CommitTextureAsView(FrameResource.BloomSetup.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.BloomSetup.get(), FViewType::Srv);
+
+		FrameResource.Bloomdown8 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 8, GDynamicRHI->GetHeight() / 8);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown8.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown8.get(), FViewType::Srv);
+
+		FrameResource.Bloomdown16 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 16, GDynamicRHI->GetHeight() / 16);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown16.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown16.get(), FViewType::Srv);
+
+		FrameResource.Bloomdown32 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 32, GDynamicRHI->GetHeight() / 32);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown32.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown32.get(), FViewType::Srv);
+
+		FrameResource.Bloomdown64 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 64, GDynamicRHI->GetHeight() / 64);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown64.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomdown64.get(), FViewType::Srv);
+		
+		FrameResource.Bloomup32 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 32, GDynamicRHI->GetHeight() / 32);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup32.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup32.get(), FViewType::Srv);
+		
+		FrameResource.Bloomup16 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 16, GDynamicRHI->GetHeight() / 16);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup16.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup16.get(), FViewType::Srv);
+
+		FrameResource.Bloomup8 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 8, GDynamicRHI->GetHeight() / 8);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup8.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup8.get(), FViewType::Srv);
+		
+		FrameResource.Bloomup4 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup4.get(), FViewType::Rtv);
+		GDynamicRHI->CommitTextureAsView(FrameResource.Bloomup4.get(), FViewType::Srv);
+
+	}
+}
+
 void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount)
 {
-	//new
 	RHI::GDynamicRHI->BegineCreateResource();
-	FrameResources.resize(FrameCount); // TODO: should move to init(), resize the FrameResources according to double buffering frame or triple
+	InitFrameResource(FrameCount);
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
 		// create mesh resource
 		const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
-		FrameResource.MeshActorFrameResources.resize(MeshActorCount);
+		FrameResource.MeshActorFrameReses.resize(MeshActorCount);
 		for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 		{
-			FMeshActorFrameResource& MeshActorFrameResource = FrameResource.MeshActorFrameResources[MeshIndex];
-			MeshActorFrameResource.MeshActorResIndex = MeshIndex;
+			FMeshActorFrameRes& MeshActorFrameResource = FrameResource.MeshActorFrameReses[MeshIndex];
 			const FMeshActor& MeshActor = Scene->MeshActors[MeshIndex];
 			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
 		}
-
-		// create shadow map
-		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
-
-		// create Ds map
-		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
-
-		// create sampler
-		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP);
-
-		// commit maps
-		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Dsv);
-		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FViewType::Srv);
-		GDynamicRHI->CommitTextureAsView(FrameResource.DepthStencilMap.get(), FViewType::Dsv);
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
+void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor)
 {
 	RHI::GDynamicRHI->CreateMeshForFrameResource(MeshActorFrameResource, MeshActor);
 }
@@ -111,7 +162,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCB);
 		ShadowPassData.BufferSize = sizeof(ShadowCB);
 
-		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameResources[MeshIndex].MeshResToRender.get(),
+		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes.get(),
 			&BasePassData, &ShadowPassData); // MeshActor in Scene reflect to MeshActorFrameResource by order
 	}
 }

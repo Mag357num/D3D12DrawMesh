@@ -3,6 +3,7 @@
 #include "DynamicRHI.h"
 #include "DX12Resource.h"
 
+
 namespace RHI
 {
 	struct FCommand
@@ -17,33 +18,6 @@ namespace RHI
 		void Close();
 		void Execute();
 		void Reset();
-	};
-
-	struct FDX12PSOInitializer : public FRACreater
-	{
-	public:
-		FDX12PSOInitializer();
-		FDX12PSOInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription, /*ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS,*/
-			const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc);
-
-		void InitPsoInitializer() override {}
-
-		struct DXGI_SAMPLE_DESC
-		{
-			uint32 Count;
-			uint32 Quality;
-		};
-
-		D3D12_INPUT_LAYOUT_DESC InputLayout;
-		D3D12_RASTERIZER_DESC RasterizerState;
-		D3D12_BLEND_DESC BlendState;
-		D3D12_DEPTH_STENCIL_DESC DepthStencilState;
-		uint32 SampleMask;
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE PrimitiveTopologyType;
-		uint32 NumRenderTargets;
-		DXGI_FORMAT RTVFormats[8];
-		DXGI_FORMAT DSVFormat;
-		DXGI_SAMPLE_DESC SampleDesc;
 	};
 
 	class FDX12DynamicRHI : public FDynamicRHI
@@ -75,11 +49,11 @@ namespace RHI
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
-		virtual void SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture) override;
 
-		// Rasterizer
-		virtual shared_ptr<FRasterizer> CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc) override;
-		virtual void SetRasterizer(FRasterizer* Ras) override;
+		// Pipeline
+		virtual shared_ptr<FPipelineState> CreatePso(FPipelineType Type, FMeshRes* MeshRes) override;
+		virtual void InitPsoInMeshRes(FMeshRes* MeshRes, const SHADER_FLAGS& rootFlags) override;
+		virtual void ChoosePipelineState(FPipelineState* Pso) override;
 
 		// shader
 		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) override;
@@ -94,11 +68,10 @@ namespace RHI
 
 
 
-		// pso
-		virtual void InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags) override;
+
 
 		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor) override;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// draw
 		virtual void FrameBegin() override;
@@ -117,7 +90,7 @@ namespace RHI
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRtvToHeaps(const uint32& FrameCount);
+		void CreateRtvToHeaps(FRenderTargetType Type, FTexture* Tex);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
 		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle);
@@ -126,8 +99,6 @@ namespace RHI
 		uint32 GetEnableShaderDebugFlags();
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
-			ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS);
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig_CB0_SR1_Sa2();
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
@@ -143,7 +114,7 @@ namespace RHI
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-		ComPtr<ID3D12Resource> BackBuffers[2]; // TODO: hard coding
+		ComPtr<ID3D12Resource> BackBuffers[RHI::BACKBUFFER_NUM];
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
@@ -159,10 +130,10 @@ namespace RHI
 		// frame resource
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
-		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRT;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDsv;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleCbvSrv;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleForCbvSrv;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDs;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleCbSr;
+		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleCbSr;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleSampler;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleSampler;
 	};

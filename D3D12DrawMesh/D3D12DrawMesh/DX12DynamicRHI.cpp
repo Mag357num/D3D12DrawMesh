@@ -6,52 +6,7 @@
 
 namespace RHI
 {
-	FDX12PSOInitializer::FDX12PSOInitializer()
-	{
-		static D3D12_INPUT_ELEMENT_DESC InputElementDescs[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
-		rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
-		rasterizerStateDesc.FrontCounterClockwise = TRUE;
-
-		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
-		depthStencilDesc.DepthEnable = TRUE;
-
-		InputLayout = { InputElementDescs, _countof(InputElementDescs) };
-		RasterizerState = rasterizerStateDesc;
-		BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		DepthStencilState = depthStencilDesc;
-		SampleMask = UINT_MAX;
-		PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		NumRenderTargets = 1;
-		RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		SampleDesc.Count = 1;
-	}
-
-	FDX12PSOInitializer::FDX12PSOInitializer(const D3D12_INPUT_LAYOUT_DESC& VertexDescription,
-		const D3D12_RASTERIZER_DESC& rasterizerStateDesc, const D3D12_DEPTH_STENCIL_DESC& depthStencilDesc)
-	{
-		InputLayout = VertexDescription;
-		RasterizerState = rasterizerStateDesc;
-		BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		DepthStencilState = depthStencilDesc;
-		SampleMask = UINT_MAX;
-		PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		NumRenderTargets = 1;
-		RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		SampleDesc.Count = 1;
-	}
-
-	void FDX12DynamicRHI::RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight)
+	void FDX12DynamicRHI::RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount, const uint32& ResoWidth, const uint32& ResoHeight)
 	{
 		this->ResoWidth = ResoWidth;
 		this->ResoHeight = ResoHeight;
@@ -105,7 +60,7 @@ namespace RHI
 
 		// swapchain
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.BufferCount = BufferFrameCount;
+		swapChainDesc.BufferCount = BackBufferFrameCount;
 		swapChainDesc.Width = ResoWidth;
 		swapChainDesc.Height = ResoHeight;
 		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -120,17 +75,18 @@ namespace RHI
 
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap);
-		LastCpuHandleRT = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-		CreateRtvToHeaps(2); //TODO: change the hard coding to double buffing.
+		LastCpuHandleRt = RTVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastCpuHandleRt.Offset(BackBufferFrameCount, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)); // first n handle for back buffer, latter for texture
+		CreateRtvToHeaps(FRenderTargetType::BACK_BUFFER, nullptr); // dont use texture for rendertarget but back buffer
 
 		// SRV CBV heaps
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap);
-		LastCpuHandleCbvSrv = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
-		LastGpuHandleForCbvSrv = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
+		LastCpuHandleCbSr = CBVSRVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastGpuHandleCbSr = CBVSRVHeap->GetGPUDescriptorHandleForHeapStart();
 
 		// DSV heaps
 		CreateDescriptorHeaps(MAX_HEAP_DEPTHSTENCILS, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, DSVHeap);
-		LastCpuHandleDsv = DSVHeap->GetCPUDescriptorHandleForHeapStart();
+		LastCpuHandleDs = DSVHeap->GetCPUDescriptorHandleForHeapStart();
 
 		// sampler heaps
 		CreateDescriptorHeaps(MAX_HEAP_SAMPLERS, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, SamplerHeap);
@@ -168,23 +124,64 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
 	}
 
-	void FDX12DynamicRHI::SetShaderSignature(FMeshRes* MeshRes, FTexture* Texture)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FPipelineType Type, FMeshRes* MeshRes)
 	{
-		//FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
-		//FDX12CB* ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get()); // shadow cb
-		//FDX12Texture* DX12Texture = dynamic_cast<FDX12Texture*>(Texture);
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
+		static D3D12_INPUT_ELEMENT_DESC InputElementDescs[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
 
-		//CommandLists[0].CommandList->SetGraphicsRootSignature(DX12MeshRes->RootSignature.Get());
-		//ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
-		//CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, ShadowCB->GPUHandleInHeap); // cb
-		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, DX12Texture->Handle); // shadow map texture
-		//CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, SamplerHeap->GetGPUDescriptorHandleForHeapStart()); // sampler
+		CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
+		rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
+		rasterizerStateDesc.FrontCounterClockwise = TRUE;
+
+		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+		depthStencilDesc.DepthEnable = TRUE;
+
+		PsoDesc.InputLayout = { InputElementDescs, _countof(InputElementDescs) };
+		PsoDesc.RasterizerState = rasterizerStateDesc;
+		PsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		PsoDesc.DepthStencilState = depthStencilDesc;
+		PsoDesc.SampleMask = UINT_MAX;
+		PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		PsoDesc.NumRenderTargets = 1;
+		PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		PsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		PsoDesc.SampleDesc.Count = 1;
+		PsoDesc.pRootSignature = MeshRes->As<FDX12MeshRes>()->RootSignature.Get();
+		PsoDesc.VS = CD3DX12_SHADER_BYTECODE(MeshRes->As<FDX12MeshRes>()->VS->As<FDX12Shader>()->Shader.Get());
+		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(MeshRes->As<FDX12MeshRes>()->PS->As<FDX12Shader>()->Shader.Get());
+
+		switch (Type)
+		{
+		case RHI::FPipelineType::LDR_OUTPUT_RT:
+			//pass
+		break;
+		case RHI::FPipelineType::SHADOW_MAP_PL:
+			PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+			PsoDesc.NumRenderTargets = 0;
+			break;
+		case RHI::FPipelineType::SCENE_COLOR_PL:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			break;
+		default:
+			break;
+		}
+
+		shared_ptr<FDX12Rasterizer> Ras = make_shared<FDX12Rasterizer>();
+		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Ras->PSO)));
+		return Ras;
 	}
 
-	void FDX12DynamicRHI::SetRasterizer(FRasterizer* Ras)
+	void FDX12DynamicRHI::ChoosePipelineState(FPipelineState* Pso)
 	{
-		FDX12Rasterizer* DX12Ras = dynamic_cast<FDX12Rasterizer*>(Ras);
+		FDX12Rasterizer* DX12Ras = dynamic_cast<FDX12Rasterizer*>(Pso);
 		CommandLists[0].CommandList->SetPipelineState(DX12Ras->PSO.Get());
 	}
 
@@ -308,7 +305,7 @@ namespace RHI
 		case RHI::FViewType::Dsv:
 		{
 			D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
-			Desc.Format = DXGI_FORMAT_D32_FLOAT;
+			Desc.Format = DX12Tex->DsvFormat;
 			Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 			CreateDsvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->DsvHandle);
 		}
@@ -316,11 +313,16 @@ namespace RHI
 		case RHI::FViewType::Srv:
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
-			Desc.Format = DXGI_FORMAT_R32_FLOAT;
+			Desc.Format = DX12Tex->SrvFormat;
 			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			Desc.Texture2D.MipLevels = 1;
 			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->SrvHandle);
+		}
+			break;
+		case RHI::FViewType::Rtv:
+		{
+			CreateRtvToHeaps(FRenderTargetType::TEXTURE, Tex);
 		}
 			break;
 		default:
@@ -336,36 +338,20 @@ namespace RHI
 		CommandLists[0].CommandList->ClearDepthStencilView(DX12Tex->DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
-	void FDX12DynamicRHI::InitPipeLineToMeshRes(FMeshRes* MeshRes, FRACreater* PsoInitializer, const SHADER_FLAGS& rootFlags)
+	void FDX12DynamicRHI::InitPsoInMeshRes(FMeshRes* MeshRes, const SHADER_FLAGS& rootFlags)
 	{
-		FDX12MeshRes* DX12MeshRes = dynamic_cast<FDX12MeshRes*>(MeshRes);
-		FShader* VS = DX12MeshRes->VS.get();
-		FShader* PS = DX12MeshRes->PS.get();
-		FDX12Shader* DX12VS = dynamic_cast<FDX12Shader*>(VS);
-		FDX12Shader* DX12PS = dynamic_cast<FDX12Shader*>(PS);
-
 		if (rootFlags == SHADER_FLAGS::CB0_SR1_Sa2)
 		{
-			DX12MeshRes->RootSignature = CreateDX12RootSig_CB0_SR1_Sa2();
+			MeshRes->As<FDX12MeshRes>()->RootSignature = CreateDX12RootSig_CB0_SR1_Sa2();
 		}
 		else
 		{
 			throw std::exception(" didnt assign rootsignature! ");
 		}
 
-		// create bass pass pso
-		FDX12PSOInitializer* Dx12Initializer = dynamic_cast<FDX12PSOInitializer*>(PsoInitializer);
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = CreateGraphicsPipelineStateDesc(*Dx12Initializer,
-			DX12MeshRes->RootSignature.Get(), CD3DX12_SHADER_BYTECODE(DX12VS->Shader.Get()),
-			CD3DX12_SHADER_BYTECODE(DX12PS->Shader.Get()));
-		DX12MeshRes->BaseRas = CreateRasterizer2(PsoDesc);
-
-		// create shadow pass pso
-		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
-		PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-		PsoDesc.NumRenderTargets = 0;
-
-		DX12MeshRes->ShadowRas = CreateRasterizer2(PsoDesc);
+		MeshRes->As<FDX12MeshRes>()->OutputPassPso = CreatePso(FPipelineType::LDR_OUTPUT_RT, MeshRes);
+		MeshRes->As<FDX12MeshRes>()->SceneColorPso = CreatePso(FPipelineType::SCENE_COLOR_PL, MeshRes);
+		MeshRes->As<FDX12MeshRes>()->ShadowPassPso = CreatePso(FPipelineType::SHADOW_MAP_PL, MeshRes);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -397,40 +383,58 @@ namespace RHI
 		ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
 	}
 
-	void FDX12DynamicRHI::CreateRtvToHeaps(const uint32& FrameCount)
+	void FDX12DynamicRHI::CreateRtvToHeaps(FRenderTargetType Type, FTexture* Tex)
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
+		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
 
-		for (uint32 n = 0; n < FrameCount; n++)
+		switch (Type)
 		{
-			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n])));
-			Device->CreateRenderTargetView(BackBuffers[n].Get(), nullptr, HeapsHandle);
-			HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		case RHI::FRenderTargetType::BACK_BUFFER:
+			CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
+			for (uint32 n = 0; n < RHI::BACKBUFFER_NUM; n++)
+			{
+				ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n])));
+				Device->CreateRenderTargetView(BackBuffers[n].Get(), nullptr, HeapsHandle);
+				HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+			}
+
+			break;
+		case RHI::FRenderTargetType::TEXTURE:
+
+			Device->CreateRenderTargetView(DX12Tex->DX12Texture.Get(), nullptr, LastCpuHandleRt);
+			DX12Tex->RtvHandle = LastCpuHandleRt;
+			LastCpuHandleRt.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+
+			break;
+		default:
+			break;
 		}
+
+
 	}
 
 	void FDX12DynamicRHI::CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB)
 	{
-		Device->CreateConstantBufferView(&CbvDesc, LastCpuHandleCbvSrv);
-		FDX12CB->GPUHandleInHeap = LastGpuHandleForCbvSrv;
+		Device->CreateConstantBufferView(&CbvDesc, LastCpuHandleCbSr);
+		FDX12CB->GPUHandleInHeap = LastGpuHandleCbSr;
 
-		LastCpuHandleCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
-		LastGpuHandleForCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
 	void FDX12DynamicRHI::CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle)
 	{
-		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCpuHandleCbvSrv);
-		Handle = LastGpuHandleForCbvSrv;  // srv need gpu handle
-		LastCpuHandleCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
-		LastGpuHandleForCbvSrv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCpuHandleCbSr);
+		Handle = LastGpuHandleCbSr;  // srv need gpu handle
+		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
 	void FDX12DynamicRHI::CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle)
 	{
-		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCpuHandleDsv);
-		Handle = LastCpuHandleDsv; // dsv need cpu handle
-		LastCpuHandleDsv.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
+		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCpuHandleDs);
+		Handle = LastCpuHandleDs; // dsv need cpu handle
+		LastCpuHandleDs.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
 	}
 
 	void FDX12DynamicRHI::ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version)
@@ -505,33 +509,6 @@ namespace RHI
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
 		return static_cast<D3D12_DEPTH_STENCIL_DESC>(depthStencilDesc);
-	}
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC FDX12DynamicRHI::CreateGraphicsPipelineStateDesc(const FDX12PSOInitializer& Initializer,
-		ID3D12RootSignature* RootSignature, const D3D12_SHADER_BYTECODE& VS, const D3D12_SHADER_BYTECODE& PS)
-	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.InputLayout = Initializer.InputLayout;
-		psoDesc.pRootSignature = RootSignature;
-		psoDesc.VS = VS;
-		psoDesc.PS = PS;
-		psoDesc.RasterizerState = Initializer.RasterizerState;
-		psoDesc.BlendState = Initializer.BlendState;
-		psoDesc.DepthStencilState = Initializer.DepthStencilState;
-		psoDesc.SampleMask = Initializer.SampleMask;
-		psoDesc.PrimitiveTopologyType = Initializer.PrimitiveTopologyType;
-		psoDesc.NumRenderTargets = Initializer.NumRenderTargets;
-		psoDesc.RTVFormats[0] = Initializer.RTVFormats[0];
-		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		psoDesc.SampleDesc.Count = Initializer.SampleDesc.Count;
-		return psoDesc;
-	}
-
-	shared_ptr<FRasterizer> FDX12DynamicRHI::CreateRasterizer2(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& PsoDesc)
-	{
-		shared_ptr<FDX12Rasterizer> Ras = make_shared<FDX12Rasterizer>();
-		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Ras->PSO)));
-		return Ras;
 	}
 
 	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
@@ -668,10 +645,10 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameResource& MeshActorFrameResource, const FMeshActor& MeshActor)
+	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
-		MeshActorFrameResource.MeshToRender = CommitMesh(MeshActor);
-		MeshActorFrameResource.MeshResToRender = CommitMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB0_SR1_Sa2);
+		MeshActorFrameResource.Mesh = CommitMesh(MeshActor);
+		MeshActorFrameResource.MeshRes = CommitMeshRes(L"shaders.hlsl", RHI::SHADER_FLAGS::CB0_SR1_Sa2);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -808,8 +785,7 @@ namespace RHI
 		std::wstring m_assetsPath = assetsPath + FileName;
 		DX12MeshRes->VS = CreateVertexShader(m_assetsPath.c_str()); // could just use dx12 shader type otherwise FShader
 		DX12MeshRes->PS = CreatePixelShader(m_assetsPath.c_str());
-		shared_ptr<FRACreater> initializer = make_shared<FDX12PSOInitializer>();
-		InitPipeLineToMeshRes(MeshRes.get(), initializer.get(), flags);
+		InitPsoInMeshRes(MeshRes.get(), flags);
 
 		// 2. create cb
 		DX12MeshRes->BaseCB = CreateConstantBuffer(256);
@@ -847,34 +823,46 @@ namespace RHI
 	{
 		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();
 		CD3DX12_RESOURCE_DESC Desc;
+		shared_ptr<D3D12_CLEAR_VALUE> ClearValue = make_shared<D3D12_CLEAR_VALUE>();
+		D3D12_RESOURCE_STATES ResState = D3D12_RESOURCE_STATE_COMMON;
 
 		switch (Type)
 		{
 		case RHI::FTextureType::SHADOW_MAP:
-			Desc = CD3DX12_RESOURCE_DESC(D3D12_RESOURCE_DIMENSION_TEXTURE2D, 0, Width, Height, 1, 1, DXGI_FORMAT_R32_TYPELESS, 1, 0, D3D12_TEXTURE_LAYOUT_UNKNOWN, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			*ClearValue = { DXGI_FORMAT_D32_FLOAT, 1.0f, 0.f }; // TODO: test if this will crash when change to R32
+			ResState = D3D12_RESOURCE_STATE_DEPTH_WRITE; // ClearValue use DXGI_FORMAT_D32_FLOAT becuz ready to use as ds
+			Texture->SrvFormat = DXGI_FORMAT_R32_FLOAT; // red 32
+			Texture->DsvFormat = DXGI_FORMAT_D32_FLOAT; // depth 32
 			break;
 		case RHI::FTextureType::DEPTH_STENCIL_MAP:
 			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			*ClearValue = { DXGI_FORMAT_D32_FLOAT, 1.0f, 0.f };
+			ResState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+			Texture->DsvFormat = DXGI_FORMAT_D32_FLOAT;
 			break;
-		case RHI::FTextureType::SHADER_RESOURCE:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+		case RHI::FTextureType::RENDER_TARGET:
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			*ClearValue = { DXGI_FORMAT_R16G16B16A16_FLOAT, {0.0f, 0.0f, 0.0f, 1.f} };
+			ResState = D3D12_RESOURCE_STATE_COPY_DEST;
+			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
+			break;
+		case RHI::FTextureType::ORDINARY_SHADER_RESOURCE:
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+			ClearValue = nullptr;
+			ResState = D3D12_RESOURCE_STATE_COPY_DEST;
+			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
 			break;
 		default:
 			break;
 		}
 
-
-		D3D12_CLEAR_VALUE clearValue;
-		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
-		clearValue.DepthStencil.Depth = 1.0f;
-		clearValue.DepthStencil.Stencil = 0;
-
 		ThrowIfFailed(Device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
 			D3D12_HEAP_FLAG_NONE,
 			&Desc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			&clearValue,
+			ResState,
+			ClearValue.get(),
 			IID_PPV_ARGS(&Texture->DX12Texture)));
 
 		return Texture;

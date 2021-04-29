@@ -7,7 +7,10 @@ namespace RHI
 {
 	struct FDX12Texture : public FTexture
 	{
+		DXGI_FORMAT SrvFormat;
+		DXGI_FORMAT DsvFormat;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle;
 		ComPtr<ID3D12Resource> DX12Texture;
 	};
@@ -18,7 +21,7 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle;
 	};
 
-	struct FDX12Rasterizer : public FRasterizer
+	struct FDX12Rasterizer : public FPipelineState
 	{
 		ComPtr<ID3D12PipelineState> PSO;
 	};

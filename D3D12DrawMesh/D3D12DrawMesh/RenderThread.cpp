@@ -12,7 +12,7 @@ FRenderThread::FRenderThread()
 void FRenderThread::Run()
 {
 	RHI::GDynamicRHI->CreateRHI();
-	RHI::GDynamicRHI->RHIInit(false, 2, GEngine->GetWidth(), GEngine->GetHeight());
+	RHI::GDynamicRHI->RHIInit(false, RHI::BACKBUFFER_NUM, GEngine->GetWidth(), GEngine->GetHeight());
 
 	while (IsRunning)
 	{
