@@ -130,7 +130,15 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->TransitTextureState(FrameRes->BloomUpMap8.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// sun merge
-
+	RHI->ClearRenderTarget(FrameRes->SunMergeMap->RtvHandle.get());
+	RHI->SetRenderTarget(1, FrameRes->SunMergeMap->RtvHandle.get(), FrameRes->DepthStencilMap->DsvHandle.get());
+	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
+	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
+	RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
+	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->SunMergeMat->PSO.get());
+	RHI->SetShaderInput(FPassType::SUN_MERGE_PT, FrameRes->PastProcessTriangleRes->SunMergeMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->TransitTextureState(FrameRes->SunMergeMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// tonemapping output
 	RHI->ClearRenderTarget(RHI->GetBackBufferHandle());
@@ -153,7 +161,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->TransitTextureState(FrameRes->BloomUpMap32.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
 	RHI->TransitTextureState(FrameRes->BloomUpMap16.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
 	RHI->TransitTextureState(FrameRes->BloomUpMap8.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
-	//RHI->TransitTextureState(FrameRes->BloomUpMap4.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->SunMergeMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	RHI->FrameEnd();
 }

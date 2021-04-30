@@ -120,12 +120,12 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		// sun merge
 		TexHandles.push_back(FrameResource.BloomSetupMap->SrvHandle);
 		TexHandles.push_back(FrameResource.BloomUpMap8->SrvHandle);
-		FrameResource.PastProcessTriangleRes->SunMerge = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles, FPassType::SUM_MERGE_PT);
+		FrameResource.PastProcessTriangleRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles, FPassType::SUN_MERGE_PT);
 		TexHandles.clear();
 
 		// tonemapping
 		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
-		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
+		TexHandles.push_back(FrameResource.SunMergeMap->SrvHandle);
 		FrameResource.PastProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles, FPassType::TONEMAPPING_PT);
 		TexHandles.clear();
 	}
@@ -279,7 +279,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	RHI::FCBData SunMergePassData;
 	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
 	SunMergePassData.BufferSize = sizeof(SunMergeStruct);
-	GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->SunMerge.get(), &SunMergePassData);
+	GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->SunMergeMat.get(), &SunMergePassData);
 
 
 }

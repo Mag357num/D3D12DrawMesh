@@ -68,7 +68,7 @@ namespace RHI
 		shared_ptr<FMaterial> BloomSetupMat;
 		shared_ptr<FMaterial> BloomDownMat[4];
 		shared_ptr<FMaterial> BloomUpMat[3];
-		shared_ptr<FMaterial> SunMerge;
+		shared_ptr<FMaterial> SunMergeMat;
 		shared_ptr<FMaterial> ToneMappingMat;
 	};
 
@@ -164,7 +164,7 @@ namespace RHI
 		BLOOM_SETUP_PT = 2,
 		BLOOM_DOWN_PT = 3,
 		BLOOM_UP_PT = 4,
-		SUM_MERGE_PT = 5,
+		SUN_MERGE_PT = 5,
 		TONEMAPPING_PT = 6,
 	};
 

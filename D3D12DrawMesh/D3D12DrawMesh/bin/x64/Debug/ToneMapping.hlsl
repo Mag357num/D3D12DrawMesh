@@ -10,9 +10,10 @@ struct PSInput
     float2 uv        : TEXCOORD0;
 };
 
-Texture2D BloomTexture : register(t0);
-Texture2D SceneColorTexture : register(t1);
+Texture2D SceneColorTexture : register(t0);
 SamplerState SceneColorSampler : register(s0);
+
+Texture2D BloomTexture : register(t1);
 // SamplerState BloomSampler : register(s1);
 
 float3 ACESToneMapping(float3 color, float adapted_lum)
@@ -39,20 +40,11 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    // float4 color;
-    // float4 SceneColor = SceneColorTexture.Sample(SceneColorSampler, input.uv);
-    // half3 LinearColor =  SceneColor.rgb;
-    // float3 CombinedBloom = BloomTexture.Sample(BloomSampler, input.uv);
-    // LinearColor = LinearColor.rgb + CombinedBloom.rgb;
-    // color.rgb = ACESToneMapping(LinearColor, 1.0f);
-    // color.a = SceneColor.a;
-
-    // return color;
-
-	float4 color;
+    float4 color;
     float4 SceneColor = SceneColorTexture.Sample(SceneColorSampler, input.uv);
     half3 LinearColor =  SceneColor.rgb;
-    LinearColor = LinearColor.rgb;
+    float3 CombinedBloom = BloomTexture.Sample(SceneColorSampler, input.uv);
+    LinearColor = LinearColor.rgb + CombinedBloom.rgb;
     color.rgb = ACESToneMapping(LinearColor, 1.0f);
     color.a = SceneColor.a;
 

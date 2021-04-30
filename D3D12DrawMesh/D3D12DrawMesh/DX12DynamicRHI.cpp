@@ -199,7 +199,7 @@ namespace RHI
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
-		case RHI::FPassType::SUM_MERGE_PT:
+		case RHI::FPassType::SUN_MERGE_PT:
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
@@ -259,7 +259,7 @@ namespace RHI
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->WarpSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
-		case RHI::FPassType::SUM_MERGE_PT:
+		case RHI::FPassType::SUN_MERGE_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
@@ -709,7 +709,7 @@ namespace RHI
 			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
 		}
-		case RHI::FPassType::SUM_MERGE_PT:
+		case RHI::FPassType::SUN_MERGE_PT:
 		{
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
