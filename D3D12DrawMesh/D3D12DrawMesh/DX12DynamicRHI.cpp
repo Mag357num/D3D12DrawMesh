@@ -241,27 +241,10 @@ namespace RHI
 		D3D12_RECT ShadowScissorRect = CD3DX12_RECT(Left, Top, Right, Bottom);
 		CommandLists[0].CommandList->RSSetScissorRects(1, &ShadowScissorRect);
 	}
-	
-	void FDX12DynamicRHI::SetRenderTarget(FPassType Type, FTexture* Rt, FTexture* DsMap)
+
+	void FDX12DynamicRHI::SetRenderTarget(uint32 DescriptorNum, FHandle* RtHandle, FHandle* DsHandle)
 	{
-		switch (Type)
-		{
-		case RHI::FPassType::SHADOW_PT:
-			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
-			break;
-
-		case RHI::FPassType::SCENE_COLOR_PT:
-			CommandLists[0].CommandList->OMSetRenderTargets(1, &Rt->RtvHandle->As<FDX12CpuHandle>()->Handle, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
-			break;
-
-		case RHI::FPassType::LDR_OUTPUT_RT_PT:
-			CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-			CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
-			break;
-
-		default:
-			break;
-		}
+		CommandLists[0].CommandList->OMSetRenderTargets(DescriptorNum, &RtHandle->As<FDX12CpuHandle>()->Handle, FALSE, &DsHandle->As<FDX12CpuHandle>()->Handle);
 	}
 
 	void FCommand::Reset()
@@ -874,7 +857,7 @@ namespace RHI
 			break;
 		case RHI::FTextureType::RENDER_TARGET_TT:
 			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-			*ClearValue = { DXGI_FORMAT_R16G16B16A16_FLOAT, {0.0f, 0.0f, 0.0f, 1.f} };
+			*ClearValue = { DXGI_FORMAT_R16G16B16A16_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
 			break;

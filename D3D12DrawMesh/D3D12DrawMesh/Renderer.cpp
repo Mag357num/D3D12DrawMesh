@@ -8,7 +8,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->ShadowMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->ShadowMapSize), static_cast<float>(FrameRes->ShadowMapSize), 0.f, 1.f);
 	RHI->SetScissor(0, 0, FrameRes->ShadowMapSize, FrameRes->ShadowMapSize);
-	RHI->SetRenderTarget(FPassType::SHADOW_PT, nullptr, FrameRes->ShadowMap.get());
+	RHI->SetRenderTarget(0, nullptr, FrameRes->ShadowMap->DsvHandle.get());
 	for (auto i : FrameRes->MeshActorFrameReses)
 	{
 		// use shadow pso
@@ -27,7 +27,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	RHI->SetRenderTarget(FPassType::SCENE_COLOR_PT, FrameRes->SceneColorMap.get(), FrameRes->DepthStencilMap.get());
+	RHI->SetRenderTarget(1, FrameRes->SceneColorMap->RtvHandle.get(), FrameRes->DepthStencilMap->DsvHandle.get());
+
 	for (auto i : FrameRes->MeshActorFrameReses)
 	{
 		// pso
@@ -53,7 +54,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	RHI->SetRenderTarget(FPassType::LDR_OUTPUT_RT_PT, nullptr, FrameRes->DepthStencilMap.get());
+	RHI->SetRenderTarget(1, RHI->GetBackBufferHandle(), FrameRes->DepthStencilMap->DsvHandle.get());
 	RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->OutputPassPso.get()); // pso
 	RHI->SetShaderInput(FPassType::LDR_OUTPUT_RT_PT, FrameRes->PostProcessTriangleRes.get(), FrameRes); // root signature
 	RHI->DrawMesh(FrameRes->PostProcessTriangle.get()); // set mesh 

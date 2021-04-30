@@ -59,7 +59,7 @@ namespace RHI
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
-		virtual void SetRenderTarget(FPassType Type, FTexture* Rt, FTexture* DsMap) = 0;
+		virtual void SetRenderTarget(uint32 DescriptorNum, FHandle* RtHandle, FHandle* DsHandle) = 0;
 
 		// other
 		virtual uint32 GetBackBufferIndex() = 0;
