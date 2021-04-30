@@ -162,9 +162,9 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		BaseCB.Light.Intensity = Scene->DirectionLight.Intensity;
 		BaseCB.IsShadowMap = FALSE;
 
-		RHI::FCBData BasePassData;
-		BasePassData.DataBuffer = reinterpret_cast<void*>(&BaseCB);
-		BasePassData.BufferSize = sizeof(BaseCB);
+		RHI::FCBData SceneColorPassData;
+		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&BaseCB);
+		SceneColorPassData.BufferSize = sizeof(BaseCB);
 
 		// shadow pass cb
 		FShadowMapCB ShadowCbStruct = BaseCB;
@@ -175,7 +175,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
 		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
 
-		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes.get(),
-			&BasePassData, &ShadowPassData); // MeshActor in Scene reflect to MeshActorFrameResource by order
+		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
 	}
 }

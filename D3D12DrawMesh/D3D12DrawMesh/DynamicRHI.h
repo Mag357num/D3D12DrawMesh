@@ -42,7 +42,7 @@ namespace RHI
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) = 0;
 
 		// Resource process
-		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
+		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) = 0;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;

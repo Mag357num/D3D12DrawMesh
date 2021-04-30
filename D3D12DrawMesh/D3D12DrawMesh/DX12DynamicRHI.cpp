@@ -245,7 +245,9 @@ namespace RHI
 			break;
 
 		case RHI::FPassType::BLOOM_SETUP_PT:
-
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_DOWN_PT:
 
@@ -299,13 +301,9 @@ namespace RHI
 		return DX12CB;
 	}
 
-	void FDX12DynamicRHI::UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData)
+	void FDX12DynamicRHI::UpdateConstantBuffer(FMaterial* Mat, FCBData* Data)
 	{
-		FDX12CB* DX12BaseCB = dynamic_cast<FDX12CB*>(MeshRes->SceneColorMat->CB.get());
-		FDX12CB* DX12ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowMat->CB.get());
-
-		memcpy(DX12BaseCB->UploadBufferVirtualAddress, BaseData->DataBuffer, BaseData->BufferSize);
-		memcpy(DX12ShadowCB->UploadBufferVirtualAddress, ShadowData->DataBuffer, ShadowData->BufferSize);
+		memcpy(Mat->CB->As<FDX12CB>()->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
 	}
 
 	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)

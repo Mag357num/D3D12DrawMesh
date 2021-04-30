@@ -43,7 +43,7 @@ namespace RHI
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) override;
 
 		// Resource process
-		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
+		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
