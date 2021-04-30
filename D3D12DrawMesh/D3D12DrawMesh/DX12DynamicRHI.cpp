@@ -619,13 +619,14 @@ namespace RHI
 		ComPtr<ID3DBlob> Error;
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
-		CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-
 		switch (Type)
 		{
 		case RHI::FPassType::SHADOW_PT:
 		case RHI::FPassType::SCENE_COLOR_PT:
+		{
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+
 			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
@@ -638,16 +639,66 @@ namespace RHI
 			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
 			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
+		}
 		case RHI::FPassType::BLOOM_SETUP_PT:
+		{
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+
+			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
+			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
+		}
 		case RHI::FPassType::BLOOM_DOWN_PT:
+		{
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+
+			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
+			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
+		}
 		case RHI::FPassType::BLOOM_UP_PT:
+		{
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
+			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
+			ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1); // infrequently changed sampler
 
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
+			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);
+
+			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
+			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
+		}
 		case RHI::FPassType::TONEMAPPING_PT:
+		{
+			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
 			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
@@ -660,6 +711,7 @@ namespace RHI
 			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
 			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
 			break;
+		}
 		default:
 			break;
 		}
@@ -828,42 +880,6 @@ namespace RHI
 
 		return Mat;
 	}
-
-	//shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FMeshType_deprecated Type)
-	//{
-	//	shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
-	//	WCHAR assetsPath[512];
-	//	GetAssetsPath(assetsPath, _countof(assetsPath));
-	//	std::wstring m_assetsPath = assetsPath + ShaderFileName;
-
-	//	// 1. create pso
-	//	// 1.1 shader
-	//	MeshRes->As<FDX12MeshRes>()->VS = CreateVertexShader(m_assetsPath.c_str());
-	//	MeshRes->As<FDX12MeshRes>()->PS = CreatePixelShader(m_assetsPath.c_str());
-	//	// 1.2 root signature
-	//	MeshRes->As<FDX12MeshRes>()->RootSignature = CreateDX12RootSig(Type);
-	//	switch (Type) // TODO: refactor here
-	//	{
-	//	case RHI::FMeshType_deprecated::POSTPROCESS_MESH_FT:
-	//		MeshRes->As<FDX12MeshRes>()->BloomSetupPso = CreatePso(FPassType::BLOOM_SETUP_PT, MeshRes.get());
-	//		MeshRes->As<FDX12MeshRes>()->BloomDownPso = CreatePso(FPassType::BLOOM_DOWN_PT, MeshRes.get());
-	//		MeshRes->As<FDX12MeshRes>()->BloomUpPso = CreatePso(FPassType::BLOOM_UP_PT, MeshRes.get());
-	//		MeshRes->As<FDX12MeshRes>()->OutputPassPso = CreatePso(FPassType::TONEMAPPING_PT, MeshRes.get());
-	//		break;
-	//	case RHI::FMeshType_deprecated::SCENE_MESH_FT:
-	//		MeshRes->As<FDX12MeshRes>()->ShadowPassPso = CreatePso(FPassType::SHADOW_PT, MeshRes.get());
-	//		MeshRes->As<FDX12MeshRes>()->SceneColorPso = CreatePso(FPassType::SCENE_COLOR_PT, MeshRes.get());
-	//		break;
-	//	default:
-	//		break;
-	//	}
-	//	// 2. create cb
-	//	MeshRes->As<FDX12MeshRes>()->SceneColorCB = CreateConstantBuffer(ConstantBufferSize); // TODO: no need to create all
-	//	MeshRes->As<FDX12MeshRes>()->ShadowCB = CreateConstantBuffer(ConstantBufferSize);
-	//	MeshRes->As<FDX12MeshRes>()->OutputCB = CreateConstantBuffer(ConstantBufferSize);
-
-	//	return MeshRes;
-	//}
 
 	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes()
 	{

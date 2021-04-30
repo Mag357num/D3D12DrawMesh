@@ -64,7 +64,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 
 	// bloom up
 
-
+	
 
 	// tonemapping output
 	RHI->ClearRenderTarget(RHI->GetBackBufferHandle());

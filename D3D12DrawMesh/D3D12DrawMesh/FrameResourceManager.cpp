@@ -23,9 +23,9 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		FrameResource.PostProcessTriangle = GDynamicRHI->CreateMesh(Actor);
 		FrameResource.PostProcessTriangleRes = GDynamicRHI->CreateMeshRes();
 		FrameResource.PostProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, FPassType::TONEMAPPING_PT);
-		//FrameResource.PostProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_SETUP_PT);
-		//FrameResource.PostProcessTriangleRes->BloomDownMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_DOWN_PT);
-		//FrameResource.PostProcessTriangleRes->BloomUpMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_UP_PT);
+		FrameResource.PostProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, FPassType::BLOOM_SETUP_PT);
+		FrameResource.PostProcessTriangleRes->BloomDownMat = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, FPassType::BLOOM_DOWN_PT);
+		FrameResource.PostProcessTriangleRes->BloomUpMat = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, FPassType::BLOOM_UP_PT);
 
 		// create and commit shadow map
 		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
