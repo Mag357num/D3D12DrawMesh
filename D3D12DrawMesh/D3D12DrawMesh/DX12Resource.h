@@ -5,13 +5,20 @@
 
 namespace RHI
 {
+	struct FDX12CpuHandle : FHandle
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE Handle;
+	};
+
+	struct FDX12GpuHandle : FHandle
+	{
+		CD3DX12_GPU_DESCRIPTOR_HANDLE Handle;
+	};
+
 	struct FDX12Texture : public FTexture
 	{
 		DXGI_FORMAT SrvFormat;
 		DXGI_FORMAT DsvFormat;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE DsvHandle;
-		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SrvHandle;
 		ComPtr<ID3D12Resource> DX12Texture;
 	};
 

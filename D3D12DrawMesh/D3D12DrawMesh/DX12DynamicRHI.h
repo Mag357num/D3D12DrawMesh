@@ -45,6 +45,7 @@ namespace RHI
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
+		virtual void ClearRenderTarget(FHandle* Handle) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
 
 		// Transform, Shader
@@ -63,6 +64,7 @@ namespace RHI
 		
 		// other
 		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
+		virtual FHandle* GetBackBufferHandle() { return BackBuffers[GetBackBufferIndex()]->RtvHandle.get(); }
 
 
 
@@ -85,12 +87,11 @@ namespace RHI
 
 	private:
 		void WaitForExecuteComplete();
-		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
-			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
-		void CreateRtvToHeaps(FRenderTargetType Type, FTexture* Tex);
+		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
+		void CreateRtvToHeaps(ID3D12Resource* RtResource, FHandle* Handle);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle);
-		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle);
+		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, FHandle* Handle);
 
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
 		uint32 GetEnableShaderDebugFlags();
@@ -111,7 +112,6 @@ namespace RHI
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
 		D3D12_VIEWPORT Viewport;
 		D3D12_RECT ScissorRect;
-		ComPtr<ID3D12Resource> BackBuffers[RHI::BACKBUFFER_NUM];
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
@@ -124,7 +124,6 @@ namespace RHI
 		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
 
-		// frame resource
 		static const uint32 FrameCount = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
@@ -133,5 +132,7 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleCbSr;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleSampler;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleSampler;
+
+		shared_ptr<FTexture> BackBuffers[RHI::BACKBUFFER_NUM];
 	};
 }

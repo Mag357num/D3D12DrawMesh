@@ -44,6 +44,7 @@ namespace RHI
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
+		virtual void ClearRenderTarget(FHandle* Handle) = 0;
 		virtual void DrawMesh(FMesh* Mesh) = 0;
 
 		// Transform, Shader
@@ -62,6 +63,7 @@ namespace RHI
 
 		// other
 		virtual uint32 GetBackBufferIndex() = 0;
+		virtual FHandle* GetBackBufferHandle() = 0;
 		inline uint32 GetWidth() { return ResoWidth; }
 		inline uint32 GetHeight() { return ResoHeight; }
 

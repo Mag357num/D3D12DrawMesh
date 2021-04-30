@@ -53,14 +53,16 @@ namespace RHI
 		shared_ptr<FShader> PS;
 	};
 
-	struct FRACreater
+	struct FHandle : public FRHIResource
 	{
-		virtual void InitPsoInitializer() = 0;
 	};
 
 	struct FTexture : public FRHIResource
 	{
 		virtual ~FTexture() = default;
+		shared_ptr<FHandle> DsvHandle;
+		shared_ptr<FHandle> RtvHandle;
+		shared_ptr<FHandle> SrvHandle;
 	};
 
 	struct FTexture2D : public FTexture
@@ -111,12 +113,6 @@ namespace RHI
 		CLAMP_ST = 0,
 		WARP_ST = 1,
 		MIRROR_ST = 2,
-	};
-
-	enum class FRenderTargetType
-	{
-		BACK_BUFFER_RTT = 0,
-		TEXTURE_RTT = 1,
 	};
 
 	enum class FPassType

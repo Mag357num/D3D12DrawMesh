@@ -50,6 +50,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	// combine
 
 	// tonemapping output
+	RHI->ClearRenderTarget(RHI->GetBackBufferHandle());
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());

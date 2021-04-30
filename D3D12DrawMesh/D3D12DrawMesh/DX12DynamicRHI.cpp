@@ -76,8 +76,13 @@ namespace RHI
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap);
 		LastCpuHandleRt = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-		LastCpuHandleRt.Offset(BackBufferFrameCount, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)); // first n handle for back buffer, latter for texture
-		CreateRtvToHeaps(FRenderTargetType::BACK_BUFFER_RTT, nullptr); // dont use texture for rendertarget but back buffer
+		for (uint32 n = 0; n < RHI::BACKBUFFER_NUM; n++)
+		{
+			BackBuffers[n] = make_shared<FDX12Texture>();
+			BackBuffers[n]->RtvHandle = make_shared<FDX12CpuHandle>();
+			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n]->As<FDX12Texture>()->DX12Texture)));
+			CreateRtvToHeaps(BackBuffers[n]->As<FDX12Texture>()->DX12Texture.Get(), BackBuffers[n]->RtvHandle.get());
+		}
 
 		// SRV CBV heaps
 		CreateDescriptorHeaps(MAX_HEAP_SRV_CBV, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, CBVSRVHeap);
@@ -216,13 +221,13 @@ namespace RHI
 
 		case RHI::FPassType::SCENE_COLOR_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->SceneColorCB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->ShadowMap->As<FDX12Texture>()->SrvHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->ShadowMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::LDR_OUTPUT_RT_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, FrameRes->SceneColorMap->As<FDX12Texture>()->SrvHandle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->As<FDX12Texture>()->SrvHandle); // TODO: change
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle); // TODO: change
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
@@ -242,16 +247,16 @@ namespace RHI
 		switch (Type)
 		{
 		case RHI::FPassType::SHADOW_PT:
-			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DsMap->As<FDX12Texture>()->DsvHandle);
+			CommandLists[0].CommandList->OMSetRenderTargets(0, nullptr, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
 			break;
 
 		case RHI::FPassType::SCENE_COLOR_PT:
-			CommandLists[0].CommandList->OMSetRenderTargets(1, &Rt->As<FDX12Texture>()->RtvHandle, FALSE, &DsMap->As<FDX12Texture>()->DsvHandle);
+			CommandLists[0].CommandList->OMSetRenderTargets(1, &Rt->RtvHandle->As<FDX12CpuHandle>()->Handle, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
 			break;
 
 		case RHI::FPassType::LDR_OUTPUT_RT_PT:
 			CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-			CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsMap->As<FDX12Texture>()->DsvHandle);
+			CommandLists[0].CommandList->OMSetRenderTargets(1, &RtvHandle, FALSE, &DsMap->DsvHandle->As<FDX12CpuHandle>()->Handle);
 			break;
 
 		default:
@@ -325,7 +330,7 @@ namespace RHI
 			D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
 			Desc.Format = DX12Tex->DsvFormat;
 			Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-			CreateDsvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->DsvHandle);
+			CreateDsvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->DsvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::SRV_RVT:
@@ -335,12 +340,12 @@ namespace RHI
 			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			Desc.Texture2D.MipLevels = 1;
 			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, DX12Tex->SrvHandle);
+			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->SrvHandle->As<FDX12GpuHandle>()->Handle);
 		}
 			break;
 		case RHI::FResViewType::RTV_RVT:
 		{
-			CreateRtvToHeaps(FRenderTargetType::TEXTURE_RTT, Tex);
+			CreateRtvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Tex->RtvHandle.get());
 		}
 			break;
 		default:
@@ -350,10 +355,16 @@ namespace RHI
 		return;
 	}
 
+	void FDX12DynamicRHI::ClearRenderTarget(FHandle* Handle)
+	{
+		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+		CommandLists[0].CommandList->ClearRenderTargetView(Handle->As<FDX12CpuHandle>()->Handle, clearColor, 0, nullptr);
+	}
+
 	void FDX12DynamicRHI::ClearDepthStencil(FTexture* Tex)
 	{
 		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
-		CommandLists[0].CommandList->ClearDepthStencilView(DX12Tex->DsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(DX12Tex->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -385,35 +396,11 @@ namespace RHI
 		ThrowIfFailed(Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&DescriptorHeaps)));
 	}
 
-	void FDX12DynamicRHI::CreateRtvToHeaps(FRenderTargetType Type, FTexture* Tex)
+	void FDX12DynamicRHI::CreateRtvToHeaps(ID3D12Resource* RtResource, FHandle* Handle)
 	{
-		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
-
-		switch (Type)
-		{
-		case RHI::FRenderTargetType::BACK_BUFFER_RTT:
-			CD3DX12_CPU_DESCRIPTOR_HANDLE HeapsHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart());
-			for (uint32 n = 0; n < RHI::BACKBUFFER_NUM; n++)
-			{
-				ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n])));
-				Device->CreateRenderTargetView(BackBuffers[n].Get(), nullptr, HeapsHandle);
-				HeapsHandle.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-				NAME_D3D12_OBJECT(BackBuffers[n]);
-			}
-
-			break;
-		case RHI::FRenderTargetType::TEXTURE_RTT:
-
-			Device->CreateRenderTargetView(DX12Tex->DX12Texture.Get(), nullptr, LastCpuHandleRt);
-			DX12Tex->RtvHandle = LastCpuHandleRt;
-			LastCpuHandleRt.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-
-			break;
-		default:
-			break;
-		}
-
-
+		Device->CreateRenderTargetView(RtResource, nullptr, LastCpuHandleRt);
+		Handle->As<FDX12CpuHandle>()->Handle = LastCpuHandleRt;
+		LastCpuHandleRt.Offset(1, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
 
 	void FDX12DynamicRHI::CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB)
@@ -433,10 +420,10 @@ namespace RHI
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
-	void FDX12DynamicRHI::CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& Handle)
+	void FDX12DynamicRHI::CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, FHandle* Handle)
 	{
 		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCpuHandleDs);
-		Handle = LastCpuHandleDs; // dsv need cpu handle
+		Handle->As<FDX12CpuHandle>()->Handle = LastCpuHandleDs; // dsv need cpu handle
 		LastCpuHandleDs.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
 	}
 
@@ -688,16 +675,16 @@ namespace RHI
 
 		// common set
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex]->As<FDX12Texture>()->DX12Texture.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-		CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		CommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
+		//const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+		//CD3DX12_CPU_DESCRIPTOR_HANDLE RtvHandle(RTVHeap->GetCPUDescriptorHandleForHeapStart(), BackFrameIndex, Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		//CommandLists[0].CommandList->ClearRenderTargetView(RtvHandle, clearColor, 0, nullptr);
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex].Get(),
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex]->As<FDX12Texture>()->DX12Texture.Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		// Execute the command list.
@@ -866,6 +853,10 @@ namespace RHI
 	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FTextureType Type, uint32 Width, uint32 Height)
 	{
 		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();
+		Texture->DsvHandle = make_shared<FDX12CpuHandle>();
+		Texture->RtvHandle = make_shared<FDX12CpuHandle>();
+		Texture->SrvHandle = make_shared<FDX12GpuHandle>();
+
 		CD3DX12_RESOURCE_DESC Desc;
 		shared_ptr<D3D12_CLEAR_VALUE> ClearValue = make_shared<D3D12_CLEAR_VALUE>();
 		D3D12_RESOURCE_STATES ResState = D3D12_RESOURCE_STATE_COMMON;
