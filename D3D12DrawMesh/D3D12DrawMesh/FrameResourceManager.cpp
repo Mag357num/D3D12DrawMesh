@@ -11,7 +11,7 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
-		// create postprocess mesh
+		// create pastprocess mesh
 		vector<float> TriangleVertices =
 		{
 			 1.f, -1.f, 0.0f,  1.f,  1.f,
@@ -20,12 +20,20 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		};
 
 		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
-		FrameResource.PostProcessTriangle = GDynamicRHI->CreateMesh(Actor);
-		FrameResource.PostProcessTriangleRes = GDynamicRHI->CreateMeshRes();
-		FrameResource.PostProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, FPassType::TONEMAPPING_PT);
-		FrameResource.PostProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, FPassType::BLOOM_SETUP_PT);
-		FrameResource.PostProcessTriangleRes->BloomDownMat = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, FPassType::BLOOM_DOWN_PT);
-		FrameResource.PostProcessTriangleRes->BloomUpMat = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, FPassType::BLOOM_UP_PT);
+		FrameResource.PastProcessTriangle = GDynamicRHI->CreateMesh(Actor);
+		FrameResource.PastProcessTriangleRes = GDynamicRHI->CreateMeshRes();
+		FrameResource.PastProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, FPassType::TONEMAPPING_PT);
+		FrameResource.PastProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, FPassType::BLOOM_SETUP_PT);
+		for (uint32 i = 0; i < 4; i++)
+		{
+			FrameResource.PastProcessTriangleRes->BloomDownMat[i] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, FPassType::BLOOM_DOWN_PT);
+		}
+		for (uint32 i = 0; i < 4; i++)
+		{
+			FrameResource.PastProcessTriangleRes->BloomUpMat[i] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, FPassType::BLOOM_UP_PT);
+		}
+		FrameResource.PastProcessTriangleRes->SunMerge = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, FPassType::SUM_MERGE_PT);
+
 
 		// create and commit shadow map
 		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
@@ -113,6 +121,8 @@ void FFrameResourceManager::CreateMeshActorFrameResources(FMeshActorFrameRes& MA
 
 void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
+	FFrameResource& FrameRes = FrameResources[FrameIndex];
+
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix CamView = MainCamera.GetViewMatrix();
 	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
@@ -131,7 +141,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
-	FFrameResource& FrameResource = FrameResources[FrameIndex];
 	const uint32 MeshActorCount = static_cast<uint32>(Scene->MeshActors.size());
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
@@ -149,33 +158,89 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
 		// base pass cb
-		FShadowMapCB BaseCB;
-		BaseCB.World = glm::transpose(WorldMatrix);
-		BaseCB.CamViewProj = glm::transpose(CamProj * CamView);
-		BaseCB.ShadowTransForm = glm::transpose(LightScr * LightProj * LightView);
-
-		FVector CamPos = Scene->SceneCamera.GetPosition();
-		BaseCB.CamEye = FVector4(CamPos.x, CamPos.y, CamPos.z, 1.0f);
-
-		BaseCB.Light.Dir = LightDirNored;
-		BaseCB.Light.Color = Scene->DirectionLight.Color;
-		BaseCB.Light.Intensity = Scene->DirectionLight.Intensity;
-		BaseCB.IsShadowMap = FALSE;
-
+		FShadowMapCB SceneColorCB;
+		SceneColorCB.World = glm::transpose(WorldMatrix);
+		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
+		SceneColorCB.ShadowTransForm = glm::transpose(LightScr * LightProj * LightView);
+		SceneColorCB.CamEye = FVector4(Scene->SceneCamera.GetPosition().x, Scene->SceneCamera.GetPosition().y, Scene->SceneCamera.GetPosition().z, 1.0f);
+		SceneColorCB.Light.Dir = LightDirNored;
+		SceneColorCB.Light.Color = Scene->DirectionLight.Color;
+		SceneColorCB.Light.Intensity = Scene->DirectionLight.Intensity;
+		SceneColorCB.IsShadowMap = FALSE;
 		RHI::FCBData SceneColorPassData;
-		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&BaseCB);
-		SceneColorPassData.BufferSize = sizeof(BaseCB);
+		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&SceneColorCB);
+		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
 
 		// shadow pass cb
-		FShadowMapCB ShadowCbStruct = BaseCB;
+		FShadowMapCB ShadowCbStruct = SceneColorCB;
 		ShadowCbStruct.CamViewProj = glm::transpose(LightProj * LightView);
 		ShadowCbStruct.IsShadowMap = TRUE;
-
 		RHI::FCBData ShadowPassData;
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
 		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
 
-		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
-		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.MeshActorFrameReses[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.MeshActorFrameReses[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
 	}
+
+	FVector4 BufferSizeAndInvSize = FVector4(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()),
+		1.f / static_cast<float>(GDynamicRHI->GetWidth()), 1.f / static_cast<float>(GDynamicRHI->GetWidth()));
+
+	// update pastprocess
+	// bloom setup
+	FBloomSetupCB BloomSetupStruct;
+	BloomSetupStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / 4.f;
+	BloomSetupStruct.BloomThreshold = -1.0f;
+	RHI::FCBData BloomSetupPassData;
+	BloomSetupPassData.DataBuffer = reinterpret_cast<void*>(&BloomSetupStruct);
+	BloomSetupPassData.BufferSize = sizeof(BloomSetupStruct);
+	GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->BloomSetupMat.get(), &BloomSetupPassData);
+
+	// bloom down
+	for (uint32 i = 0; i < 4; i++)
+	{
+		FBloomDownCB BloomDwonStruct;
+		BloomDwonStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 1)));
+		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
+		RHI::FCBData BloomDwonPassData;
+		BloomDwonPassData.DataBuffer = reinterpret_cast<void*>(&BloomDwonStruct);
+		BloomDwonPassData.BufferSize = sizeof(BloomDwonStruct);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->BloomDownMat[i].get(), &BloomDwonPassData);
+	}
+
+	// bloom up
+	static const FVector4 BloomTint1 = FVector4(0.3465f);
+	static const FVector4 BloomTint2 = FVector4(0.138f);
+	static const FVector4 BloomTint3 = FVector4(0.1176f);
+	static const FVector4 BloomTint4 = FVector4(0.066f);
+	static const FVector4 BloomTint5 = FVector4(0.066f);
+	static const float BloomIntensity = 1.0f;
+	static const float BloomThreshold = -1.0f;
+	static const FVector4 BloomTintAs[3] = { BloomTint4, BloomTint3 * BloomIntensity, BloomTint2 * BloomIntensity };
+	static const FVector4 BloomTintBs[3] = { BloomTint5, FVector4(1.0f, 1.0f, 1.0f, 0.0f), FVector4(1.0f, 1.0f, 1.0f, 0.0f) };
+	for (int i = 2; i >= 0; i--)
+	{
+		FBloomUpCB BloomUpStruct;
+		BloomUpStruct.BufferASizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 1)));
+		BloomUpStruct.BufferBSizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 2)));
+		BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
+		BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
+		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
+		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
+		RHI::FCBData BloomUpPassData;
+		BloomUpPassData.DataBuffer = reinterpret_cast<void*>(&BloomUpStruct);
+		BloomUpPassData.BufferSize = sizeof(BloomUpStruct);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->BloomUpMat[i].get(), &BloomUpPassData);
+	}
+
+	// sun merge
+	FSunMergeCB SunMergeStruct;
+	SunMergeStruct.BloomUpSizeAndInvSize = BufferSizeAndInvSize / 8.f;
+	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
+	RHI::FCBData SunMergePassData;
+	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
+	SunMergePassData.BufferSize = sizeof(SunMergeStruct);
+	GDynamicRHI->UpdateConstantBuffer(FrameRes.PastProcessTriangleRes->SunMerge.get(), &SunMergePassData);
+
+
 }

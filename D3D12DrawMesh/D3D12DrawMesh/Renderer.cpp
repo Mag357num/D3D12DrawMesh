@@ -47,9 +47,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-	RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->BloomSetupMat->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->PostProcessTriangleRes->BloomSetupMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PostProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomSetupMat->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->PastProcessTriangleRes->BloomSetupMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
 	RHI->TransitTextureState(FrameRes->BloomSetupMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom down
@@ -66,9 +66,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->ToneMappingMat->PSO.get());
-	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->PostProcessTriangleRes->ToneMappingMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PostProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->ToneMappingMat->PSO.get());
+	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->PastProcessTriangleRes->ToneMappingMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
 	
 	// transition
 	RHI->TransitTextureState(FrameRes->ShadowMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE);

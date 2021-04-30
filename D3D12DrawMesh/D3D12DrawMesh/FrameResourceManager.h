@@ -18,13 +18,14 @@ class FFrameResource
 public:
 	std::vector<FMeshActorFrameRes> MeshActorFrameReses;
 	
-	uint32 ShadowMapSize = 8192;
+	const uint32 ShadowMapSize = 8192;
+
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
 
-	shared_ptr<FMesh> PostProcessTriangle;
-	shared_ptr<FMeshRes> PostProcessTriangleRes;
+	shared_ptr<FMesh> PastProcessTriangle;
+	shared_ptr<FMeshRes> PastProcessTriangleRes;
 
 	shared_ptr<FTexture> SceneColorMap;
 	shared_ptr<FTexture> BloomSetupMap;

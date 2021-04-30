@@ -61,8 +61,9 @@ namespace RHI
 		shared_ptr<FMaterial> ShadowMat;
 		shared_ptr<FMaterial> SceneColorMat;
 		shared_ptr<FMaterial> BloomSetupMat;
-		shared_ptr<FMaterial> BloomDownMat;
-		shared_ptr<FMaterial> BloomUpMat;
+		shared_ptr<FMaterial> BloomDownMat[4];
+		shared_ptr<FMaterial> BloomUpMat[3];
+		shared_ptr<FMaterial> SunMerge;
 		shared_ptr<FMaterial> ToneMappingMat;
 	};
 
@@ -106,6 +107,33 @@ namespace RHI
 		float padding[3];
 	};
 
+	struct FBloomSetupCB
+	{
+		FVector4 BufferSizeAndInvSize;
+		float BloomThreshold;
+	};
+
+	struct FBloomDownCB
+	{
+		FVector4 BufferSizeAndInvSize;
+		float BloomDownScale;
+	};
+
+	struct FBloomUpCB
+	{
+		FVector4 BufferASizeAndInvSize;
+		FVector4 BufferBSizeAndInvSize;
+		FVector4 BloomTintA;
+		FVector4 BloomTintB;
+		FVector2 BloomUpScales;
+	};
+
+	struct FSunMergeCB
+	{
+		FVector4 BloomUpSizeAndInvSize;
+		FVector BloomColor;
+	};
+
 	enum class FTextureType
 	{
 		SHADOW_MAP_TT = 0,
@@ -135,13 +163,14 @@ namespace RHI
 		BLOOM_SETUP_PT = 2,
 		BLOOM_DOWN_PT = 3,
 		BLOOM_UP_PT = 4,
-		TONEMAPPING_PT = 5,
+		SUM_MERGE_PT = 5,
+		TONEMAPPING_PT = 6,
 	};
 
 	enum class FMeshType_deprecated
 	{
 		SCENE_MESH_FT = 0,
-		POSTPROCESS_MESH_FT = 1,
+		PastProcess_MESH_FT = 1,
 	};
 
 	enum class FRESOURCE_STATES

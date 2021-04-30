@@ -4,7 +4,7 @@ SamplerState BloomDownSourceSampler : register(s0);
 cbuffer BloomDownConstantBuffer : register(b0)
 {
     float4 BufferSizeAndInvSize;
-    float BloomDownScale;   
+    float BloomDownScale;
 };
 
 struct VSInput
