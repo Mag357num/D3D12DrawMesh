@@ -322,42 +322,29 @@ namespace RHI
 
 	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)
 	{
-		ComPtr<ID3D12Resource> D3D12Resource;
-
-		if (FDX12Texture* DX12Res = dynamic_cast<FDX12Texture*>(Tex))
-		{
-			D3D12Resource = DX12Res->DX12Texture;
-		}
-		else
-		{
-			throw std::exception("transit texture state failed!");
-		}
-
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(D3D12Resource.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Tex->As<FDX12Texture>()->DX12Texture.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
 	}
 
 	void FDX12DynamicRHI::CommitTextureAsView(FTexture* Tex, FResViewType Type)
 	{
-		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
-
 		switch (Type)
 		{
 		case RHI::FResViewType::DSV_RVT:
 		{
 			D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
-			Desc.Format = DX12Tex->DsvFormat;
+			Desc.Format = Tex->As<FDX12Texture>()->DsvFormat;
 			Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-			CreateDsvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->DsvHandle.get());
+			CreateDsvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Desc, Tex->DsvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::SRV_RVT:
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
-			Desc.Format = DX12Tex->SrvFormat;
+			Desc.Format = Tex->As<FDX12Texture>()->SrvFormat;
 			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			Desc.Texture2D.MipLevels = 1;
 			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->SrvHandle.get());
+			CreateSrvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Desc, Tex->SrvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::RTV_RVT:
@@ -380,8 +367,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::ClearDepthStencil(FTexture* Tex)
 	{
-		FDX12Texture* DX12Tex = dynamic_cast<FDX12Texture*>(Tex);
-		CommandLists[0].CommandList->ClearDepthStencilView(DX12Tex->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(Tex->As<FDX12Texture>()->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -469,9 +455,8 @@ namespace RHI
 	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreateVertexShader(const std::wstring& FileName)
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
-		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
 		ID3DBlob* ErrorMsg = nullptr;
-		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, &ErrorMsg);
+		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "VSMain", "vs_5_0", GetEnableShaderDebugFlags(), 0, &Shader->As<FDX12Shader>()->Shader, &ErrorMsg);
 		if (FAILED(HR))
 		{
 			if (ErrorMsg)
@@ -488,9 +473,8 @@ namespace RHI
 	shared_ptr<RHI::FShader> FDX12DynamicRHI::CreatePixelShader(const std::wstring& FileName)
 	{
 		shared_ptr<FShader> Shader = make_shared<FDX12Shader>();
-		FDX12Shader* DX12Shader = dynamic_cast<FDX12Shader*>(Shader.get());
 		ID3DBlob* ErrorMsg = nullptr;
-		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &DX12Shader->Shader, nullptr);
+		auto HR = D3DCompileFromFile(FileName.c_str(), nullptr, nullptr, "PSMain", "ps_5_0", GetEnableShaderDebugFlags(), 0, &Shader->As<FDX12Shader>()->Shader, nullptr);
 		if (FAILED(HR))
 		{
 			if (ErrorMsg)
