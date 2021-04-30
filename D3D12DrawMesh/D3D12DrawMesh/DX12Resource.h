@@ -45,11 +45,6 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandleInHeap;
 	};
 
-	struct FDX12MeshRes : public FMeshRes
-	{
-		ComPtr<ID3D12RootSignature> RootSignature;
-	};
-
 	struct FDX12Mesh : public FMesh
 	{
 		ComPtr<ID3D12Resource> VertexBuffer;
@@ -58,5 +53,10 @@ namespace RHI
 		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
 		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
 		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
+	};
+
+	struct FDX12RootSignatrue : public FRootSignatrue
+	{
+		ComPtr<ID3D12RootSignature> RootSignature;
 	};
 }

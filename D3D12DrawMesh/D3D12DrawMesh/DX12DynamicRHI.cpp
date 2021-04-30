@@ -133,7 +133,7 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
 	}
 
-	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FPassType Type, FMeshRes* MeshRes)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
 
@@ -170,17 +170,13 @@ namespace RHI
 		PsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		PsoDesc.SampleDesc.Count = 1;
 
-		PsoDesc.pRootSignature = MeshRes->As<FDX12MeshRes>()->RootSignature.Get();
-		PsoDesc.VS = CD3DX12_SHADER_BYTECODE(MeshRes->As<FDX12MeshRes>()->VS->As<FDX12Shader>()->Shader.Get());
-		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(MeshRes->As<FDX12MeshRes>()->PS->As<FDX12Shader>()->Shader.Get());
+		PsoDesc.pRootSignature = Sig->As<FDX12RootSignatrue>()->RootSignature.Get();
+		PsoDesc.VS = CD3DX12_SHADER_BYTECODE(VS->As<FDX12Shader>()->Shader.Get());
+		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(PS->As<FDX12Shader>()->Shader.Get());
 
 
 		switch (Type)
 		{
-		case RHI::FPassType::LDR_OUTPUT_RT_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
 		case RHI::FPassType::SHADOW_PT:
 			PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0); // TODO: could delete
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
@@ -190,6 +186,22 @@ namespace RHI
 		case RHI::FPassType::SCENE_COLOR_PT:
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs1, _countof(InputElementDescs1) };
+			break;
+		case RHI::FPassType::BLOOM_SETUP_PT:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
+			break;
+		case RHI::FPassType::BLOOM_DOWN_PT:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
+			break;
+		case RHI::FPassType::BLOOM_UP_PT:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
+			break;
+		case RHI::FPassType::TONEMAPPING_PT:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
 		default:
 			break;
@@ -208,29 +220,40 @@ namespace RHI
 	// some resource store at FMeshRes some store at FFrameResource
 	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes)
 	{
-		CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->As<FDX12MeshRes>()->RootSignature.Get());
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
 		switch (Type)
 		{
 		case RHI::FPassType::SHADOW_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->ShadowCB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->ShadowMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->ShadowMat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::SCENE_COLOR_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->SceneColorCB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->SceneColorMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->SceneColorMat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->ShadowMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
-		case RHI::FPassType::LDR_OUTPUT_RT_PT:
+		case RHI::FPassType::TONEMAPPING_PT:
+			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->ToneMappingMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle); // TODO: change
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
+		case RHI::FPassType::BLOOM_SETUP_PT:
+
+			break;
+		case RHI::FPassType::BLOOM_DOWN_PT:
+
+			break;
+		case RHI::FPassType::BLOOM_UP_PT:
+
+			break;
 		default:
 			break;
 		}
@@ -279,8 +302,8 @@ namespace RHI
 
 	void FDX12DynamicRHI::UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData)
 	{
-		FDX12CB* DX12BaseCB = dynamic_cast<FDX12CB*>(MeshRes->SceneColorCB.get());
-		FDX12CB* DX12ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowCB.get());
+		FDX12CB* DX12BaseCB = dynamic_cast<FDX12CB*>(MeshRes->SceneColorMat->CB.get());
+		FDX12CB* DX12ShadowCB = dynamic_cast<FDX12CB*>(MeshRes->ShadowMat->CB.get());
 
 		memcpy(DX12BaseCB->UploadBufferVirtualAddress, BaseData->DataBuffer, BaseData->BufferSize);
 		memcpy(DX12ShadowCB->UploadBufferVirtualAddress, ShadowData->DataBuffer, ShadowData->BufferSize);
@@ -580,7 +603,7 @@ namespace RHI
 	}
 
 	ComPtr<ID3D12RootSignature> FDX12DynamicRHI::CreateDX12RootSig(FPassType Type)
-{
+	{
 		ComPtr<ID3D12RootSignature> RootSignature;
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
 		ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
@@ -601,19 +624,6 @@ namespace RHI
 
 		switch (Type)
 		{
-		case RHI::FPassType::LDR_OUTPUT_RT_PT:
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
 		case RHI::FPassType::SHADOW_PT:
 		case RHI::FPassType::SCENE_COLOR_PT:
 			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
@@ -621,6 +631,28 @@ namespace RHI
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
 			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
+			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+
+			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
+			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
+			break;
+		case RHI::FPassType::BLOOM_SETUP_PT:
+
+			break;
+		case RHI::FPassType::BLOOM_DOWN_PT:
+
+			break;
+		case RHI::FPassType::BLOOM_UP_PT:
+
+			break;
+		case RHI::FPassType::TONEMAPPING_PT:
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
+			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
+			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
+
+			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
 			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
 			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
 
@@ -648,7 +680,10 @@ namespace RHI
 	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor)
 	{
 		MeshActorFrameResource.Mesh = CreateMesh(MeshActor);
-		MeshActorFrameResource.MeshRes = CreateMeshRes(L"Shadow_SceneColor.hlsl", 256, FPassType::SCENE_COLOR_PT);
+
+		MeshActorFrameResource.MeshRes = CreateMeshRes();
+		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, FPassType::SHADOW_PT);
+		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, FPassType::SCENE_COLOR_PT);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -770,38 +805,69 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type)
+	shared_ptr<RHI::FRootSignatrue> FDX12DynamicRHI::CreateRootSignatrue(FPassType Type)
 	{
-		shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
+		shared_ptr<FDX12RootSignatrue> Sig = make_shared<FDX12RootSignatrue>();
+		Sig->RootSignature = CreateDX12RootSig(Type);
+		return Sig;
+	}
+
+	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type)
+	{
+		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
+		Mat->Type = Type;
+
 		WCHAR assetsPath[512];
 		GetAssetsPath(assetsPath, _countof(assetsPath));
 		std::wstring m_assetsPath = assetsPath + ShaderFileName;
+		Mat->VS = CreateVertexShader(m_assetsPath.c_str());
+		Mat->PS = CreatePixelShader(m_assetsPath.c_str());
+		Mat->Sig = CreateRootSignatrue(Type);
+		Mat->PSO = CreatePso(Type, Mat->VS.get(), Mat->PS.get(), Mat->Sig.get());
+		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
 
-		// 1. create pso
-		// 1.1 shader
-		MeshRes->As<FDX12MeshRes>()->VS = CreateVertexShader(m_assetsPath.c_str());
-		MeshRes->As<FDX12MeshRes>()->PS = CreatePixelShader(m_assetsPath.c_str());
-		// 1.2 root signature
-		MeshRes->As<FDX12MeshRes>()->RootSignature = CreateDX12RootSig(Type);
-		switch (Type) // TODO: refactor here
-		{
-		case RHI::FPassType::LDR_OUTPUT_RT_PT:
-			MeshRes->As<FDX12MeshRes>()->OutputPassPso = CreatePso(FPassType::LDR_OUTPUT_RT_PT, MeshRes.get());
-			break;
-		case RHI::FPassType::SHADOW_PT:
-		case RHI::FPassType::SCENE_COLOR_PT:
-			MeshRes->As<FDX12MeshRes>()->ShadowPassPso = CreatePso(FPassType::SHADOW_PT, MeshRes.get());
-			MeshRes->As<FDX12MeshRes>()->SceneColorPso = CreatePso(FPassType::SCENE_COLOR_PT, MeshRes.get());
-			break;
-		default:
-			break;
-		}
-		// 2. create cb
-		MeshRes->As<FDX12MeshRes>()->SceneColorCB = CreateConstantBuffer(ConstantBufferSize); // TODO: no need to create all
-		MeshRes->As<FDX12MeshRes>()->ShadowCB = CreateConstantBuffer(ConstantBufferSize);
-		MeshRes->As<FDX12MeshRes>()->OutputCB = CreateConstantBuffer(ConstantBufferSize);
+		return Mat;
+	}
 
-		return MeshRes;
+	//shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FMeshType_deprecated Type)
+	//{
+	//	shared_ptr<FMeshRes> MeshRes = make_shared<FDX12MeshRes>();
+	//	WCHAR assetsPath[512];
+	//	GetAssetsPath(assetsPath, _countof(assetsPath));
+	//	std::wstring m_assetsPath = assetsPath + ShaderFileName;
+
+	//	// 1. create pso
+	//	// 1.1 shader
+	//	MeshRes->As<FDX12MeshRes>()->VS = CreateVertexShader(m_assetsPath.c_str());
+	//	MeshRes->As<FDX12MeshRes>()->PS = CreatePixelShader(m_assetsPath.c_str());
+	//	// 1.2 root signature
+	//	MeshRes->As<FDX12MeshRes>()->RootSignature = CreateDX12RootSig(Type);
+	//	switch (Type) // TODO: refactor here
+	//	{
+	//	case RHI::FMeshType_deprecated::POSTPROCESS_MESH_FT:
+	//		MeshRes->As<FDX12MeshRes>()->BloomSetupPso = CreatePso(FPassType::BLOOM_SETUP_PT, MeshRes.get());
+	//		MeshRes->As<FDX12MeshRes>()->BloomDownPso = CreatePso(FPassType::BLOOM_DOWN_PT, MeshRes.get());
+	//		MeshRes->As<FDX12MeshRes>()->BloomUpPso = CreatePso(FPassType::BLOOM_UP_PT, MeshRes.get());
+	//		MeshRes->As<FDX12MeshRes>()->OutputPassPso = CreatePso(FPassType::TONEMAPPING_PT, MeshRes.get());
+	//		break;
+	//	case RHI::FMeshType_deprecated::SCENE_MESH_FT:
+	//		MeshRes->As<FDX12MeshRes>()->ShadowPassPso = CreatePso(FPassType::SHADOW_PT, MeshRes.get());
+	//		MeshRes->As<FDX12MeshRes>()->SceneColorPso = CreatePso(FPassType::SCENE_COLOR_PT, MeshRes.get());
+	//		break;
+	//	default:
+	//		break;
+	//	}
+	//	// 2. create cb
+	//	MeshRes->As<FDX12MeshRes>()->SceneColorCB = CreateConstantBuffer(ConstantBufferSize); // TODO: no need to create all
+	//	MeshRes->As<FDX12MeshRes>()->ShadowCB = CreateConstantBuffer(ConstantBufferSize);
+	//	MeshRes->As<FDX12MeshRes>()->OutputCB = CreateConstantBuffer(ConstantBufferSize);
+
+	//	return MeshRes;
+	//}
+
+	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes()
+	{
+		return make_shared<FMeshRes>();
 	}
 
 	void FDX12DynamicRHI::CreateFenceAndEvent()

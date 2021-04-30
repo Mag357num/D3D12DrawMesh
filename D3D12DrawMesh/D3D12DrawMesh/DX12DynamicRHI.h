@@ -33,13 +33,15 @@ namespace RHI
 		// Resource Create
 		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) override;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) override;
-		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) override;
+		//virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FMeshType_deprecated Type) override;
+		virtual shared_ptr<FMeshRes> CreateMeshRes() override;
+		virtual shared_ptr<FMaterial> CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
-		virtual void DrawMesh(FMesh* Mesh) override;
+		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
@@ -47,12 +49,13 @@ namespace RHI
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
+		virtual void DrawMesh(FMesh* Mesh) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
 
 		// Pipeline
-		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FMeshRes* MeshRes) override;
+		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig) override;
 		virtual void ChoosePipelineState(FPipelineState* Pso) override;
 
 		// shader

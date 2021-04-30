@@ -41,16 +41,29 @@ namespace RHI
 		uint32 IndexNum;
 	};
 
-	struct FMeshRes : public FRHIResource
+	struct FRootSignatrue : public FRHIResource
 	{
-		shared_ptr<FCB> ShadowCB;
-		shared_ptr<FCB> SceneColorCB;
-		shared_ptr<FCB> OutputCB;
-		shared_ptr<FPipelineState> ShadowPassPso;
-		shared_ptr<FPipelineState> OutputPassPso;
-		shared_ptr<FPipelineState> SceneColorPso;
+	};
+
+	enum class FPassType;
+	struct FMaterial : public FRHIResource
+	{
+		FPassType Type;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
+		shared_ptr<FCB> CB;
+		shared_ptr<RHI::FPipelineState> PSO;
+		shared_ptr<FRootSignatrue> Sig;
+	};
+
+	struct FMeshRes : public FRHIResource
+	{
+		shared_ptr<FMaterial> ShadowMat;
+		shared_ptr<FMaterial> SceneColorMat;
+		shared_ptr<FMaterial> BloomSetupMat;
+		shared_ptr<FMaterial> BloomDownMat;
+		shared_ptr<FMaterial> BloomUpMat;
+		shared_ptr<FMaterial> ToneMappingMat;
 	};
 
 	struct FHandle : public FRHIResource
@@ -117,9 +130,18 @@ namespace RHI
 
 	enum class FPassType
 	{
-		LDR_OUTPUT_RT_PT = 0,
-		SHADOW_PT = 1,
-		SCENE_COLOR_PT = 2,
+		SHADOW_PT = 0,
+		SCENE_COLOR_PT = 1,
+		BLOOM_SETUP_PT = 2,
+		BLOOM_DOWN_PT = 3,
+		BLOOM_UP_PT = 4,
+		TONEMAPPING_PT = 5,
+	};
+
+	enum class FMeshType_deprecated
+	{
+		SCENE_MESH_FT = 0,
+		POSTPROCESS_MESH_FT = 1,
 	};
 
 	enum class FRESOURCE_STATES

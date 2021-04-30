@@ -12,12 +12,6 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
 		// create postprocess mesh
-		//vector<float> TriangleVertices =
-		//{ 
-		//	-3.f, -1.f, 0.0f, -1.f,  1.f,
-		//	 1.f,  3.f, 0.0f,  1.f, -1.f,
-		//	 1.f, -1.f, 0.0f,  1.f,  1.f,
-		//};
 		vector<float> TriangleVertices =
 		{
 			 1.f, -1.f, 0.0f,  1.f,  1.f,
@@ -27,7 +21,11 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 
 		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
 		FrameResource.PostProcessTriangle = GDynamicRHI->CreateMesh(Actor);
-		FrameResource.PostProcessTriangleRes = GDynamicRHI->CreateMeshRes(L"ToneMapping.hlsl", 256, FPassType::LDR_OUTPUT_RT_PT);
+		FrameResource.PostProcessTriangleRes = GDynamicRHI->CreateMeshRes();
+		FrameResource.PostProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, FPassType::TONEMAPPING_PT);
+		//FrameResource.PostProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_SETUP_PT);
+		//FrameResource.PostProcessTriangleRes->BloomDownMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_DOWN_PT);
+		//FrameResource.PostProcessTriangleRes->BloomUpMat = GDynamicRHI->CreateMaterial(L".hlsl", 256, FPassType::BLOOM_UP_PT);
 
 		// create and commit shadow map
 		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
@@ -169,13 +167,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		BasePassData.BufferSize = sizeof(BaseCB);
 
 		// shadow pass cb
-		FShadowMapCB ShadowCB = BaseCB;
-		ShadowCB.CamViewProj = glm::transpose(LightProj * LightView);
-		ShadowCB.IsShadowMap = TRUE;
+		FShadowMapCB ShadowCbStruct = BaseCB;
+		ShadowCbStruct.CamViewProj = glm::transpose(LightProj * LightView);
+		ShadowCbStruct.IsShadowMap = TRUE;
 
 		RHI::FCBData ShadowPassData;
-		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCB);
-		ShadowPassData.BufferSize = sizeof(ShadowCB);
+		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
+		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
 
 		GDynamicRHI->UpdateConstantBuffer(FrameResource.MeshActorFrameReses[MeshIndex].MeshRes.get(),
 			&BasePassData, &ShadowPassData); // MeshActor in Scene reflect to MeshActorFrameResource by order
