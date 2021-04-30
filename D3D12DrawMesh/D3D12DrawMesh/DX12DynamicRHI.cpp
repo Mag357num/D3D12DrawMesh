@@ -199,6 +199,10 @@ namespace RHI
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
+		case RHI::FPassType::SUM_MERGE_PT:
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
+			break;
 		case RHI::FPassType::TONEMAPPING_PT:
 			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
