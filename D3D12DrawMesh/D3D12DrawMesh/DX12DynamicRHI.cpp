@@ -244,7 +244,7 @@ namespace RHI
 
 		case RHI::FPassType::BLOOM_SETUP_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_DOWN_PT:
