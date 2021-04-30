@@ -12,17 +12,17 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FFrameResource& FrameResource = GetFrameRes()[FrameIndex];
 
 		// create and commit shadow map
-		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.GetShadowMapSize(), FrameResource.GetShadowMapSize());
-		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FResViewType::DSV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FResViewType::SRV_RVT);
+		FrameResource.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.GetShadowMapSize(), FrameResource.GetShadowMapSize()));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetShadowMap().get(), FResViewType::DSV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetShadowMap().get(), FResViewType::SRV_RVT);
 
 		// create and commit Ds map
-		FrameResource.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
-		GDynamicRHI->CommitTextureAsView(FrameResource.DepthStencilMap.get(), FResViewType::DSV_RVT);
+		FrameResource.SetDsMap(GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetDsMap().get(), FResViewType::DSV_RVT);
 
 		// create and commit sampler
-		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST);
-		FrameResource.WarpSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST);
+		FrameResource.SetClampSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST));
+		FrameResource.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
 
 		// create and commit scene color
 		FrameResource.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());

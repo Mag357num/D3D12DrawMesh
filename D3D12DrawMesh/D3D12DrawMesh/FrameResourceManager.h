@@ -20,6 +20,10 @@ private:
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
 	vector<FFrameMesh> FrameMeshes;
 
+	shared_ptr<FTexture> ShadowMap;
+	shared_ptr<FTexture> DepthStencilMap;
+	shared_ptr<FSampler> ClampSampler;
+	shared_ptr<FSampler> WarpSampler;
 public:
 	const uint32& GetShadowMapSize() const { return ShadowMapSize; }
 	void SetPostProcessTriangle( shared_ptr<FMesh>& Mesh ) { PostProcessTriangle = Mesh; }
@@ -28,11 +32,16 @@ public:
 	const shared_ptr<FMeshRes>& GetPostProcessTriangleRes() const { return PostProcessTriangleRes; }
 	vector<FFrameMesh>& GetFrameMeshes() { return FrameMeshes; }
 
+	void SetShadowMap( const shared_ptr<FTexture>& Tex ) { ShadowMap = Tex; }
+	void SetDsMap( const shared_ptr<FTexture>& Tex ) { DepthStencilMap = Tex; }
+	void SetClampSampler( const shared_ptr<FSampler>& Sam ) { ClampSampler = Sam; }
+	void SetWarpSampler( const shared_ptr<FSampler>& Sam ) { WarpSampler = Sam; }
+	shared_ptr<FTexture>& GetShadowMap() { return ShadowMap; }
+	shared_ptr<FTexture>& GetDsMap() { return DepthStencilMap; }
+	shared_ptr<FSampler>& GetClampSampler() { return ClampSampler; }
+	shared_ptr<FSampler>& GetWarpSampler() { return WarpSampler; }
+
 public: // TODO: encapsulate those below in array
-	shared_ptr<FTexture> ShadowMap;
-	shared_ptr<FTexture> DepthStencilMap;
-	shared_ptr<FSampler> ClampSampler;
-	shared_ptr<FSampler> WarpSampler;
 	shared_ptr<FTexture> SceneColorMap;
 	shared_ptr<FTexture> BloomSetupMap;
 	shared_ptr<FTexture> BloomDownMap8;

@@ -230,43 +230,43 @@ namespace RHI
 		{
 		case RHI::FPassType::SHADOW_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::SCENE_COLOR_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->ShadowMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->GetShadowMap()->SrvHandle->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::BLOOM_SETUP_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_DOWN_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_UP_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->WarpSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->GetWarpSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::SUN_MERGE_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->WarpSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->GetWarpSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::TONEMAPPING_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle); // TODO: change
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		default:
