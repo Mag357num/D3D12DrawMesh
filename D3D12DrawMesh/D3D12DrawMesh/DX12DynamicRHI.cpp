@@ -242,23 +242,36 @@ namespace RHI
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
-		case RHI::FPassType::TONEMAPPING_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle); // TODO: change
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
-			break;
-
 		case RHI::FPassType::BLOOM_SETUP_PT:
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_DOWN_PT:
-
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 		case RHI::FPassType::BLOOM_UP_PT:
-
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->WarpSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
+		case RHI::FPassType::SUM_MERGE_PT:
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->WarpSampler->As<FDX12Sampler>()->SamplerHandle);
+			break;
+		case RHI::FPassType::TONEMAPPING_PT:
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle); // TODO: change
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
+			break;
+
 		default:
 			break;
 		}
@@ -751,8 +764,9 @@ namespace RHI
 		MeshActorFrameResource.Mesh = CreateMesh(MeshActor);
 
 		MeshActorFrameResource.MeshRes = CreateMeshRes();
-		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, FPassType::SHADOW_PT);
-		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, FPassType::SCENE_COLOR_PT);
+		vector<shared_ptr<FHandle>> Empty; // TODO: refactor
+		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, Empty, FPassType::SHADOW_PT);
+		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, Empty, FPassType::SCENE_COLOR_PT);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -881,7 +895,7 @@ namespace RHI
 		return Sig;
 	}
 
-	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type)
+	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type)
 	{
 		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
 		Mat->Type = Type;
@@ -894,7 +908,7 @@ namespace RHI
 		Mat->Sig = CreateRootSignatrue(Type);
 		Mat->PSO = CreatePso(Type, Mat->VS.get(), Mat->PS.get(), Mat->Sig.get());
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
-
+		Mat->TexHandles = TexHandles;
 		return Mat;
 	}
 

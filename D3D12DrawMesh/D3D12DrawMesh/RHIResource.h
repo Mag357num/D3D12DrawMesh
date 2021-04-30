@@ -45,6 +45,10 @@ namespace RHI
 	{
 	};
 
+	struct FHandle : public FRHIResource
+	{
+	};
+
 	enum class FPassType;
 	struct FMaterial : public FRHIResource
 	{
@@ -54,6 +58,7 @@ namespace RHI
 		shared_ptr<FCB> CB;
 		shared_ptr<RHI::FPipelineState> PSO;
 		shared_ptr<FRootSignatrue> Sig;
+		vector<shared_ptr<FHandle>> TexHandles;
 	};
 
 	struct FMeshRes : public FRHIResource
@@ -65,10 +70,6 @@ namespace RHI
 		shared_ptr<FMaterial> BloomUpMat[3];
 		shared_ptr<FMaterial> SunMerge;
 		shared_ptr<FMaterial> ToneMappingMat;
-	};
-
-	struct FHandle : public FRHIResource
-	{
 	};
 
 	struct FTexture : public FRHIResource

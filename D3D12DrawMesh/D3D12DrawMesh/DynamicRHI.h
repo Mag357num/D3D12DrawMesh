@@ -33,7 +33,7 @@ namespace RHI
 		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) = 0;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) = 0; // meshActor is mesh data, can read from file or write in code
 		virtual shared_ptr<FMeshRes> CreateMeshRes() = 0;
-		virtual shared_ptr<FMaterial> CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) = 0;
+		virtual shared_ptr<FMaterial> CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;

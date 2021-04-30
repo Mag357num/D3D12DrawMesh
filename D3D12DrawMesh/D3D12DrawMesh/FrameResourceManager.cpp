@@ -11,30 +11,6 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 	{
 		FFrameResource& FrameResource = FrameResources[FrameIndex];
 
-		// create pastprocess mesh
-		vector<float> TriangleVertices =
-		{
-			 1.f, -1.f, 0.0f,  1.f,  1.f,
-			 1.f,  3.f, 0.0f,  1.f, -1.f,
-			-3.f, -1.f, 0.0f, -1.f,  1.f,
-		};
-
-		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
-		FrameResource.PastProcessTriangle = GDynamicRHI->CreateMesh(Actor);
-		FrameResource.PastProcessTriangleRes = GDynamicRHI->CreateMeshRes();
-		FrameResource.PastProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, FPassType::TONEMAPPING_PT);
-		FrameResource.PastProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, FPassType::BLOOM_SETUP_PT);
-		for (uint32 i = 0; i < 4; i++)
-		{
-			FrameResource.PastProcessTriangleRes->BloomDownMat[i] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, FPassType::BLOOM_DOWN_PT);
-		}
-		for (uint32 i = 0; i < 4; i++)
-		{
-			FrameResource.PastProcessTriangleRes->BloomUpMat[i] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, FPassType::BLOOM_UP_PT);
-		}
-		FrameResource.PastProcessTriangleRes->SunMerge = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, FPassType::SUM_MERGE_PT);
-
-
 		// create and commit shadow map
 		FrameResource.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.ShadowMapSize, FrameResource.ShadowMapSize);
 		GDynamicRHI->CommitTextureAsView(FrameResource.ShadowMap.get(), FResViewType::DSV_RVT);
@@ -46,6 +22,7 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 
 		// create and commit sampler
 		FrameResource.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST);
+		FrameResource.WarpSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST);
 
 		// create and commit scene color
 		FrameResource.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
@@ -89,6 +66,68 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap4.get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap4.get(), FResViewType::SRV_RVT);
 
+		// create pastprocess mesh and mesh resource
+		vector<float> TriangleVertices =
+		{
+			 1.f, -1.f, 0.0f,  1.f,  1.f,
+			 1.f,  3.f, 0.0f,  1.f, -1.f,
+			-3.f, -1.f, 0.0f, -1.f,  1.f,
+		};
+		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
+		FrameResource.PastProcessTriangle = GDynamicRHI->CreateMesh(Actor);
+		FrameResource.PastProcessTriangleRes = GDynamicRHI->CreateMeshRes();
+
+		// create pastprocess material
+		// bloom setup
+		vector<shared_ptr<FHandle>> TexHandles;
+		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, TexHandles, FPassType::BLOOM_SETUP_PT);
+		TexHandles.clear();
+
+		// bloom down
+		TexHandles.push_back(FrameResource.BloomSetupMap->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TexHandles.clear();
+
+		TexHandles.push_back(FrameResource.BloomDownMap8->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TexHandles.clear();
+
+		TexHandles.push_back(FrameResource.BloomDownMap16->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TexHandles.clear();
+
+		TexHandles.push_back(FrameResource.BloomDownMap32->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TexHandles.clear();
+
+		// bloom up
+		TexHandles.push_back(FrameResource.BloomDownMap32->SrvHandle);
+		TexHandles.push_back(FrameResource.BloomDownMap64->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TexHandles.clear();
+
+		TexHandles.push_back(FrameResource.BloomDownMap16->SrvHandle);
+		TexHandles.push_back(FrameResource.BloomUpMap32->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TexHandles.clear();
+
+		TexHandles.push_back(FrameResource.BloomDownMap8->SrvHandle);
+		TexHandles.push_back(FrameResource.BloomUpMap16->SrvHandle);
+		FrameResource.PastProcessTriangleRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TexHandles.clear();
+
+		// sun merge
+		TexHandles.push_back(FrameResource.BloomSetupMap->SrvHandle);
+		TexHandles.push_back(FrameResource.BloomUpMap8->SrvHandle);
+		FrameResource.PastProcessTriangleRes->SunMerge = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles, FPassType::SUM_MERGE_PT);
+		TexHandles.clear();
+
+		// tonemapping
+		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
+		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
+		FrameResource.PastProcessTriangleRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles, FPassType::TONEMAPPING_PT);
+		TexHandles.clear();
 	}
 }
 

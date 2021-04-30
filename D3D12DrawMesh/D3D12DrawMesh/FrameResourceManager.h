@@ -23,6 +23,7 @@ public:
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
+	shared_ptr<FSampler> WarpSampler;
 
 	shared_ptr<FMesh> PastProcessTriangle;
 	shared_ptr<FMeshRes> PastProcessTriangleRes;
