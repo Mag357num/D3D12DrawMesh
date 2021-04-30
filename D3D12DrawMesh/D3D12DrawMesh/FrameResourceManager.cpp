@@ -25,46 +25,34 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FrameResource.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
 
 		// create and commit scene color
-		FrameResource.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
-		GDynamicRHI->CommitTextureAsView(FrameResource.SceneColorMap.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.SceneColorMap.get(), FResViewType::SRV_RVT);
+		FrameResource.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::SRV_RVT);
 
 		// create and commit bloom down and up texture
-		FrameResource.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomSetupMap.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomSetupMap.get(), FResViewType::SRV_RVT);
+		FrameResource.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::SRV_RVT);
 
-		FrameResource.BloomDownMap8 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 8, GDynamicRHI->GetHeight() / 8);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap8.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap8.get(), FResViewType::SRV_RVT);
+		for (uint32 i = 0; i < 4; i++)
+		{
+			uint32 ZoomIn = static_cast<uint32>(pow( 2, 3 + i ));
+			FrameResource.GetBloomDownMaps().push_back(GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ));
+			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::RTV_RVT );
+			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::SRV_RVT );
+		}
 
-		FrameResource.BloomDownMap16 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 16, GDynamicRHI->GetHeight() / 16);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap16.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap16.get(), FResViewType::SRV_RVT);
-
-		FrameResource.BloomDownMap32 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 32, GDynamicRHI->GetHeight() / 32);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap32.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap32.get(), FResViewType::SRV_RVT);
-
-		FrameResource.BloomDownMap64 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 64, GDynamicRHI->GetHeight() / 64);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap64.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomDownMap64.get(), FResViewType::SRV_RVT);
+		for (int i = 4; i > 1; i--)
+		{
+			uint32 ZoomIn = static_cast<uint32>(pow( 2, 1 + i ));
+			FrameResource.GetBloomUpMaps().push_back( GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ) );
+			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::RTV_RVT );
+			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::SRV_RVT );
+		}
 		
-		FrameResource.BloomUpMap32 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 32, GDynamicRHI->GetHeight() / 32);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap32.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap32.get(), FResViewType::SRV_RVT);
-		
-		FrameResource.BloomUpMap16 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 16, GDynamicRHI->GetHeight() / 16);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap16.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap16.get(), FResViewType::SRV_RVT);
-
-		FrameResource.BloomUpMap8 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 8, GDynamicRHI->GetHeight() / 8);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap8.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap8.get(), FResViewType::SRV_RVT);
-		
-		FrameResource.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
-		GDynamicRHI->CommitTextureAsView(FrameResource.SunMergeMap.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.SunMergeMap.get(), FResViewType::SRV_RVT);
+		FrameResource.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::SRV_RVT);
 
 		// create pastprocess mesh and mesh resource
 		vector<float> TriangleVertices =
@@ -80,52 +68,52 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		// create pastprocess material
 		// bloom setup
 		vector<shared_ptr<FHandle>> TexHandles;
-		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
+		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomSetupMat = GDynamicRHI->CreateMaterial( L"BloomSetup.hlsl", 256, TexHandles, FPassType::BLOOM_SETUP_PT );
 		TexHandles.clear();
 
 		// bloom down
-		TexHandles.push_back(FrameResource.BloomSetupMap->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
 		TexHandles.clear();
 
-		TexHandles.push_back(FrameResource.BloomDownMap8->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
 		TexHandles.clear();
 
-		TexHandles.push_back(FrameResource.BloomDownMap16->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
 		TexHandles.clear();
 
-		TexHandles.push_back(FrameResource.BloomDownMap32->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
 		TexHandles.clear();
 
 		// bloom up
-		TexHandles.push_back(FrameResource.BloomDownMap32->SrvHandle);
-		TexHandles.push_back(FrameResource.BloomDownMap64->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[3]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
 		TexHandles.clear();
 
-		TexHandles.push_back(FrameResource.BloomDownMap16->SrvHandle);
-		TexHandles.push_back(FrameResource.BloomUpMap32->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomUpMaps()[0]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
 		TexHandles.clear();
 
-		TexHandles.push_back(FrameResource.BloomDownMap8->SrvHandle);
-		TexHandles.push_back(FrameResource.BloomUpMap16->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomUpMaps()[1]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
 		TexHandles.clear();
 
 		// sun merge
-		TexHandles.push_back(FrameResource.BloomSetupMap->SrvHandle);
-		TexHandles.push_back(FrameResource.BloomUpMap8->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
+		TexHandles.push_back(FrameResource.GetBloomUpMaps()[2]->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles, FPassType::SUN_MERGE_PT);
 		TexHandles.clear();
 
 		// tonemapping
-		TexHandles.push_back(FrameResource.SceneColorMap->SrvHandle);
-		TexHandles.push_back(FrameResource.SunMergeMap->SrvHandle);
+		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
+		TexHandles.push_back(FrameResource.GetSunMergeMap()->SrvHandle);
 		FrameResource.GetPostProcessTriangleRes()->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles, FPassType::TONEMAPPING_PT);
 		TexHandles.clear();
 	}

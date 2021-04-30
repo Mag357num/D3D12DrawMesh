@@ -24,6 +24,12 @@ private:
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
 	shared_ptr<FSampler> WarpSampler;
+	shared_ptr<FTexture> SceneColorMap;
+	shared_ptr<FTexture> BloomSetupMap;
+	shared_ptr<FTexture> SunMergeMap;
+	vector<shared_ptr<FTexture>> BloomDownMaps;
+	vector<shared_ptr<FTexture>> BloomUpMaps;
+
 public:
 	const uint32& GetShadowMapSize() const { return ShadowMapSize; }
 	void SetPostProcessTriangle( shared_ptr<FMesh>& Mesh ) { PostProcessTriangle = Mesh; }
@@ -34,24 +40,23 @@ public:
 
 	void SetShadowMap( const shared_ptr<FTexture>& Tex ) { ShadowMap = Tex; }
 	void SetDsMap( const shared_ptr<FTexture>& Tex ) { DepthStencilMap = Tex; }
+	void SetSceneColorMap( const shared_ptr<FTexture>& Tex ) { SceneColorMap = Tex; }
 	void SetClampSampler( const shared_ptr<FSampler>& Sam ) { ClampSampler = Sam; }
 	void SetWarpSampler( const shared_ptr<FSampler>& Sam ) { WarpSampler = Sam; }
-	shared_ptr<FTexture>& GetShadowMap() { return ShadowMap; }
-	shared_ptr<FTexture>& GetDsMap() { return DepthStencilMap; }
-	shared_ptr<FSampler>& GetClampSampler() { return ClampSampler; }
-	shared_ptr<FSampler>& GetWarpSampler() { return WarpSampler; }
+	const shared_ptr<FTexture>& GetShadowMap() const { return ShadowMap; }
+	const shared_ptr<FTexture>& GetDsMap() const { return DepthStencilMap; }
+	const shared_ptr<FTexture>& GetSceneColorMap() const { return SceneColorMap; }
+	const shared_ptr<FSampler>& GetClampSampler() const { return ClampSampler; }
+	const shared_ptr<FSampler>& GetWarpSampler() const { return WarpSampler; }
 
-public: // TODO: encapsulate those below in array
-	shared_ptr<FTexture> SceneColorMap;
-	shared_ptr<FTexture> BloomSetupMap;
-	shared_ptr<FTexture> BloomDownMap8;
-	shared_ptr<FTexture> BloomDownMap16;
-	shared_ptr<FTexture> BloomDownMap32;
-	shared_ptr<FTexture> BloomDownMap64;
-	shared_ptr<FTexture> BloomUpMap32;
-	shared_ptr<FTexture> BloomUpMap16;
-	shared_ptr<FTexture> BloomUpMap8;
-	shared_ptr<FTexture> SunMergeMap;
+	void SetBloomSetupMap( const shared_ptr<FTexture>& Tex ) { BloomSetupMap = Tex; }
+	void SetSunMergeMap( const shared_ptr<FTexture>& Tex ) { SunMergeMap = Tex; }
+	const shared_ptr<FTexture>& GetBloomSetupMap() const { return BloomSetupMap; }
+	const shared_ptr<FTexture>& GetSunMergeMap() const { return SunMergeMap; }
+
+	vector<shared_ptr<FTexture>>& GetBloomDownMaps() { return BloomDownMaps; }
+	vector<shared_ptr<FTexture>>& GetBloomUpMaps() { return BloomUpMaps; }
+
 };
 
 class FFrameResourceManager
