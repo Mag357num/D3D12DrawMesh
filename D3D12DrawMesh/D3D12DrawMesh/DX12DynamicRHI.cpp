@@ -765,8 +765,8 @@ namespace RHI
 
 		MeshActorFrameResource.MeshRes = CreateMeshRes();
 		vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, Empty, FPassType::SHADOW_PT);
-		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(L"Shadow_SceneColor.hlsl", 256, Empty, FPassType::SCENE_COLOR_PT);
+		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SHADOW_PT);
+		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SCENE_COLOR_PT);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -903,8 +903,8 @@ namespace RHI
 		WCHAR assetsPath[512];
 		GetAssetsPath(assetsPath, _countof(assetsPath));
 		std::wstring m_assetsPath = assetsPath + ShaderFileName;
-		Mat->VS = CreateVertexShader(m_assetsPath.c_str());
-		Mat->PS = CreatePixelShader(m_assetsPath.c_str());
+		Mat->VS = CreateVertexShader(m_assetsPath);
+		Mat->PS = CreatePixelShader(m_assetsPath);
 		Mat->Sig = CreateRootSignatrue(Type);
 		Mat->PSO = CreatePso(Type, Mat->VS.get(), Mat->PS.get(), Mat->Sig.get());
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);

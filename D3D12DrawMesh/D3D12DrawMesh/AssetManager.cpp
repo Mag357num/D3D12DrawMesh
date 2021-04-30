@@ -22,7 +22,13 @@ void FAssetManager::LoadScene(const std::wstring& BinFileName, FScene* TargetSce
 		TargetScene->MeshActors[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
 		ReadMeshLODFromIfstream(Fin, TargetScene->MeshActors[i].MeshLODs[0]);
 		ReadMeshTransFromIfstream(Fin, TargetScene->MeshActors[i].Transform);
+
+		// TODO: add a func to read shader file name, so different mesh can have different shader
+		TargetScene->MeshActors[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
 	}
+
+	// TODO: hard code
+	TargetScene->MeshActors[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
 
 	Fin.close();
 }

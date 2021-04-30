@@ -82,7 +82,7 @@ PSInput VSMain(VSInput input)
 	result.worldpos = result.position;
     result.position = mul(result.worldpos, CameraVP);
     result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
-	result.color = float4(200.f, 200.f, 200.f, 1.f);
+	result.color = float4(1.f, 1.f, 1.f, 1.f);
 
 	if(!IsShadowPass)
 	{
@@ -94,5 +94,32 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	return float4(200.f, 200.f, 200.f, 1.f);
+	if(IsShadowPass)
+	{
+		return float4(1.f, 1.f, 1.f, 1.f);
+	}
+
+	input.normal = normalize(input.normal);
+	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
+	viewDir = normalize(viewDir);
+	float3 dir = normalize(Light.DirectionLightDir * -1.f);
+	float3 halfWay = normalize(viewDir + dir);
+
+	float ks = 1.5f;
+	float shine = 10.f;
+	float4 specularColor;
+	specularColor = ks *  float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
+	specularColor *= dot(input.normal, dir);
+
+	float kd = 0.3f;
+	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
+
+	float ambientFactor = 0.02f;
+	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
+
+	float bias = max(0.005f * (1.0f - abs(dot(input.normal, Light.DirectionLightDir))), 0.00005f);
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH, bias);
+	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
+
+	return FrameBuffer;
 }

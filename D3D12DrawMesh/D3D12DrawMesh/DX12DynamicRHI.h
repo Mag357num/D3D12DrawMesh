@@ -41,6 +41,7 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) override;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) override;
@@ -67,14 +68,6 @@ namespace RHI
 		// other
 		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
 		virtual FHandle* GetBackBufferHandle() { return BackBuffers[GetBackBufferIndex()]->RtvHandle.get(); }
-
-
-
-
-
-
-		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// draw
 		virtual void FrameBegin() override;

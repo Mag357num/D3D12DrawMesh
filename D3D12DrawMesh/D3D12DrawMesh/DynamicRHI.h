@@ -40,6 +40,7 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) = 0;
+		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) = 0;
@@ -68,11 +69,6 @@ namespace RHI
 		virtual FHandle* GetBackBufferHandle() = 0;
 		inline uint32 GetWidth() { return ResoWidth; }
 		inline uint32 GetHeight() { return ResoHeight; }
-
-
-
-		// mesh
-		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// draw
 		virtual void FrameBegin() = 0;

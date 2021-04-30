@@ -37,4 +37,5 @@ public:
 
 	FTransform Transform;
 	vector<FMeshLOD> MeshLODs;
+	wstring ShaderFileName;
 };
