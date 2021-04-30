@@ -40,7 +40,7 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) = 0;
-		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
+		virtual void CreateFrameMesh(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) = 0;

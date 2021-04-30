@@ -4,6 +4,7 @@
 
 class FRenderThread : public FTaskThread
 {
+private:
 	shared_ptr<class FFrameResourceManager> FrameResourceManager;
 	std::condition_variable RenderCV;
 	std::mutex RenderMutex;

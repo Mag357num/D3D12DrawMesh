@@ -5,5 +5,5 @@ void FScene::UpdateMainCamera(class FEngine* Engine)
 {
 	StepTimer& Timer = Engine->GetTimer();
 	Timer.Tick(NULL);
-	SceneCamera.Update(static_cast<float>(Timer.GetElapsedSeconds()));
+	GetCurrentCamera().Update(static_cast<float>(Timer.GetElapsedSeconds()));
 }

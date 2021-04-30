@@ -11,9 +11,6 @@ namespace RHI
 		this->ResoWidth = ResoWidth;
 		this->ResoHeight = ResoHeight;
 
-		Viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight));
-		ScissorRect = CD3DX12_RECT(0, 0, static_cast<LONG>(ResoWidth), static_cast<LONG>(ResoHeight));
-
 		//create device
 		if (UseWarpDevice)
 		{
@@ -551,16 +548,10 @@ namespace RHI
 		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&VirtualAddress)));
 	}
 
-	_Use_decl_annotations_
-		void FDX12DynamicRHI::GetHardwareAdapter(
-			IDXGIFactory1* pFactory,
-			IDXGIAdapter1** ppAdapter,
-			bool requestHighPerformanceAdapter)
+	_Use_decl_annotations_ void FDX12DynamicRHI::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter)
 	{
 		*ppAdapter = nullptr;
-
 		ComPtr<IDXGIAdapter1> adapter;
-
 		ComPtr<IDXGIFactory6> factory6;
 		if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 		{
@@ -759,14 +750,13 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor)
+	void FDX12DynamicRHI::CreateFrameMesh(FFrameMesh& FrameMesh, const FMeshActor& MeshActor)
 	{
-		MeshActorFrameResource.Mesh = CreateMesh(MeshActor);
-
-		MeshActorFrameResource.MeshRes = CreateMeshRes();
+		FrameMesh.Mesh = CreateMesh(MeshActor);
+		FrameMesh.MeshRes = CreateMeshRes();
 		vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-		MeshActorFrameResource.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SHADOW_PT);
-		MeshActorFrameResource.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SCENE_COLOR_PT);
+		FrameMesh.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SHADOW_PT);
+		FrameMesh.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SCENE_COLOR_PT);
 	}
 
 	void FDX12DynamicRHI::FrameBegin()

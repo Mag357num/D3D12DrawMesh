@@ -19,12 +19,10 @@ struct FDirectionLight : public FBaseLight
 struct FPointLight : public FBaseLight
 {
 	FVector Position = { 0.f, 0.f, 0.f };
-
 	struct
 	{
 		float Constant;
 		float Linear;
 		float Exp;
 	} Attenuation;
-
 };

@@ -6,10 +6,10 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 
 	// shadow pass
 	RHI->ClearDepthStencil(FrameRes->ShadowMap.get());
-	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->ShadowMapSize), static_cast<float>(FrameRes->ShadowMapSize), 0.f, 1.f);
-	RHI->SetScissor(0, 0, FrameRes->ShadowMapSize, FrameRes->ShadowMapSize);
+	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->GetShadowMapSize()), static_cast<float>(FrameRes->GetShadowMapSize()), 0.f, 1.f);
+	RHI->SetScissor(0, 0, FrameRes->GetShadowMapSize(), FrameRes->GetShadowMapSize());
 	RHI->SetRenderTarget(0, nullptr, FrameRes->ShadowMap->DsvHandle.get());
-	for (auto i : FrameRes->MeshActorFrameReses)
+	for (auto i : FrameRes->GetFrameMeshes())
 	{
 		// use shadow pso
 		RHI->ChoosePipelineState(i.MeshRes->ShadowMat->PSO.get());
@@ -28,7 +28,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	for (auto i : FrameRes->MeshActorFrameReses)
+	for (auto i : FrameRes->GetFrameMeshes())
 	{
 		// pso
 		RHI->ChoosePipelineState(i.MeshRes->SceneColorMat->PSO.get()); // use HDR pso
@@ -47,9 +47,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomSetupMat->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->PastProcessTriangleRes->BloomSetupMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomSetupMat->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->GetPostProcessTriangleRes()->BloomSetupMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomSetupMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom down 1/4->1/8
@@ -58,9 +58,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomDownMat[0]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->PastProcessTriangleRes->BloomDownMat[0].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomDownMat[0]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->GetPostProcessTriangleRes()->BloomDownMat[0].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomDownMap8.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom down 1/8->1/16
@@ -69,9 +69,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomDownMat[1]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->PastProcessTriangleRes->BloomDownMat[1].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomDownMat[1]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->GetPostProcessTriangleRes()->BloomDownMat[1].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomDownMap16.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom down 1/16->1/32
@@ -80,9 +80,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomDownMat[2]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->PastProcessTriangleRes->BloomDownMat[2].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomDownMat[2]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->GetPostProcessTriangleRes()->BloomDownMat[2].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomDownMap32.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom down 1/32->1/64
@@ -91,9 +91,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 64), static_cast<float>(RHI->GetHeight() / 64), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 64, RHI->GetHeight() / 64);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomDownMat[3]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->PastProcessTriangleRes->BloomDownMat[3].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomDownMat[3]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_DOWN_PT, FrameRes->GetPostProcessTriangleRes()->BloomDownMat[3].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomDownMap64.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom up 1/64->1/32
@@ -102,9 +102,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomUpMat[0]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->PastProcessTriangleRes->BloomUpMat[0].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomUpMat[0]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->GetPostProcessTriangleRes()->BloomUpMat[0].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomUpMap32.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom up 1/32->1/16
@@ -113,9 +113,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomUpMat[1]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->PastProcessTriangleRes->BloomUpMat[1].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomUpMat[1]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->GetPostProcessTriangleRes()->BloomUpMat[1].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomUpMap16.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom up 1/16->1/8
@@ -124,9 +124,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->BloomUpMat[2]->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->PastProcessTriangleRes->BloomUpMat[2].get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomUpMat[2]->PSO.get());
+	RHI->SetShaderInput(FPassType::BLOOM_UP_PT, FrameRes->GetPostProcessTriangleRes()->BloomUpMat[2].get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->BloomUpMap8.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// sun merge
@@ -135,9 +135,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->SunMergeMat->PSO.get());
-	RHI->SetShaderInput(FPassType::SUN_MERGE_PT, FrameRes->PastProcessTriangleRes->SunMergeMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->SunMergeMat->PSO.get());
+	RHI->SetShaderInput(FPassType::SUN_MERGE_PT, FrameRes->GetPostProcessTriangleRes()->SunMergeMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	RHI->TransitTextureState(FrameRes->SunMergeMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// tonemapping output
@@ -146,9 +146,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	RHI->ChoosePipelineState(FrameRes->PastProcessTriangleRes->ToneMappingMat->PSO.get());
-	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->PastProcessTriangleRes->ToneMappingMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->PastProcessTriangle.get());
+	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->ToneMappingMat->PSO.get());
+	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->GetPostProcessTriangleRes()->ToneMappingMat.get(), FrameRes);
+	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
 	
 	// transition
 	RHI->TransitTextureState(FrameRes->ShadowMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE);

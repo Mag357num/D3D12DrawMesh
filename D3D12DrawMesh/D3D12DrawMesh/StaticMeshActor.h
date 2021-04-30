@@ -10,6 +10,11 @@ struct FTransform
 
 class FMeshLOD
 {
+private:
+	uint32 VertexStride;
+	vector<float> Vertices;
+	vector<uint32> Indices;
+
 public:
 	FMeshLOD() = default;
 	~FMeshLOD() = default;
@@ -22,11 +27,6 @@ public:
 	void SetVertexStride(const uint32& Stride) { VertexStride = Stride; }
 	void SetVertices(const vector<float>& Param) { Vertices = Param; }
 	void SetIndices(const vector<uint32>& Param) { Indices = Param; }
-
-public:
-	uint32 VertexStride;
-	vector<float> Vertices;
-	vector<uint32> Indices;
 };
 
 class FMeshActor

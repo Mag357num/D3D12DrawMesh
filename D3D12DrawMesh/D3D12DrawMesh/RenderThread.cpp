@@ -40,7 +40,7 @@ void FRenderThread::Run()
 
 void FRenderThread::DoRender()
 {
-	if(FrameResourceManager->FrameResources.size() == 0)
+	if(FrameResourceManager->GetFrameRes().size() == 0)
 	{
 		return;
 	}
@@ -48,7 +48,7 @@ void FRenderThread::DoRender()
 	std::unique_lock<std::mutex> Lock(Mutex);
 	RenderCV.wait(Lock, [this]() { return RenderTaskNum > 0; });
 
-	FFrameResource& FrameResource = FrameResourceManager->FrameResources[GDynamicRHI->GetFramIndex()];
+	FFrameResource& FrameResource = FrameResourceManager->GetFrameRes()[GDynamicRHI->GetFramIndex()];
 	FRenderer Renderer;
 	Renderer.RenderScene(RHI::GDynamicRHI.get(), &FrameResource);
 	--RenderTaskNum;

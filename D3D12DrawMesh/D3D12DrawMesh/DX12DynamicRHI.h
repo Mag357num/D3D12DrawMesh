@@ -41,7 +41,7 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) override;
-		virtual void CreateMeshForFrameResource(FMeshActorFrameRes& MeshActorFrameResource, const FMeshActor& MeshActor) override;
+		virtual void CreateFrameMesh(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) override;
@@ -75,7 +75,7 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() override;
-		virtual uint32 GetFrameCount() override { return FrameCount; }
+		virtual uint32 GetFrameCount() override { return FrameNum; }
 		virtual uint32 GetFramIndex() override { return FrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
@@ -87,7 +87,6 @@ namespace RHI
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
 		void CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, FHandle* Handle);
 		void CreateDsvToHeaps(ID3D12Resource* DsResource, const D3D12_DEPTH_STENCIL_VIEW_DESC& DsvDesc, FHandle* Handle);
-
 		void ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version);
 		uint32 GetEnableShaderDebugFlags();
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
@@ -95,8 +94,7 @@ namespace RHI
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
 		ComPtr<ID3D12RootSignature> CreateDX12RootSig(FPassType Type);
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
-		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
-			bool requestHighPerformanceAdapter = false);
+		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
 
 	private:
 		// RHI attributes
@@ -105,22 +103,19 @@ namespace RHI
 		ComPtr<IDXGIFactory4> Factory;
 		ComPtr<IDXGISwapChain3> RHISwapChain;
 		ComPtr<ID3D12CommandQueue> RHICommandQueue;
-		D3D12_VIEWPORT Viewport;
-		D3D12_RECT ScissorRect;
 		ComPtr<ID3D12DescriptorHeap> RTVHeap;
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
 		ComPtr<ID3D12DescriptorHeap> SamplerHeap;
 		uint32 BackFrameIndex;
-		std::vector<FCommand> CommandLists;
-
+		vector<FCommand> CommandLists;
 		//sync
 		HANDLE FenceEvent;
 		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
-
-		static const uint32 FrameCount = 1;
+		static const uint32 FrameNum = 1;
 		uint32 FrameIndex = 0; // TODO: only have one Frame
+		// handles
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDs;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleCbSr;

@@ -18,32 +18,31 @@ class FCamera
 public:
 	FCamera();
 
-	void		Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
-	void		Update(const float& ElapsedSeconds);
-	FMatrix		GetViewMatrix() const;
-	FMatrix		GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
-	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top 
-		,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
-	void		SetMoveSpeed(const float & UnitsPerSecond);
-	void		SetTurnSpeed(const float& RadiansPerSecond);
+	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
+	void Update(const float& ElapsedSeconds);
+	FMatrix GetViewMatrix() const;
+	FMatrix GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
+	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top ,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
+	void SetMoveSpeed(const float & UnitsPerSecond);
+	void SetTurnSpeed(const float& RadiansPerSecond);
 
-	void		OnKeyDown(const WPARAM& key);
-	void		OnKeyUp(const WPARAM& key);
+	void OnKeyDown(const WPARAM& key);
+	void OnKeyUp(const WPARAM& key);
 
-	void		OnRightButtonDown(const uint32& x, const uint32& y);
-	void		OnRightButtonUp();
-	void		OnMouseMove(const uint32& x, const uint32& y);
+	void OnRightButtonDown(const uint32& x, const uint32& y);
+	void OnRightButtonUp();
+	void OnMouseMove(const uint32& x, const uint32& y);
 
-	void		GetEulerByLook(const FVector& LookAt);
-	void		GetLookByEuler(const float& Pitch, const float& Yaw);
+	void GetEulerByLook(const FVector& LookAt);
+	void GetLookByEuler(const float& Pitch, const float& Yaw);
 
-	void		SetFov(const float& FovParam) { Fov = FovParam; }
-	void		SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
+	void SetFov(const float& FovParam) { Fov = FovParam; }
+	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
 
-	FVector		GetPosition() { return Position; }
+	FVector GetPosition() { return Position; }
 
 private:
-	void		Reset();
+	void Reset();
 
 	struct KeysPressed
 	{
@@ -60,23 +59,23 @@ private:
 		bool down;
 	};
 
-	FVector		InitialPosition;
-	FVector		InitialUpDir;
-	FVector		InitialLookAt;
-	FVector		Position;
-	FVector		LookDirection;
-	FVector		UpDirection;
-	KeysPressed	Keys;
-	FVector2	MouseCurrentPosition;
-	FVector2	MouseFirstPosition;
-	bool		IsMouseDown;
-	bool		IsMouseMove;
-	float		MoveSpeed;				// Speed at which the camera moves, in units per second.
-	float		TurnSpeed;				// Speed at which the camera turns, in radians per second.
-	float		MouseSensibility;
-	float		Yaw;						// Relative to the +z axis.
-	float		Pitch;					// Relative to the xz plane.
+	FVector InitialPosition;
+	FVector InitialUpDir;
+	FVector InitialLookAt;
+	FVector Position;
+	FVector LookDirection;
+	FVector UpDirection;
+	KeysPressed Keys;
+	FVector2 MouseCurrentPosition;
+	FVector2 MouseFirstPosition;
+	bool IsMouseDown;
+	bool IsMouseMove;
+	float MoveSpeed; // Speed at which the camera moves, in units per second.
+	float TurnSpeed; // Speed at which the camera turns, in radians per second.
+	float MouseSensibility;
+	float Yaw; // Relative to the +z axis.
+	float Pitch; // Relative to the xz plane.
 
-	float		Fov;
-	float		AspectRatio;
+	float Fov;
+	float AspectRatio;
 };

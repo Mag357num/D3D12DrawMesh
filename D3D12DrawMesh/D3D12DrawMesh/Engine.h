@@ -32,8 +32,6 @@ public:
     void OnRender();
     void OnDestroy();
 
-	void UpdateMainCamera();
-
     // Samples override the event handlers to handle specific messages.
 	void OnKeyDown(unsigned char Key);
 	void OnKeyUp(unsigned char Key);

@@ -6,6 +6,5 @@ class FRenderer
 {
 public:
 	virtual ~FRenderer() = default;
-
 	void RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes);
 };
