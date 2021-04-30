@@ -340,7 +340,7 @@ namespace RHI
 			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			Desc.Texture2D.MipLevels = 1;
 			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->SrvHandle->As<FDX12GpuHandle>()->Handle);
+			CreateSrvToHeaps(DX12Tex->DX12Texture.Get(), Desc, Tex->SrvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::RTV_RVT:
@@ -412,10 +412,10 @@ namespace RHI
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
-	void FDX12DynamicRHI::CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, CD3DX12_GPU_DESCRIPTOR_HANDLE& Handle)
+	void FDX12DynamicRHI::CreateSrvToHeaps(ID3D12Resource* ShaderResource, const D3D12_SHADER_RESOURCE_VIEW_DESC& SrvDesc, FHandle* Handle)
 	{
 		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCpuHandleCbSr);
-		Handle = LastGpuHandleCbSr;  // srv need gpu handle
+		Handle->As<FDX12GpuHandle>()->Handle = LastGpuHandleCbSr; // srv need gpu handle
 		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}

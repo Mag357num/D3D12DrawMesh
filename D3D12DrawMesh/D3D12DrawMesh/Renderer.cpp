@@ -48,8 +48,6 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 
 	// bloom up
 
-	// combine
-
 	// tonemapping output
 	RHI->ClearRenderTarget(RHI->GetBackBufferHandle());
 	RHI->ClearDepthStencil(FrameRes->DepthStencilMap.get());
@@ -59,7 +57,6 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->OutputPassPso.get()); // pso
 	RHI->SetShaderInput(FPassType::LDR_OUTPUT_RT_PT, FrameRes->PostProcessTriangleRes.get(), FrameRes); // root signature
 	RHI->DrawMesh(FrameRes->PostProcessTriangle.get()); // set mesh 
-
 
 	RHI->TransitTextureState(FrameRes->SceneColorMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
 	RHI->FrameEnd();
