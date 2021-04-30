@@ -37,7 +37,7 @@ public:
 	shared_ptr<FTexture> BloomUpMap32;
 	shared_ptr<FTexture> BloomUpMap16;
 	shared_ptr<FTexture> BloomUpMap8;
-	shared_ptr<FTexture> BloomUpMap4;
+	shared_ptr<FTexture> SunMergeMap;
 
 };
 

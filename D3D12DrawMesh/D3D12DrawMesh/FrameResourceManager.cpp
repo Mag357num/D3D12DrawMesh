@@ -62,9 +62,9 @@ void FFrameResourceManager::InitFrameResource(uint32 FrameCount)
 		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap8.get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap8.get(), FResViewType::SRV_RVT);
 		
-		FrameResource.BloomUpMap4 = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap4.get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.BloomUpMap4.get(), FResViewType::SRV_RVT);
+		FrameResource.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+		GDynamicRHI->CommitTextureAsView(FrameResource.SunMergeMap.get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameResource.SunMergeMap.get(), FResViewType::SRV_RVT);
 
 		// create pastprocess mesh and mesh resource
 		vector<float> TriangleVertices =
