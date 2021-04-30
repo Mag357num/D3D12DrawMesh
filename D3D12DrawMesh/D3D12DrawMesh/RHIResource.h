@@ -43,11 +43,12 @@ namespace RHI
 
 	struct FMeshRes : public FRHIResource
 	{
-		shared_ptr<FCB> BaseCB;
 		shared_ptr<FCB> ShadowCB;
+		shared_ptr<FCB> SceneColorCB;
+		shared_ptr<FCB> OutputCB;
+		shared_ptr<FPipelineState> ShadowPassPso;
 		shared_ptr<FPipelineState> OutputPassPso;
 		shared_ptr<FPipelineState> SceneColorPso;
-		shared_ptr<FPipelineState> ShadowPassPso;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 	};
@@ -66,7 +67,7 @@ namespace RHI
 	{
 	};
 
-	struct FSampler
+	struct FSampler : public FRHIResource
 	{
 		virtual ~FSampler() = default;
 	};
@@ -92,49 +93,37 @@ namespace RHI
 
 	enum class FTextureType
 	{
-		SHADOW_MAP = 0,
-		DEPTH_STENCIL_MAP = 1,
-		RENDER_TARGET = 2,
-		ORDINARY_SHADER_RESOURCE = 3, // for texture that only act as srv but not for ds, rt etc... should read from file
+		SHADOW_MAP_TT = 0,
+		DEPTH_STENCIL_MAP_TT = 1,
+		RENDER_TARGET_TT = 2,
+		ORDINARY_SHADER_RESOURCE_TT = 3, // for texture that only act as srv but not for ds, rt etc... should read from file
 	};
 
-	enum class FViewType
+	enum class FResViewType
 	{
-		Dsv = 0,
-		Srv = 1,
-		Rtv = 2,
+		DSV_RVT = 0,
+		SRV_RVT = 1,
+		RTV_RVT = 2,
 	};
 
 	enum class FSamplerType
 	{
-		CLAMP = 0,
-		WARP = 1,
-		MIRROR = 2,
-	};
-
-	enum class FRtType
-	{
-		EMPTY = 0,
-		SWAPCHAIN = 1,
-	};
-
-	enum class FPassType
-	{
-		SHADOW_PASS = 0,
-		BASE_PASS = 1,
+		CLAMP_ST = 0,
+		WARP_ST = 1,
+		MIRROR_ST = 2,
 	};
 
 	enum class FRenderTargetType
 	{
-		BACK_BUFFER = 0,
-		TEXTURE = 1,
+		BACK_BUFFER_RTT = 0,
+		TEXTURE_RTT = 1,
 	};
 
-	enum class FPipelineType
+	enum class FPassType
 	{
-		LDR_OUTPUT_RT = 0,
-		SHADOW_MAP_PL = 1,
-		SCENE_COLOR_PL = 2,
+		LDR_OUTPUT_RT_PT = 0,
+		SHADOW_PT = 1,
+		SCENE_COLOR_PT = 2,
 	};
 
 	enum class FRESOURCE_STATES

@@ -4,7 +4,7 @@ using RHI::FMesh;
 using RHI::FMeshRes;
 using RHI::GDynamicRHI;
 
-void FAssetManager::LoadMeshesToScene(const std::wstring& BinFileName, FScene* TargetScene)
+void FAssetManager::LoadScene(const std::wstring& BinFileName, FScene* TargetScene)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -61,7 +61,7 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	}
 
 	Fin.read((char*)&Trans.Translation, 3 * sizeof(float));
-	Fin.read((char*)&Trans.Rotator, 3 * sizeof(float));
+	Fin.read((char*)&Trans.Rotation, 3 * sizeof(float));
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 }
 

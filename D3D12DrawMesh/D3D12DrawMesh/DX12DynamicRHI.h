@@ -30,29 +30,28 @@ namespace RHI
 		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
 			const uint32& ResoHeight) override;
 
-		// Input Assembler
-		virtual void SetMeshBuffer(FMesh* Mesh) override;
-
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMeshBuffer(const FMeshActor& MeshActor) override;
+		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) override;
+		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) override;
+		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
+		virtual void DrawMesh(FMesh* Mesh) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
-		virtual void CommitTextureAsView(FTexture* Tex, FViewType Type) override;
+		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
 
 		// Pipeline
-		virtual shared_ptr<FPipelineState> CreatePso(FPipelineType Type, FMeshRes* MeshRes) override;
-		virtual void InitPsoInMeshRes(FMeshRes* MeshRes, const SHADER_FLAGS& rootFlags) override;
+		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FMeshRes* MeshRes) override;
 		virtual void ChoosePipelineState(FPipelineState* Pso) override;
 
 		// shader
@@ -60,7 +59,7 @@ namespace RHI
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;
-		virtual void SetRenderTarget(FPassType Type, FTexture* DsMap) override;
+		virtual void SetRenderTarget(FPassType Type, FTexture* Rt, FTexture* DsMap) override;
 		
 		// other
 		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
@@ -85,8 +84,6 @@ namespace RHI
 		virtual void EndCreateResource() override;
 
 	private:
-		shared_ptr<FMesh> CommitMesh(const FMeshActor& MeshActor);
-		shared_ptr<FMeshRes> CommitMeshRes(const std::wstring& FileName, const SHADER_FLAGS& flags);
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type,
 			const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
@@ -100,7 +97,7 @@ namespace RHI
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
-		ComPtr<ID3D12RootSignature> CreateDX12RootSig_CB0_SR1_Sa2();
+		ComPtr<ID3D12RootSignature> CreateDX12RootSig(FPassType Type);
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter,
 			bool requestHighPerformanceAdapter = false);

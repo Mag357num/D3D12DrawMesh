@@ -18,11 +18,6 @@ namespace RHI
 		MAX_HEAP_DEPTHSTENCILS = 32,
 	};
 
-	enum class SHADER_FLAGS
-	{
-		CB0_SR1_Sa2 = 1,
-	};
-
 	class FDynamicRHI
 	{
 	public:
@@ -34,11 +29,10 @@ namespace RHI
 		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
 			const uint32& ResoHeight) = 0;
 
-		// Input Assembler
-		virtual void SetMeshBuffer(FMesh* Mesh) = 0;
-
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMeshBuffer(const FMeshActor& MeshActor) = 0;
+		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) = 0;
+		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) = 0; // meshActor is mesh data, can read from file or write in code
+		virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
@@ -48,8 +42,9 @@ namespace RHI
 		// Resource process
 		virtual void UpdateConstantBuffer(FMeshRes* MeshRes, FCBData* BaseData, FCBData* ShadowData) = 0;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
-		virtual void CommitTextureAsView(FTexture* Tex, FViewType Type) = 0;
+		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
+		virtual void DrawMesh(FMesh* Mesh) = 0;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
@@ -58,13 +53,12 @@ namespace RHI
 		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) = 0;
 
 		// Pipeline
-		virtual shared_ptr<FPipelineState> CreatePso(FPipelineType Type, FMeshRes* MeshRes) = 0;
-		virtual void InitPsoInMeshRes(FMeshRes* MeshRes, const SHADER_FLAGS& rootFlags) = 0;
+		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FMeshRes* MeshRes) = 0;
 		virtual void ChoosePipelineState(FPipelineState* Pso) = 0;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;
-		virtual void SetRenderTarget(FPassType Type, FTexture* DsMap) = 0;
+		virtual void SetRenderTarget(FPassType Type, FTexture* Rt, FTexture* DsMap) = 0;
 
 		// other
 		virtual uint32 GetBackBufferIndex() = 0;

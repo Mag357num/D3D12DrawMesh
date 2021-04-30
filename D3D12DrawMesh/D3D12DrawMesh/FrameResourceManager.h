@@ -26,16 +26,17 @@ public:
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
 
-	shared_ptr<FTexture> SceneColor;
-	shared_ptr<FTexture> BloomSetup;
-	shared_ptr<FTexture> Bloomdown8;
-	shared_ptr<FTexture> Bloomdown16;
-	shared_ptr<FTexture> Bloomdown32;
-	shared_ptr<FTexture> Bloomdown64;
-	shared_ptr<FTexture> Bloomup32;
-	shared_ptr<FTexture> Bloomup16;
-	shared_ptr<FTexture> Bloomup8;
-	shared_ptr<FTexture> Bloomup4;
+	shared_ptr<FTexture> SceneColorMap;
+	shared_ptr<FTexture> BloomSetupMap;
+	shared_ptr<FTexture> BloomDownMap8;
+	shared_ptr<FTexture> BloomDownMap16;
+	shared_ptr<FTexture> BloomDownMap32;
+	shared_ptr<FTexture> BloomDownMap64;
+	shared_ptr<FTexture> BloomUpMap32;
+	shared_ptr<FTexture> BloomUpMap16;
+	shared_ptr<FTexture> BloomUpMap8;
+	shared_ptr<FTexture> BloomUpMap4;
+
 };
 
 class FFrameResourceManager

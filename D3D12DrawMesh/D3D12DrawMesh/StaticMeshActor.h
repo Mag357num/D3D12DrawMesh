@@ -4,7 +4,7 @@
 struct FTransform
 {
 	FVector Translation;
-	FVector Rotator;
+	FVector Rotation;
 	FVector Scale;
 };
 
@@ -19,6 +19,9 @@ public:
 	const vector<float>& GetVertices() const { return Vertices; }
 	const vector<uint32>& GetIndices() const { return Indices; }
 	const uint32& GetVertexStride() const { return VertexStride; }
+	void SetVertexStride(const uint32& Stride) { VertexStride = Stride; }
+	void SetVertices(const vector<float>& Param) { Vertices = Param; }
+	void SetIndices(const vector<uint32>& Param) { Indices = Param; }
 
 public:
 	uint32 VertexStride;

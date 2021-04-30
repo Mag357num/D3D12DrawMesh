@@ -21,7 +21,7 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle;
 	};
 
-	struct FDX12Rasterizer : public FPipelineState
+	struct FDX12PipelineState : public FPipelineState
 	{
 		ComPtr<ID3D12PipelineState> PSO;
 	};
