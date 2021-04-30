@@ -33,7 +33,6 @@ namespace RHI
 		// Resource Create
 		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) override;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) override;
-		//virtual shared_ptr<FMeshRes> CreateMeshRes(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FMeshType_deprecated Type) override;
 		virtual shared_ptr<FMeshRes> CreateMeshRes() override;
 		virtual shared_ptr<FMaterial> CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, FPassType Type) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) override;
@@ -59,7 +58,7 @@ namespace RHI
 		virtual void ChoosePipelineState(FPipelineState* Pso) override;
 
 		// shader
-		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) override;
+		virtual void SetShaderInput(FPassType Type, FMaterial* Mat, FFrameResource* FrameRes) override;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;

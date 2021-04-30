@@ -218,28 +218,27 @@ namespace RHI
 	}
 
 	// some resource store at FMeshRes some store at FFrameResource
-	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes)
+	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMaterial* Mat, FFrameResource* FrameRes)
 	{
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
+		CommandLists[0].CommandList->SetGraphicsRootSignature(Mat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
+
 		switch (Type)
 		{
 		case RHI::FPassType::SHADOW_PT:
-			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->ShadowMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->ShadowMat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::SCENE_COLOR_PT:
-			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->SceneColorMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, MeshRes->SceneColorMat->CB->As<FDX12CB>()->GPUHandleInHeap);
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->ShadowMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);
 			break;
 
 		case RHI::FPassType::TONEMAPPING_PT:
-			CommandLists[0].CommandList->SetGraphicsRootSignature(MeshRes->ToneMappingMat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle);
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->SceneColorMap->SrvHandle->As<FDX12GpuHandle>()->Handle); // TODO: change
 			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->ClampSampler->As<FDX12Sampler>()->SamplerHandle);

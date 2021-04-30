@@ -15,7 +15,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->ChoosePipelineState(i.MeshRes->ShadowMat->PSO.get());
 
 		// root signature
-		RHI->SetShaderInput(FPassType::SHADOW_PT, i.MeshRes.get(), FrameRes);
+		RHI->SetShaderInput(FPassType::SHADOW_PT, i.MeshRes->ShadowMat.get(), FrameRes);
 
 		// set mesh
 		RHI->DrawMesh(i.Mesh.get());
@@ -35,7 +35,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->ChoosePipelineState(i.MeshRes->SceneColorMat->PSO.get()); // use HDR pso
 
 		// root signature
-		RHI->SetShaderInput(FPassType::SCENE_COLOR_PT, i.MeshRes.get(), FrameRes);
+		RHI->SetShaderInput(FPassType::SCENE_COLOR_PT, i.MeshRes->SceneColorMat.get(), FrameRes);
 
 		// set mesh
 		RHI->DrawMesh(i.Mesh.get());
@@ -50,7 +50,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	//RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 	//RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
 
-	//RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->); // pso
+	//RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->BloomSetupMat->PSO.get()); // pso
 	//RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->PostProcessTriangleRes.get(), FrameRes); // root signature
 
 	//RHI->DrawMesh(FrameRes->PostProcessTriangle.get()); // set mesh 
@@ -73,7 +73,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
 	RHI->ChoosePipelineState(FrameRes->PostProcessTriangleRes->ToneMappingMat->PSO.get()); // pso
-	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->PostProcessTriangleRes.get(), FrameRes); // root signature
+	RHI->SetShaderInput(FPassType::TONEMAPPING_PT, FrameRes->PostProcessTriangleRes->ToneMappingMat.get(), FrameRes); // root signature
 	RHI->DrawMesh(FrameRes->PostProcessTriangle.get()); // set mesh 
 	RHI->TransitTextureState(FrameRes->SceneColorMap.get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
 	

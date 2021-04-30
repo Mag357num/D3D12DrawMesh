@@ -53,7 +53,7 @@ namespace RHI
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
 
 		// shader
-		virtual void SetShaderInput(FPassType Type, FMeshRes* MeshRes, FFrameResource* FrameRes) = 0;
+		virtual void SetShaderInput(FPassType Type, FMaterial* Mat, FFrameResource* FrameRes) = 0;
 
 		// Pipeline
 		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
