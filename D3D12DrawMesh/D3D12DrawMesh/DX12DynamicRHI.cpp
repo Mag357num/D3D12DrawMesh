@@ -916,6 +916,16 @@ namespace RHI
 		WaitForExecuteComplete();
 	}
 
+	void FDX12DynamicRHI::BeginEvent(const char* EventName)
+	{
+		PIXBeginEvent(CommandLists[0].CommandList.Get(), 0, EventName);
+	}
+
+	void FDX12DynamicRHI::EndEvent()
+	{
+		PIXEndEvent(CommandLists[0].CommandList.Get());
+	}
+
 	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FTextureType Type, uint32 Width, uint32 Height)
 	{
 		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();

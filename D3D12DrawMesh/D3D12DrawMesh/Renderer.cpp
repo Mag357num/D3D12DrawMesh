@@ -5,52 +5,61 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->FrameBegin();
 
 	// shadow pass
-	RHI->ClearDepthStencil(FrameRes->GetShadowMap().get());
-	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->GetShadowMapSize()), static_cast<float>(FrameRes->GetShadowMapSize()), 0.f, 1.f);
-	RHI->SetScissor(0, 0, FrameRes->GetShadowMapSize(), FrameRes->GetShadowMapSize());
-	RHI->SetRenderTarget(0, nullptr, FrameRes->GetShadowMap()->DsvHandle.get());
-	for (auto i : FrameRes->GetFrameMeshes())
 	{
-		// use shadow pso
-		RHI->ChoosePipelineState(i.MeshRes->ShadowMat->PSO.get());
+		SCOPED_EVENT("ShadowDepth");
+		RHI->ClearDepthStencil(FrameRes->GetShadowMap().get());
+		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->GetShadowMapSize()), static_cast<float>(FrameRes->GetShadowMapSize()), 0.f, 1.f);
+		RHI->SetScissor(0, 0, FrameRes->GetShadowMapSize(), FrameRes->GetShadowMapSize());
+		RHI->SetRenderTarget(0, nullptr, FrameRes->GetShadowMap()->DsvHandle.get());
+		for (auto i : FrameRes->GetFrameMeshes())
+		{
+			// use shadow pso
+			RHI->ChoosePipelineState(i.MeshRes->ShadowMat->PSO.get());
 
-		// root signature
-		RHI->SetShaderInput(FPassType::SHADOW_PT, i.MeshRes->ShadowMat.get(), FrameRes);
+			// root signature
+			RHI->SetShaderInput(FPassType::SHADOW_PT, i.MeshRes->ShadowMat.get(), FrameRes);
 
-		// set mesh
-		RHI->DrawMesh(i.Mesh.get());
+			// set mesh
+			RHI->DrawMesh(i.Mesh.get());
+		}
+		RHI->TransitTextureState(FrameRes->GetShadowMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
-	RHI->TransitTextureState(FrameRes->GetShadowMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
 	// scene color pass
-	RHI->ClearRenderTarget(FrameRes->GetSceneColorMap()->RtvHandle.get());
-	RHI->SetRenderTarget(1, FrameRes->GetSceneColorMap()->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
-	RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
-	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
-	RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-	for (auto i : FrameRes->GetFrameMeshes())
 	{
-		// pso
-		RHI->ChoosePipelineState(i.MeshRes->SceneColorMat->PSO.get()); // use HDR pso
+		SCOPED_EVENT("SceneColor");
+		RHI->ClearRenderTarget(FrameRes->GetSceneColorMap()->RtvHandle.get());
+		RHI->SetRenderTarget(1, FrameRes->GetSceneColorMap()->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+		RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
+		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
+		RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
+		for (auto i : FrameRes->GetFrameMeshes())
+		{
+			// pso
+			RHI->ChoosePipelineState(i.MeshRes->SceneColorMat->PSO.get()); // use HDR pso
 
-		// root signature
-		RHI->SetShaderInput(FPassType::SCENE_COLOR_PT, i.MeshRes->SceneColorMat.get(), FrameRes);
+			// root signature
+			RHI->SetShaderInput(FPassType::SCENE_COLOR_PT, i.MeshRes->SceneColorMat.get(), FrameRes);
 
-		// set mesh
-		RHI->DrawMesh(i.Mesh.get());
+			// set mesh
+			RHI->DrawMesh(i.Mesh.get());
+		}
+		RHI->TransitTextureState(FrameRes->GetSceneColorMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
-	RHI->TransitTextureState(FrameRes->GetSceneColorMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// bloom setup
-	RHI->ClearRenderTarget(FrameRes->GetBloomSetupMap()->RtvHandle.get());
-	RHI->SetRenderTarget(1, FrameRes->GetBloomSetupMap()->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
-	RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
-	RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
-	RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-	RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomSetupMat->PSO.get());
-	RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->GetPostProcessTriangleRes()->BloomSetupMat.get(), FrameRes);
-	RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
-	RHI->TransitTextureState(FrameRes->GetBloomSetupMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	{
+		SCOPED_EVENT("Bloom");
+		SCOPED_EVENT_F("BloomSetup {}x{}", RHI->GetWidth() / 4, RHI->GetHeight() / 4);
+		RHI->ClearRenderTarget(FrameRes->GetBloomSetupMap()->RtvHandle.get());
+		RHI->SetRenderTarget(1, FrameRes->GetBloomSetupMap()->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+		RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
+		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
+		RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
+		RHI->ChoosePipelineState(FrameRes->GetPostProcessTriangleRes()->BloomSetupMat->PSO.get());
+		RHI->SetShaderInput(FPassType::BLOOM_SETUP_PT, FrameRes->GetPostProcessTriangleRes()->BloomSetupMat.get(), FrameRes);
+		RHI->DrawMesh(FrameRes->GetPostProcessTriangle().get());
+		RHI->TransitTextureState(FrameRes->GetBloomSetupMap().get(), FRESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	}
 
 	// bloom down 1/4->1/8
 	RHI->ClearRenderTarget(FrameRes->GetBloomDownMaps()[0]->RtvHandle.get());

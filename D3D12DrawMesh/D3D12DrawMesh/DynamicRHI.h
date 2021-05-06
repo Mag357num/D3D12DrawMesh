@@ -81,8 +81,27 @@ namespace RHI
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 
+		//even
+		virtual void BeginEvent(const char* EventName) = 0;
+		virtual void EndEvent() = 0;
+
 	protected:
 		uint32 ResoWidth;
 		uint32 ResoHeight;
 	};
 }
+
+class FScopedEvent
+{
+public:
+	FScopedEvent(const char* EventName)
+	{
+		GDynamicRHI->BeginEvent(EventName);
+	}
+	~FScopedEvent() { GDynamicRHI->EndEvent(); }
+};
+
+#define MACRO_COMBINE_DIRECT(X, Y) X##Y
+#define MACRO_COMBINE(X, Y) MACRO_COMBINE_DIRECT(X, Y)
+#define SCOPED_EVENT(__NAME__) FScopedEvent MACRO_COMBINE(ScopedEvent, __LINE__)(__NAME__)
+#define SCOPED_EVENT_F(...) SCOPED_EVENT(fmt::format(__VA_ARGS__).c_str())

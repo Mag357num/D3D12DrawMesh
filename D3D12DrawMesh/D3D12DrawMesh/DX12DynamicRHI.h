@@ -80,6 +80,10 @@ namespace RHI
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
 
+		//even
+		virtual void BeginEvent(const char* EventName) override;
+		virtual void EndEvent() override;
+
 	private:
 		void WaitForExecuteComplete();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
