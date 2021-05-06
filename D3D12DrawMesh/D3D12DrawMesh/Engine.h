@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include "DXSampleHelper.h"
 #include "SimpleCamera.h"
 #include "DynamicRHI.h"
 #include "StepTimer.h"
@@ -55,9 +54,6 @@ protected:
     bool IsUseWarpDevice;
 
 private:
-    // Root assets path.
-    std::wstring AssetsPath;
-
     // Window title.
     std::wstring Title;
 

@@ -27,9 +27,6 @@ FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
     IsUseWarpDevice(false)
 {
 	GEngine = this;
-    WCHAR assetsPath[512];
-    GetAssetsPath(assetsPath, _countof(assetsPath));
-    AssetsPath = assetsPath;
     AspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
 	AssetManager = make_shared<FAssetManager>();
