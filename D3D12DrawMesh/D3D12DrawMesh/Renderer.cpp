@@ -49,11 +49,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	{
 		SCOPED_EVENT("Post Process");
 		{
-			SCOPED_EVENT("Bloom setup");
+			SCOPED_EVENT("Bloom");
 			{
 				// bloom setup
 				{
-					SCOPED_EVENT("Bloom");
+					SCOPED_EVENT("Bloom setup");
 					RHI->ClearRenderTarget(FrameRes->GetBloomSetupMap()->RtvHandle.get());
 					RHI->SetRenderTarget(1, FrameRes->GetBloomSetupMap()->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
