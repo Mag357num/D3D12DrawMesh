@@ -104,4 +104,3 @@ public:
 #define MACRO_COMBINE_DIRECT(X, Y) X##Y
 #define MACRO_COMBINE(X, Y) MACRO_COMBINE_DIRECT(X, Y)
 #define SCOPED_EVENT(__NAME__) FScopedEvent MACRO_COMBINE(ScopedEvent, __LINE__)(__NAME__)
-#define SCOPED_EVENT_F(...) SCOPED_EVENT(fmt::format(__VA_ARGS__).c_str())
