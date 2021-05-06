@@ -185,19 +185,19 @@ namespace RHI
 			PsoDesc.InputLayout = { InputElementDescs1, _countof(InputElementDescs1) };
 			break;
 		case RHI::FPassType::BLOOM_SETUP_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
 		case RHI::FPassType::BLOOM_DOWN_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
 		case RHI::FPassType::BLOOM_UP_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
 		case RHI::FPassType::SUN_MERGE_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
 			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
 			break;
 		case RHI::FPassType::TONEMAPPING_PT:
@@ -952,17 +952,20 @@ namespace RHI
 			ResState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 			Texture->DsvFormat = DXGI_FORMAT_D32_FLOAT;
 			break;
-		case RHI::FTextureType::RENDER_TARGET_TT:
+		case RHI::FTextureType::SCENE_COLOR_TT:
 			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			*ClearValue = { DXGI_FORMAT_R16G16B16A16_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
 			break;
+		case RHI::FTextureType::RENDER_TARGET_TEXTURE_TT:
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			*ClearValue = { DXGI_FORMAT_R11G11B10_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
+			ResState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
+			break;
 		case RHI::FTextureType::ORDINARY_SHADER_RESOURCE_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_NONE);
-			ClearValue = nullptr;
-			ResState = D3D12_RESOURCE_STATE_COPY_DEST;
-			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
+
 			break;
 		default:
 			break;
@@ -989,14 +992,14 @@ namespace RHI
 		switch (Type)
 		{
 		case RHI::FSamplerType::CLAMP_ST:
-			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 			break;
 
 		case RHI::FSamplerType::WARP_ST:
-			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;

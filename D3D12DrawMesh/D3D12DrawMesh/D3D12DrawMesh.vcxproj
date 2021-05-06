@@ -52,6 +52,7 @@
     <ClCompile Include="FScene.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MathExtend.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />

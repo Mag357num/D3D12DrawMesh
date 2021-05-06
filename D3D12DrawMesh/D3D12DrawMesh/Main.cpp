@@ -15,6 +15,6 @@
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-    FEngine sample(1280, 720, L"D3D12 Hello Triangle");
+    FEngine sample(1600, 900, L"D3D12 Hello Triangle");
     return Win32Application::Run(&sample, hInstance, nCmdShow);
 }

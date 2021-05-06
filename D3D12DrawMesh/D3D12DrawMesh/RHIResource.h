@@ -139,8 +139,9 @@ namespace RHI
 	{
 		SHADOW_MAP_TT = 0,
 		DEPTH_STENCIL_MAP_TT = 1,
-		RENDER_TARGET_TT = 2,
-		ORDINARY_SHADER_RESOURCE_TT = 3, // for texture that only act as srv but not for ds, rt etc... should read from file
+		SCENE_COLOR_TT = 2,
+		RENDER_TARGET_TEXTURE_TT = 3,
+		ORDINARY_SHADER_RESOURCE_TT = 4, // for texture that only act as srv but not for ds, rt etc... should read from file
 	};
 
 	enum class FResViewType

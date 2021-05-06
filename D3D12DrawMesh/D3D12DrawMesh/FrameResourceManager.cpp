@@ -3,6 +3,7 @@
 #include <gtc/matrix_transform.hpp>
 #include "RHIResource.h"
 #include "DX12Resource.h"
+#include "MathExtend.h"
 
 void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 {
@@ -25,19 +26,19 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FrameResource.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
 
 		// create and commit scene color
-		FrameResource.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+		FrameResource.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::SRV_RVT);
 
 		// create and commit bloom down and up texture
-		FrameResource.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+		FrameResource.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::SRV_RVT);
 
 		for (uint32 i = 0; i < 4; i++)
 		{
 			uint32 ZoomIn = static_cast<uint32>(pow( 2, 3 + i ));
-			FrameResource.GetBloomDownMaps().push_back(GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ));
+			FrameResource.GetBloomDownMaps().push_back(GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ));
 			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::RTV_RVT );
 			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::SRV_RVT );
 		}
@@ -45,12 +46,12 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		for (int i = 4; i > 1; i--)
 		{
 			uint32 ZoomIn = static_cast<uint32>(pow( 2, 1 + i ));
-			FrameResource.GetBloomUpMaps().push_back( GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ) );
+			FrameResource.GetBloomUpMaps().push_back( GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ) );
 			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::RTV_RVT );
 			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::SRV_RVT );
 		}
 		
-		FrameResource.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+		FrameResource.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::SRV_RVT);
 
@@ -210,13 +211,12 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetFrameMeshes()[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
 	}
 
-	FVector4 BufferSizeAndInvSize = FVector4(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()),
-		1.f / static_cast<float>(GDynamicRHI->GetWidth()), 1.f / static_cast<float>(GDynamicRHI->GetWidth()));
+	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
 
 	// update postprocess
 	// bloom setup
 	FBloomSetupCB BloomSetupStruct;
-	BloomSetupStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / 4.f;
+	BloomSetupStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 4.f);
 	BloomSetupStruct.BloomThreshold = 1.0f;
 	RHI::FCBData BloomSetupPassData;
 	BloomSetupPassData.DataBuffer = reinterpret_cast<void*>(&BloomSetupStruct);
@@ -227,7 +227,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 i = 0; i < 4; i++)
 	{
 		FBloomDownCB BloomDwonStruct;
-		BloomDwonStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 1)));
+		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight  / (4.f * static_cast<float>(pow(2, i + 1))));
 		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
 		RHI::FCBData BloomDwonPassData;
 		BloomDwonPassData.DataBuffer = reinterpret_cast<void*>(&BloomDwonStruct);
@@ -247,8 +247,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (int i = 2; i >= 0; i--)
 	{
 		FBloomUpCB BloomUpStruct;
-		BloomUpStruct.BufferASizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 1)));
-		BloomUpStruct.BufferBSizeAndInvSize = BufferSizeAndInvSize / (4.f * static_cast<float>(pow(2, i + 2)));
+		BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 1))));
+		BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 2))));
 		BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
 		BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
 		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
@@ -261,7 +261,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	// sun merge
 	FSunMergeCB SunMergeStruct;
-	SunMergeStruct.BloomUpSizeAndInvSize = BufferSizeAndInvSize / 8.f;
+	SunMergeStruct.BloomUpSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 8.f);
 	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
 	RHI::FCBData SunMergePassData;
 	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
