@@ -256,7 +256,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		RHI::FCBData BloomUpPassData;
 		BloomUpPassData.DataBuffer = reinterpret_cast<void*>(&BloomUpStruct);
 		BloomUpPassData.BufferSize = sizeof(BloomUpStruct);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->BloomUpMat[i].get(), &BloomUpPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->BloomUpMat[2-i].get(), &BloomUpPassData);
 	}
 
 	// sun merge
