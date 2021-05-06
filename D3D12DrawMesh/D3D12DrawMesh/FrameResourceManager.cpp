@@ -217,7 +217,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// bloom setup
 	FBloomSetupCB BloomSetupStruct;
 	BloomSetupStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / 4.f;
-	BloomSetupStruct.BloomThreshold = -1.0f;
+	BloomSetupStruct.BloomThreshold = 1.0f;
 	RHI::FCBData BloomSetupPassData;
 	BloomSetupPassData.DataBuffer = reinterpret_cast<void*>(&BloomSetupStruct);
 	BloomSetupPassData.BufferSize = sizeof(BloomSetupStruct);
@@ -242,7 +242,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	static const FVector4 BloomTint4 = FVector4(0.066f);
 	static const FVector4 BloomTint5 = FVector4(0.066f);
 	static const float BloomIntensity = 1.0f;
-	static const float BloomThreshold = -1.0f;
 	static const FVector4 BloomTintAs[3] = { BloomTint4, BloomTint3 * BloomIntensity, BloomTint2 * BloomIntensity };
 	static const FVector4 BloomTintBs[3] = { BloomTint5, FVector4(1.0f, 1.0f, 1.0f, 0.0f), FVector4(1.0f, 1.0f, 1.0f, 0.0f) };
 	for (int i = 2; i >= 0; i--)
