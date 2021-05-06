@@ -54,7 +54,7 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::SRV_RVT);
 
-		// create pastprocess mesh and mesh resource
+		// create postprocess mesh and mesh resource
 		vector<float> TriangleVertices =
 		{
 			 1.f, -1.f, 0.0f,  1.f,  1.f,
@@ -65,7 +65,7 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FrameResource.SetPostProcessTriangle( GDynamicRHI->CreateMesh( Actor ) );
 		FrameResource.SetPostProcessTriangleRes( GDynamicRHI->CreateMeshRes() );
 
-		// create pastprocess material
+		// create postprocess material
 		// bloom setup
 		vector<shared_ptr<FHandle>> TexHandles;
 		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
@@ -213,7 +213,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	FVector4 BufferSizeAndInvSize = FVector4(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()),
 		1.f / static_cast<float>(GDynamicRHI->GetWidth()), 1.f / static_cast<float>(GDynamicRHI->GetWidth()));
 
-	// update pastprocess
+	// update postprocess
 	// bloom setup
 	FBloomSetupCB BloomSetupStruct;
 	BloomSetupStruct.BufferSizeAndInvSize = BufferSizeAndInvSize / 4.f;

@@ -171,7 +171,7 @@ namespace RHI
 	enum class FMeshType_deprecated
 	{
 		SCENE_MESH_FT = 0,
-		PastProcess_MESH_FT = 1,
+		PostProcess_MESH_FT = 1,
 	};
 
 	enum class FRESOURCE_STATES
