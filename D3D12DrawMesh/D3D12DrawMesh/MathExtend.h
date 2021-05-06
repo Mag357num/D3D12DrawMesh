@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
 
+float PI = 3.141592654f;
+
 float Atan2(const float& Y, const float& X)
 {
 	const float absX = fabs(X);
@@ -34,8 +36,8 @@ float Atan2(const float& Y, const float& X)
 	t0 = t0 * t4 + c[6];
 	t3 = t0 * t3;
 
-	t3 = yAbsBigger ? (0.5f * XM_PI) - t3 : t3;
-	t3 = (X < 0.0f) ? XM_PI - t3 : t3;
+	t3 = yAbsBigger ? (0.5f * PI) - t3 : t3;
+	t3 = (X < 0.0f) ? PI - t3 : t3;
 	t3 = (Y < 0.0f) ? -t3 : t3;
 
 	return t3;

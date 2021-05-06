@@ -17,7 +17,7 @@
 FCamera::FCamera():
 	InitialPosition(500.f, 0.f, 0.f),
 	Position(InitialPosition),
-	Yaw(XM_PI),
+	Yaw(3.141592654f),
 	Pitch(0.0f),
 	LookDirection(-1.f, 0.f, 0.f),
 	UpDirection(0.f, 0.f, 1.f),
@@ -25,7 +25,7 @@ FCamera::FCamera():
 	MouseSensibility(0.005f),
 	Fov(90.f),
 	AspectRatio(1.7777777f),
-	TurnSpeed(XM_PIDIV2),
+	TurnSpeed(1.570796327f),
 	Keys{}
 {
 }

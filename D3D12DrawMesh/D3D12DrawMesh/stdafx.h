@@ -21,19 +21,11 @@
 
 #include <windows.h>
 
-#include <d2d1_3.h>
-#include <dwrite.h>
-#include <d3d11on12.h>
-#include <d3d12.h>
-#include <dxgi1_6.h>
-#include <D3Dcompiler.h>
-#include <DirectXMath.h>
-#include "d3dx12.h"
-#include <pix.h>
 #include <cmath>
 #include <fstream>
 
 #include <string>
+#include <vector>
 #include <wrl.h>
 #include <shellapi.h>
 #include "assert.h" 
@@ -41,7 +33,6 @@
 #include "string.h"
 #include "Types.h"
 
-using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
 using std::make_shared;
 using std::dynamic_pointer_cast;
@@ -49,4 +40,3 @@ using std::vector;
 using std::array;
 using std::string;
 using std::wstring;
-using namespace DirectX; // TODO: namespace DirectX is platform dependent
