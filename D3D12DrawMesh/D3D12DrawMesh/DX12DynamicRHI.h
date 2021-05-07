@@ -96,7 +96,6 @@ namespace RHI
 		D3D12_RASTERIZER_DESC CreateRasterizerStateDesc();
 		D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc();
 		void DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size);
-		ComPtr<ID3D12RootSignature> CreateDX12RootSig(FPassType Type);
 		void CreateGPUFence(ComPtr<ID3D12Fence>& Fence);
 		void GetHardwareAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter = false);
 
