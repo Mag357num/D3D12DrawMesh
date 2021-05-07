@@ -130,89 +130,15 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
 	}
 
-	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig)
+	shared_ptr<RHI::FPipeline> FDX12DynamicRHI::CreatePipeline(FFormat RtFormat, uint32 RtNum, FVertexInputLayer VertexInputLayer, FShaderInputLayer ShaderInputLayer, FMaterial* Mat)
 	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
-
-		static D3D12_INPUT_ELEMENT_DESC InputElementDescs1[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-		static D3D12_INPUT_ELEMENT_DESC InputElementDescs2[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		};
-
-		CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
-		rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
-		rasterizerStateDesc.FrontCounterClockwise = TRUE;
-
-		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
-		depthStencilDesc.DepthEnable = TRUE;
-
-		PsoDesc.InputLayout = { InputElementDescs1, _countof(InputElementDescs1) };
-		PsoDesc.RasterizerState = rasterizerStateDesc;
-		PsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		PsoDesc.DepthStencilState = depthStencilDesc;
-		PsoDesc.SampleMask = UINT_MAX;
-		PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		PsoDesc.NumRenderTargets = 1;
-		PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		PsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-		PsoDesc.SampleDesc.Count = 1;
-
-		PsoDesc.pRootSignature = Sig->As<FDX12RootSignatrue>()->RootSignature.Get();
-		PsoDesc.VS = CD3DX12_SHADER_BYTECODE(VS->As<FDX12Shader>()->Shader.Get());
-		PsoDesc.PS = CD3DX12_SHADER_BYTECODE(PS->As<FDX12Shader>()->Shader.Get());
-
-		switch (Type)
-		{
-		case RHI::FPassType::SHADOW_PT:
-			PsoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0); // TODO: could delete
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
-			PsoDesc.NumRenderTargets = 0;
-			PsoDesc.InputLayout = { InputElementDescs1, _countof(InputElementDescs1) };
-			break;
-		case RHI::FPassType::SCENE_COLOR_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			PsoDesc.InputLayout = { InputElementDescs1, _countof(InputElementDescs1) };
-			break;
-		case RHI::FPassType::BLOOM_SETUP_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
-		case RHI::FPassType::BLOOM_DOWN_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
-		case RHI::FPassType::BLOOM_UP_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
-		case RHI::FPassType::SUN_MERGE_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R11G11B10_FLOAT;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
-		case RHI::FPassType::TONEMAPPING_PT:
-			PsoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-			PsoDesc.InputLayout = { InputElementDescs2, _countof(InputElementDescs2) };
-			break;
-		default:
-			break;
-		}
-
-		shared_ptr<FDX12PipelineState> Ras = make_shared<FDX12PipelineState>();
-		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Ras->PSO)));
-		return Ras;
+		shared_ptr<FPipeline> Pipeline = make_shared<FPipeline>();
+		Pipeline->Sig = GDynamicRHI->CreateRootSignatrue(ShaderInputLayer);
+		Pipeline->PSO = GDynamicRHI->CreatePso(RtFormat, VertexInputLayer, RtNum, Mat->VS.get(), Mat->PS.get(), Pipeline->Sig.get());
+		return Pipeline;
 	}
 
-	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso2(FFormat RtFormat, FInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
 
@@ -261,64 +187,20 @@ namespace RHI
 		return Pso;
 	}
 
-	void FDX12DynamicRHI::SetPipelineState(FPipelineState* Pso)
+	void FDX12DynamicRHI::SetPipelineState(FPipeline* Pipe)
 	{
-		CommandLists[0].CommandList->SetPipelineState(Pso->As<FDX12PipelineState>()->PSO.Get());
+		CommandLists[0].CommandList->SetPipelineState(Pipe->PSO->As<FDX12PipelineState>()->PSO.Get());
+		CommandLists[0].CommandList->SetGraphicsRootSignature(Pipe->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
 	}
 
-	// some resource store at FMeshRes some store at FFrameResource
-	void FDX12DynamicRHI::SetShaderInput(FPassType Type, FMaterial* Mat, FFrameResource* FrameRes)
+	void FDX12DynamicRHI::SetShaderInput(vector<shared_ptr<FHandle>> Handles)
 	{
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
-		CommandLists[0].CommandList->SetGraphicsRootSignature(Mat->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
-
-		switch (Type)
+		for (uint32 i = 0; i < Handles.size(); i++)
 		{
-		case RHI::FPassType::SHADOW_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-
-		case RHI::FPassType::SCENE_COLOR_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, FrameRes->GetShadowMap()->SrvHandle->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-
-		case RHI::FPassType::BLOOM_SETUP_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-		case RHI::FPassType::BLOOM_DOWN_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-		case RHI::FPassType::BLOOM_UP_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->GetWarpSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-		case RHI::FPassType::SUN_MERGE_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->CB->As<FDX12CB>()->GPUHandleInHeap);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(3, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(4, FrameRes->GetWarpSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-		case RHI::FPassType::TONEMAPPING_PT:
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(0, Mat->TexHandles[0]->As<FDX12GpuHandle>()->Handle);
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(1, Mat->TexHandles[1]->As<FDX12GpuHandle>()->Handle); // TODO: change
-			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(2, FrameRes->GetClampSampler()->As<FDX12Sampler>()->SamplerHandle);
-			break;
-
-		default:
-			break;
+			CommandLists[0].CommandList->SetGraphicsRootDescriptorTable(i, Handles[i]->As<FDX12GpuHandle>()->Handle);
 		}
 	}
 
@@ -359,7 +241,35 @@ namespace RHI
 	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBuffer(const uint32& Size)
 {
 		shared_ptr<FDX12CB> DX12CB = make_shared<FDX12CB>();
-		DX12CreateConstantBuffer(DX12CB.get(), Size);
+		DX12CB->CBHandle = make_shared<FDX12GpuHandle>();
+
+		ComPtr<ID3D12Resource>& ConstantBuffer = DX12CB->CBRes;
+		void*& VirtualAddress = DX12CB->UploadBufferVirtualAddress;
+		uint32 ConstantBufferSize = Size;
+
+		ThrowIfFailed(Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(ConstantBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&ConstantBuffer)));
+
+		NAME_D3D12_OBJECT(ConstantBuffer);
+
+		// Describe and create a constant buffer view.
+		D3D12_CONSTANT_BUFFER_VIEW_DESC CbvDesc = {};
+		CbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
+		CbvDesc.SizeInBytes = ConstantBufferSize;
+		CreateCbvToHeaps(CbvDesc, DX12CB.get());
+
+		// Map and initialize the constant buffer. We don't unmap this until the
+		// app closes. Keeping things mapped for the lifetime of the resource is okay.
+		CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+		// Map: resource give cpu the right to dynamic manipulate(memcpy) it, and forbid gpu to manipulate it, until Unmap occur.
+		// resource->Map(subresource, cpuReadRange, cpuVirtualAdress )
+		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&VirtualAddress)));
+
 		return DX12CB;
 	}
 
@@ -457,7 +367,7 @@ namespace RHI
 	void FDX12DynamicRHI::CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB)
 	{
 		Device->CreateConstantBufferView(&CbvDesc, LastCpuHandleCbSr);
-		FDX12CB->GPUHandleInHeap = LastGpuHandleCbSr;
+		FDX12CB->CBHandle->As<FDX12GpuHandle>()->Handle = LastGpuHandleCbSr;
 
 		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -552,32 +462,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
 	{
-		ComPtr<ID3D12Resource>& ConstantBuffer = FDX12CB->CBRes;
-		void*& VirtualAddress = FDX12CB->UploadBufferVirtualAddress;
-		uint32 ConstantBufferSize = Size;
-
-		ThrowIfFailed(Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(ConstantBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&ConstantBuffer)));
-
-		NAME_D3D12_OBJECT(ConstantBuffer);
-
-		// Describe and create a constant buffer view.
-		D3D12_CONSTANT_BUFFER_VIEW_DESC CbvDesc = {};
-		CbvDesc.BufferLocation = ConstantBuffer->GetGPUVirtualAddress();
-		CbvDesc.SizeInBytes = ConstantBufferSize;
-		CreateCbvToHeaps(CbvDesc, FDX12CB);
-
-		// Map and initialize the constant buffer. We don't unmap this until the
-		// app closes. Keeping things mapped for the lifetime of the resource is okay.
-		CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-		// Map: resource give cpu the right to dynamic manipulate(memcpy) it, and forbid gpu to manipulate it, until Unmap occur.
-		// resource->Map(subresource, cpuReadRange, cpuVirtualAdress )
-		ThrowIfFailed(ConstantBuffer->Map(0, &readRange, reinterpret_cast<void**>(&VirtualAddress)));
+		assert(0);
 	}
 
 	_Use_decl_annotations_ void FDX12DynamicRHI::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter)
@@ -648,9 +533,26 @@ namespace RHI
 	{
 		FrameMesh.Mesh = CreateMesh(MeshActor);
 		FrameMesh.MeshRes = CreateMeshRes();
+
+		// material
 		vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-		FrameMesh.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SHADOW_PT);
-		FrameMesh.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty, FPassType::SCENE_COLOR_PT);
+		FrameMesh.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
+		FrameMesh.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
+
+		// shadow map pipeline
+		FShaderInputLayer ShaderInputLayer;
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		FrameMesh.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, FrameMesh.Mesh->InputLayer, ShaderInputLayer, FrameMesh.MeshRes->ShadowMat.get());
+
+		// shadow map pipeline
+		ShaderInputLayer.Elements.clear();
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		FrameMesh.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, FrameMesh.Mesh->InputLayer, ShaderInputLayer, FrameMesh.MeshRes->SceneColorMat.get());
+
 	}
 
 	void FDX12DynamicRHI::FrameBegin()
@@ -779,10 +681,10 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FRootSignatrue> FDX12DynamicRHI::CreateRootSignatrue(FPassType Type)
+	shared_ptr<RHI::FRootSignatrue> FDX12DynamicRHI::CreateRootSignatrue(FShaderInputLayer InputLayer)
 	{
 		shared_ptr<FDX12RootSignatrue> Sig = make_shared<FDX12RootSignatrue>();
-		ComPtr<ID3D12RootSignature> RootSignature;
+
 		D3D12_FEATURE_DATA_ROOT_SIGNATURE FeatureData = {};
 		ChooseSupportedFeatureVersion(FeatureData, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
@@ -797,147 +699,26 @@ namespace RHI
 		ComPtr<ID3DBlob> Error;
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 
-		switch (Type)
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[20]; // TODO: hard coding
+		CD3DX12_ROOT_PARAMETER1 rootParameters[20]; // TODO: hard coding
+
+		for (uint32 i = 0; i < InputLayer.Elements.size(); i++)
 		{
-		case RHI::FPassType::SHADOW_PT:
-		case RHI::FPassType::SCENE_COLOR_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+			ranges[i].Init(static_cast<D3D12_DESCRIPTOR_RANGE_TYPE>(InputLayer.Elements[i].RangeType),
+				InputLayer.Elements[i].NumDescriptors, InputLayer.Elements[i].BaseShaderRegister);
 
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		case RHI::FPassType::BLOOM_SETUP_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		case RHI::FPassType::BLOOM_DOWN_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		case RHI::FPassType::BLOOM_UP_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
-			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-			ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		case RHI::FPassType::SUN_MERGE_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
-			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-			ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[3].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
-			rootParameters[4].InitAsDescriptorTable(1, &ranges[4], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		case RHI::FPassType::TONEMAPPING_PT:
-		{
-			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
-			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
-			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
-			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
-
-			rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL); // srv only used in ps
-			rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-
-			rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
-			ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
-			ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&RootSignature)));
-			break;
-		}
-		default:
-			break;
+			rootParameters[i].InitAsDescriptorTable(1, &ranges[i],
+				static_cast<D3D12_SHADER_VISIBILITY>(InputLayer.Elements[i].Visibility));
 		}
 
-		Sig->RootSignature = RootSignature;
+		rootSignatureDesc.Init_1_1(static_cast<uint32>(InputLayer.Elements.size()), rootParameters, 0, nullptr, rootSignatureFlags);
+		ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, FeatureData.HighestVersion, &Signature, &Error));
+		ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&Sig->RootSignature)));
 
 		return Sig;
 	}
 
-	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type)
-	{
-		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
-		Mat->Type = Type;
-
-		WCHAR assetsPath[512];
-		GetAssetsPath(assetsPath, _countof(assetsPath));
-		std::wstring m_assetsPath = assetsPath + ShaderFileName;
-		Mat->VS = CreateVertexShader(m_assetsPath);
-		Mat->PS = CreatePixelShader(m_assetsPath);
-		Mat->Sig = CreateRootSignatrue(Type);
-		Mat->PSO = CreatePso(Type, Mat->VS.get(), Mat->PS.get(), Mat->Sig.get());
-		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
-		Mat->TexHandles = TexHandles;
-		return Mat;
-	}
-
-	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial2(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles)
+	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles)
 	{
 		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
 
@@ -1030,7 +811,10 @@ namespace RHI
 			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
 			break;
 		case RHI::FTextureType::ORDINARY_SHADER_RESOURCE_TT:
-
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+			*ClearValue = { DXGI_FORMAT_R11G11B10_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
+			ResState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
 			break;
 		default:
 			break;
@@ -1050,6 +834,7 @@ namespace RHI
 	shared_ptr<RHI::FSampler> FDX12DynamicRHI::CreateAndCommitSampler(FSamplerType Type)
 	{
 		shared_ptr <FDX12Sampler> DX12Sam = make_shared<FDX12Sampler>();
+		DX12Sam->SamplerHandle = make_shared<FDX12GpuHandle>();
 		DX12Sam->Type = Type;
 
 		D3D12_SAMPLER_DESC SamplerDesc = {};
@@ -1084,7 +869,7 @@ namespace RHI
 		SamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
 		Device->CreateSampler(&SamplerDesc, LastCpuHandleSampler);
-		DX12Sam->SamplerHandle = LastGpuHandleSampler;
+		DX12Sam->SamplerHandle->As<FDX12GpuHandle>()->Handle = LastGpuHandleSampler;
 		LastCpuHandleSampler.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
 		LastGpuHandleSampler.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
 

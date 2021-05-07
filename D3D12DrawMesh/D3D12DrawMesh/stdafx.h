@@ -28,7 +28,7 @@
 #include <vector>
 #include <wrl.h>
 #include <shellapi.h>
-#include "assert.h" 
+#include <assert.h>
 
 #include "string.h"
 #include "Types.h"

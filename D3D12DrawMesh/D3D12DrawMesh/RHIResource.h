@@ -15,6 +15,10 @@ namespace RHI
 		inline T* TryAs() { return dynamic_cast<T*>(this); }
 	};
 
+	struct FHandle : public FRHIResource
+	{
+	};
+
 	struct FPipelineState : public FRHIResource
 	{
 	};
@@ -28,6 +32,7 @@ namespace RHI
 
 	struct FCB : public FRHIResource
 	{
+		shared_ptr<FHandle> CBHandle;
 	};
 
 	struct FShader : public FRHIResource
@@ -47,7 +52,7 @@ namespace RHI
 		uint32 InstanceDataStepRate;
 	};
 
-	struct FInputLayer
+	struct FVertexInputLayer
 	{
 		vector<FInputElement> Elements;
 	};
@@ -56,14 +61,10 @@ namespace RHI
 	{
 		FMesh() = default;
 		uint32 IndexNum;
-		FInputLayer InputLayer;
+		FVertexInputLayer InputLayer;
 	};
 
 	struct FRootSignatrue : public FRHIResource
-	{
-	};
-
-	struct FHandle : public FRHIResource
 	{
 	};
 
@@ -74,13 +75,25 @@ namespace RHI
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 		shared_ptr<FCB> CB;
+		vector<shared_ptr<FHandle>> TexHandles;
+	};
+
+	struct FPipeline
+	{
 		shared_ptr<FPipelineState> PSO;
 		shared_ptr<FRootSignatrue> Sig;
-		vector<shared_ptr<FHandle>> TexHandles;
 	};
 
 	struct FMeshRes : public FRHIResource
 	{
+		shared_ptr<FPipeline> ShadowPipeline;
+		shared_ptr<FPipeline> SceneColorPipeline;
+		shared_ptr<FPipeline> BloomSetupPipeline;
+		shared_ptr<FPipeline> BloomDownPipeline;
+		shared_ptr<FPipeline> BloomUpPipeline;
+		shared_ptr<FPipeline> SunMergePipeline;
+		shared_ptr<FPipeline> ToneMappingPipeline;
+
 		shared_ptr<FMaterial> ShadowMat;
 		shared_ptr<FMaterial> SceneColorMat;
 		shared_ptr<FMaterial> BloomSetupMat;
@@ -105,6 +118,7 @@ namespace RHI
 	struct FSampler : public FRHIResource
 	{
 		virtual ~FSampler() = default;
+		shared_ptr<FHandle> SamplerHandle;
 	};
 
 	struct FBlinnPhongCB
@@ -153,10 +167,39 @@ namespace RHI
 		FVector BloomColor;
 	};
 
-	struct FPipeline
+	enum class FRangeType;
+	enum class FShaderVisibility;
+	struct FShaderInputElement
 	{
-		shared_ptr<FPipelineState> PSO;
-		shared_ptr<FRootSignatrue> Sig;
+		FRangeType RangeType;
+		uint32 NumDescriptors;
+		uint32 BaseShaderRegister;
+		FShaderVisibility Visibility;
+	};
+
+	struct FShaderInputLayer
+	{
+		vector<FShaderInputElement> Elements;
+	};
+
+	enum class FRangeType
+	{
+		DESCRIPTOR_RANGE_TYPE_SRV = 0,
+		DESCRIPTOR_RANGE_TYPE_UAV = (DESCRIPTOR_RANGE_TYPE_SRV + 1),
+		DESCRIPTOR_RANGE_TYPE_CBV = (DESCRIPTOR_RANGE_TYPE_UAV + 1),
+		DESCRIPTOR_RANGE_TYPE_SAMPLER = (DESCRIPTOR_RANGE_TYPE_CBV + 1)
+	};
+
+	enum class FShaderVisibility
+	{
+		SHADER_VISIBILITY_ALL = 0,
+		SHADER_VISIBILITY_VERTEX = 1,
+		SHADER_VISIBILITY_HULL = 2,
+		SHADER_VISIBILITY_DOMAIN = 3,
+		SHADER_VISIBILITY_GEOMETRY = 4,
+		SHADER_VISIBILITY_PIXEL = 5,
+		SHADER_VISIBILITY_AMPLIFICATION = 6,
+		SHADER_VISIBILITY_MESH = 7
 	};
 
 	enum class FTextureType
@@ -180,17 +223,6 @@ namespace RHI
 		CLAMP_ST = 0,
 		WARP_ST = 1,
 		MIRROR_ST = 2,
-	};
-
-	enum class FPassType
-	{
-		SHADOW_PT = 0,
-		SCENE_COLOR_PT = 1,
-		BLOOM_SETUP_PT = 2,
-		BLOOM_DOWN_PT = 3,
-		BLOOM_UP_PT = 4,
-		SUN_MERGE_PT = 5,
-		TONEMAPPING_PT = 6,
 	};
 
 	enum class FMeshType_deprecated

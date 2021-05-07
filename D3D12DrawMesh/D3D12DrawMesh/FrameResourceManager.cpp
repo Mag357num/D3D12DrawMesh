@@ -12,6 +12,10 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 	{
 		FFrameResource& FrameResource = GetFrameRes()[FrameIndex];
 
+		// create and commit null texture
+		FrameResource.SetNullTexture(GDynamicRHI->CreateTexture(FTextureType::ORDINARY_SHADER_RESOURCE_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+		GDynamicRHI->CommitTextureAsView(FrameResource.GetNullTexture().get(), FResViewType::SRV_RVT);
+
 		// create and commit shadow map
 		FrameResource.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.GetShadowMapSize(), FrameResource.GetShadowMapSize()));
 		GDynamicRHI->CommitTextureAsView(FrameResource.GetShadowMap().get(), FResViewType::DSV_RVT);
@@ -65,61 +69,91 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
 		FrameResource.SetPostProcessTriangle( GDynamicRHI->CreateMesh( Actor ) );
 		FrameResource.SetPostProcessTriangleRes( GDynamicRHI->CreateMeshRes() );
-		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.clear();
-		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
+		FMeshRes* TriRes = FrameResource.GetPostProcessTriangleRes().get();
+		FMesh* Tri = FrameResource.GetPostProcessTriangle().get();
+
+		Tri->InputLayer.Elements.clear();
+		Tri->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+		Tri->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
 
 		// create postprocess material
 		// bloom setup
 		vector<shared_ptr<FHandle>> TexHandles;
 		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomSetupMat = GDynamicRHI->CreateMaterial( L"BloomSetup.hlsl", 256, TexHandles, FPassType::BLOOM_SETUP_PT );
+		TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial( L"BloomSetup.hlsl", 256, TexHandles);
 		TexHandles.clear();
 
 		// bloom down
 		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
-
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
-
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
-
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles, FPassType::BLOOM_DOWN_PT);
+		TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
 
 		// bloom up
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[3]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
-
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
 		TexHandles.push_back(FrameResource.GetBloomUpMaps()[0]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
-
 		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
 		TexHandles.push_back(FrameResource.GetBloomUpMaps()[1]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles, FPassType::BLOOM_UP_PT);
+		TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
 		TexHandles.clear();
 
 		// sun merge
 		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
 		TexHandles.push_back(FrameResource.GetBloomUpMaps()[2]->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles, FPassType::SUN_MERGE_PT);
+		TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles);
 		TexHandles.clear();
 
 		// tonemapping
 		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
 		TexHandles.push_back(FrameResource.GetSunMergeMap()->SrvHandle);
-		FrameResource.GetPostProcessTriangleRes()->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles, FPassType::TONEMAPPING_PT);
+		TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles);
 		TexHandles.clear();
+
+		// pipeline
+		// bloom setup
+		TriRes->BloomSetupPipeline = make_shared<FPipeline>();
+
+		FShaderInputLayer ShaderInputLayer;
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		TriRes->BloomSetupPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomSetupMat.get());
+
+		// bloom down
+		TriRes->BloomDownPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomDownMat[0].get());
+
+		// bloom up
+		ShaderInputLayer.Elements.clear();
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		TriRes->BloomUpPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomUpMat[0].get());
+
+		// sun merge
+		TriRes->SunMergePipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->SunMergeMat.get());
+
+		// tone mapping
+		ShaderInputLayer.Elements.clear();
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+		TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_B8G8R8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
 	}
 }
 

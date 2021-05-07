@@ -37,7 +37,6 @@ namespace RHI
 	struct FDX12Sampler : public FSampler
 	{
 		FSamplerType Type;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE SamplerHandle;
 	};
 
 	struct FDX12PipelineState : public FPipelineState
@@ -54,7 +53,6 @@ namespace RHI
 	{
 		ComPtr<ID3D12Resource> CBRes;
 		void* UploadBufferVirtualAddress;
-		CD3DX12_GPU_DESCRIPTOR_HANDLE GPUHandleInHeap;
 	};
 
 	struct FDX12Mesh : public FMesh

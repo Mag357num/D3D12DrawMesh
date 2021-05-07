@@ -34,14 +34,13 @@ namespace RHI
 		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) override;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) override;
 		virtual shared_ptr<FMeshRes> CreateMeshRes() override;
-		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type) override;
-		virtual shared_ptr<FMaterial> CreateMaterial2(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
+		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
-		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FPassType Type) override;
+		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) override;
 		virtual void CreateFrameMesh(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// Resource process
@@ -56,12 +55,10 @@ namespace RHI
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
 
 		// Pipeline
-		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig) override;
-		virtual shared_ptr<FPipelineState> CreatePso2(FFormat RtFormat, FInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) override;
-		virtual void SetPipelineState(FPipelineState* Pso) override;
-
-		// shader
-		virtual void SetShaderInput(FPassType Type, FMaterial* Mat, FFrameResource* FrameRes) override;
+		virtual shared_ptr<FPipeline> CreatePipeline(FFormat RtFormat, uint32 RtNum, FVertexInputLayer VertexInputLayer, FShaderInputLayer ShaderInputLayer, FMaterial* Mat) override;
+		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) override;
+		virtual void SetPipelineState(FPipeline* Pipe) override;
+		virtual void SetShaderInput(vector<shared_ptr<FHandle>> Handles) override;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) override;
