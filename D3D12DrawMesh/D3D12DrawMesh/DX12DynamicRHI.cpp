@@ -805,7 +805,7 @@ namespace RHI
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
 
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
@@ -822,7 +822,7 @@ namespace RHI
 		{
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
@@ -839,7 +839,7 @@ namespace RHI
 		{
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
 
@@ -856,7 +856,7 @@ namespace RHI
 		{
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
 			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
@@ -877,7 +877,7 @@ namespace RHI
 		{
 			CD3DX12_DESCRIPTOR_RANGE1 ranges[5];
 			CD3DX12_ROOT_PARAMETER1 rootParameters[5];
-			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); // frequently changed cb
+			ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // frequently changed cb
 			ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // infrequently changed srv
 			ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); // infrequently changed srv
 			ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // infrequently changed sampler
