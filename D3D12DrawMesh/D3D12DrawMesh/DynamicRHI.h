@@ -33,9 +33,10 @@ namespace RHI
 		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) = 0;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) = 0; // meshActor is mesh data, can read from file or write in code
 		virtual shared_ptr<FMeshRes> CreateMeshRes() = 0;
-		virtual shared_ptr<FMaterial> CreateMaterial(const std::wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type) = 0;
-		virtual shared_ptr<FShader> CreateVertexShader(const std::wstring& FileName) = 0;
-		virtual shared_ptr<FShader> CreatePixelShader(const std::wstring& FileName) = 0;
+		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles, FPassType Type) = 0;
+		virtual shared_ptr<FMaterial> CreateMaterial2(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
+		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
+		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
@@ -58,7 +59,8 @@ namespace RHI
 
 		// Pipeline
 		virtual shared_ptr<FPipelineState> CreatePso(FPassType Type, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
-		virtual void ChoosePipelineState(FPipelineState* Pso) = 0;
+		virtual shared_ptr<FPipelineState> CreatePso2(FFormat RtFormat, FInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
+		virtual void SetPipelineState(FPipelineState* Pso) = 0;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;

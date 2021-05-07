@@ -65,6 +65,9 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
 		FrameResource.SetPostProcessTriangle( GDynamicRHI->CreateMesh( Actor ) );
 		FrameResource.SetPostProcessTriangleRes( GDynamicRHI->CreateMeshRes() );
+		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.clear();
+		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+		FrameResource.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
 
 		// create postprocess material
 		// bloom setup

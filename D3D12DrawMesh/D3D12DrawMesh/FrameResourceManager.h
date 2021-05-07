@@ -10,6 +10,8 @@ struct FFrameMesh
 	shared_ptr<FMesh> Mesh;
 	shared_ptr<FMeshRes> MeshRes;
 	vector<FTexture> Textures;
+	shared_ptr<FPipeline> ShadowPipeline;
+	shared_ptr<FPipeline> SceneColorPipeline;
 };
 
 class FFrameResource

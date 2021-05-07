@@ -212,7 +212,56 @@ namespace RHI
 		return Ras;
 	}
 
-	void FDX12DynamicRHI::ChoosePipelineState(FPipelineState* Pso)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso2(FFormat RtFormat, FInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
+
+		static D3D12_INPUT_ELEMENT_DESC InputElementDescs[20]; // TODO: why static? // TODO:only assign a num that is certainly bigger than actual Element.size()
+		for (uint32 i = 0; i < Layer.Elements.size(); i++)
+		{
+			InputElementDescs[i] =
+			{
+				Layer.Elements[i].SemanticName.c_str(),
+				Layer.Elements[i].SemanticIndex,
+				static_cast<DXGI_FORMAT>(Layer.Elements[i].Format),
+				Layer.Elements[i].InputSlot,
+				Layer.Elements[i].AlignedByteOffset,
+				static_cast<D3D12_INPUT_CLASSIFICATION>(Layer.Elements[i].InputSlotClass),
+				Layer.Elements[i].InstanceDataStepRate
+			};
+		}
+
+		CD3DX12_RASTERIZER_DESC rasterizerStateDesc(D3D12_DEFAULT);
+		rasterizerStateDesc.CullMode = D3D12_CULL_MODE_BACK;
+		rasterizerStateDesc.FrontCounterClockwise = TRUE;
+
+		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+		depthStencilDesc.DepthEnable = TRUE;
+
+		PsoDesc.InputLayout = { InputElementDescs, static_cast<uint32>(Layer.Elements.size()) };
+		PsoDesc.RasterizerState = rasterizerStateDesc;
+		PsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		PsoDesc.DepthStencilState = depthStencilDesc;
+		PsoDesc.SampleMask = UINT_MAX;
+		PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		PsoDesc.RTVFormats[0] = static_cast<DXGI_FORMAT>(RtFormat);
+		PsoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		PsoDesc.SampleDesc.Count = 1;
+		PsoDesc.NumRenderTargets = NumRt;
+
+		PsoDesc.pRootSignature = Sig->As<FDX12RootSignatrue>()->RootSignature.Get();
+		PsoDesc.VS = CD3DX12_SHADER_BYTECODE(VS->As<FDX12Shader>()->Shader.Get());
+		PsoDesc.PS = NumRt == 0 ? CD3DX12_SHADER_BYTECODE(0, 0) : CD3DX12_SHADER_BYTECODE(PS->As<FDX12Shader>()->Shader.Get());
+
+		shared_ptr<FDX12PipelineState> Pso = make_shared<FDX12PipelineState>();
+		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Pso->PSO)));
+
+		NAME_D3D12_OBJECT(Pso->PSO);
+
+		return Pso;
+	}
+
+	void FDX12DynamicRHI::SetPipelineState(FPipelineState* Pso)
 	{
 		CommandLists[0].CommandList->SetPipelineState(Pso->As<FDX12PipelineState>()->PSO.Get());
 	}
@@ -720,6 +769,13 @@ namespace RHI
 		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
 
+		// TODO: hard coding
+		Mesh->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+		Mesh->InputLayer.Elements.push_back({ "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 });
+		Mesh->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
+		Mesh->InputLayer.Elements.push_back({ "TEXCOORD", 1, FFormat::FORMAT_R32G32_FLOAT, 0, 32, 0, 0 });
+		Mesh->InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 40, 0, 0 });
+
 		return Mesh;
 	}
 
@@ -876,6 +932,20 @@ namespace RHI
 		Mat->PS = CreatePixelShader(m_assetsPath);
 		Mat->Sig = CreateRootSignatrue(Type);
 		Mat->PSO = CreatePso(Type, Mat->VS.get(), Mat->PS.get(), Mat->Sig.get());
+		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
+		Mat->TexHandles = TexHandles;
+		return Mat;
+	}
+
+	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial2(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles)
+	{
+		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
+
+		WCHAR assetsPath[512];
+		GetAssetsPath(assetsPath, _countof(assetsPath));
+		std::wstring m_assetsPath = assetsPath + ShaderFileName;
+		Mat->VS = CreateVertexShader(m_assetsPath);
+		Mat->PS = CreatePixelShader(m_assetsPath);
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
 		Mat->TexHandles = TexHandles;
 		return Mat;
