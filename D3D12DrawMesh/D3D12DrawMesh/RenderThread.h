@@ -10,6 +10,8 @@ private:
 	std::mutex RenderMutex;
 	std::atomic_int32_t RenderTaskNum = 0;
 
+	static FRenderThread* GRenderThread;
+
 public:
 	FRenderThread();
 	virtual void Run() override;
@@ -19,7 +21,7 @@ public:
 
 	static FRenderThread* Get();
 
-	void CreateResourceForScene(shared_ptr<class FScene> Scene);
+	void CreateFrameResource(shared_ptr<class FScene> Scene);
 	void UpdateFrameResources(FScene* Scene);
 	void WaitForRenderThread();
 

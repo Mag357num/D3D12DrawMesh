@@ -19,7 +19,7 @@ private:
 	const uint32 ShadowMapSize = 8192;
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
-	vector<FFrameMesh> FrameMeshes;
+	vector<FFrameMesh> FrameMeshArray;
 
 	shared_ptr<FTexture> NullTexture;
 	shared_ptr<FTexture> ShadowMap;
@@ -29,8 +29,8 @@ private:
 	shared_ptr<FTexture> SceneColorMap;
 	shared_ptr<FTexture> BloomSetupMap;
 	shared_ptr<FTexture> SunMergeMap;
-	vector<shared_ptr<FTexture>> BloomDownMaps;
-	vector<shared_ptr<FTexture>> BloomUpMaps;
+	vector<shared_ptr<FTexture>> BloomDownMapArray;
+	vector<shared_ptr<FTexture>> BloomUpMapArray;
 
 public:
 	const uint32& GetShadowMapSize() const { return ShadowMapSize; }
@@ -38,7 +38,7 @@ public:
 	void SetPostProcessTriangleRes(shared_ptr<FMeshRes>& MeshRes) { PostProcessTriangleRes = MeshRes; }
 	const shared_ptr<FMesh>& GetPostProcessTriangle() const { return PostProcessTriangle; }
 	const shared_ptr<FMeshRes>& GetPostProcessTriangleRes() const { return PostProcessTriangleRes; }
-	vector<FFrameMesh>& GetFrameMeshes() { return FrameMeshes; }
+	vector<FFrameMesh>& GetFrameMeshArray() { return FrameMeshArray; }
 
 	void SetNullTexture(const shared_ptr<FTexture>& Tex) { NullTexture = Tex; }
 	void SetShadowMap(const shared_ptr<FTexture>& Tex) { ShadowMap = Tex; }
@@ -58,18 +58,27 @@ public:
 	const shared_ptr<FTexture>& GetBloomSetupMap() const { return BloomSetupMap; }
 	const shared_ptr<FTexture>& GetSunMergeMap() const { return SunMergeMap; }
 
-	vector<shared_ptr<FTexture>>& GetBloomDownMaps() { return BloomDownMaps; }
-	vector<shared_ptr<FTexture>>& GetBloomUpMaps() { return BloomUpMaps; }
+	vector<shared_ptr<FTexture>>& GetBloomDownMapArray() { return BloomDownMapArray; }
+	vector<shared_ptr<FTexture>>& GetBloomUpMapArray() { return BloomUpMapArray; }
 };
 
 class FFrameResourceManager
 {
 private:
-	vector<FFrameResource> FrameRes;
+	vector<FFrameResource> FrameResArray; // every frame own a FFrameResource
 public:
-	vector<FFrameResource>& GetFrameRes() { return FrameRes; }
+	vector<FFrameResource>& GetFrameRes() { return FrameResArray; }
 	void InitFrameResource(const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	void CreateMeshActorFrameResources(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor);
+	FFrameMesh CreateFrameMesh(const FMeshActor& MeshActor);
+	void CreateMapsForShadow(FFrameResource& FrameRes);
+	void CreateSamplers(FFrameResource& FrameRes);
+	void CreateMapsForScene(FFrameResource& FrameRes);
+	void CreateMapsForPostProcess(FFrameResource& FrameRes);
+	void CreatePostProcessTriangle(FFrameResource& FrameRes);
+	void CreatePostProcessMaterials(FFrameResource& FrameRes);
+	void CreatePostProcessPipelines(FFrameResource& FrameRes);
+
+
 };

@@ -30,9 +30,7 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) = 0;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) = 0; // meshActor is mesh data, can read from file or write in code
-		virtual shared_ptr<FMeshRes> CreateMeshRes() = 0;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
@@ -40,7 +38,6 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) = 0;
-		virtual void CreateFrameMesh(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor) = 0;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) = 0;
@@ -75,7 +72,7 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() = 0;
-		virtual uint32 GetFrameCount() = 0;
+		virtual uint32 GetFrameNum() = 0;
 		virtual uint32 GetFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
@@ -84,7 +81,6 @@ namespace RHI
 		virtual void BeginEvent(const char* EventName) = 0;
 		virtual void EndEvent() = 0;
 
-	protected:
 		uint32 ResoWidth;
 		uint32 ResoHeight;
 	};

@@ -10,12 +10,12 @@ class FScene
 private:
 	FCamera CurrentCamera; // TODO: change to std::vector<FCamera> Cameras
 	FDirectionLight DirectionLight; // TODO: extend to a array of lights
-	vector<FMeshActor> MeshActors;
+	vector<FMeshActor> MeshActorArray;
 
 public:
 	void UpdateMainCamera(class FEngine* Engine);
 	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio) { return CurrentCamera.Init(PositionParam, UpDir, LookAt, Fov, AspectRatio); }
 	FCamera& GetCurrentCamera() { return CurrentCamera; }
 	FDirectionLight& GetDirectionLight() { return DirectionLight; }
-	vector<FMeshActor>& GetMeshActors() { return MeshActors; }
+	vector<FMeshActor>& GetMeshActorArray() { return MeshActorArray; }
 };

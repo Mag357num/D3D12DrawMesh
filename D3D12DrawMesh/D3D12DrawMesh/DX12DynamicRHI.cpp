@@ -111,19 +111,6 @@ namespace RHI
 		CommandLists[0].CommandList->DrawIndexedInstanced(Mesh->As<FDX12Mesh>()->IndexNum, 1, 0, 0, 0);
 	}
 
-	FMeshActor FDX12DynamicRHI::CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
-	{
-		FMeshActor Actor;
-		Actor.MeshLODs.resize(1); // TODO: only consider one mip
-		Actor.MeshLODs[0].SetVertexStride(VertexStride);
-		Actor.MeshLODs[0].SetVertices(Vertices);
-		Actor.MeshLODs[0].SetIndices(Indices);
-		Actor.Transform.Translation = Transform.Translation;
-		Actor.Transform.Rotation = Transform.Rotation;
-		Actor.Transform.Scale = Transform.Scale;
-		return Actor;
-	}
-
 	void FDX12DynamicRHI::SetViewport(float Left, float Right, float Width, float Height, float MinDepth /*= 0.f*/, float MaxDepth /*= 1.f*/)
 	{
 		D3D12_VIEWPORT ShadowViewport = CD3DX12_VIEWPORT(Left, Right, Width, Height, MinDepth, MaxDepth);
@@ -527,32 +514,6 @@ namespace RHI
 		ThrowIfFailed(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)));
 	}
 
-	void FDX12DynamicRHI::CreateFrameMesh(FFrameMesh& FrameMesh, const FMeshActor& MeshActor)
-	{
-		FrameMesh.Mesh = CreateMesh(MeshActor);
-		FrameMesh.MeshRes = CreateMeshRes();
-
-		// material
-		vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-		FrameMesh.MeshRes->ShadowMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
-		FrameMesh.MeshRes->SceneColorMat = CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
-
-		// shadow map pipeline
-		FShaderInputLayer ShaderInputLayer;
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		FrameMesh.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, FrameMesh.Mesh->InputLayer, ShaderInputLayer, FrameMesh.MeshRes->ShadowMat.get());
-
-		// shadow map pipeline
-		ShaderInputLayer.Elements.clear();
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		FrameMesh.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, FrameMesh.Mesh->InputLayer, ShaderInputLayer, FrameMesh.MeshRes->SceneColorMat.get());
-
-	}
-
 	void FDX12DynamicRHI::FrameBegin()
 	{
 		// reset the commandlist
@@ -728,11 +689,6 @@ namespace RHI
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
 		Mat->TexHandles = TexHandles;
 		return Mat;
-	}
-
-	shared_ptr<RHI::FMeshRes> FDX12DynamicRHI::CreateMeshRes()
-	{
-		return make_shared<FMeshRes>();
 	}
 
 	void FDX12DynamicRHI::CreateFenceAndEvent()

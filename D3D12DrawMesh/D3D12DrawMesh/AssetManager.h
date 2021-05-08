@@ -9,8 +9,13 @@
 
 class FAssetManager
 {
+private:
+	static FAssetManager* GAssetManager;
+
 public:
-	void LoadScene(const std::wstring& BinFileName, FScene* TargetScene);
+	static FAssetManager* Get();
+	shared_ptr<FScene> LoadScene(const std::wstring& BinFileName);
+	FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 
 private:
 	void ReadMeshLODFromIfstream(std::ifstream& Fin, FMeshLOD& MeshLOD);

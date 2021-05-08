@@ -11,7 +11,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->GetShadowMapSize()), static_cast<float>(FrameRes->GetShadowMapSize()), 0.f, 1.f);
 		RHI->SetScissor(0, 0, FrameRes->GetShadowMapSize(), FrameRes->GetShadowMapSize());
 		RHI->SetRenderTarget(0, nullptr, FrameRes->GetShadowMap()->DsvHandle.get());
-		for (auto i : FrameRes->GetFrameMeshes())
+		for (auto i : FrameRes->GetFrameMeshArray())
 		{
 			// use shadow pso
 			RHI->SetPipelineState(i.MeshRes->ShadowPipeline.get());
@@ -36,7 +36,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 		RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-		for (auto i : FrameRes->GetFrameMeshes())
+		for (auto i : FrameRes->GetFrameMeshArray())
 		{
 			// pso
 			RHI->SetPipelineState(i.MeshRes->SceneColorPipeline.get()); // use HDR pso
@@ -85,8 +85,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 				// bloom down 1/4->1/8
 				{
 					SCOPED_EVENT("Bloom down 1/4->1/8");
-					RHI->ClearRenderTarget(FrameRes->GetBloomDownMaps()[0]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMaps()[0]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomDownMapArray()[0]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMapArray()[0]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
@@ -99,14 +99,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom down 1/8->1/16
 				{
 					SCOPED_EVENT("Bloom down 1/8->1/16");
-					RHI->ClearRenderTarget(FrameRes->GetBloomDownMaps()[1]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMaps()[1]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomDownMapArray()[1]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMapArray()[1]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
@@ -119,14 +119,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom down 1/16->1/32
 				{
 					SCOPED_EVENT("Bloom down 1/16->1/32");
-					RHI->ClearRenderTarget(FrameRes->GetBloomDownMaps()[2]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMaps()[2]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomDownMapArray()[2]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMapArray()[2]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
@@ -139,14 +139,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom down 1/32->1/64
 				{
 					SCOPED_EVENT("Bloom down 1/32->1/64");
-					RHI->ClearRenderTarget(FrameRes->GetBloomDownMaps()[3]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMaps()[3]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomDownMapArray()[3]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomDownMapArray()[3]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 64), static_cast<float>(RHI->GetHeight() / 64), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 64, RHI->GetHeight() / 64);
@@ -159,14 +159,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[3].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[3].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom up 1/64->1/32
 				{
 					SCOPED_EVENT("Bloom up 1/64->1/32");
-					RHI->ClearRenderTarget(FrameRes->GetBloomUpMaps()[0]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMaps()[0]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomUpMapArray()[0]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMapArray()[0]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
@@ -181,14 +181,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom up 1/32->1/16
 				{
 					SCOPED_EVENT("Bloom up 1/32->1/16");
-					RHI->ClearRenderTarget(FrameRes->GetBloomUpMaps()[1]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMaps()[1]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomUpMapArray()[1]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMapArray()[1]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
@@ -203,14 +203,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// bloom up 1/16->1/8
 				{
 					SCOPED_EVENT("Bloom up 1/16->1/8");
-					RHI->ClearRenderTarget(FrameRes->GetBloomUpMaps()[2]->RtvHandle.get());
-					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMaps()[2]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
+					RHI->ClearRenderTarget(FrameRes->GetBloomUpMapArray()[2]->RtvHandle.get());
+					RHI->SetRenderTarget(1, FrameRes->GetBloomUpMapArray()[2]->RtvHandle.get(), FrameRes->GetDsMap()->DsvHandle.get());
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
@@ -225,7 +225,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 
 				// sun merge
@@ -276,13 +276,13 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	RHI->TransitTextureState(FrameRes->GetShadowMap().get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_DEPTH_WRITE);
 	RHI->TransitTextureState(FrameRes->GetSceneColorMap().get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
 	RHI->TransitTextureState(FrameRes->GetBloomSetupMap().get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomDownMaps()[3].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-	RHI->TransitTextureState(FrameRes->GetBloomUpMaps()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomDownMapArray()[3].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[0].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[1].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+	RHI->TransitTextureState(FrameRes->GetBloomUpMapArray()[2].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
 	RHI->TransitTextureState(FrameRes->GetSunMergeMap().get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE, FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
 
 	RHI->FrameEnd();

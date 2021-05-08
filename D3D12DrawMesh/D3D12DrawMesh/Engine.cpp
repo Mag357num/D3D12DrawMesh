@@ -21,18 +21,13 @@ using RHI::FMeshRes;
 FEngine* GEngine = nullptr;
 
 FEngine::FEngine(uint32 width, uint32 height, std::wstring name) :
-    ResoWidth(width),
-    ResoHeight(height),
-    Title(name),
-    IsUseWarpDevice(false)
+	ResoWidth(width),
+	ResoHeight(height),
+	Title(name),
+	IsUseWarpDevice(false)
 {
 	GEngine = this;
-    AspectRatio = static_cast<float>(width) / static_cast<float>(height);
-
-	AssetManager = make_shared<FAssetManager>();
-
-	CurrentScene = make_shared<FScene>();
-	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
+	AspectRatio = static_cast<float>(width) / static_cast<float>(height);
 }
 
 FEngine::~FEngine()
@@ -41,10 +36,12 @@ FEngine::~FEngine()
 
 void FEngine::OnInit()
 {
-	AssetManager->LoadScene(L"Scene_.dat", CurrentScene.get());
+	CurrentScene = FAssetManager::Get()->LoadScene(L"Scene_.dat");
+	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
+
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start(); // TODO: Start() will make DoRender invoked after every "one" task, which is not so right
-	FRenderThread::Get()->CreateResourceForScene(CurrentScene);
+	FRenderThread::Get()->CreateFrameResource(CurrentScene);
 }
 
 void FEngine::OnUpdate()

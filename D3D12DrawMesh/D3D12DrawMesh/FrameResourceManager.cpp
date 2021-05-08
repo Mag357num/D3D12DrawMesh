@@ -4,189 +4,250 @@
 #include "RHIResource.h"
 #include "DX12Resource.h"
 #include "MathExtend.h"
+#include "AssetManager.h"
 
 void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 {
-	GetFrameRes().resize(FrameCount);
-	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
+	FrameResArray.resize(FrameCount);
+	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex) // init res for each frame
 	{
-		FFrameResource& FrameResource = GetFrameRes()[FrameIndex];
+		FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
-		// create and commit null texture
-		FrameResource.SetNullTexture(GDynamicRHI->CreateTexture(FTextureType::ORDINARY_SHADER_RESOURCE_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetNullTexture().get(), FResViewType::SRV_RVT);
-
-		// create and commit shadow map
-		FrameResource.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameResource.GetShadowMapSize(), FrameResource.GetShadowMapSize()));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetShadowMap().get(), FResViewType::DSV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetShadowMap().get(), FResViewType::SRV_RVT);
-
-		// create and commit Ds map
-		FrameResource.SetDsMap(GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetDsMap().get(), FResViewType::DSV_RVT);
-
-		// create and commit sampler
-		FrameResource.SetClampSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST));
-		FrameResource.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
-
-		// create and commit scene color
-		FrameResource.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetSceneColorMap().get(), FResViewType::SRV_RVT);
-
-		// create and commit bloom down and up texture
-		FrameResource.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetBloomSetupMap().get(), FResViewType::SRV_RVT);
-
-		for (uint32 i = 0; i < 4; i++)
-		{
-			uint32 ZoomIn = static_cast<uint32>(pow( 2, 3 + i ));
-			FrameResource.GetBloomDownMaps().push_back(GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ));
-			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::RTV_RVT );
-			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomDownMaps()[i].get(), FResViewType::SRV_RVT );
-		}
-
-		for (int i = 4; i > 1; i--)
-		{
-			uint32 ZoomIn = static_cast<uint32>(pow( 2, 1 + i ));
-			FrameResource.GetBloomUpMaps().push_back( GDynamicRHI->CreateTexture( FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ZoomIn, GDynamicRHI->GetHeight() / ZoomIn ) );
-			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::RTV_RVT );
-			GDynamicRHI->CommitTextureAsView( FrameResource.GetBloomUpMaps()[4-i].get(), FResViewType::SRV_RVT );
-		}
-		
-		FrameResource.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameResource.GetSunMergeMap().get(), FResViewType::SRV_RVT);
-
-		// create postprocess mesh and mesh resource
-		vector<float> TriangleVertices =
-		{
-			 1.f, -1.f, 0.0f,  1.f,  1.f,
-			 1.f,  3.f, 0.0f,  1.f, -1.f,
-			-3.f, -1.f, 0.0f, -1.f,  1.f,
-		};
-		FMeshActor Actor = GDynamicRHI->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
-		FrameResource.SetPostProcessTriangle( GDynamicRHI->CreateMesh( Actor ) );
-		FrameResource.SetPostProcessTriangleRes( GDynamicRHI->CreateMeshRes() );
-		FMeshRes* TriRes = FrameResource.GetPostProcessTriangleRes().get();
-		FMesh* Tri = FrameResource.GetPostProcessTriangle().get();
-
-		Tri->InputLayer.Elements.clear();
-		Tri->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-		Tri->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
-
-		// create postprocess material
-		// bloom setup
-		vector<shared_ptr<FHandle>> TexHandles;
-		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
-		TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial( L"BloomSetup.hlsl", 256, TexHandles);
-		TexHandles.clear();
-
-		// bloom down
-		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
-		TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
-		TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
-		TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
-		TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-
-		// bloom up
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[2]->SrvHandle);
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[3]->SrvHandle);
-		TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[1]->SrvHandle);
-		TexHandles.push_back(FrameResource.GetBloomUpMaps()[0]->SrvHandle);
-		TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-		TexHandles.push_back(FrameResource.GetBloomDownMaps()[0]->SrvHandle);
-		TexHandles.push_back(FrameResource.GetBloomUpMaps()[1]->SrvHandle);
-		TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
-		TexHandles.clear();
-
-		// sun merge
-		TexHandles.push_back(FrameResource.GetBloomSetupMap()->SrvHandle);
-		TexHandles.push_back(FrameResource.GetBloomUpMaps()[2]->SrvHandle);
-		TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles);
-		TexHandles.clear();
-
-		// tonemapping
-		TexHandles.push_back(FrameResource.GetSceneColorMap()->SrvHandle);
-		TexHandles.push_back(FrameResource.GetSunMergeMap()->SrvHandle);
-		TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles);
-		TexHandles.clear();
-
-		// pipeline
-		// bloom setup
-		TriRes->BloomSetupPipeline = make_shared<FPipeline>();
-
-		FShaderInputLayer ShaderInputLayer;
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		TriRes->BloomSetupPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomSetupMat.get());
-
-		// bloom down
-		TriRes->BloomDownPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomDownMat[0].get());
-
-		// bloom up
-		ShaderInputLayer.Elements.clear();
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		TriRes->BloomUpPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomUpMat[0].get());
-
-		// sun merge
-		TriRes->SunMergePipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->SunMergeMat.get());
-
-		// tone mapping
-		ShaderInputLayer.Elements.clear();
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R8G8B8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
+		CreateMapsForShadow(FrameRes);
+		CreateSamplers(FrameRes);
+		CreateMapsForScene(FrameRes);
+		CreateMapsForPostProcess(FrameRes);
+		CreatePostProcessTriangle(FrameRes);
 	}
 }
 
-void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount)
+void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameNum)
 {
 	RHI::GDynamicRHI->BegineCreateResource();
-	InitFrameResource(FrameCount);
-	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
-	{
-		FFrameResource& FrameResource = GetFrameRes()[FrameIndex];
+	InitFrameResource(FrameNum);
 
-		// create mesh resource
-		const uint32 MeshActorCount = static_cast<uint32>(Scene->GetMeshActors().size());
-		FrameResource.GetFrameMeshes().resize(MeshActorCount);
-		for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
+	for (uint32 FrameIndex = 0; FrameIndex < FrameNum; ++FrameIndex)
+	{
+		FFrameResource& FrameResource = FrameResArray[FrameIndex];
+
+		const uint32 MeshActorNum = static_cast<uint32>(Scene->GetMeshActorArray().size());
+		FrameResource.GetFrameMeshArray().resize(MeshActorNum);
+
+		for (uint32 i = 0; i < MeshActorNum; ++i)
 		{
-			FFrameMesh& MeshActorFrameResource = FrameResource.GetFrameMeshes()[MeshIndex];
-			const FMeshActor& MeshActor = Scene->GetMeshActors()[MeshIndex];
-			CreateMeshActorFrameResources(MeshActorFrameResource, MeshActor); // MeshActor in Scene reflect to MeshActorFrameResource by order
+			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetMeshActorArray()[i]);
 		}
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-void FFrameResourceManager::CreateMeshActorFrameResources(FFrameMesh& MAFrameRes, const FMeshActor& MeshActor)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(const FMeshActor& MeshActor)
 {
-	RHI::GDynamicRHI->CreateFrameMesh(MAFrameRes, MeshActor);
+	FFrameMesh MeshActorFrameResource;
+
+	MeshActorFrameResource.Mesh = GDynamicRHI->CreateMesh(MeshActor);
+	MeshActorFrameResource.MeshRes = make_shared<FMeshRes>();
+
+	// material
+	vector<shared_ptr<FHandle>> Empty; // TODO: refactor
+	MeshActorFrameResource.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
+	MeshActorFrameResource.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
+
+	// shadow map pipeline
+	FShaderInputLayer ShaderInputLayer;
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	MeshActorFrameResource.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshActorFrameResource.Mesh->InputLayer, ShaderInputLayer, MeshActorFrameResource.MeshRes->ShadowMat.get());
+
+	// shadow map pipeline
+	ShaderInputLayer.Elements.clear();
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	MeshActorFrameResource.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, MeshActorFrameResource.Mesh->InputLayer, ShaderInputLayer, MeshActorFrameResource.MeshRes->SceneColorMat.get());
+
+	return MeshActorFrameResource;
+}
+
+void FFrameResourceManager::CreateMapsForShadow(FFrameResource& FrameRes)
+{
+	// create and commit null texture
+	FrameRes.SetNullTexture(GDynamicRHI->CreateTexture(FTextureType::ORDINARY_SHADER_RESOURCE_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetNullTexture().get(), FResViewType::SRV_RVT);
+
+	// create and commit shadow map
+	FrameRes.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameRes.GetShadowMapSize(), FrameRes.GetShadowMapSize()));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetShadowMap().get(), FResViewType::DSV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetShadowMap().get(), FResViewType::SRV_RVT);
+}
+
+void FFrameResourceManager::CreateSamplers(FFrameResource& FrameRes)
+{
+	// create and commit sampler
+	FrameRes.SetClampSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST));
+	FrameRes.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
+}
+
+void FFrameResourceManager::CreateMapsForScene(FFrameResource& FrameRes)
+{
+	// create and commit Ds map
+	FrameRes.SetDsMap(GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetDsMap().get(), FResViewType::DSV_RVT);
+
+	// create and commit scene color
+	FrameRes.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetSceneColorMap().get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetSceneColorMap().get(), FResViewType::SRV_RVT);
+}
+
+void FFrameResourceManager::CreateMapsForPostProcess(FFrameResource& FrameRes)
+{
+	// create and commit bloom down and up texture
+	FrameRes.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomSetupMap().get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomSetupMap().get(), FResViewType::SRV_RVT);
+
+	for (uint32 i = 0; i < 4; i++)
+	{
+		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 3 + i));
+		FrameRes.GetBloomDownMapArray().push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomDownMapArray()[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomDownMapArray()[i].get(), FResViewType::SRV_RVT);
+	}
+
+	for (int i = 4; i > 1; i--)
+	{
+		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 1 + i));
+		FrameRes.GetBloomUpMapArray().push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomUpMapArray()[4 - i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomUpMapArray()[4 - i].get(), FResViewType::SRV_RVT);
+	}
+
+	FrameRes.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetSunMergeMap().get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.GetSunMergeMap().get(), FResViewType::SRV_RVT);
+}
+
+void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
+{
+	// create postprocess mesh and mesh resource
+	vector<float> TriangleVertices =
+	{
+		 1.f, -1.f, 0.0f,  1.f,  1.f,
+		 1.f,  3.f, 0.0f,  1.f, -1.f,
+		-3.f, -1.f, 0.0f, -1.f,  1.f,
+	};
+	FMeshActor Actor = FAssetManager::Get()->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
+	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Actor));
+	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
+
+	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.clear();
+	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
+
+	CreatePostProcessMaterials(FrameRes);
+	CreatePostProcessPipelines(FrameRes);
+}
+
+void FFrameResourceManager::CreatePostProcessMaterials(FFrameResource& FrameRes)
+{
+	FMeshRes* TriRes = FrameRes.GetPostProcessTriangleRes().get();
+	FMesh* Tri = FrameRes.GetPostProcessTriangle().get();
+
+	// create postprocess material
+	// bloom setup
+	vector<shared_ptr<FHandle>> TexHandles;
+	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
+	TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, TexHandles);
+
+	// bloom down
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
+	TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
+	TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
+	TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
+	TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+
+	// bloom up
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[3]->SrvHandle);
+	TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
+	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[0]->SrvHandle);
+	TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
+	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[1]->SrvHandle);
+	TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+
+	// sun merge
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
+	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[2]->SrvHandle);
+	TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles);
+
+	// tonemapping
+	TexHandles.clear();
+	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
+	TexHandles.push_back(FrameRes.GetSunMergeMap()->SrvHandle);
+	TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles);
+}
+
+void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
+{
+	FMeshRes* TriRes = FrameRes.GetPostProcessTriangleRes().get();
+	FMesh* Tri = FrameRes.GetPostProcessTriangle().get();
+
+	// pipeline
+	// bloom setup
+	FShaderInputLayer ShaderInputLayer;
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	TriRes->BloomSetupPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomSetupMat.get());
+
+	// bloom down
+	TriRes->BloomDownPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomDownMat[0].get());
+
+	// bloom up
+	ShaderInputLayer.Elements.clear();
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	TriRes->BloomUpPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomUpMat[0].get());
+
+	// sun merge
+	TriRes->SunMergePipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->SunMergeMat.get());
+
+	// tone mapping
+	ShaderInputLayer.Elements.clear();
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R8G8B8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
+
 }
 
 void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
-	FFrameResource& FrameRes = GetFrameRes()[FrameIndex];
+	FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
 	FCamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix CamView = MainCamera.GetViewMatrix();
@@ -206,19 +267,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
-	const uint32 MeshActorCount = static_cast<uint32>(Scene->GetMeshActors().size());
+	const uint32 MeshActorCount = static_cast<uint32>(Scene->GetMeshActorArray().size());
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FVector& Rotate = Scene->GetMeshActors()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
+		const FVector& Rotate = Scene->GetMeshActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0)); // roll
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0)); // pitch
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.z), FVector(0, 0, 1)); // yaw
 
-		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetMeshActors()[MeshIndex].Transform.Scale);
-		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetMeshActors()[MeshIndex].Transform.Translation);
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetMeshActorArray()[MeshIndex].Transform.Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetMeshActorArray()[MeshIndex].Transform.Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
@@ -244,8 +305,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
 		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
 
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetFrameMeshes()[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetFrameMeshes()[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetFrameMeshArray()[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
+		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetFrameMeshArray()[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
 	}
 
 	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));

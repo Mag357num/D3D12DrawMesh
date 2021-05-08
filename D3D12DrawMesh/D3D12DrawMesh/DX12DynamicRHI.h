@@ -31,9 +31,7 @@ namespace RHI
 			const uint32& ResoHeight) override;
 
 		// Resource Create
-		virtual FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform) override;
 		virtual shared_ptr<FMesh> CreateMesh(const FMeshActor& MeshActor) override;
-		virtual shared_ptr<FMeshRes> CreateMeshRes() override;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;
@@ -41,7 +39,6 @@ namespace RHI
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) override;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) override;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) override;
-		virtual void CreateFrameMesh(FFrameMesh& MeshActorFrameResource, const FMeshActor& MeshActor) override;
 
 		// Resource process
 		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) override;
@@ -74,7 +71,7 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() override;
-		virtual uint32 GetFrameCount() override { return FrameNum; }
+		virtual uint32 GetFrameNum() override { return FrameNum; }
 		virtual uint32 GetFramIndex() override { return FrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
