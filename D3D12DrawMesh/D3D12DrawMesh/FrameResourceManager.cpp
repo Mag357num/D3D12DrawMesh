@@ -153,7 +153,7 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 		ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-		TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_B8G8R8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
+		TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R8G8B8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
 	}
 }
 

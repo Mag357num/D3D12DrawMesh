@@ -19,6 +19,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(i.MeshRes->ShadowMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetNullTexture()->SrvHandle);
 			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 

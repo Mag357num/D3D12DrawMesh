@@ -182,8 +182,6 @@ namespace RHI
 		shared_ptr<FDX12PipelineState> Pso = make_shared<FDX12PipelineState>();
 		ThrowIfFailed(Device->CreateGraphicsPipelineState(&PsoDesc, IID_PPV_ARGS(&Pso->PSO)));
 
-		NAME_D3D12_OBJECT(Pso->PSO);
-
 		return Pso;
 	}
 
@@ -811,7 +809,7 @@ namespace RHI
 			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
 			break;
 		case RHI::FTextureType::ORDINARY_SHADER_RESOURCE_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			*ClearValue = { DXGI_FORMAT_R11G11B10_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
