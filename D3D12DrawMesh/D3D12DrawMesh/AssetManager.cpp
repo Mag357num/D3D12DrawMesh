@@ -44,7 +44,7 @@ shared_ptr<FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 	return TargetScene;
 }
 
-void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FMeshLOD& MeshLOD)
+void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FStaticMeshLOD& MeshLOD)
 {
 	if (!Fin.is_open())
 	{
@@ -82,9 +82,9 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 }
 
-FMeshActor FAssetManager::CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
+FStaticMeshActor FAssetManager::CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
 {
-	FMeshActor Actor;
+	FStaticMeshActor Actor;
 	Actor.MeshLODs.resize(1); // TODO: only consider one mip
 	Actor.MeshLODs[0].SetVertexStride(VertexStride);
 	Actor.MeshLODs[0].SetVertices(Vertices);

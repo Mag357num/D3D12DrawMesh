@@ -71,7 +71,7 @@ public:
 	void InitFrameResource(const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	FFrameMesh CreateFrameMesh(const FMeshActor& MeshActor);
+	FFrameMesh CreateFrameMesh(const FStaticMeshActor& MeshActor);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);
 	void CreateMapsForScene(FFrameResource& FrameRes);
@@ -79,6 +79,50 @@ public:
 	void CreatePostProcessTriangle(FFrameResource& FrameRes);
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
+};
 
+struct FBlinnPhongCB
+{
+	FMatrix World;
+	FMatrix ViewProj;
+	FVector4 CamEye;
+	FDirectionLight Light;
+};
 
+struct FShadowMapCB // BlinnPhong
+{
+	FMatrix World;
+	FMatrix CamViewProj;
+	FMatrix ShadowTransForm;
+	FVector4 CamEye;
+	FDirectionLight Light;
+	BOOL IsShadowMap; // TODO: BOOL is win dependent?
+	float padding[3];
+};
+
+struct FBloomSetupCB
+{
+	FVector4 BufferSizeAndInvSize;
+	float BloomThreshold;
+};
+
+struct FBloomDownCB
+{
+	FVector4 BufferSizeAndInvSize;
+	float BloomDownScale;
+};
+
+struct FBloomUpCB
+{
+	FVector4 BufferASizeAndInvSize;
+	FVector4 BufferBSizeAndInvSize;
+	FVector4 BloomTintA;
+	FVector4 BloomTintB;
+	FVector2 BloomUpScales;
+};
+
+struct FSunMergeCB
+{
+	FVector4 BloomUpSizeAndInvSize;
+	FVector BloomColor;
 };

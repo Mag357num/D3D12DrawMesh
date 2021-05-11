@@ -10,3 +10,11 @@ using FVector = glm::vec3;
 using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;
 using FFloat4X4 = glm::mat4;
+
+struct FTransform
+{
+	FVector Translation;
+	FVector Rotation;
+	FVector Scale;
+};
+

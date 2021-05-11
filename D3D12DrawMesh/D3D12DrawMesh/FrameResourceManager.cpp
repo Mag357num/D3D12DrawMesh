@@ -42,7 +42,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(const FMeshActor& MeshActor)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(const FStaticMeshActor& MeshActor)
 {
 	FFrameMesh MeshActorFrameResource;
 
@@ -139,7 +139,7 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		 1.f,  3.f, 0.0f,  1.f, -1.f,
 		-3.f, -1.f, 0.0f, -1.f,  1.f,
 	};
-	FMeshActor Actor = FAssetManager::Get()->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
+	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Actor));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
 

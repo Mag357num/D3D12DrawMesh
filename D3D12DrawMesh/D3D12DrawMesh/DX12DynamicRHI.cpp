@@ -553,7 +553,7 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(const FMeshActor& MeshActor)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(const FStaticMeshActor& MeshActor)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexNum = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size());

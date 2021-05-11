@@ -15,9 +15,9 @@ private:
 public:
 	static FAssetManager* Get();
 	shared_ptr<FScene> LoadScene(const std::wstring& BinFileName);
-	FMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
+	FStaticMeshActor CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 
 private:
-	void ReadMeshLODFromIfstream(std::ifstream& Fin, FMeshLOD& MeshLOD);
+	void ReadMeshLODFromIfstream(std::ifstream& Fin, FStaticMeshLOD& MeshLOD);
 	void ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Trans);
 };

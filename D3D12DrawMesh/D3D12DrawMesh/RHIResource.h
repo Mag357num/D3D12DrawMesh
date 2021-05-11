@@ -121,52 +121,6 @@ namespace RHI
 		shared_ptr<FHandle> SamplerHandle;
 	};
 
-	struct FBlinnPhongCB
-	{
-		FMatrix World;
-		FMatrix ViewProj;
-		FVector4 CamEye;
-		FDirectionLight Light;
-	};
-
-	struct FShadowMapCB // BlinnPhong
-	{
-		FMatrix World;
-		FMatrix CamViewProj;
-		FMatrix ShadowTransForm;
-		FVector4 CamEye;
-		FDirectionLight Light;
-		BOOL IsShadowMap; // TODO: BOOL is win dependent?
-		float padding[3];
-	};
-
-	struct FBloomSetupCB
-	{
-		FVector4 BufferSizeAndInvSize;
-		float BloomThreshold;
-	};
-
-	struct FBloomDownCB
-	{
-		FVector4 BufferSizeAndInvSize;
-		float BloomDownScale;
-	};
-
-	struct FBloomUpCB
-	{
-		FVector4 BufferASizeAndInvSize;
-		FVector4 BufferBSizeAndInvSize;
-		FVector4 BloomTintA;
-		FVector4 BloomTintB;
-		FVector2 BloomUpScales;
-	};
-
-	struct FSunMergeCB
-	{
-		FVector4 BloomUpSizeAndInvSize;
-		FVector BloomColor;
-	};
-
 	enum class FRangeType;
 	enum class FShaderVisibility;
 	struct FShaderInputElement
@@ -387,7 +341,6 @@ namespace RHI
 
 		FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189,
 		FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE = 190,
-
 
 		FORMAT_FORCE_UINT = 0xffffffff
 	};

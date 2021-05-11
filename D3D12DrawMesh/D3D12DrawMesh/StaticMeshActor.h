@@ -1,14 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-struct FTransform
-{
-	FVector Translation;
-	FVector Rotation;
-	FVector Scale;
-};
-
-class FMeshLOD
+class FStaticMeshLOD
 {
 private:
 	uint32 VertexStride;
@@ -16,8 +9,8 @@ private:
 	vector<uint32> Indices;
 
 public:
-	FMeshLOD() = default;
-	~FMeshLOD() = default;
+	FStaticMeshLOD() = default;
+	~FStaticMeshLOD() = default;
 
 	void ResizeVertices(uint32 Size) { Vertices.resize(Size); }
 	void ResizeIndices(uint32 Size) { Indices.resize(Size); }
@@ -29,13 +22,13 @@ public:
 	void SetIndices(const vector<uint32>& Param) { Indices = Param; }
 };
 
-class FMeshActor
+class FStaticMeshActor
 {
 public:
-	FMeshActor() = default;
-	~FMeshActor() = default;
+	FStaticMeshActor() = default;
+	~FStaticMeshActor() = default;
 
 	FTransform Transform;
-	vector<FMeshLOD> MeshLODs;
+	vector<FStaticMeshLOD> MeshLODs;
 	wstring ShaderFileName;
 };
