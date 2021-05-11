@@ -17,19 +17,19 @@ struct FRotator // order same with ue4
 	float Yaw;
 };
 
-struct FTransform
-{
-	FVector Translation;
-	FRotator Rotation;
-	FVector Scale;
-};
-
 struct FQuat
 {
 	float X;
 	float Y;
 	float Z;
 	float W;
+};
+
+struct FTransform
+{
+	FVector Scale;
+	FRotator Rotation;
+	FVector Translation;
 };
 
 float Atan2(const float& Y, const float& X);
