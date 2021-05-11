@@ -24,20 +24,20 @@ shared_ptr<FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 
 	uint32 ActorNum;
 	Fin.read((char*)&ActorNum, sizeof(uint32));
-	TargetScene->GetMeshActorArray().resize(ActorNum);
+	TargetScene->GetSceneSMActorArray().resize(ActorNum);
 
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		TargetScene->GetMeshActorArray()[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
-		ReadMeshLODFromIfstream(Fin, TargetScene->GetMeshActorArray()[i].MeshLODs[0]);
-		ReadMeshTransFromIfstream(Fin, TargetScene->GetMeshActorArray()[i].Transform);
+		TargetScene->GetSceneSMActorArray()[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
+		ReadMeshLODFromIfstream(Fin, TargetScene->GetSceneSMActorArray()[i].MeshLODs[0]);
+		ReadMeshTransFromIfstream(Fin, TargetScene->GetSceneSMActorArray()[i].Transform);
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
-		TargetScene->GetMeshActorArray()[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
+		TargetScene->GetSceneSMActorArray()[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
 	}
 
 	// TODO: hard code
-	TargetScene->GetMeshActorArray()[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
+	TargetScene->GetSceneSMActorArray()[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
 
 	Fin.close();
 
@@ -82,7 +82,7 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 }
 
-FStaticMeshActor FAssetManager::CreateMeshActor(uint32 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
+FStaticMeshActor FAssetManager::CreateMeshActor(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
 {
 	FStaticMeshActor Actor;
 	Actor.MeshLODs.resize(1); // TODO: only consider one mip

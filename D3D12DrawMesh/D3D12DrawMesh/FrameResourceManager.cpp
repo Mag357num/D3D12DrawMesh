@@ -30,12 +30,12 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	{
 		FFrameResource& FrameResource = FrameResArray[FrameIndex];
 
-		const uint32 MeshActorNum = static_cast<uint32>(Scene->GetMeshActorArray().size());
+		const uint32 MeshActorNum = static_cast<uint32>(Scene->GetSceneSMActorArray().size());
 		FrameResource.GetFrameMeshArray().resize(MeshActorNum);
 
 		for (uint32 i = 0; i < MeshActorNum; ++i)
 		{
-			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetMeshActorArray()[i]);
+			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetSceneSMActorArray()[i]);
 		}
 	}
 
@@ -139,7 +139,7 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		 1.f,  3.f, 0.0f,  1.f, -1.f,
 		-3.f, -1.f, 0.0f, -1.f,  1.f,
 	};
-	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(20, TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
+	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(static_cast<uint16>(20), TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Actor));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
 
@@ -267,19 +267,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
-	const uint32 MeshActorCount = static_cast<uint32>(Scene->GetMeshActorArray().size());
+	const uint32 MeshActorCount = static_cast<uint32>(Scene->GetSceneSMActorArray().size());
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FVector& Rotate = Scene->GetMeshActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
+		const FVector& Rotate = Scene->GetSceneSMActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0)); // roll
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0)); // pitch
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.z), FVector(0, 0, 1)); // yaw
 
-		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetMeshActorArray()[MeshIndex].Transform.Scale);
-		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetMeshActorArray()[MeshIndex].Transform.Translation);
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
