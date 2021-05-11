@@ -14,7 +14,7 @@
 #include "SimpleCamera.h"
 #include "DynamicRHI.h"
 #include "StepTimer.h"
-#include "FScene.h"
+#include "Scene.h"
 #include "AssetManager.h"
 
 class FEngine;
