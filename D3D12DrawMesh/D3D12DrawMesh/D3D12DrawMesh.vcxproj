@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
+    <ClInclude Include="Character.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DX12DynamicRHI.h" />
     <ClInclude Include="DX12Resource.h" />
@@ -45,6 +46,7 @@
     <ClCompile Include="AssetManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Character.cpp" />
     <ClCompile Include="DX12DynamicRHI.cpp" />
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Engine.cpp" />
