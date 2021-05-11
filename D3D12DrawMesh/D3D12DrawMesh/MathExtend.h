@@ -24,8 +24,34 @@ struct FTransform
 	FVector Scale;
 };
 
+struct FQuat
+{
+	float X;
+	float Y;
+	float Z;
+	float W;
+};
+
 float Atan2(const float& Y, const float& X);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);
 
-FVector QuatToEuler(FVector4 Quat);
+FRotator QuatToEuler(FQuat Quat);
+
+FQuat EulerToQuat(FRotator Euler);
+
+float FastAsin(float Value);
+
+float NormalizeAxis(float Angle);
+
+float ClampAxis(float Angle);
+
+float Fmod(float X, float Y);
+
+void SinCos(float* ScalarSin, float* ScalarCos, float Value);
+
+template< class T >
+T Clamp(const T X, const T Min, const T Max)
+{
+	return X < Min ? Min : X < Max ? X : Max;
+}
