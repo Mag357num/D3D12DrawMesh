@@ -21,7 +21,6 @@
 
 #include <windows.h>
 
-#include <cmath>
 #include <fstream>
 
 #include <string>
@@ -31,7 +30,15 @@
 #include <assert.h>
 
 #include "string.h"
-#include "Types.h"
+#include <cstdint>
+
+#include <cmath>
+#include "MathExtend.h"
+
+using uint8 = uint8_t;
+using uint16 = uint16_t;
+using uint32 = uint32_t;
+using uint64 = uint64_t;
 
 using std::shared_ptr;
 using std::make_shared;
@@ -40,3 +47,4 @@ using std::vector;
 using std::array;
 using std::string;
 using std::wstring;
+
