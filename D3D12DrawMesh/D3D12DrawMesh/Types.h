@@ -13,10 +13,17 @@ using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;
 using FFloat4X4 = glm::mat4;
 
+struct FRotator // order same with ue4
+{
+	float Roll;
+	float Pitch;
+	float Yaw;
+};
+
 struct FTransform
 {
 	FVector Translation;
-	FVector Rotation;
+	FRotator Rotation;
 	FVector Scale;
 };
 

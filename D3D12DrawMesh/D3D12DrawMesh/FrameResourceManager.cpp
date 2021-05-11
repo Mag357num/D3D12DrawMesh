@@ -271,12 +271,12 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FVector& Rotate = Scene->GetSceneSMActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
+		const FRotator& Rotate = Scene->GetSceneSMActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.x), FVector(1, 0, 0)); // roll
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.y), FVector(0, 1, 0)); // pitch
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.z), FVector(0, 0, 1)); // yaw
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Pitch), FVector(0, 1, 0)); // pitch
+		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.Yaw), FVector(0, 0, 1)); // yaw
 
 		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Scale);
 		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Translation);

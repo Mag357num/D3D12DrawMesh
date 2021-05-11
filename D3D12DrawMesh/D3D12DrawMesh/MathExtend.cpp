@@ -46,3 +46,37 @@ FVector4 GetBufferSizeAndInvSize(FVector2 Param)
 {
 	return FVector4(std::ceil(Param.x), std::ceil(Param.y), 1.f / std::ceil(Param.x), 1.f / std::ceil(Param.y));
 }
+
+FVector QuatToEuler(FVector4 Quat) // copy from ue4
+{
+	const float SingularityTest = Quat.z * Quat.x - Quat.w * Quat.y;
+	const float YawY = 2.f * (Quat.w * Quat.z + Quat.x * Quat.y);
+	const float YawX = (1.f - 2.f * (std::pow(Quat.y, 2) + std::pow(Quat.z, 2)));
+
+	const float SINGULARITY_THRESHOLD = 0.4999995f;
+	const float RAD_TO_DEG = (180.f) / PI;
+
+	FVector RotatorFromQuat(1, 1, 1);
+	//FVector RotatorFromQuat;
+
+	//if (SingularityTest < -SINGULARITY_THRESHOLD)
+	//{
+	//	RotatorFromQuat.Pitch = -90.f;
+	//	RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
+	//	RotatorFromQuat.Roll = FRotator::NormalizeAxis(-RotatorFromQuat.Yaw - (2.f * Atan2(Quat.x, Quat.w) * RAD_TO_DEG));
+	//}
+	//else if (SingularityTest > SINGULARITY_THRESHOLD)
+	//{
+	//	RotatorFromQuat.Pitch = 90.f;
+	//	RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
+	//	RotatorFromQuat.Roll = FRotator::NormalizeAxis(RotatorFromQuat.Yaw - (2.f * Atan2(Quat.x, Quat.w) * RAD_TO_DEG));
+	//}
+	//else
+	//{
+	//	RotatorFromQuat.Pitch = FMath::FastAsin(2.f * (SingularityTest)) * RAD_TO_DEG;
+	//	RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
+	//	RotatorFromQuat.Roll = Atan2(-2.f * (Quat.w * Quat.x + Quat.y * Quat.z), (1.f - 2.f * (FMath::Square(Quat.x) + FMath::Square(Quat.y)))) * RAD_TO_DEG;
+	//}
+
+	return RotatorFromQuat;
+}
