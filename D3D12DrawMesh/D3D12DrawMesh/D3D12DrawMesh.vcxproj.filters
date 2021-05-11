@@ -63,9 +63,6 @@
     <ClInclude Include="RHIResource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="FScene.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -79,6 +76,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Character.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -110,9 +110,6 @@
     <ClCompile Include="FrameResourceManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="FScene.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -132,6 +129,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Character.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include "SimpleCamera.h"
 #include "StaticMeshActor.h"
 #include "Light.h"
+#include "Character.h"
 
 class FScene
 {
@@ -11,6 +12,7 @@ private:
 	FCamera CurrentCamera; // TODO: change to std::vector<FCamera> Cameras
 	FDirectionLight DirectionLight; // TODO: extend to a array of lights
 	vector<FStaticMeshActor> MeshActorArray;
+	FCharacter Charater;
 
 public:
 	void UpdateMainCamera(class FEngine* Engine);
