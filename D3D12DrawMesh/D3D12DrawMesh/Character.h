@@ -1,6 +1,5 @@
 #pragma once
 #include "stdafx.h"
-#include "StaticMeshActor.h"
 
 class FCharacter
 {

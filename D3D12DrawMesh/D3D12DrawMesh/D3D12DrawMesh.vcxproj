@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationSequence.h" />
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="d3dx12.h" />
@@ -28,6 +29,7 @@
     <ClInclude Include="DynamicRHI.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="FrameResourceManager.h" />
+    <ClInclude Include="Joint.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="MathExtend.h" />
     <ClInclude Include="Renderer.h" />
@@ -35,14 +37,19 @@
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SimpleCamera.h" />
+    <ClInclude Include="SkeletalMesh.h" />
+    <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="SkinnedWeightVertex.h" />
     <ClInclude Include="StaticMeshActor.h" />
+    <ClInclude Include="StaticVertex.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Thread.h" />
-    <ClInclude Include="Types.h" />
+    <ClInclude Include="Track.h" />
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationSequence.cpp" />
     <ClCompile Include="AssetManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
@@ -51,6 +58,7 @@
     <ClCompile Include="DynamicRHI.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="FrameResourceManager.cpp" />
+    <ClCompile Include="Joint.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MathExtend.cpp" />
@@ -58,11 +66,16 @@
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
+    <ClCompile Include="SkeletalMesh.cpp" />
+    <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="SkinnedWeightVertex.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
+    <ClCompile Include="StaticVertex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="Track.cpp" />
     <ClCompile Include="Win32Application.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

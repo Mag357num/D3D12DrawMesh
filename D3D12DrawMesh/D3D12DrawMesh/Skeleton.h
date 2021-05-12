@@ -1,11 +1,19 @@
 #pragma once
 #include "stdafx.h"
+#include "Joint.h"
 
-class SkeletalMesh
+using FPose = FTransform;
+
+class FSkeleton
 {
+private:
+	vector<FJoint> Joints;
+	vector<FPose> BindPoses;
+	
+
 public:
-	SkeletalMesh() = default;
-	~SkeletalMesh() = default;
+	FSkeleton() = default;
+	~FSkeleton() = default;
 
 private:
 

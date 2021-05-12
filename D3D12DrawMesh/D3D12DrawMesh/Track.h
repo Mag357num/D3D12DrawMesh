@@ -1,15 +1,9 @@
 #pragma once
 #include "stdafx.h"
 
-class FSkeleton
+struct FTrack
 {
-private:
-
-public:
-	FSkeleton() = default;
-	~FSkeleton() = default;
-
-private:
-
+	vector<FVector> ScaleSample;
+	vector<FQuat> QuatSample;
+	vector<FVector> TranslationSample;
 };
-

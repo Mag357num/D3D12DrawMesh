@@ -1,13 +1,17 @@
 #pragma once
 #include "stdafx.h"
+#include "Skeleton.h"
 
-class Skeleton
+class FAnimationSequence
 {
 private:
+	FSkeleton* Skeleton;
+	uint32 FrameNum;
+
 
 public:
-	Skeleton() = default;
-	~Skeleton() = default;
+	FAnimationSequence() = default;
+	~FAnimationSequence() = default;
 
 private:
 

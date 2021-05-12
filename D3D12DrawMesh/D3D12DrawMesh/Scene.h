@@ -12,7 +12,7 @@ private:
 	FCamera CurrentCamera; // TODO: change to std::vector<FCamera> Cameras
 	FDirectionLight DirectionLight; // TODO: extend to a array of lights
 	vector<FStaticMeshActor> SceneSMActorArray;
-	FCharacter Charater;
+	FCharacter Character;
 
 public:
 	void UpdateMainCamera(class FEngine* Engine);

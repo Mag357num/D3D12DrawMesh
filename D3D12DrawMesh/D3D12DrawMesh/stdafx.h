@@ -47,4 +47,4 @@ using std::vector;
 using std::array;
 using std::string;
 using std::wstring;
-
+using std::unordered_map;

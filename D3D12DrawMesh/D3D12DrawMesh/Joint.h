@@ -1,13 +1,15 @@
 #pragma once
 #include "stdafx.h"
 
-class Skeleton
+class FJoint
 {
 private:
+	uint16 ParentIndex;
+	string JointName;
 
 public:
-	Skeleton() = default;
-	~Skeleton() = default;
+	FJoint() = default;
+	~FJoint() = default;
 
 private:
 
