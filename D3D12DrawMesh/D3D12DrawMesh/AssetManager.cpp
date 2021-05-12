@@ -78,7 +78,7 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	}
 
 	Fin.read((char*)&Trans.Translation, 3 * sizeof(float));
-	Fin.read((char*)&Trans.Rotation, 3 * sizeof(float));
+	Fin.read((char*)&Trans.Quat, 4 * sizeof(float));
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 }
 
@@ -90,7 +90,7 @@ FStaticMeshActor FAssetManager::CreateMeshActor(uint16 VertexStride, vector<floa
 	Actor.MeshLODs[0].SetVertices(Vertices);
 	Actor.MeshLODs[0].SetIndices(Indices);
 	Actor.Transform.Translation = Transform.Translation;
-	Actor.Transform.Rotation = Transform.Rotation;
+	Actor.Transform.Quat = Transform.Quat;
 	Actor.Transform.Scale = Transform.Scale;
 	return Actor;
 }

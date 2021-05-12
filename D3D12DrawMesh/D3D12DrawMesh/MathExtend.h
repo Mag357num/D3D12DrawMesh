@@ -28,7 +28,7 @@ struct FQuat
 struct FTransform
 {
 	FVector Scale;
-	FRotator Rotation;
+	FQuat Quat;
 	FVector Translation;
 };
 

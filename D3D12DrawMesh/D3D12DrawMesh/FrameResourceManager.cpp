@@ -139,7 +139,8 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		 1.f,  3.f, 0.0f,  1.f, -1.f,
 		-3.f, -1.f, 0.0f, -1.f,  1.f,
 	};
-	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(static_cast<uint16>(20), TriangleVertices, { 0, 1, 2 }, { { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f }, { 1.f, 1.f, 1.f } });
+	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(static_cast<uint16>(20), TriangleVertices,
+		{ 0, 1, 2 }, { { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Actor));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
 
@@ -271,7 +272,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FRotator& Rotate = Scene->GetSceneSMActorArray()[MeshIndex].Transform.Rotation; // x roll y pitch z yaw
+		const FRotator& Rotate = QuatToEuler(Scene->GetSceneSMActorArray()[MeshIndex].Transform.Quat); // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
