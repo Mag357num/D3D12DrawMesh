@@ -29,9 +29,9 @@ private:
 public:
 	FAnimInstance GetAnimator() { return Animator; }
 	void TickAnimation() { Animator.UpdateAnimation(); }
+	void InitAnimation(FAnimSequenceBase* Sequence) { Animator.initAnimation(this, Sequence); }
 
 	FSkeletalMeshComponent() = default;
-	FSkeletalMeshComponent(FAnimSequenceBase* Sequence) { Animator.initAnimation(this, Sequence); }
 	~FSkeletalMeshComponent() = default;
 };
 
