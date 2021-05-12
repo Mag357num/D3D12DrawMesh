@@ -25,6 +25,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <wrl.h>
 #include <shellapi.h>
 #include <assert.h>

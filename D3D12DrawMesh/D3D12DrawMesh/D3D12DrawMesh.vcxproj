@@ -37,8 +37,8 @@
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SimpleCamera.h" />
-    <ClInclude Include="SkeletalMesh.h" />
     <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="SkinnedMesh.h" />
     <ClInclude Include="SkinnedWeightVertex.h" />
     <ClInclude Include="StaticMeshActor.h" />
     <ClInclude Include="StaticVertex.h" />
@@ -66,8 +66,8 @@
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
-    <ClCompile Include="SkeletalMesh.cpp" />
     <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="SkinnedMesh.cpp" />
     <ClCompile Include="SkinnedWeightVertex.cpp" />
     <ClCompile Include="StaticMeshActor.cpp" />
     <ClCompile Include="StaticVertex.cpp" />
