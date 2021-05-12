@@ -6,8 +6,12 @@ void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, FAnim
 	Proxy.Sequence = Sequence;
 }
 
-void FAnimInstance::UpdateAnimation()
+void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 {
-	assert(0);
+	Proxy.UpdateAnimation(ElapsedSeconds);
 }
 
+void FAnimInstanceProxy::UpdateAnimation(const float& ElapsedSeconds)
+{
+	// calculate pose according to tick
+}
