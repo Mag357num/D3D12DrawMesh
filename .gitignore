@@ -446,3 +446,10 @@ D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Scene.obj
 D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Character.obj
 D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/MathExtend.obj
 D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Scene.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/AnimationSequence.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Joint.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Skeleton.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/SkinnedMesh.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/SkinnedWeightVertex.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/StaticVertex.obj
+D3D12DrawMesh/D3D12DrawMesh/obj/x64/Debug/Track.obj
