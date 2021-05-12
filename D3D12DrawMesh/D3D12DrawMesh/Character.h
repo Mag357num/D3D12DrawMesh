@@ -1,14 +1,14 @@
 #pragma once
 #include "stdafx.h"
-#include "SkinnedMesh.h"
+#include "SkeletalMesh.h"
 
 class FCharacter
 {
 private:
-	FSkinnedMesh* SkinnedMesh;
+	FSkeletalMesh* SkinnedMesh;
 
 public:
-	void SetSkinnedMesh(FSkinnedMesh* SkiMesh) { SkinnedMesh = SkiMesh; }
+	void SetSkinnedMesh(FSkeletalMesh* SkiMesh) { SkinnedMesh = SkiMesh; }
 
 	FCharacter() = default;
 	~FCharacter() = default;

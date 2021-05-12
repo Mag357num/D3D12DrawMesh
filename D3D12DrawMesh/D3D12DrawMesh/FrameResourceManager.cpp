@@ -30,45 +30,45 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	{
 		FFrameResource& FrameResource = FrameResArray[FrameIndex];
 
-		const uint32 MeshActorNum = static_cast<uint32>(Scene->GetSceneSMActorArray().size());
-		FrameResource.GetFrameMeshArray().resize(MeshActorNum);
+		const uint32 MeshComponentNum = static_cast<uint32>(Scene->GetComponentArray().size());
+		FrameResource.GetFrameMeshArray().resize(MeshComponentNum);
 
-		for (uint32 i = 0; i < MeshActorNum; ++i)
+		for (uint32 i = 0; i < MeshComponentNum; ++i)
 		{
-			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetSceneSMActorArray()[i]);
+			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetComponentArray()[i]);
 		}
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(const FStaticMeshActor& MeshActor)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(const FStaticMeshComponent& MeshComponent)
 {
-	FFrameMesh MeshActorFrameResource;
+	FFrameMesh MeshComFrameRes;
 
-	MeshActorFrameResource.Mesh = GDynamicRHI->CreateMesh(MeshActor);
-	MeshActorFrameResource.MeshRes = make_shared<FMeshRes>();
+	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent);
+	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
 	vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-	MeshActorFrameResource.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
-	MeshActorFrameResource.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshActor.ShaderFileName, 256, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.ShaderFileName, 256, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.ShaderFileName, 256, Empty);
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	MeshActorFrameResource.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshActorFrameResource.Mesh->InputLayer, ShaderInputLayer, MeshActorFrameResource.MeshRes->ShadowMat.get());
+	MeshComFrameRes.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->ShadowMat.get());
 
 	// shadow map pipeline
 	ShaderInputLayer.Elements.clear();
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	MeshActorFrameResource.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, MeshActorFrameResource.Mesh->InputLayer, ShaderInputLayer, MeshActorFrameResource.MeshRes->SceneColorMat.get());
+	MeshComFrameRes.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->SceneColorMat.get());
 
-	return MeshActorFrameResource;
+	return MeshComFrameRes;
 }
 
 void FFrameResourceManager::CreateMapsForShadow(FFrameResource& FrameRes)
@@ -139,9 +139,9 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		 1.f,  3.f, 0.0f,  1.f, -1.f,
 		-3.f, -1.f, 0.0f, -1.f,  1.f,
 	};
-	FStaticMeshActor Actor = FAssetManager::Get()->CreateMeshActor(static_cast<uint16>(20), TriangleVertices,
+	FStaticMeshComponent Component = FAssetManager::Get()->CreateMeshComponent(static_cast<uint16>(20), TriangleVertices,
 		{ 0, 1, 2 }, { { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
-	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Actor));
+	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
 
 	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.clear();
@@ -268,19 +268,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
-	const uint32 MeshActorCount = static_cast<uint32>(Scene->GetSceneSMActorArray().size());
-	for (uint32 MeshIndex = 0; MeshIndex < MeshActorCount; ++MeshIndex)
+	const uint32 MeshComponentNum = static_cast<uint32>(Scene->GetComponentArray().size());
+	for (uint32 MeshIndex = 0; MeshIndex < MeshComponentNum; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FRotator& Rotate = QuatToEuler(Scene->GetSceneSMActorArray()[MeshIndex].Transform.Quat); // x roll y pitch z yaw
+		const FRotator& Rotate = QuatToEuler(Scene->GetComponentArray()[MeshIndex].Transform.Quat); // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Pitch), FVector(0, 1, 0)); // pitch
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.Yaw), FVector(0, 0, 1)); // yaw
 
-		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Scale);
-		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetSceneSMActorArray()[MeshIndex].Transform.Translation);
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetComponentArray()[MeshIndex].Transform.Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetComponentArray()[MeshIndex].Transform.Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 

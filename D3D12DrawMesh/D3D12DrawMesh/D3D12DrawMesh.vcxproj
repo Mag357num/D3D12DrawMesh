@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimaInstance.h" />
     <ClInclude Include="AnimationSequence.h" />
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="Character.h" />
@@ -37,10 +38,10 @@
     <ClInclude Include="RHIResource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SimpleCamera.h" />
+    <ClInclude Include="SkeletalMesh.h" />
     <ClInclude Include="Skeleton.h" />
-    <ClInclude Include="SkinnedMesh.h" />
     <ClInclude Include="SkinnedWeightVertex.h" />
-    <ClInclude Include="StaticMeshActor.h" />
+    <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticVertex.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StepTimer.h" />
@@ -49,6 +50,7 @@
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AnimaInstance.cpp" />
     <ClCompile Include="AnimationSequence.cpp" />
     <ClCompile Include="AssetManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
@@ -66,10 +68,10 @@
     <ClCompile Include="RenderThread.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SimpleCamera.cpp" />
+    <ClCompile Include="SkeletalMesh.cpp" />
     <ClCompile Include="Skeleton.cpp" />
-    <ClCompile Include="SkinnedMesh.cpp" />
     <ClCompile Include="SkinnedWeightVertex.cpp" />
-    <ClCompile Include="StaticMeshActor.cpp" />
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticVertex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -553,13 +553,13 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(const FStaticMeshActor& MeshActor)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(const FStaticMeshComponent& MeshComponent)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
-		Mesh->IndexNum = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.MeshLODs[0].GetIndices().size());
 
-		uint32 VertexBufferSize = static_cast<uint32>(MeshActor.MeshLODs[0].GetVertices().size() * sizeof(float));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshActor.MeshLODs[0].GetIndices().size() * sizeof(uint32));
+		uint32 VertexBufferSize = static_cast<uint32>(MeshComponent.MeshLODs[0].GetVertices().size() * sizeof(float));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.MeshLODs[0].GetIndices().size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -584,7 +584,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the vertex buffer.
 		D3D12_SUBRESOURCE_DATA vertexData = {};
-		vertexData.pData = MeshActor.MeshLODs[0].GetVertices().data();
+		vertexData.pData = MeshComponent.MeshLODs[0].GetVertices().data();
 		vertexData.RowPitch = VertexBufferSize;
 		vertexData.SlicePitch = vertexData.RowPitch;
 
@@ -593,7 +593,7 @@ namespace RHI
 
 		// Initialize the vertex buffer view.
 		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = MeshActor.MeshLODs[0].GetVertexStride();
+		Mesh->VertexBufferView.StrideInBytes = MeshComponent.MeshLODs[0].GetVertexStride();
 		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// index buffer
@@ -618,7 +618,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshActor.MeshLODs[0].GetIndices().data();
+		indexData.pData = MeshComponent.MeshLODs[0].GetIndices().data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 

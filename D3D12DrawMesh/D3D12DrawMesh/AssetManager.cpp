@@ -22,22 +22,22 @@ shared_ptr<FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 		throw std::exception("open file faild.");
 	}
 
-	uint32 ActorNum;
-	Fin.read((char*)&ActorNum, sizeof(uint32));
-	TargetScene->GetSceneSMActorArray().resize(ActorNum);
+	uint32 ComponentNum;
+	Fin.read((char*)&ComponentNum, sizeof(uint32));
+	TargetScene->GetComponentArray().resize(ComponentNum);
 
-	for (uint32 i = 0; i < ActorNum; i++)
+	for (uint32 i = 0; i < ComponentNum; i++)
 	{
-		TargetScene->GetSceneSMActorArray()[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
-		ReadMeshLODFromIfstream(Fin, TargetScene->GetSceneSMActorArray()[i].MeshLODs[0]);
-		ReadMeshTransFromIfstream(Fin, TargetScene->GetSceneSMActorArray()[i].Transform);
+		TargetScene->GetComponentArray()[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
+		ReadMeshLODFromIfstream(Fin, TargetScene->GetComponentArray()[i].MeshLODs[0]);
+		ReadMeshTransFromIfstream(Fin, TargetScene->GetComponentArray()[i].Transform);
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
-		TargetScene->GetSceneSMActorArray()[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
+		TargetScene->GetComponentArray()[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
 	}
 
 	// TODO: hard code
-	TargetScene->GetSceneSMActorArray()[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
+	TargetScene->GetComponentArray()[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
 
 	Fin.close();
 
@@ -82,16 +82,16 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 }
 
-FStaticMeshActor FAssetManager::CreateMeshActor(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
+FStaticMeshComponent FAssetManager::CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
 {
-	FStaticMeshActor Actor;
-	Actor.MeshLODs.resize(1); // TODO: only consider one mip
-	Actor.MeshLODs[0].SetVertexStride(VertexStride);
-	Actor.MeshLODs[0].SetVertices(Vertices);
-	Actor.MeshLODs[0].SetIndices(Indices);
-	Actor.Transform.Translation = Transform.Translation;
-	Actor.Transform.Quat = Transform.Quat;
-	Actor.Transform.Scale = Transform.Scale;
-	return Actor;
+	FStaticMeshComponent Component;
+	Component.MeshLODs.resize(1); // TODO: only consider one mip
+	Component.MeshLODs[0].SetVertexStride(VertexStride);
+	Component.MeshLODs[0].SetVertices(Vertices);
+	Component.MeshLODs[0].SetIndices(Indices);
+	Component.Transform.Translation = Transform.Translation;
+	Component.Transform.Quat = Transform.Quat;
+	Component.Transform.Scale = Transform.Scale;
+	return Component;
 }
 

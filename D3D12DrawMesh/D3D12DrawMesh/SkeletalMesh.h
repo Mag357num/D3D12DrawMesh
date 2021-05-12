@@ -4,7 +4,7 @@
 #include "StaticVertex.h"
 #include "SkinnedWeightVertex.h"
 
-class FSkinnedMesh
+class FSkeletalMesh
 {
 private:
 	FSkeleton* Skeleton;
@@ -14,8 +14,8 @@ private:
 public:
 	void SetSkeleton(FSkeleton* Ske) { Skeleton = Ske; };
 
-	FSkinnedMesh() = default;
-	~FSkinnedMesh() = default;
+	FSkeletalMesh() = default;
+	~FSkeletalMesh() = default;
 
 private:
 

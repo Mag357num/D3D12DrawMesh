@@ -1,19 +1,16 @@
 #pragma once
 #include "stdafx.h"
-#include "Joint.h"
 
-using FPose = FTransform;
-
-class FSkeleton
+class FAnimaInstance
 {
 private:
-	vector<FJoint> Joints;
-	vector<FPose> BindPoses;
-	std::unordered_map<string, uint16> NameToIndexMap;
 
 public:
-	FSkeleton() = default;
-	~FSkeleton() = default;
+	void initAnimation(); // start timer counting
+	void UpdateAnimation(); // invoke in main loop, make character to move
+
+	FAnimaInstance() = default;
+	~FAnimaInstance() = default;
 
 private:
 

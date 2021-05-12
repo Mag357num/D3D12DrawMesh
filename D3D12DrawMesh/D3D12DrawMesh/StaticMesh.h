@@ -22,11 +22,11 @@ public:
 	void SetIndices(const vector<uint32>& Param) { Indices = Param; }
 };
 
-class FStaticMeshActor
+class FStaticMeshComponent
 {
 public:
-	FStaticMeshActor() = default;
-	~FStaticMeshActor() = default;
+	FStaticMeshComponent() = default;
+	~FStaticMeshComponent() = default;
 
 	FTransform Transform;
 	vector<FStaticMeshLOD> MeshLODs;

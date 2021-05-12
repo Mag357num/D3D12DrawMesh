@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
-#include "StaticMeshActor.h"
+#include "StaticMesh.h"
 
 namespace RHI
 {
@@ -29,7 +29,7 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(const FStaticMeshActor& MeshActor) = 0; // meshActor is mesh data, can read from file or write in code
+		virtual shared_ptr<FMesh> CreateMesh(const FStaticMeshComponent& MeshComponent) = 0; // MeshComponent is mesh data, can read from file or write in code
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;

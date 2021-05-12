@@ -66,9 +66,6 @@
     <ClInclude Include="AssetManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="StaticMeshActor.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Light.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -96,7 +93,13 @@
     <ClInclude Include="Track.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SkinnedMesh.h">
+    <ClInclude Include="AnimaInstance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SkeletalMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -134,9 +137,6 @@
     <ClCompile Include="AssetManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="StaticMeshActor.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Light.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -170,7 +170,13 @@
     <ClCompile Include="Track.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SkinnedMesh.cpp">
+    <ClCompile Include="AnimaInstance.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SkeletalMesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
