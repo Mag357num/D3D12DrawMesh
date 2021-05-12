@@ -13,7 +13,7 @@ private:
 
 public:
 	static FAssetManager* Get();
-	shared_ptr<FScene> LoadScene(const std::wstring& BinFileName);
+	shared_ptr<FScene> LoadStaticMeshComponentToScene(const std::wstring& BinFileName);
 	FStaticMeshComponent CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 
 private:
