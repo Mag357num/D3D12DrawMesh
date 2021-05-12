@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AnimaInstance.h" />
     <ClInclude Include="AnimationSequence.h" />
     <ClInclude Include="AssetManager.h" />
@@ -50,6 +52,8 @@
     <ClInclude Include="Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AnimaInstance.cpp" />
     <ClCompile Include="AnimationSequence.cpp" />
     <ClCompile Include="AssetManager.cpp">

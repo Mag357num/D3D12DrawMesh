@@ -85,7 +85,7 @@ void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)
 		});
 }
 
-void FRenderThread::UpdateFrameResources(FScene* Scene)
+void FRenderThread::TickFrameRes(FScene* Scene)
 {
 	RENDER_THREAD([this, Scene]()
 		{

@@ -17,7 +17,7 @@ public:
 	FCamera();
 
 	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
-	void Update(const float& ElapsedSeconds);
+	void Tick(const float& ElapsedSeconds);
 	FMatrix GetViewMatrix() const;
 	FMatrix GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top ,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;

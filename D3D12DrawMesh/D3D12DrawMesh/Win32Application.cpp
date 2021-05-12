@@ -43,7 +43,7 @@ int Win32Application::Run(FEngine* pEngine, HINSTANCE hInstance, int nCmdShow)
 		pEngine);
 
 	// Initialize the sample. OnInit is defined in each child-implementation of DXSample.
-	pEngine->OnInit();
+	pEngine->Init();
 
 	ShowWindow(m_hwnd, nCmdShow);
 
@@ -59,7 +59,7 @@ int Win32Application::Run(FEngine* pEngine, HINSTANCE hInstance, int nCmdShow)
 		}
 	}
 
-	pEngine->OnDestroy();
+	pEngine->Destroy();
 
 	// Return this part of the WM_QUIT message to Windows.
 	return static_cast<char>(msg.wParam);
@@ -138,8 +138,8 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 	case WM_PAINT:
 		if (pEngine)
 		{
-			pEngine->OnUpdate();
-			pEngine->OnRender();
+			pEngine->Tick();
+			pEngine->Render();
 		}
 		return 0;
 

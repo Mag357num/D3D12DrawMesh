@@ -3,6 +3,9 @@
 #include "Skeleton.h"
 #include "StaticVertex.h"
 #include "SkinnedWeightVertex.h"
+#include "AnimaInstance.h"
+#include "ActorComponent.h"
+#include "Actor.h"
 
 class FSkeletalMesh
 {
@@ -16,8 +19,20 @@ public:
 
 	FSkeletalMesh() = default;
 	~FSkeletalMesh() = default;
-
-private:
-
 };
 
+class FSkeletalMeshComponent : public FActorComponent
+{
+private:
+	FSkeletalMesh* SkeletalMesh;
+	FAnimaInstance Animator;
+
+public:
+	FSkeletalMeshComponent() = default;
+	~FSkeletalMeshComponent() = default;
+};
+
+class ASkeletalMeshActor : public AActor
+{
+
+};

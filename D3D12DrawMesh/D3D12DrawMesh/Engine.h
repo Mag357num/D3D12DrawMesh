@@ -26,10 +26,10 @@ public:
     FEngine(uint32 width, uint32 height, std::wstring name);
     virtual ~FEngine();
 
-    void OnInit();
-    void OnUpdate();
-    void OnRender();
-    void OnDestroy();
+    void Init();
+    void Tick(); // update
+    void Render();
+    void Destroy();
 
     // Samples override the event handlers to handle specific messages.
 	void OnKeyDown(unsigned char Key);

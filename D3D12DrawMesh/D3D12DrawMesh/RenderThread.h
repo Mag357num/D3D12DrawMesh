@@ -22,7 +22,7 @@ public:
 	static FRenderThread* Get();
 
 	void CreateFrameResource(shared_ptr<class FScene> Scene);
-	void UpdateFrameResources(FScene* Scene);
+	void TickFrameRes(FScene* Scene);
 	void WaitForRenderThread();
 
 private:

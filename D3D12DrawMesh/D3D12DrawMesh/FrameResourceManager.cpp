@@ -30,12 +30,12 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	{
 		FFrameResource& FrameResource = FrameResArray[FrameIndex];
 
-		const uint32 MeshComponentNum = static_cast<uint32>(Scene->GetComponentArray().size());
-		FrameResource.GetFrameMeshArray().resize(MeshComponentNum);
+		const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
+		FrameResource.GetFrameMeshArray().resize(ActorNum);
 
-		for (uint32 i = 0; i < MeshComponentNum; ++i)
+		for (uint32 i = 0; i < ActorNum; ++i)
 		{
-			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(Scene->GetComponentArray()[i]);
+			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(*static_cast<FStaticMeshComponent*>(Scene->GetStaticMeshActors()[i].GetComs()[0].get()));
 		}
 	}
 
@@ -268,19 +268,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.0f, 1.0f);
 
-	const uint32 MeshComponentNum = static_cast<uint32>(Scene->GetComponentArray().size());
-	for (uint32 MeshIndex = 0; MeshIndex < MeshComponentNum; ++MeshIndex)
+	const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
+	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FRotator& Rotate = QuatToEuler(Scene->GetComponentArray()[MeshIndex].GetTransform().Quat); // x roll y pitch z yaw
+		const FRotator& Rotate = QuatToEuler(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat); // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Pitch), FVector(0, 1, 0)); // pitch
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.Yaw), FVector(0, 0, 1)); // yaw
 
-		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetComponentArray()[MeshIndex].GetTransform().Scale);
-		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetComponentArray()[MeshIndex].GetTransform().Translation);
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 

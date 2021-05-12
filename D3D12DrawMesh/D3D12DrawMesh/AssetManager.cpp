@@ -11,7 +11,7 @@ FAssetManager* FAssetManager::Get()
 	return GAssetManager;
 }
 
-shared_ptr<FScene> FAssetManager::LoadStaticMeshComponentToScene(const std::wstring& BinFileName)
+shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName)
 {
 	shared_ptr<FScene> TargetScene = make_shared<FScene>();
 
@@ -22,30 +22,30 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshComponentToScene(const std::wstr
 		throw std::exception("open file faild.");
 	}
 
-	vector<FStaticMeshComponent> Coms;
-	uint32 ComponentNum;
-	Fin.read((char*)&ComponentNum, sizeof(uint32));
+	uint32 ActorNum;
+	Fin.read((char*)&ActorNum, sizeof(uint32));
 
-	for (uint32 i = 0; i < ComponentNum; i++)
+	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		FStaticMeshComponent Com;
+		AStaticMeshActor Actor;
+		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 
-		Com.SetMeshLODs(ReadMeshLODsFromIfstream(Fin));
-		Com.SetTransform(ReadMeshTransformFromIfstream(Fin));
+		Com->SetMeshLODs(ReadMeshLODsFromIfstream(Fin));
+		Com->SetTransform(ReadMeshTransformFromIfstream(Fin));
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
 		if (i == 6) // TODO: hard coding
 		{
-			Com.SetShaderFileName(L"Shadow_SceneColor_Sun.hlsl");
+			Com->SetShaderFileName(L"Shadow_SceneColor_Sun.hlsl");
 		}
 		else
 		{
-			Com.SetShaderFileName(L"Shadow_SceneColor.hlsl");
+			Com->SetShaderFileName(L"Shadow_SceneColor.hlsl");
 		}
 
-		Coms.push_back(Com);
+		Actor.GetComs().push_back(Com);
+		TargetScene->GetStaticMeshActors().push_back(Actor);
 	}
-	TargetScene->SetComponentArray(Coms);
 
 	Fin.close();
 

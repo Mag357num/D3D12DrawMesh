@@ -1,5 +1,7 @@
 #pragma once
 #include "stdafx.h"
+#include "ActorComponent.h"
+#include "Actor.h"
 
 class FStaticMeshLOD
 {
@@ -37,11 +39,10 @@ public:
 	~FStaticMesh() = default;
 };
 
-class FStaticMeshComponent
+class FStaticMeshComponent : public FActorComponent
 {
 private:
 	FStaticMesh StaticMesh;
-	FTransform Transform;
 	wstring ShaderFileName;
 
 public:
@@ -59,4 +60,9 @@ public:
 
 	FStaticMeshComponent() = default;
 	~FStaticMeshComponent() = default;
+};
+
+class AStaticMeshActor : public AActor
+{
+
 };

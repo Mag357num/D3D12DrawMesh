@@ -34,9 +34,9 @@ FEngine::~FEngine()
 {
 }
 
-void FEngine::OnInit()
+void FEngine::Init()
 {
-	CurrentScene = FAssetManager::Get()->LoadStaticMeshComponentToScene(L"Scene_.dat");
+	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
 	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
 
 	FRenderThread::CreateRenderThread();
@@ -44,43 +44,46 @@ void FEngine::OnInit()
 	FRenderThread::Get()->CreateFrameResource(CurrentScene);
 }
 
-void FEngine::OnUpdate()
+void FEngine::Tick()
 {
 	FRenderThread::Get()->WaitForRenderThread();
-	CurrentScene->UpdateMainCamera(GEngine);
-	FRenderThread::Get()->UpdateFrameResources(CurrentScene.get());
+
+	StepTimer& Timer = GEngine->GetTimer();
+	Timer.Tick(NULL);
+	CurrentScene->Tick(Timer);
+	FRenderThread::Get()->TickFrameRes(CurrentScene.get());
 }
 
-void FEngine::OnRender()
+void FEngine::Render()
 {
 }
 
-void FEngine::OnDestroy()
+void FEngine::Destroy()
 {
 	FRenderThread::DestroyRenderThread();
 }
 
 void FEngine::OnKeyDown(unsigned char Key)
 {
-	CurrentScene->ManipulateCamera(Key, 0, 0, SceneCameraManipulateType::KEY_DOWN);
+	CurrentScene->GetCurrentCamera().OnKeyDown(Key);
 }
 
 void FEngine::OnKeyUp(unsigned char Key)
 {
-	CurrentScene->ManipulateCamera(Key, 0, 0, SceneCameraManipulateType::KEY_UP);
+	CurrentScene->GetCurrentCamera().OnKeyUp(Key);
 }
 
 void FEngine::OnMouseMove(uint32 x, uint32 y)
 {
-	CurrentScene->ManipulateCamera(0, x, y, SceneCameraManipulateType::MOUSEMOVE);
+	CurrentScene->GetCurrentCamera().OnMouseMove(x, y);
 }
 
 void FEngine::OnRightButtonDown(uint32 x, uint32 y)
 {
-	CurrentScene->ManipulateCamera(0, x, y, SceneCameraManipulateType::RIGHT_BUTTON_DOWN);
+	CurrentScene->GetCurrentCamera().OnRightButtonDown(x, y);
 }
 
 void FEngine::OnRightButtonUp()
 {
-	CurrentScene->ManipulateCamera(0, 0, 0, SceneCameraManipulateType::RIGHT_BUTTON_UP);
+	CurrentScene->GetCurrentCamera().OnRightButtonUp();
 }

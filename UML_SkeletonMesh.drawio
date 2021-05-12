@@ -7,7 +7,7 @@
                 <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startArrow=none;startFill=0;endArrow=diamondThin;endFill=1;strokeWidth=2;" parent="1" source="8sGW1j9p3B2PJ3TuNCzf-1" target="2" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=diamondThin;endFill=0;strokeWidth=2;" parent="1" source="8sGW1j9p3B2PJ3TuNCzf-1" target="43" edge="1">
+                <mxCell id="47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=diamondThin;endFill=1;strokeWidth=2;" parent="1" source="66" target="43" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="59" value="animator" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="47">
@@ -16,24 +16,19 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="8sGW1j9p3B2PJ3TuNCzf-1" value="FCharacter" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-120" y="28" width="240" height="108" as="geometry"/>
+                    <mxGeometry x="-160" y="-108" width="320" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="8sGW1j9p3B2PJ3TuNCzf-2" value="+ SkinnedMesh: Fskinnedmesh*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8sGW1j9p3B2PJ3TuNCzf-1" vertex="1">
-                    <mxGeometry y="26" width="240" height="24" as="geometry"/>
+                <mxCell id="8sGW1j9p3B2PJ3TuNCzf-2" value="+ SkeletalMeshComponent: FSkeletalMeshComponent*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8sGW1j9p3B2PJ3TuNCzf-1" vertex="1">
+                    <mxGeometry y="26" width="320" height="24" as="geometry"/>
                 </mxCell>
                 <mxCell id="50" value="+ AnimaInstance: FanimaInstance*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="8sGW1j9p3B2PJ3TuNCzf-1">
-                    <mxGeometry y="50" width="240" height="24" as="geometry"/>
+                    <mxGeometry y="50" width="320" height="24" as="geometry"/>
                 </mxCell>
                 <mxCell id="8sGW1j9p3B2PJ3TuNCzf-3" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="8sGW1j9p3B2PJ3TuNCzf-1" vertex="1">
-                    <mxGeometry y="74" width="240" height="8" as="geometry"/>
+                    <mxGeometry y="74" width="320" height="8" as="geometry"/>
                 </mxCell>
                 <mxCell id="35" value="+ SetSkinnedMesh(FilePath): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8sGW1j9p3B2PJ3TuNCzf-1" vertex="1">
-                    <mxGeometry y="82" width="240" height="26" as="geometry"/>
-                </mxCell>
-                <mxCell id="8sGW1j9p3B2PJ3TuNCzf-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=none;startFill=0;endArrow=diamondThin;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;strokeWidth=2;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="8sGW1j9p3B2PJ3TuNCzf-20" target="8sGW1j9p3B2PJ3TuNCzf-1" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-30" y="140" as="targetPoint"/>
-                    </mxGeometry>
+                    <mxGeometry y="82" width="320" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="8sGW1j9p3B2PJ3TuNCzf-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=none;startFill=0;endArrow=diamondThin;endFill=0;strokeWidth=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="8sGW1j9p3B2PJ3TuNCzf-26" target="8sGW1j9p3B2PJ3TuNCzf-20" edge="1">
                     <mxGeometry relative="1" as="geometry">
@@ -50,7 +45,10 @@
                         <mxPoint x="-160" y="280" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="8sGW1j9p3B2PJ3TuNCzf-20" value="FSkinnedMesh" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                <mxCell id="70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endArrow=diamondThin;endFill=1;strokeWidth=2;" edge="1" parent="1" source="8sGW1j9p3B2PJ3TuNCzf-20" target="66">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="8sGW1j9p3B2PJ3TuNCzf-20" value="FSkeletalMesh" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
                     <mxGeometry x="-160" y="160" width="320" height="138" as="geometry"/>
                 </mxCell>
                 <mxCell id="8sGW1j9p3B2PJ3TuNCzf-21" value="+ Skeleton: FSkeleton*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="8sGW1j9p3B2PJ3TuNCzf-20" vertex="1">
@@ -163,7 +161,7 @@
                     <mxGeometry y="104" width="160" height="8" as="geometry"/>
                 </mxCell>
                 <mxCell id="2" value="FScene" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-120" y="-158" width="240" height="158" as="geometry"/>
+                    <mxGeometry x="-120" y="-320" width="240" height="158" as="geometry"/>
                 </mxCell>
                 <mxCell id="3" value="+ Light: " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
                     <mxGeometry y="26" width="240" height="24" as="geometry"/>
@@ -227,7 +225,7 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="43" value="FAnimInstance&#10;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="250" y="28" width="280" height="86" as="geometry"/>
+                    <mxGeometry x="280" y="40" width="280" height="86" as="geometry"/>
                 </mxCell>
                 <mxCell id="45" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="43" vertex="1">
                     <mxGeometry y="26" width="280" height="8" as="geometry"/>
@@ -237,6 +235,21 @@
                 </mxCell>
                 <mxCell id="49" value="+ UpdateAnimation(): attribute" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="43" vertex="1">
                     <mxGeometry y="60" width="280" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endArrow=diamondThin;endFill=1;strokeWidth=2;" edge="1" parent="1" source="66" target="8sGW1j9p3B2PJ3TuNCzf-1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="66" value="FSkeletalMeshComponent" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="-160" y="40" width="320" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="67" value="+ SkeletalMesh: FSkeletalMesh*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="66">
+                    <mxGeometry y="26" width="320" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="68" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="66">
+                    <mxGeometry y="52" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="69" value="+ TickAnimation(type): type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="66">
+                    <mxGeometry y="60" width="320" height="26" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

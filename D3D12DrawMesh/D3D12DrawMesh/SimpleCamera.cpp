@@ -83,7 +83,7 @@ void FCamera::Reset()
 	GetEulerByLook(LookDirection);
 }
 
-void FCamera::Update(const float& ElapsedSeconds)
+void FCamera::Tick(const float& ElapsedSeconds)
 {
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
