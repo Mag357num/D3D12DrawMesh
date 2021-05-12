@@ -28,24 +28,25 @@ shared_ptr<FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 
 	for (uint32 i = 0; i < ComponentNum; i++)
 	{
-		TargetScene->GetComponentArray()[i].MeshLODs.resize(1); // TODO: change to the real lod num of mesh
-		ReadMeshLODFromIfstream(Fin, TargetScene->GetComponentArray()[i].MeshLODs[0]);
-		ReadMeshTransFromIfstream(Fin, TargetScene->GetComponentArray()[i].Transform);
+		TargetScene->GetComponentArray()[i].SetMeshLODs(ReadMeshLODsFromIfstream(Fin));
+		TargetScene->GetComponentArray()[i].SetTransform(ReadMeshTransformFromIfstream(Fin));
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
-		TargetScene->GetComponentArray()[i].ShaderFileName = L"Shadow_SceneColor.hlsl";
+		TargetScene->GetComponentArray()[i].SetShaderFileName(L"Shadow_SceneColor.hlsl");
 	}
 
 	// TODO: hard code
-	TargetScene->GetComponentArray()[6].ShaderFileName = L"Shadow_SceneColor_Sun.hlsl";
+	TargetScene->GetComponentArray()[6].SetShaderFileName(L"Shadow_SceneColor_Sun.hlsl");
 
 	Fin.close();
 
 	return TargetScene;
 }
 
-void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FStaticMeshLOD& MeshLOD)
+vector<FStaticMeshLOD> FAssetManager::ReadMeshLODsFromIfstream(std::ifstream& Fin)
 {
+	FStaticMeshLOD MeshLOD;
+
 	if (!Fin.is_open())
 	{
 		throw std::exception("open file faild.");
@@ -68,10 +69,15 @@ void FAssetManager::ReadMeshLODFromIfstream(std::ifstream& Fin, FStaticMeshLOD& 
 
 	MeshLOD.ResizeIndices(BufferElementSize);
 	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
+
+	vector<FStaticMeshLOD> MeshLODs;
+	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
+	return MeshLODs;
 }
 
-void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Trans)
+FTransform FAssetManager::ReadMeshTransformFromIfstream(std::ifstream& Fin)
 {
+	FTransform Trans;
 	if (!Fin.is_open())
 	{
 		throw std::exception("open file faild.");
@@ -80,18 +86,18 @@ void FAssetManager::ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Tr
 	Fin.read((char*)&Trans.Translation, 3 * sizeof(float));
 	Fin.read((char*)&Trans.Quat, 4 * sizeof(float));
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
+
+	return Trans;
 }
 
 FStaticMeshComponent FAssetManager::CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
 {
 	FStaticMeshComponent Component;
-	Component.MeshLODs.resize(1); // TODO: only consider one mip
-	Component.MeshLODs[0].SetVertexStride(VertexStride);
-	Component.MeshLODs[0].SetVertices(Vertices);
-	Component.MeshLODs[0].SetIndices(Indices);
-	Component.Transform.Translation = Transform.Translation;
-	Component.Transform.Quat = Transform.Quat;
-	Component.Transform.Scale = Transform.Scale;
+	vector<FStaticMeshLOD> Lods;
+	Lods.push_back(FStaticMeshLOD(VertexStride, Vertices, Indices));
+	FStaticMesh StaticMesh;
+	StaticMesh.SetMeshLODs(Lods);
+	Component.SetStaticMesh(StaticMesh);
+	Component.SetTransform(Transform);
 	return Component;
 }
-

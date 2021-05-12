@@ -51,8 +51,8 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(const FStaticMeshComponent& Me
 
 	// material
 	vector<shared_ptr<FHandle>> Empty; // TODO: refactor
-	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.ShaderFileName, 256, Empty);
-	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.ShaderFileName, 256, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
@@ -272,15 +272,15 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 MeshIndex = 0; MeshIndex < MeshComponentNum; ++MeshIndex)
 	{
 		const FMatrix Identity = glm::identity<FMatrix>();
-		const FRotator& Rotate = QuatToEuler(Scene->GetComponentArray()[MeshIndex].Transform.Quat); // x roll y pitch z yaw
+		const FRotator& Rotate = QuatToEuler(Scene->GetComponentArray()[MeshIndex].GetTransform().Quat); // x roll y pitch z yaw
 
 		FMatrix RotateMatrix = Identity;
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Pitch), FVector(0, 1, 0)); // pitch
 		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.Yaw), FVector(0, 0, 1)); // yaw
 
-		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetComponentArray()[MeshIndex].Transform.Scale);
-		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetComponentArray()[MeshIndex].Transform.Translation);
+		FMatrix ScaleMatrix = glm::scale(Identity, Scene->GetComponentArray()[MeshIndex].GetTransform().Scale);
+		FMatrix TranslateMatrix = glm::translate(Identity, Scene->GetComponentArray()[MeshIndex].GetTransform().Translation);
 
 		FMatrix WorldMatrix = Identity * TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 

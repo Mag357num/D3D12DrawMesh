@@ -17,6 +17,6 @@ public:
 	FStaticMeshComponent CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 
 private:
-	void ReadMeshLODFromIfstream(std::ifstream& Fin, FStaticMeshLOD& MeshLOD);
-	void ReadMeshTransFromIfstream(std::ifstream& Fin, FTransform& Trans);
+	vector<FStaticMeshLOD> ReadMeshLODsFromIfstream(std::ifstream& Fin);
+	FTransform ReadMeshTransformFromIfstream(std::ifstream& Fin);
 };
