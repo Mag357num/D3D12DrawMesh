@@ -1,12 +1,11 @@
 #pragma once
-#include "stdafx.h"
-#include "Skeleton.h"
 #include "StaticVertex.h"
+#include "AnimInstance.h"
 #include "SkinnedWeightVertex.h"
-#include "AnimaInstance.h"
 #include "ActorComponent.h"
 #include "Actor.h"
 
+class FSkeleton;
 class FSkeletalMesh
 {
 private:
@@ -24,15 +23,18 @@ public:
 class FSkeletalMeshComponent : public FActorComponent
 {
 private:
-	FSkeletalMesh* SkeletalMesh;
-	FAnimaInstance Animator;
+	shared_ptr<FSkeletalMesh> SkeletalMesh;
+	FAnimInstance Animator;
 
 public:
+	FAnimInstance GetAnimator() { return Animator; }
+	void TickAnimation() { Animator.UpdateAnimation(); }
+
 	FSkeletalMeshComponent() = default;
+	FSkeletalMeshComponent(FAnimSequenceBase* Sequence) { Animator.initAnimation(this, Sequence); }
 	~FSkeletalMeshComponent() = default;
 };
 
 class ASkeletalMeshActor : public AActor
 {
-
 };

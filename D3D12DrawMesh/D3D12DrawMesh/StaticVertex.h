@@ -13,8 +13,4 @@ private:
 public:
 	FStaticVertex() = default;
 	~FStaticVertex() = default;
-
-private:
-
 };
-

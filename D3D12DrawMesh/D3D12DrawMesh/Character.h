@@ -6,10 +6,10 @@
 class ACharacter : public AActor
 {
 private:
-	FSkeletalMesh* SkinnedMesh;
+	shared_ptr<ASkeletalMeshActor> SkinnedMeshActor;
 
 public:
-	void SetSkinnedMesh(FSkeletalMesh* SkiMesh) { SkinnedMesh = SkiMesh; }
+	void SetSkinnedMesh(shared_ptr<ASkeletalMeshActor> SkiMesh) { SkinnedMeshActor = SkiMesh; }
 	void Tick(const float& ElapsedSeconds);
 
 	ACharacter() = default;

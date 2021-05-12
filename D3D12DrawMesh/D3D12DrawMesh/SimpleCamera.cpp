@@ -14,7 +14,7 @@
 #include "MathExtend.h"
 #include <gtc/matrix_transform.hpp>
 
-FCamera::FCamera():
+ACamera::ACamera():
 	InitialPosition(500.f, 0.f, 0.f),
 	Position(InitialPosition),
 	Yaw(3.141592654f),
@@ -30,13 +30,13 @@ FCamera::FCamera():
 {
 }
 
-void FCamera::GetEulerByLook(const FVector& LookAt)
+void ACamera::GetEulerByLook(const FVector& LookAt)
 {
 	Yaw = Atan2(LookAt.y, LookAt.x);
 	Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
 }
 
-void FCamera::GetLookByEuler(const float& Pitch, const float& Yaw)
+void ACamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 {
 	LookDirection.x = cosf(Pitch) * cosf(Yaw);
 	LookDirection.y = cosf(Pitch) * sinf(Yaw);
@@ -47,7 +47,7 @@ void FCamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0.f;
 }
 
-void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio)
+void ACamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio)
 {
 	InitialPosition = PositionParam;
 	InitialUpDir = UpDir;
@@ -64,17 +64,17 @@ void FCamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVe
 	SetAspectRatio(AspectRatio);
 }
 
-void FCamera::SetMoveSpeed(const float & UnitsPerSecond)
+void ACamera::SetMoveSpeed(const float & UnitsPerSecond)
 {
 	MoveSpeed = UnitsPerSecond;
 }
 
-void FCamera::SetTurnSpeed(const float& RadiansPerSecond)
+void ACamera::SetTurnSpeed(const float& RadiansPerSecond)
 {
 	TurnSpeed = RadiansPerSecond;
 }
 
-void FCamera::Reset()
+void ACamera::Reset()
 {
 	Position = InitialPosition;
 	UpDirection = InitialUpDir;
@@ -83,7 +83,7 @@ void FCamera::Reset()
 	GetEulerByLook(LookDirection);
 }
 
-void FCamera::Tick(const float& ElapsedSeconds)
+void ACamera::Tick(const float& ElapsedSeconds)
 {
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
@@ -153,22 +153,22 @@ void FCamera::Tick(const float& ElapsedSeconds)
 	GetLookByEuler(Pitch, Yaw);
 }
 
-FMatrix FCamera::GetViewMatrix() const
+FMatrix ACamera::GetViewMatrix() const
 {
 	return glm::lookAtLH(Position, Position + LookDirection * 10.0f, UpDirection); // TODO: camera didnt update upDir
 }
 
-FMatrix FCamera::GetPerspProjMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+FMatrix ACamera::GetPerspProjMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
 {
 	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
 }
 
-FMatrix FCamera::GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+FMatrix ACamera::GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
 {
 	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
 }
 
-void FCamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
+void ACamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
 {
 	switch (key)
 	{
@@ -208,7 +208,7 @@ void FCamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
 	}
 }
 
-void FCamera::OnKeyUp(const WPARAM& key)
+void ACamera::OnKeyUp(const WPARAM& key)
 {
 	switch (key)
 	{
@@ -245,19 +245,19 @@ void FCamera::OnKeyUp(const WPARAM& key)
 	}
 }
 
-void FCamera::OnRightButtonDown(const uint32& x, const uint32& y)
+void ACamera::OnRightButtonDown(const uint32& x, const uint32& y)
 {
 	IsMouseDown = true;
 	MouseFirstPosition = { static_cast<float>(x), static_cast<float>(y) };
 	MouseCurrentPosition = MouseFirstPosition;
 }
 
-void FCamera::OnRightButtonUp()
+void ACamera::OnRightButtonUp()
 {
 	IsMouseDown = false;
 }
 
-void FCamera::OnMouseMove(const uint32& x, const uint32& y)
+void ACamera::OnMouseMove(const uint32& x, const uint32& y)
 {
 	if (IsMouseDown)
 	{

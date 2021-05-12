@@ -11,10 +11,10 @@
 
 #pragma once
 
-class FCamera
+class ACamera // TODO: refactor: make ACamera a Actor
 {
 public:
-	FCamera();
+	ACamera();
 
 	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
 	void Tick(const float& ElapsedSeconds);

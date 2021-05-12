@@ -35,7 +35,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 
 		for (uint32 i = 0; i < ActorNum; ++i)
 		{
-			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(*static_cast<FStaticMeshComponent*>(Scene->GetStaticMeshActors()[i].GetComs()[0].get()));
+			FrameResource.GetFrameMeshArray()[i] = CreateFrameMesh(*Scene->GetStaticMeshActors()[i].GetComs()[0]->As<FStaticMeshComponent>());
 		}
 	}
 
@@ -250,7 +250,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
-	FCamera& MainCamera = Scene->GetCurrentCamera();
+	ACamera& MainCamera = Scene->GetCurrentCamera();
 	FMatrix CamView = MainCamera.GetViewMatrix();
 	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
 

@@ -12,8 +12,4 @@ private:
 public:
 	FSkinnedWeightVertex() = default;
 	~FSkinnedWeightVertex() = default;
-
-private:
-
 };
-

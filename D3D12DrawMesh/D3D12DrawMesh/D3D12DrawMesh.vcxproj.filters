@@ -87,13 +87,7 @@
     <ClInclude Include="Joint.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AnimationSequence.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Track.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimaInstance.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SkeletalMesh.h">
@@ -106,6 +100,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ActorComponent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimInstance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimSequenceBase.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -170,13 +173,7 @@
     <ClCompile Include="Joint.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AnimationSequence.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Track.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimaInstance.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SkeletalMesh.cpp">
@@ -189,6 +186,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ActorComponent.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimInstance.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimSequenceBase.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,4 +12,9 @@ public:
 
 	FActorComponent() = default;
 	~FActorComponent() = default;
+
+	template <typename T>
+	inline T* As() { return static_cast<T*>(this); }
+	template <typename T>
+	inline T* TryAs() { return dynamic_cast<T*>(this); }
 };

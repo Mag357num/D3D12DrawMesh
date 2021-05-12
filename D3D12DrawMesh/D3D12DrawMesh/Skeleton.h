@@ -14,8 +14,4 @@ private:
 public:
 	FSkeleton() = default;
 	~FSkeleton() = default;
-
-private:
-
 };
-

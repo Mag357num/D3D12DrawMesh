@@ -48,9 +48,10 @@ void FEngine::Tick()
 {
 	FRenderThread::Get()->WaitForRenderThread();
 
-	StepTimer& Timer = GEngine->GetTimer();
+	// tick
 	Timer.Tick(NULL);
-	CurrentScene->Tick(Timer);
+	CurrentScene->Tick(Timer); // all actors store in FScene for now
+
 	FRenderThread::Get()->TickFrameRes(CurrentScene.get());
 }
 

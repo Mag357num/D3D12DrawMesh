@@ -1,15 +1,21 @@
 #pragma once
 #include "stdafx.h"
-#include "ActorComponent.h"
+#include "SkeletalMesh.h"
+#include "AnimSequenceBase.h"
 
-class AActor
+class FAnimNode_Base // Animation BlendTree
+{
+public:
+	virtual void Update() {}
+	virtual void Evaluate() {}
+};
+
+class FAnimNode_SequencePlyer : public FAnimNode_Base
 {
 private:
-	vector<shared_ptr<FActorComponent>> Components;
+	FAnimSequenceBase* Sequence;
 
 public:
-	vector<shared_ptr<FActorComponent>>& GetComs() { return Components; }
-
-	AActor() = default;
-	~AActor() = default;
+	void Update() override {}
+	void Evaluate() override {}
 };

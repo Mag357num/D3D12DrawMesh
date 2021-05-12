@@ -1,18 +1,24 @@
 #pragma once
-#include "stdafx.h"
+#include "AnimSequenceBase.h"
 
-class FAnimaInstance
+class FSkeletalMeshComponent;
+struct FAnimInstanceProxy
 {
-private:
+	FSkeletalMeshComponent* SkeletalMeshCom;
 
-public:
-	void initAnimation(); // start timer counting
-	void UpdateAnimation(); // invoke in main loop, make character to move
-
-	FAnimaInstance() = default;
-	~FAnimaInstance() = default;
-
-private:
-
+	//FAnimNode_Base* RootNode; // TODO: add animation blend tree to replace Sequence
+	FAnimSequenceBase* Sequence;
 };
 
+class FAnimInstance
+{
+private:
+	FAnimInstanceProxy Proxy;
+
+public:
+	void initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, FAnimSequenceBase* Sequence); // start timer counting
+	void UpdateAnimation(); // invoke in main loop, make character to move
+
+	FAnimInstance() = default;
+	~FAnimInstance() = default;
+};
