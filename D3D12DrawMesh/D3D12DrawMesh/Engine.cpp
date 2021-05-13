@@ -48,10 +48,15 @@ void FEngine::Tick()
 {
 	FRenderThread::Get()->WaitForRenderThread();
 
-	// tick
+	/*
+	*  Tick layer out:
+	*  Engine(main loop) --> Scene --> Camera
+	*                              --> Character --> SkeletalMeshComponent --> AnimInstance --> AnimInstanceProxy --> AnimSequence
+	*/
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 
+	// TODO: remove FrameRes concept add into the tick layer out, update static mesh's constant buffer when tick them
 	FRenderThread::Get()->TickFrameRes(CurrentScene.get());
 }
 

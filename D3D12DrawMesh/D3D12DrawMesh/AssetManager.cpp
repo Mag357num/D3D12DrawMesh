@@ -30,8 +30,8 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		AStaticMeshActor Actor;
 		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 
-		Com->SetMeshLODs(ReadMeshLODsFromIfstream(Fin));
-		Com->SetTransform(ReadMeshTransformFromIfstream(Fin));
+		Com->SetMeshLODs(ReadMeshLODs(Fin));
+		Com->SetTransform(ReadMeshTransform(Fin));
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
 		if (i == 6) // TODO: hard coding
@@ -52,7 +52,7 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	return TargetScene;
 }
 
-vector<FStaticMeshLOD> FAssetManager::ReadMeshLODsFromIfstream(std::ifstream& Fin)
+vector<FStaticMeshLOD> FAssetManager::ReadMeshLODs(std::ifstream& Fin)
 {
 	FStaticMeshLOD MeshLOD;
 
@@ -84,7 +84,7 @@ vector<FStaticMeshLOD> FAssetManager::ReadMeshLODsFromIfstream(std::ifstream& Fi
 	return MeshLODs;
 }
 
-FTransform FAssetManager::ReadMeshTransformFromIfstream(std::ifstream& Fin)
+FTransform FAssetManager::ReadMeshTransform(std::ifstream& Fin)
 {
 	FTransform Trans;
 	if (!Fin.is_open())

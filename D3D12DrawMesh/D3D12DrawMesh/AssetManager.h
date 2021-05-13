@@ -13,10 +13,10 @@ private:
 
 public:
 	static FAssetManager* Get();
-	shared_ptr<FScene> LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName);
+	shared_ptr<FScene> LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName); // TODO: divide to two func
 	FStaticMeshComponent CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 
 private:
-	vector<FStaticMeshLOD> ReadMeshLODsFromIfstream(std::ifstream& Fin);
-	FTransform ReadMeshTransformFromIfstream(std::ifstream& Fin);
+	vector<FStaticMeshLOD> ReadMeshLODs(std::ifstream& Fin);
+	FTransform ReadMeshTransform(std::ifstream& Fin);
 };

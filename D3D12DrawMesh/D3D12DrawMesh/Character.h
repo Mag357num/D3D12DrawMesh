@@ -9,7 +9,7 @@ private:
 	shared_ptr<ASkeletalMeshActor> SkeletalMeshActor;
 
 public:
-	void SetSkinnedMesh(shared_ptr<ASkeletalMeshActor> SkeMesh) { SkeletalMeshActor = SkeMesh; }
+	void SetSkeletalMesh(shared_ptr<ASkeletalMeshActor> SkeMesh) { SkeletalMeshActor = SkeMesh; }
 	void Tick(const float& ElapsedSeconds);
 
 	ACharacter() = default;
