@@ -30,8 +30,8 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		AStaticMeshActor Actor;
 		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 
-		Com->SetMeshLODs(ReadMeshLODs(Fin));
-		Com->SetTransform(ReadMeshTransform(Fin));
+		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
+		Com->SetTransform(ReadTransform(Fin));
 
 		// TODO: add a func to read shader file name, so different mesh can have different shader
 		if (i == 6) // TODO: hard coding
@@ -52,7 +52,7 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	return TargetScene;
 }
 
-vector<FStaticMeshLOD> FAssetManager::ReadMeshLODs(std::ifstream& Fin)
+vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 {
 	FStaticMeshLOD MeshLOD;
 
@@ -84,7 +84,39 @@ vector<FStaticMeshLOD> FAssetManager::ReadMeshLODs(std::ifstream& Fin)
 	return MeshLODs;
 }
 
-FTransform FAssetManager::ReadMeshTransform(std::ifstream& Fin)
+vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
+{
+	FStaticMeshLOD MeshLOD;
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("open file faild.");
+	}
+
+	Fin.read((char*)&MeshLOD.GetVertexStride(), sizeof(int));
+
+	uint32 BufferByteSize;
+	uint32 BufferElementSize;
+	Fin.read((char*)&BufferElementSize, sizeof(int));
+	BufferByteSize = BufferElementSize * MeshLOD.GetVertexStride();
+
+	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
+	assert(VerticeSize - floor(VerticeSize) == 0);
+	MeshLOD.ResizeVertices(static_cast<int>(BufferByteSize / sizeof(float)));
+	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
+
+	Fin.read((char*)&BufferElementSize, sizeof(int));
+	BufferByteSize = BufferElementSize * sizeof(int);
+
+	MeshLOD.ResizeIndices(BufferElementSize);
+	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
+
+	vector<FStaticMeshLOD> MeshLODs;
+	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
+	return MeshLODs;
+}
+
+FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 {
 	FTransform Trans;
 	if (!Fin.is_open())
@@ -99,7 +131,7 @@ FTransform FAssetManager::ReadMeshTransform(std::ifstream& Fin)
 	return Trans;
 }
 
-FStaticMeshComponent FAssetManager::CreateMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
+FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
 {
 	FStaticMeshComponent Component;
 	vector<FStaticMeshLOD> Lods;
@@ -109,4 +141,26 @@ FStaticMeshComponent FAssetManager::CreateMeshComponent(uint16 VertexStride, vec
 	Component.SetStaticMesh(StaticMesh);
 	Component.SetTransform(Transform);
 	return Component;
+}
+
+class shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
+{
+	/*
+	*	Ar << Value.VertStride;
+	*	Ar << Value.Vertice;
+	*	Ar << Value.SkinnedWeightVertice;
+	*	Ar << Value.Indices;
+	*/
+	std::ifstream Fin(BinFileName, std::ios::binary);
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("open file faild.");
+	}
+
+	shared_ptr<FSkeletalMesh> SkeMesh = make_shared<FSkeletalMesh>();
+
+	SkeMesh->SetSkeletalMeshLods(ReadSkeletalMeshLods(Fin));
+
+	return SkeMesh;
 }

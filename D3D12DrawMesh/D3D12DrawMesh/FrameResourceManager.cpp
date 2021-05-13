@@ -139,7 +139,7 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		 1.f,  3.f, 0.0f,  1.f, -1.f,
 		-3.f, -1.f, 0.0f, -1.f,  1.f,
 	};
-	FStaticMeshComponent Component = FAssetManager::Get()->CreateMeshComponent(static_cast<uint16>(20), TriangleVertices,
+	FStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(static_cast<uint16>(20), TriangleVertices,
 		{ 0, 1, 2 }, { { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());

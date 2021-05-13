@@ -5,18 +5,24 @@
 #include "ActorComponent.h"
 #include "Actor.h"
 
+struct FSkeletalMeshLOD
+{
+	vector<FStaticVertex> StaticVertexArray;
+	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
+	vector<uint32> Indices;
+};
+
 class FSkeleton;
 class FSkeletalMesh
 {
 private:
 	FSkeleton* Skeleton;
-	vector<FStaticVertex> StaticVertexArray;
-	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
 
-	vector<uint32> Indices;
+	vector<FSkeletalMeshLOD> MeshLODs;
 
 public:
 	void SetSkeleton(FSkeleton* Ske) { Skeleton = Ske; };
+	void SetSkeletalMeshLods(const vector<FSkeletalMeshLOD>& LODs) { MeshLODs = LODs; }
 
 	FSkeletalMesh() = default;
 	~FSkeletalMesh() = default;
@@ -32,6 +38,9 @@ public:
 	FAnimInstance GetAnimator() { return Animator; }
 	void TickAnimation(const float& ElapsedSeconds) { Animator.UpdateAnimation(ElapsedSeconds); }
 	void InitAnimation(FAnimSequenceBase* Sequence) { Animator.initAnimation(this, Sequence); } // init this when init chararcter
+
+	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
+
 
 	FSkeletalMeshComponent() = default;
 	~FSkeletalMeshComponent() = default;

@@ -6,11 +6,13 @@
 class ACharacter : public AActor
 {
 private:
-	shared_ptr<ASkeletalMeshActor> SkeletalMeshActor;
+	shared_ptr<FSkeletalMeshComponent> SkeletalMeshCom;
 
 public:
-	void SetSkeletalMesh(shared_ptr<ASkeletalMeshActor> SkeMesh) { SkeletalMeshActor = SkeMesh; }
+	void SetSkeletalMeshCom(shared_ptr<FSkeletalMeshComponent> SkeMesh) { SkeletalMeshCom = SkeMesh; }
 	void Tick(const float& ElapsedSeconds);
+
+	FSkeletalMeshComponent* GetSkeletalMeshCom() { return SkeletalMeshCom.get(); }
 
 	ACharacter() = default;
 	~ACharacter() = default;

@@ -44,7 +44,7 @@ public:
 class FStaticMeshComponent : public FActorComponent
 {
 private:
-	UStaticMesh StaticMesh;
+	UStaticMesh StaticMesh; // TODO: change to a smart ptr to divide the UStaticMesh with FStaticMeshComponent
 	wstring ShaderFileName;
 
 public:
@@ -56,7 +56,7 @@ public:
 	void SetStaticMesh(const UStaticMesh& SM) { StaticMesh = SM; }
 
 	const FTransform& GetTransform() const { return Transform; }
-	const UStaticMesh& GetStaticMesh() const { return StaticMesh; }
+	UStaticMesh& GetStaticMesh() { return StaticMesh; }
 	const wstring& GetShaderFileName() const { return ShaderFileName; }
 	const vector<FStaticMeshLOD>& GetMeshLODs() const { return StaticMesh.GetMeshLODs(); }
 

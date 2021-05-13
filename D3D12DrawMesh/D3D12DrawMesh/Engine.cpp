@@ -38,6 +38,8 @@ void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
 	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
+	CurrentScene->SetCharacter(CurrentScene->CreateCharacter(L"SkeletalMeshBinary_.dat"));
+	
 
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start(); // TODO: Start() will make DoRender invoked after every "one" task, which is not so right
