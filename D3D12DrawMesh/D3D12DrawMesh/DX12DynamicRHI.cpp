@@ -445,11 +445,6 @@ namespace RHI
 		return static_cast<D3D12_DEPTH_STENCIL_DESC>(depthStencilDesc);
 	}
 
-	void FDX12DynamicRHI::DX12CreateConstantBuffer(FDX12CB* FDX12CB, uint32 Size)
-	{
-		assert(0);
-	}
-
 	_Use_decl_annotations_ void FDX12DynamicRHI::GetHardwareAdapter(IDXGIFactory1* pFactory, IDXGIAdapter1** ppAdapter, bool requestHighPerformanceAdapter)
 	{
 		*ppAdapter = nullptr;
