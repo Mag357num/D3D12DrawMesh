@@ -104,7 +104,7 @@ FStaticMeshComponent FAssetManager::CreateMeshComponent(uint16 VertexStride, vec
 	FStaticMeshComponent Component;
 	vector<FStaticMeshLOD> Lods;
 	Lods.push_back(FStaticMeshLOD(VertexStride, Vertices, Indices));
-	FStaticMesh StaticMesh;
+	UStaticMesh StaticMesh;
 	StaticMesh.SetMeshLODs(Lods);
 	Component.SetStaticMesh(StaticMesh);
 	Component.SetTransform(Transform);

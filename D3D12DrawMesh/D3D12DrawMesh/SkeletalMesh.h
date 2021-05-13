@@ -13,6 +13,8 @@ private:
 	vector<FStaticVertex> StaticVertexArray;
 	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
 
+	vector<uint32> Indices;
+
 public:
 	void SetSkeleton(FSkeleton* Ske) { Skeleton = Ske; };
 

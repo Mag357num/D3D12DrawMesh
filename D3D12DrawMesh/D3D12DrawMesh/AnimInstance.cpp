@@ -14,4 +14,5 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 void FAnimInstanceProxy::UpdateAnimation(const float& ElapsedSeconds)
 {
 	// calculate pose according to tick
+
 }

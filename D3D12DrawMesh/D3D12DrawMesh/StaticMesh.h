@@ -6,8 +6,10 @@
 class FStaticMeshLOD
 {
 private:
+	// TODO: refactor to a FStaticVertex Array
 	uint32 VertexStride;
 	vector<float> Vertices;
+
 	vector<uint32> Indices;
 
 public:
@@ -26,7 +28,7 @@ public:
 	~FStaticMeshLOD() = default;
 };
 
-class FStaticMesh
+class UStaticMesh
 {
 private:
 	vector<FStaticMeshLOD> MeshLODs;
@@ -35,14 +37,14 @@ public:
 	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { MeshLODs = LODs; }
 	const vector<FStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
 
-	FStaticMesh() = default;
-	~FStaticMesh() = default;
+	UStaticMesh() = default;
+	~UStaticMesh() = default;
 };
 
 class FStaticMeshComponent : public FActorComponent
 {
 private:
-	FStaticMesh StaticMesh;
+	UStaticMesh StaticMesh;
 	wstring ShaderFileName;
 
 public:
@@ -51,10 +53,10 @@ public:
 	void SetTransform(const FTransform& Trans) { Transform = Trans; }
 	void SetShaderFileName(const wstring& Name) { ShaderFileName = Name; }
 	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { StaticMesh.SetMeshLODs(LODs); }
-	void SetStaticMesh(const FStaticMesh& SM) { StaticMesh = SM; }
+	void SetStaticMesh(const UStaticMesh& SM) { StaticMesh = SM; }
 
 	const FTransform& GetTransform() const { return Transform; }
-	const FStaticMesh& GetStaticMesh() const { return StaticMesh; }
+	const UStaticMesh& GetStaticMesh() const { return StaticMesh; }
 	const wstring& GetShaderFileName() const { return ShaderFileName; }
 	const vector<FStaticMeshLOD>& GetMeshLODs() const { return StaticMesh.GetMeshLODs(); }
 
