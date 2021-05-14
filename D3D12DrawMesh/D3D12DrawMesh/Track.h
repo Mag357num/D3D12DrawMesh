@@ -3,7 +3,7 @@
 
 struct FTrack
 {
-	vector<FVector> ScaleSample;
-	vector<FQuat> QuatSample;
-	vector<FVector> TranslationSample;
+	vector<FVector> ScaleSamples;
+	vector<FQuat> QuatSamples;
+	vector<FVector> TranslationSamples;
 };

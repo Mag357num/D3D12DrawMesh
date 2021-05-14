@@ -38,9 +38,20 @@ void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
 	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
-	CurrentScene->SetCharacter(CurrentScene->CreateCharacter(L"SkeletalMeshBinary_.dat"));
-	
 
+	// init a character to scene // TODO: this logic should not be engine's work
+	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
+	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
+	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
+	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
+	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceBinary_.dat");
+	SkeMesh->SetSkeleton(Ske);
+	SkeMeshCom->InitAnimation(Seq);
+	SkeMeshCom->SetSkeletalMesh(SkeMesh);
+	Cha->SetSkeletalMeshCom(SkeMeshCom);
+	CurrentScene->SetCharacter(Cha);
+
+	// thread
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start(); // TODO: Start() will make DoRender invoked after every "one" task, which is not so right
 	FRenderThread::Get()->CreateFrameResource(CurrentScene);

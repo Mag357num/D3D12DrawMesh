@@ -1,6 +1,6 @@
 #include "AnimInstance.h"
 
-void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, FAnimSequence* Sequence)
+void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, shared_ptr<FAnimSequence> Sequence)
 {
 	Proxy.SkeletalMeshCom = SkeletalMeshCom;
 	Proxy.Sequence = Sequence;

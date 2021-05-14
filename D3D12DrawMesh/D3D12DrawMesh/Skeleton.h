@@ -9,9 +9,13 @@ class FSkeleton
 private:
 	vector<FJoint> Joints;
 	vector<FPose> BindPoses;
-	std::unordered_map<string, uint16> NameToIndexMap;
+	unordered_map<string, int> NameToIndexMap;
 
 public:
+	vector<FJoint>& GetJoints() { return Joints; }
+	vector<FPose>& GetBindPoses() { return BindPoses; }
+	unordered_map<string, int>& GetNameToIndexMap() { return NameToIndexMap; }
+
 	FSkeleton() = default;
 	~FSkeleton() = default;
 };

@@ -24,7 +24,6 @@ public:
 	void SetCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
 
 	// TODO: refactor here. createCharacter should not be Scene's work
-	shared_ptr<ACharacter> CreateCharacter(const std::wstring& SkeletalMeshFileName);
 
 	ACamera& GetCurrentCamera() { return CurrentCamera; }
 	ACharacter* GetCharacter() { return CurrentCharacter.get(); }

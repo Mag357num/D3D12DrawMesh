@@ -108,7 +108,7 @@
     <ClInclude Include="AnimNode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AnimSequenceBase.h">
+    <ClInclude Include="AnimSequence.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -194,7 +194,7 @@
     <ClCompile Include="AnimNode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AnimSequenceBase.cpp">
+    <ClCompile Include="AnimSequence.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

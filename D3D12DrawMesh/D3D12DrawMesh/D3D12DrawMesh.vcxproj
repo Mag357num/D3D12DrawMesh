@@ -23,7 +23,7 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="AnimInstance.h" />
     <ClInclude Include="AnimNode.h" />
-    <ClInclude Include="AnimSequenceBase.h" />
+    <ClInclude Include="AnimSequence.h" />
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="d3dx12.h" />
@@ -57,7 +57,7 @@
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="AnimInstance.cpp" />
     <ClCompile Include="AnimNode.cpp" />
-    <ClCompile Include="AnimSequenceBase.cpp" />
+    <ClCompile Include="AnimSequence.cpp" />
     <ClCompile Include="AssetManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
     </ClCompile>
