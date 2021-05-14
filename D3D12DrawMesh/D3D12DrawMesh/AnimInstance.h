@@ -7,7 +7,7 @@ struct FAnimInstanceProxy
 	FSkeletalMeshComponent* SkeletalMeshCom;
 
 	//FAnimNode_Base* RootNode; // TODO: add animation blend tree to replace Sequence
-	FAnimSequenceBase* Sequence;
+	FAnimSequence* Sequence;
 
 	void UpdateAnimation(const float& ElapsedSeconds);
 };
@@ -18,7 +18,7 @@ private:
 	FAnimInstanceProxy Proxy;
 
 public:
-	void initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, FAnimSequenceBase* Sequence); // start timer counting
+	void initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, FAnimSequence* Sequence); // start timer counting
 	void UpdateAnimation(const float& ElapsedSeconds); // invoke in main loop, make character to move
 
 	FAnimInstance() = default;

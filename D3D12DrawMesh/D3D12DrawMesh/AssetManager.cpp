@@ -64,19 +64,19 @@ vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 	Fin.read((char*)&MeshLOD.GetVertexStride(), sizeof(int));
 
 	uint32 BufferByteSize;
-	uint32 BufferElementSize;
-	Fin.read((char*)&BufferElementSize, sizeof(int));
-	BufferByteSize = BufferElementSize * MeshLOD.GetVertexStride();
+	uint32 VertexNum;
+	Fin.read((char*)&VertexNum, sizeof(int));
+	BufferByteSize = VertexNum * MeshLOD.GetVertexStride();
 
 	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
 	MeshLOD.ResizeVertices(static_cast<int>(BufferByteSize / sizeof(float)));
 	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
 
-	Fin.read((char*)&BufferElementSize, sizeof(int));
-	BufferByteSize = BufferElementSize * sizeof(int);
+	Fin.read((char*)&VertexNum, sizeof(int));
+	BufferByteSize = VertexNum * sizeof(int);
 
-	MeshLOD.ResizeIndices(BufferElementSize);
+	MeshLOD.ResizeIndices(VertexNum);
 	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
 
 	vector<FStaticMeshLOD> MeshLODs;
@@ -86,7 +86,7 @@ vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 
 vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 {
-	FStaticMeshLOD MeshLOD;
+	FSkeletalMeshLOD MeshLOD;
 
 	if (!Fin.is_open())
 	{
@@ -96,22 +96,36 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	Fin.read((char*)&MeshLOD.GetVertexStride(), sizeof(int));
 
 	uint32 BufferByteSize;
-	uint32 BufferElementSize;
-	Fin.read((char*)&BufferElementSize, sizeof(int));
-	BufferByteSize = BufferElementSize * MeshLOD.GetVertexStride();
+	uint32 VertexNum;
+	Fin.read((char*)&VertexNum, sizeof(int));
+	BufferByteSize = VertexNum * MeshLOD.GetVertexStride();
 
-	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
-	assert(VerticeSize - floor(VerticeSize) == 0);
-	MeshLOD.ResizeVertices(static_cast<int>(BufferByteSize / sizeof(float)));
+	MeshLOD.ResizeVertices(VertexNum);
 	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
 
-	Fin.read((char*)&BufferElementSize, sizeof(int));
-	BufferByteSize = BufferElementSize * sizeof(int);
+	// WeightVertex
+	{
+		Fin.read((char*)&VertexNum, sizeof(int)); // vertex num
+		MeshLOD.GetWeightVertices().resize(VertexNum);
+		for (uint32 i = 0; i < VertexNum; i++)
+		{
+			uint32 WeightsNum; // weight num of each vertex
+			Fin.read((char*)&WeightsNum, sizeof(int));
+			MeshLOD.GetWeightVertices()[i].GetJointIndice().resize(WeightsNum);
+			MeshLOD.GetWeightVertices()[i].GetJointWeights().resize(WeightsNum);
+			Fin.read((char*)MeshLOD.GetWeightVertices()[i].GetJointIndice().data(), WeightsNum * sizeof(int16_t));
+			Fin.read((char*)MeshLOD.GetWeightVertices()[i].GetJointWeights().data(), WeightsNum * sizeof(int8_t));
+		}
+	}
 
-	MeshLOD.ResizeIndices(BufferElementSize);
+	uint32 IndiceNum;
+	Fin.read((char*)&IndiceNum, sizeof(int));
+	BufferByteSize = IndiceNum * sizeof(int);
+
+	MeshLOD.ResizeIndices(IndiceNum);
 	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
 
-	vector<FStaticMeshLOD> MeshLODs;
+	vector<FSkeletalMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
 	return MeshLODs;
 }
@@ -145,12 +159,6 @@ FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(uint16 VertexStrid
 
 class shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
 {
-	/*
-	*	Ar << Value.VertStride;
-	*	Ar << Value.Vertice;
-	*	Ar << Value.SkinnedWeightVertice;
-	*	Ar << Value.Indices;
-	*/
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
 	if (!Fin.is_open())

@@ -18,6 +18,8 @@ public:
 	FStaticMeshComponent CreateStaticMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
 	
 	class shared_ptr<FSkeletalMesh> LoadSkeletalMesh(const std::wstring& BinFileName);
+	class shared_ptr<FSkeleton> LoadSkeleton(const std::wstring& BinFileName);
+	class shared_ptr<FAnimSequence> LoadSkeletalMesh(const std::wstring& BinFileName);
 
 private:
 	vector<FStaticMeshLOD> ReadStaticMeshLODs(std::ifstream& Fin);

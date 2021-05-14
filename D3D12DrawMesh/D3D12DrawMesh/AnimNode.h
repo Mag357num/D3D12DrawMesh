@@ -13,7 +13,7 @@ public:
 class FAnimNode_SequencePlyer : public FAnimNode_Base
 {
 private:
-	FAnimSequenceBase* Sequence;
+	FAnimSequence* Sequence;
 
 public:
 	void Update() override {}

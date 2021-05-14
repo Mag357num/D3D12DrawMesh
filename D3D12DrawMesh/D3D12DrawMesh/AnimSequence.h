@@ -3,7 +3,7 @@
 #include "Skeleton.h"
 #include "Track.h"
 
-class FAnimSequenceBase
+class FAnimSequence
 {
 private:
 	FSkeleton* Skeleton;
@@ -13,6 +13,6 @@ private:
 	unordered_map<string, uint16> TrackToJointIndexMap;
 
 public:
-	FAnimSequenceBase() = default;
-	~FAnimSequenceBase() = default;
+	FAnimSequence() = default;
+	~FAnimSequence() = default;
 };
