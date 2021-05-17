@@ -1,6 +1,5 @@
 #include "FrameResourceManager.h"
 #include "DynamicRHI.h"
-#include <gtc/matrix_transform.hpp>
 #include "RHIResource.h"
 #include "DX12Resource.h"
 #include "MathExtend.h"
@@ -366,6 +365,4 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
 	SunMergePassData.BufferSize = sizeof(SunMergeStruct);
 	GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->SunMergeMat.get(), &SunMergePassData);
-
-
 }

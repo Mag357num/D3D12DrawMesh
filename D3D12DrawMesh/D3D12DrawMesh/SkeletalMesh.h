@@ -32,6 +32,8 @@ public:
 	void SetSkeleton(shared_ptr<FSkeleton> Ske) { Skeleton = Ske; };
 	void SetSkeletalMeshLods(const vector<FSkeletalMeshLOD>& LODs) { MeshLODs = LODs; }
 
+	FSkeleton* GetSkeleton() { return Skeleton.get(); }
+
 	FSkeletalMesh() = default;
 	~FSkeletalMesh() = default;
 };
@@ -48,7 +50,7 @@ public:
 	void InitAnimation(shared_ptr<FAnimSequence> Sequence) { Animator.initAnimation(this, Sequence); } // init this when init chararcter
 
 	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
-
+	FSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
 
 	FSkeletalMeshComponent() = default;
 	~FSkeletalMeshComponent() = default;

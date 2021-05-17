@@ -37,14 +37,14 @@ FEngine::~FEngine()
 void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
-	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio);
+	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio); // TODO: hard code
 
 	// init a character to scene // TODO: this logic should not be engine's work
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
 	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
 	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
 	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
-	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceBinary_.dat");
+	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceBinary_.dat"); // TODO: hard code
 	SkeMesh->SetSkeleton(Ske);
 	SkeMeshCom->InitAnimation(Seq);
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);

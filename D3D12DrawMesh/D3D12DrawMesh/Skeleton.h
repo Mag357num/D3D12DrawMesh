@@ -14,6 +14,7 @@ private:
 public:
 	vector<FJoint>& GetJoints() { return Joints; }
 	vector<FPose>& GetBindPoses() { return BindPoses; }
+	vector<FMatrix> GetJointOffset(); // Bind Pose inverse matrix: to transform vertex into joint space
 	unordered_map<string, int>& GetNameToIndexMap() { return NameToIndexMap; }
 
 	FSkeleton() = default;

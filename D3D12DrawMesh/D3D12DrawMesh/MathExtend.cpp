@@ -52,9 +52,9 @@ FVector4 GetBufferSizeAndInvSize(FVector2 Param)
 
 FRotator QuatToEuler(FQuat Quat)
 {
-	const float SingularityTest = Quat.Z * Quat.X - Quat.W * Quat.Y;
-	const float YawY = 2.f * (Quat.W * Quat.Z + Quat.X * Quat.Y);
-	const float YawX = (1.f - 2.f * (std::pow(Quat.Y, 2) + std::pow(Quat.Z, 2)));
+	const float SingularityTest = Quat.z * Quat.x - Quat.w * Quat.y;
+	const float YawY = 2.f * (Quat.w * Quat.z + Quat.x * Quat.y);
+	const float YawX = (1.f - 2.f * (std::pow(Quat.y, 2) + std::pow(Quat.z, 2)));
 
 	const float SINGULARITY_THRESHOLD = 0.4999995f;
 	const float RAD_TO_DEG = (180.f) / PI;
@@ -65,19 +65,19 @@ FRotator QuatToEuler(FQuat Quat)
 	{
 		RotatorFromQuat.Pitch = -90.f;
 		RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
-		RotatorFromQuat.Roll = NormalizeAxis(-RotatorFromQuat.Yaw - (2.f * Atan2(Quat.X, Quat.W) * RAD_TO_DEG));
+		RotatorFromQuat.Roll = NormalizeAxis(-RotatorFromQuat.Yaw - (2.f * Atan2(Quat.x, Quat.w) * RAD_TO_DEG));
 	}
 	else if (SingularityTest > SINGULARITY_THRESHOLD)
 	{
 		RotatorFromQuat.Pitch = 90.f;
 		RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
-		RotatorFromQuat.Roll = NormalizeAxis(RotatorFromQuat.Yaw - (2.f * Atan2(Quat.X, Quat.W) * RAD_TO_DEG));
+		RotatorFromQuat.Roll = NormalizeAxis(RotatorFromQuat.Yaw - (2.f * Atan2(Quat.x, Quat.w) * RAD_TO_DEG));
 	}
 	else
 	{
 		RotatorFromQuat.Pitch = FastAsin(2.f * (SingularityTest)) * RAD_TO_DEG;
 		RotatorFromQuat.Yaw = Atan2(YawY, YawX) * RAD_TO_DEG;
-		RotatorFromQuat.Roll = Atan2(-2.f * (Quat.W * Quat.X + Quat.Y * Quat.Z), (1.f - 2.f * (std::pow(Quat.X, 2) + std::pow(Quat.Y, 2)))) * RAD_TO_DEG;
+		RotatorFromQuat.Roll = Atan2(-2.f * (Quat.w * Quat.x + Quat.y * Quat.z), (1.f - 2.f * (std::pow(Quat.x, 2) + std::pow(Quat.y, 2)))) * RAD_TO_DEG;
 	}
 
 	return RotatorFromQuat;
@@ -99,10 +99,10 @@ FQuat EulerToQuat(FRotator Euler)
 	SinCos(&SR, &CR, RollNoWinding * RADS_DIVIDED_BY_2);
 
 	FQuat RotationQuat;
-	RotationQuat.X = CR * SP * SY - SR * CP * CY;
-	RotationQuat.Y = -CR * SP * CY - SR * CP * SY;
-	RotationQuat.Z = CR * CP * SY - SR * SP * CY;
-	RotationQuat.W = CR * CP * CY + SR * SP * SY;
+	RotationQuat.x = CR * SP * SY - SR * CP * CY;
+	RotationQuat.y = -CR * SP * CY - SR * CP * SY;
+	RotationQuat.z = CR * CP * SY - SR * SP * CY;
+	RotationQuat.w = CR * CP * CY + SR * SP * SY;
 
 	return RotationQuat;
 }

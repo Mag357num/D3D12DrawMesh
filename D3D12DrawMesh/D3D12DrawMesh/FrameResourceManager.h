@@ -9,7 +9,6 @@ struct FFrameMesh
 {
 	shared_ptr<FMesh> Mesh;
 	shared_ptr<FMeshRes> MeshRes;
-
 	vector<FTexture> Textures;
 };
 
@@ -17,8 +16,10 @@ class FFrameResource
 {
 private:
 	const uint32 ShadowMapSize = 8192;
+
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
+
 	vector<FFrameMesh> FrameMeshArray;
 
 	shared_ptr<FTexture> NullTexture;

@@ -18,6 +18,8 @@ public:
 	vector<FTrack>& GetTracks() { return Tracks; }
 	vector<int>& GetTrackToJointIndexMapTable() { return TrackToJointIndexMapTable; }
 
+	vector<FMatrix> Interpolate(float t);
+
 	FAnimSequence() = default;
 	~FAnimSequence() = default;
 };

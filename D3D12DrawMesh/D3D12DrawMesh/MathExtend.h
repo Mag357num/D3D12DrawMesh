@@ -4,25 +4,20 @@
 #include <glm.hpp>
 #include <ext/vector_float3.hpp>
 #include <ext/matrix_float4x4.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtx/quaternion.hpp>
 
 using FVector2 = glm::vec2;
 using FVector = glm::vec3;
 using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;
+using FQuat = glm::tquat<float>;
 
 struct FRotator // order same with ue4
 {
 	float Roll;
 	float Pitch;
 	float Yaw;
-};
-
-struct FQuat
-{
-	float X;
-	float Y;
-	float Z;
-	float W;
 };
 
 struct FTransform

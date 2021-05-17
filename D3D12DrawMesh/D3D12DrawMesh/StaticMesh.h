@@ -66,5 +66,5 @@ public:
 
 class AStaticMeshActor : public AActor
 {
-
+	// contain a static mesh component
 };
