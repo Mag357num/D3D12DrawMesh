@@ -185,8 +185,10 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 		{ { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
 
 	FVertexInputLayer InputLayer;
-	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-	InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
+	InputLayer.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
+	InputLayer.Elements.push_back( { "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 } );
+	InputLayer.Elements.push_back( { "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 } );
+	InputLayer.Elements.push_back( { "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 } );
 
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component, InputLayer));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
