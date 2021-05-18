@@ -7,8 +7,9 @@ class FStaticMeshLOD
 {
 private:
 	// TODO: refactor to a FStaticVertex Array
-	uint32 VertexStride;
+	//uint32 VertexStride;
 	vector<float> Vertices;
+	vector<FStaticVertex> Vertices2;
 
 	vector<uint32> Indices;
 
@@ -16,9 +17,10 @@ public:
 	void ResizeVertices(uint32 Size) { Vertices.resize(Size); }
 	void ResizeIndices(uint32 Size) { Indices.resize(Size); }
 	const vector<float>& GetVertices() const { return Vertices; }
+	const vector<FStaticVertex>& GetVertices2() const { return Vertices2; }
 	const vector<uint32>& GetIndices() const { return Indices; }
-	const uint32& GetVertexStride() const { return VertexStride; }
-	void SetVertexStride(const uint16& Stride) { VertexStride = Stride; }
+	//const uint32& GetVertexStride() const { return VertexStride; }
+	//void SetVertexStride(const uint16& Stride) { VertexStride = Stride; }
 	void SetVertices(const vector<float>& Param) { Vertices = Param; }
 	void SetIndices(const vector<uint32>& Param) { Indices = Param; }
 

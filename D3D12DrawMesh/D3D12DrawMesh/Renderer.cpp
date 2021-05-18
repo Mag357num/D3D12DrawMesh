@@ -72,7 +72,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			RHI->SetPipelineState(FrameRes->GetSkeletalMesh().MeshRes->SceneColorPipeline.get());
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->SceneColorMat->CB->CBHandle);
-			Handles.push_back(FrameRes->GetNullTexture()->SrvHandle);
+			Handles.push_back(FrameRes->GetShadowMap()->SrvHandle);
 			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawMesh(FrameRes->GetSkeletalMesh().Mesh.get());

@@ -553,7 +553,7 @@ namespace RHI
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetIndices().size());
 
-		uint32 VertexBufferSize = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetVertices().size() * sizeof(float));
+		uint32 VertexBufferSize = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetVertices2().size() * sizeof(FStaticVertex));
 		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetIndices().size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
