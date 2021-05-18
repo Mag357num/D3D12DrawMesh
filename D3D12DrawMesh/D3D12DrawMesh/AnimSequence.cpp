@@ -5,14 +5,14 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 	vector<FMatrix> Result;
 
 	float frameLength = SequenceLength / FrameNum;
+	int frameIndex = floor(t / frameLength);
+	float lerpPercent = (t / frameLength) - floor(t / frameLength);
 
 	for (uint32 i = 0; i < Tracks.size(); i++)
 	{
 		FMatrix S, Q, T;
 		FVector S1, S2, T1, T2;
 		FQuat Q1, Q2;
-		int frameIndex = floor(t / frameLength);
-		float lerpPercent = (t - frameIndex * frameLength) / frameLength;
 
 		// Interpolate
 		if (frameIndex == 0)
@@ -120,7 +120,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 		Q = glm::toMat4(glm::lerp(Q1, Q2, lerpPercent));
 		T = glm::translate(glm::identity<FMatrix>(), lerpPercent * T1 + (1 - lerpPercent) * T2);
 
-		Result.push_back(T* Q* S);
+		Result.push_back(T * Q * S);
 	}
 
 	return Result;

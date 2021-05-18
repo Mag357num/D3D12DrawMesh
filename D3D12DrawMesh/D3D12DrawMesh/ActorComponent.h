@@ -8,7 +8,7 @@ protected:
 public:
 	void SetTransform(const FTransform& Trans) { Transform = Trans; }
 
-	const FTransform& GetTransform() { return Transform; }
+	FTransform& GetTransform() { return Transform; }
 
 	FActorComponent() = default;
 	~FActorComponent() = default;

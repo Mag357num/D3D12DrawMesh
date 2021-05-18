@@ -97,12 +97,13 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 		throw std::exception("open file faild.");
 	}
 
-	Fin.read((char*)&MeshLOD.GetVertexStride(), sizeof(int));
+	uint32 VertexStride;
+	Fin.read((char*)&VertexStride, sizeof(int));
 
 	uint32 BufferByteSize;
 	uint32 VertexNum;
 	Fin.read((char*)&VertexNum, sizeof(int));
-	BufferByteSize = VertexNum * MeshLOD.GetVertexStride();
+	BufferByteSize = VertexNum * VertexStride;
 
 	MeshLOD.GetVertices().resize(VertexNum);
 	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);

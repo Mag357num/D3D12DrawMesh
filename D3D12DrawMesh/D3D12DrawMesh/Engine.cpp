@@ -48,6 +48,9 @@ void FEngine::Init()
 	SkeMesh->SetSkeleton(Ske);
 	SkeMeshCom->InitAnimation(Seq);
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
+	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor.hlsl");
+	SkeMeshCom->SetTransform({ {2, 2, 2}, {0, 0, 0, 1}, {-200, 500, 0} });
+
 	Cha->SetSkeletalMeshCom(SkeMeshCom);
 	CurrentScene->SetCharacter(Cha);
 

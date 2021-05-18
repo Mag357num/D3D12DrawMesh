@@ -5,14 +5,11 @@
 
 class ACharacter : public AActor
 {
-private:
-	shared_ptr<FSkeletalMeshComponent> SkeletalMeshCom;
-
 public:
-	void SetSkeletalMeshCom(shared_ptr<FSkeletalMeshComponent> SkeMesh) { SkeletalMeshCom = SkeMesh; }
-	void Tick(const float& ElapsedSeconds);
+	void SetSkeletalMeshCom(shared_ptr<FSkeletalMeshComponent> SkeMesh) { Components.push_back(SkeMesh); }
+	void Tick(const float& TotalSeconds);
 
-	FSkeletalMeshComponent* GetSkeletalMeshCom() { return SkeletalMeshCom.get(); }
+	FSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<FSkeletalMeshComponent>(); }
 
 	ACharacter() = default;
 	~ACharacter() = default;

@@ -1,7 +1,7 @@
 #include "Character.h"
 
-void ACharacter::Tick(const float& ElapsedSeconds)
+void ACharacter::Tick(const float& TotalSeconds)
 {
 	assert(1); // didnt import skeletalmeshActor 
-	SkeletalMeshCom->TickAnimation(ElapsedSeconds);
+	GetSkeletalMeshCom()->TickAnimation(TotalSeconds);
 }

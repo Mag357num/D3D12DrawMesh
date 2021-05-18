@@ -11,7 +11,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(FrameRes->GetShadowMapSize()), static_cast<float>(FrameRes->GetShadowMapSize()), 0.f, 1.f);
 		RHI->SetScissor(0, 0, FrameRes->GetShadowMapSize(), FrameRes->GetShadowMapSize());
 		RHI->SetRenderTarget(0, nullptr, FrameRes->GetShadowMap()->DsvHandle.get());
-		for (auto i : FrameRes->GetFrameMeshArray())
+		// draw static mesh
+		for (auto i : FrameRes->GetStaticMeshArray())
 		{
 			// use shadow pso
 			RHI->SetPipelineState(i.MeshRes->ShadowPipeline.get());
@@ -26,6 +27,18 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			// set mesh
 			RHI->DrawMesh(i.Mesh.get());
 		}
+
+		// draw skeletalmesh
+		{
+			RHI->SetPipelineState(FrameRes->GetSkeletalMesh().MeshRes->ShadowPipeline.get());
+			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->ShadowMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetNullTexture()->SrvHandle);
+			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
+			RHI->SetShaderInput(Handles);
+			RHI->DrawMesh(FrameRes->GetSkeletalMesh().Mesh.get());
+		}
+
 		RHI->TransitTextureState(FrameRes->GetShadowMap().get(), FRESOURCE_STATES::RESOURCE_STATE_DEPTH_WRITE, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 	// scene color pass
@@ -36,7 +49,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 		RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-		for (auto i : FrameRes->GetFrameMeshArray())
+		
+		// draw static mesh
+		for (auto i : FrameRes->GetStaticMeshArray())
 		{
 			// pso
 			RHI->SetPipelineState(i.MeshRes->SceneColorPipeline.get()); // use HDR pso
@@ -51,6 +66,18 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			// set mesh
 			RHI->DrawMesh(i.Mesh.get());
 		}
+
+		// draw skeletalmesh
+		{
+			RHI->SetPipelineState(FrameRes->GetSkeletalMesh().MeshRes->SceneColorPipeline.get());
+			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->SceneColorMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetNullTexture()->SrvHandle);
+			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
+			RHI->SetShaderInput(Handles);
+			RHI->DrawMesh(FrameRes->GetSkeletalMesh().Mesh.get());
+		}
+
 		RHI->TransitTextureState(FrameRes->GetSceneColorMap().get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 

@@ -5,11 +5,14 @@ class FSkeletalMeshComponent;
 struct FAnimInstanceProxy
 {
 	FSkeletalMeshComponent* SkeletalMeshCom;
+	vector<FMatrix> Palette;
 
-	//FAnimNode_Base* RootNode; // TODO: add animation blend tree to replace Sequence
 	shared_ptr<FAnimSequence> Sequence;
+	//FAnimNode_Base* RootNode; // TODO: add animation blend tree to replace Sequence
 
-	void UpdateAnimation(const float& ElapsedSeconds);
+
+
+	void UpdateAnimation(const float& TotalSeconds);
 	vector<FMatrix> GetFinalTransforms(float dt);
 };
 
@@ -20,7 +23,7 @@ private:
 
 public:
 	void initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, shared_ptr<FAnimSequence> Sequence); // start timer counting
-	void UpdateAnimation(const float& ElapsedSeconds); // invoke in main loop, make character to move
+	void UpdateAnimation(const float& TotalSeconds); // invoke in main loop, make character to move
 
 	FAnimInstanceProxy& GetProxy() { return Proxy; }
 

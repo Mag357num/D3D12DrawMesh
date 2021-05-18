@@ -8,23 +8,22 @@ void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, share
 	Proxy.Sequence = Sequence;
 }
 
-void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
+void FAnimInstance::UpdateAnimation(const float& TotalSeconds)
 {
-	Proxy.UpdateAnimation(ElapsedSeconds);
+	Proxy.UpdateAnimation(TotalSeconds);
 }
 
-void FAnimInstanceProxy::UpdateAnimation(const float& ElapsedSeconds)
+void FAnimInstanceProxy::UpdateAnimation(const float& TotalSeconds)
 {
 	// calculate pose according to tick
-
+	float dt = TotalSeconds - floor(TotalSeconds / Sequence->GetSequenceLength());
+	Palette = GetFinalTransforms(dt);
 }
 
 vector<FMatrix> FAnimInstanceProxy::GetFinalTransforms(float dt)
 {
 	vector<FMatrix> Result;
-
 	vector<FMatrix> JointOffset = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton()->GetJointOffset();
-
 	vector<FMatrix> LocalPose = Sequence->Interpolate(dt);
 
 	vector<FMatrix> GlobalPose;

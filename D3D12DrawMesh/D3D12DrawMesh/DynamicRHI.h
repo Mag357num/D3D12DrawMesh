@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "RHIResource.h"
 #include "StaticMesh.h"
+#include "SkeletalMesh.h"
 
 namespace RHI
 {
@@ -29,7 +30,8 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(const FStaticMeshComponent& MeshComponent) = 0; // MeshComponent is mesh data, can read from file or write in code
+		virtual shared_ptr<FMesh> CreateMesh(const FStaticMeshComponent& MeshComponent) = 0;
+		virtual shared_ptr<FMesh> CreateMesh(FSkeletalMeshComponent& MeshComponent) = 0;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;

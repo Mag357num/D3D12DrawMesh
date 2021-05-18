@@ -4,7 +4,7 @@
 
 class AActor
 {
-private:
+protected:
 	vector<shared_ptr<FActorComponent>> Components;
 
 public:

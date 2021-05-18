@@ -20,7 +20,8 @@ private:
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
 
-	vector<FFrameMesh> FrameMeshArray;
+	vector<FFrameMesh> StaticMeshArray;
+	FFrameMesh SkeletalMesh;
 
 	shared_ptr<FTexture> NullTexture;
 	shared_ptr<FTexture> ShadowMap;
@@ -39,7 +40,8 @@ public:
 	void SetPostProcessTriangleRes(shared_ptr<FMeshRes>& MeshRes) { PostProcessTriangleRes = MeshRes; }
 	const shared_ptr<FMesh>& GetPostProcessTriangle() const { return PostProcessTriangle; }
 	const shared_ptr<FMeshRes>& GetPostProcessTriangleRes() const { return PostProcessTriangleRes; }
-	vector<FFrameMesh>& GetFrameMeshArray() { return FrameMeshArray; }
+	vector<FFrameMesh>& GetStaticMeshArray() { return StaticMeshArray; }
+	FFrameMesh& GetSkeletalMesh() { return SkeletalMesh; }
 
 	void SetNullTexture(const shared_ptr<FTexture>& Tex) { NullTexture = Tex; }
 	void SetShadowMap(const shared_ptr<FTexture>& Tex) { ShadowMap = Tex; }
@@ -73,6 +75,7 @@ public:
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 	FFrameMesh CreateFrameMesh(const FStaticMeshComponent& MeshComponent);
+	FFrameMesh CreateFrameMesh(FSkeletalMeshComponent& MeshComponent);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);
 	void CreateMapsForScene(FFrameResource& FrameRes);
@@ -82,15 +85,7 @@ public:
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
 };
 
-struct FBlinnPhongCB
-{
-	FMatrix World;
-	FMatrix ViewProj;
-	FVector4 CamEye;
-	FDirectionLight Light;
-};
-
-struct FShadowMapCB // BlinnPhong
+struct FSceneColorCB // BlinnPhong
 {
 	FMatrix World;
 	FMatrix CamViewProj;

@@ -8,7 +8,6 @@
 class FSkeletalMeshLOD
 {
 private:
-	uint32 VertexStride; // TODO: uint16 is enough
 	vector<FStaticVertex> StaticVertexArray;
 	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
 	vector<uint32> Indices;
@@ -17,7 +16,6 @@ public:
 	vector<FStaticVertex>& GetVertices() { return StaticVertexArray; }
 	vector<FSkinnedWeightVertex>& GetWeightVertices() { return SkinnedWeightVertexArray; }
 	vector<uint32>& GetIndices() { return Indices; }
-	uint32& GetVertexStride() { return VertexStride; }
 };
 
 class FSkeleton;
@@ -32,6 +30,8 @@ public:
 	void SetSkeleton(shared_ptr<FSkeleton> Ske) { Skeleton = Ske; };
 	void SetSkeletalMeshLods(const vector<FSkeletalMeshLOD>& LODs) { MeshLODs = LODs; }
 
+	vector<FSkeletalMeshLOD>& GetMeshLODs() { return MeshLODs; }
+
 	FSkeleton* GetSkeleton() { return Skeleton.get(); }
 
 	FSkeletalMesh() = default;
@@ -42,14 +42,18 @@ class FSkeletalMeshComponent : public FActorComponent
 {
 private:
 	shared_ptr<FSkeletalMesh> SkeletalMesh;
+	wstring ShaderFileName;
 	FAnimInstance Animator;
 
 public:
 	FAnimInstance GetAnimator() { return Animator; }
-	void TickAnimation(const float& ElapsedSeconds) { Animator.UpdateAnimation(ElapsedSeconds); }
+	void TickAnimation(const float& TotalSeconds) { Animator.UpdateAnimation(TotalSeconds); }
 	void InitAnimation(shared_ptr<FAnimSequence> Sequence) { Animator.initAnimation(this, Sequence); } // init this when init chararcter
 
 	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
+	void SetShaderFileName(const wstring& Name) { ShaderFileName = Name; }
+
+	wstring& GetShaderFileName() { return ShaderFileName; }
 	FSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
 
 	FSkeletalMeshComponent() = default;
