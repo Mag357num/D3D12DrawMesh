@@ -42,11 +42,17 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(const FStaticMeshComponent& MeshComponent)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComponent)
 {
 	FFrameMesh MeshComFrameRes;
 
-	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent);
+	FVertexInputLayer InputLayer;
+	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+	InputLayer.Elements.push_back({ "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 });
+	InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
+	InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 });
+
+	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent, InputLayer);
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
@@ -75,7 +81,13 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshCo
 {
 	FFrameMesh MeshComFrameRes;
 
-	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent);
+	FVertexInputLayer InputLayer;
+	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+	InputLayer.Elements.push_back({ "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 });
+	InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
+	InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 });
+
+	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent, InputLayer);
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
@@ -162,20 +174,22 @@ void FFrameResourceManager::CreateMapsForPostProcess(FFrameResource& FrameRes)
 void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 {
 	// create postprocess mesh and mesh resource
-	vector<float> TriangleVertices =
-	{
-		 1.f, -1.f, 0.0f,  1.f,  1.f,
-		 1.f,  3.f, 0.0f,  1.f, -1.f,
-		-3.f, -1.f, 0.0f, -1.f,  1.f,
-	};
-	FStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(static_cast<uint16>(20), TriangleVertices,
-		{ 0, 1, 2 }, { { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
-	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component));
-	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
+	vector<FStaticVertex> TriangleVertice;
+	TriangleVertice.push_back(FStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
+	TriangleVertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
+	TriangleVertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
 
-	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.clear();
-	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-	FrameRes.GetPostProcessTriangle()->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
+	vector<uint32> Indice = { 0, 1, 2 };
+
+	FStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(TriangleVertice, Indice,
+		{ { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
+
+	FVertexInputLayer InputLayer;
+	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
+	InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 12, 0, 0 });
+
+	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component, InputLayer));
+	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
 
 	CreatePostProcessMaterials(FrameRes);
 	CreatePostProcessPipelines(FrameRes);

@@ -74,7 +74,7 @@ public:
 	void InitFrameResource(const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	FFrameMesh CreateFrameMesh(const FStaticMeshComponent& MeshComponent);
+	FFrameMesh CreateFrameMesh(FStaticMeshComponent& MeshComponent);
 	FFrameMesh CreateFrameMesh(FSkeletalMeshComponent& MeshComponent);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);

@@ -22,7 +22,7 @@ public:
 	
 	//TODO: regard component as a basic functional unit, so change this func to LoadStaticMeshComponent and CreateScene(StaticMeshActors)
 	shared_ptr<FScene> LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName);
-	FStaticMeshComponent CreateStaticMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform);
+	FStaticMeshComponent CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform);
 	
 	shared_ptr<class FSkeletalMesh> LoadSkeletalMesh(const std::wstring& BinFileName);
 	shared_ptr<class FSkeleton> LoadSkeleton(const std::wstring& BinFileName);

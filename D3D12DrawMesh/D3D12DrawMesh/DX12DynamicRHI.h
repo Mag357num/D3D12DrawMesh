@@ -31,8 +31,8 @@ namespace RHI
 			const uint32& ResoHeight) override;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(const FStaticMeshComponent& MeshComponent) override;
-		virtual shared_ptr<FMesh> CreateMesh(FSkeletalMeshComponent& MeshComponent) override;
+		virtual shared_ptr<FMesh> CreateMesh(FStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
+		virtual shared_ptr<FMesh> CreateMesh(FSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;

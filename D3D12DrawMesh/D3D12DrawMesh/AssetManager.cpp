@@ -154,11 +154,11 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 	return Trans;
 }
 
-FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(uint16 VertexStride, vector<float> Vertices, vector<uint32> Indices, FTransform Transform)
+FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
 {
 	FStaticMeshComponent Component;
 	vector<FStaticMeshLOD> Lods;
-	Lods.push_back(FStaticMeshLOD(VertexStride, Vertices, Indices));
+	Lods.push_back(FStaticMeshLOD(Vertices, Indices));
 	UStaticMesh StaticMesh;
 	StaticMesh.SetMeshLODs(Lods);
 	Component.SetStaticMesh(StaticMesh);

@@ -548,13 +548,14 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(const FStaticMeshComponent& MeshComponent)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(FStaticMeshComponent& MeshComponent, FVertexInputLayer Layer)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetIndices().size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().size());
 
-		uint32 VertexBufferSize = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetVertices2().size() * sizeof(FStaticVertex));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetMeshLODs()[0].GetIndices().size() * sizeof(uint32));
+		const vector<FStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetVertices2();
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(FStaticVertex));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -579,7 +580,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the vertex buffer.
 		D3D12_SUBRESOURCE_DATA vertexData = {};
-		vertexData.pData = MeshComponent.GetMeshLODs()[0].GetVertices().data();
+		vertexData.pData = VertexBuffer.data();
 		vertexData.RowPitch = VertexBufferSize;
 		vertexData.SlicePitch = vertexData.RowPitch;
 
@@ -588,7 +589,7 @@ namespace RHI
 
 		// Initialize the vertex buffer view.
 		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = MeshComponent.GetMeshLODs()[0].GetVertexStride();
+		Mesh->VertexBufferView.StrideInBytes = sizeof(FStaticVertex);
 		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// index buffer
@@ -613,7 +614,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetMeshLODs()[0].GetIndices().data();
+		indexData.pData = MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -625,16 +626,12 @@ namespace RHI
 		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
 
-		// TODO: hard coding
-		Mesh->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 });
+		Mesh->InputLayer = Layer;
 
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(FSkeletalMeshComponent& MeshComponent)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(FSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].GetIndices().size());
@@ -712,11 +709,7 @@ namespace RHI
 		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
 
-		// TODO: hard coding
-		Mesh->InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
-		Mesh->InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 });
+		Mesh->InputLayer = Layer;
 
 		return Mesh;
 	}
