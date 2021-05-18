@@ -263,14 +263,26 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 		Fin.read((char*)&ScalesNum, sizeof(int));
 		Seq->GetTracks()[i].ScaleSamples.resize(ScalesNum);
 		Fin.read((char*)Seq->GetTracks()[i].ScaleSamples.data(), ScalesNum * 3 * sizeof(float));
+		if (ScalesNum == 0)
+		{
+			Seq->GetTracks()[i].ScaleSamples.push_back(FVector(1, 1, 1));
+		}
 
 		Fin.read((char*)&QuatsNum, sizeof(int));
 		Seq->GetTracks()[i].QuatSamples.resize(QuatsNum);
 		Fin.read((char*)Seq->GetTracks()[i].QuatSamples.data(), QuatsNum * 4 * sizeof(float));
+		if (QuatsNum == 0)
+		{
+			Seq->GetTracks()[i].QuatSamples.push_back(FQuat(0, 0, 0, 1));
+		}
 
 		Fin.read((char*)&TranslationsNum, sizeof(int));
 		Seq->GetTracks()[i].TranslationSamples.resize(TranslationsNum);
 		Fin.read((char*)Seq->GetTracks()[i].TranslationSamples.data(), TranslationsNum * 3 * sizeof(float));
+		if (TranslationsNum == 0)
+		{
+			Seq->GetTracks()[i].TranslationSamples.push_back(FVector(0, 0, 0));
+		}
 	}
 
 	uint32 IndexTableNum;

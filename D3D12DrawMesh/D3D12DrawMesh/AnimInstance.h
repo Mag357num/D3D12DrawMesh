@@ -10,7 +10,7 @@ struct FAnimInstanceProxy
 	shared_ptr<FAnimSequence> Sequence;
 
 	void UpdateAnimation(const float& ElapsedSeconds);
-	FMatrix GetFinalTransforms(float dt);
+	vector<FMatrix> GetFinalTransforms(float dt);
 };
 
 class FAnimInstance

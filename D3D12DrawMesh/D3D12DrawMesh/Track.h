@@ -6,6 +6,4 @@ struct FTrack
 	vector<FVector> ScaleSamples;
 	vector<FQuat> QuatSamples;
 	vector<FVector> TranslationSamples;
-
-	FMatrix Interpolate(float t);
 };
