@@ -84,6 +84,17 @@ public:
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
 };
+struct FSceneColor_SkeletalMesh
+{
+	FMatrix World;
+	FMatrix CamViewProj;
+	FMatrix ShadowTransForm;
+	array<FMatrix, 68> GBoneTransforms;
+	FVector4 CamEye;
+	FDirectionLight Light;
+	BOOL IsShadowMap; // TODO: BOOL is win dependent?
+	float padding[3];
+};
 
 struct FSceneColorCB // BlinnPhong
 {

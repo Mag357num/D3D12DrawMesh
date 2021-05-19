@@ -5,17 +5,30 @@
 #include "ActorComponent.h"
 #include "Actor.h"
 
-class FSkeletalMeshLOD
+struct FSkeletalVertex
+{
+	FVector Pos;
+	FVector Nor;
+	FVector2 UV0;
+	FVector4 Color;
+	array<uint16, 4> InfluJointWeights; // Accuracy is 1/256
+	array<uint16, 4> InfluJointIndice;
+};
+
+class FSkeletalMeshLOD // TODO: only store SkeletalVertexArray and Indice
 {
 private:
 	vector<FStaticVertex> StaticVertexArray;
 	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
-	vector<uint32> Indices;
+	vector<FSkeletalVertex> SkeletalVertexArray;
+
+	vector<uint32> Indice;
 
 public:
-	vector<FStaticVertex>& GetVertices() { return StaticVertexArray; }
-	vector<FSkinnedWeightVertex>& GetWeightVertices() { return SkinnedWeightVertexArray; }
-	vector<uint32>& GetIndices() { return Indices; }
+	vector<FStaticVertex>& GetVertice() { return StaticVertexArray; }
+	vector<FSkeletalVertex>& GetSkeletalVertice() { return SkeletalVertexArray; }
+	vector<FSkinnedWeightVertex>& GetWeightVertice() { return SkinnedWeightVertexArray; }
+	vector<uint32>& GetIndice() { return Indice; }
 };
 
 class FSkeleton;

@@ -45,10 +45,11 @@ void FEngine::Init()
 	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
 	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
 	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceBinary_.dat"); // TODO: hard code
+	Seq->SetSkeleton(Ske.get());
 	SkeMesh->SetSkeleton(Ske);
 	SkeMeshCom->InitAnimation(Seq);
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
-	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor.hlsl");
+	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor_SkeletalMesh.hlsl");
 	SkeMeshCom->SetTransform({ {2, 2, 2}, {0, 0, 0, 1}, {-200, 500, 0} });
 
 	Cha->SetSkeletalMeshCom(SkeMeshCom);

@@ -10,10 +10,10 @@ struct FAnimInstanceProxy
 	shared_ptr<FAnimSequence> Sequence;
 	//FAnimNode_Base* RootNode; // TODO: add animation blend tree to replace Sequence
 
-
+	vector<FMatrix>& GetPalette() { return Palette; }
 
 	void UpdateAnimation(const float& TotalSeconds);
-	vector<FMatrix> GetFinalTransforms(float dt);
+	vector<FMatrix> UpdatePalette(float dt);
 };
 
 class FAnimInstance

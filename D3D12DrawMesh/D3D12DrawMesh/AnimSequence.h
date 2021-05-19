@@ -8,17 +8,19 @@ class FAnimSequence
 private:
 	FSkeleton* Skeleton;
 	float SequenceLength; // Length (in seconds) of this AnimSequence if played back with a speed of 1.0.
-	uint32 FrameNum;
+	uint32 SampleNum;
 	vector<FTrack> Tracks; // one track respondding to one joint
 	vector<int> TrackToJointIndexMapTable;
 
 public:
 	float& GetSequenceLength() { return SequenceLength; }
-	uint32& GetFrameNum() { return FrameNum; }
+	uint32& GetFrameNum() { return SampleNum; }
 	vector<FTrack>& GetTracks() { return Tracks; }
 	vector<int>& GetTrackToJointIndexMapTable() { return TrackToJointIndexMapTable; }
 
 	vector<FMatrix> Interpolate(float t);
+
+	void SetSkeleton(FSkeleton* Ske) { Skeleton = Ske; }
 
 	FAnimSequence() = default;
 	~FAnimSequence() = default;

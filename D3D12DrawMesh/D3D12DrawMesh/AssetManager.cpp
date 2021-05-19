@@ -40,7 +40,7 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		// TODO: add a func to read shader file name, so different mesh can have different shader
 		if (i == 6) // TODO: hard coding
 		{
-			Com->SetShaderFileName(L"Shadow_SceneColor_Sun.hlsl");
+			Com->SetShaderFileName(L"Shadow_SceneColor.hlsl");
 		}
 		else
 		{
@@ -106,24 +106,24 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	Fin.read((char*)&VertexNum, sizeof(int));
 	BufferByteSize = VertexNum * VertexStride;
 
-	MeshLOD.GetVertices().resize(VertexNum);
-	Fin.read((char*)MeshLOD.GetVertices().data(), BufferByteSize);
+	MeshLOD.GetVertice().resize(VertexNum);
+	Fin.read((char*)MeshLOD.GetVertice().data(), BufferByteSize);
 
 	// WeightVertex
 	{
 		Fin.read((char*)&VertexNum, sizeof(int)); // vertex num
-		MeshLOD.GetWeightVertices().resize(VertexNum);
+		MeshLOD.GetWeightVertice().resize(VertexNum);
 		for (uint32 i = 0; i < VertexNum; i++)
 		{
 			uint32 IndiceNum, WeightsNum; // weight num of each vertex
 
 			Fin.read((char*)&IndiceNum, sizeof(int));
-			MeshLOD.GetWeightVertices()[i].GetJointIndice().resize(IndiceNum);
-			Fin.read((char*)MeshLOD.GetWeightVertices()[i].GetJointIndice().data(), IndiceNum * sizeof(int16_t));
+			MeshLOD.GetWeightVertice()[i].GetJointIndice().resize(IndiceNum);
+			Fin.read((char*)MeshLOD.GetWeightVertice()[i].GetJointIndice().data(), IndiceNum * sizeof(int16_t));
 
 			Fin.read((char*)&WeightsNum, sizeof(int));
-			MeshLOD.GetWeightVertices()[i].GetJointWeights().resize(WeightsNum);
-			Fin.read((char*)MeshLOD.GetWeightVertices()[i].GetJointWeights().data(), WeightsNum * sizeof(int8_t));
+			MeshLOD.GetWeightVertice()[i].GetJointWeights().resize(WeightsNum);
+			Fin.read((char*)MeshLOD.GetWeightVertice()[i].GetJointWeights().data(), WeightsNum * sizeof(int8_t));
 		}
 	}
 
@@ -131,8 +131,31 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	Fin.read((char*)&IndiceNum, sizeof(int));
 	BufferByteSize = IndiceNum * sizeof(int);
 
-	MeshLOD.GetIndices().resize(IndiceNum);
-	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
+	MeshLOD.GetIndice().resize(IndiceNum);
+	Fin.read((char*)MeshLOD.GetIndice().data(), BufferByteSize);
+
+	for (uint32 i = 0; i < VertexNum; i++)
+	{
+		array<uint16, 4> JointWeight;
+		array<uint16, 4> JointIndice;
+
+		for (uint32 j = 0; j < 4; j++)
+		{
+			JointWeight[j] = static_cast<uint16>(MeshLOD.GetWeightVertice()[i].GetJointWeights()[j]);
+			JointIndice[j] = MeshLOD.GetWeightVertice()[i].GetJointIndice()[j];
+		}
+
+		FSkeletalVertex Vertex =
+		{ 
+			MeshLOD.GetVertice()[i].Pos,
+			MeshLOD.GetVertice()[i].Nor,
+			MeshLOD.GetVertice()[i].UV0,
+			MeshLOD.GetVertice()[i].Color,
+			JointWeight,
+			JointIndice,
+		};
+		MeshLOD.GetSkeletalVertice().push_back(Vertex);
+	}
 
 	vector<FSkeletalMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
