@@ -6,13 +6,12 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 
 	float frameLength = SequenceLength / (SampleNum - 1); // there are (SampleNum - 1) frames 
 	int frameIndex = floor(t / frameLength);
-	frameIndex = 21;
+	//frameIndex = 0;
 	float lerpPercent = (t - (frameLength * frameIndex)) / frameLength;
-	lerpPercent = 0;
+	//lerpPercent = 0;
 
 	for (uint32 i = 0; i < Tracks.size(); i++)
 	{
-		FMatrix S, Q, T;
 		FVector S1, S2, T1, T2;
 		FQuat Q1, Q2;
 
@@ -65,9 +64,39 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 			T2 = Tracks[i].TranslationSamples[frameIndex + 1];
 		}
 
-		S = glm::scale(glm::identity<FMatrix>(), lerpPercent * S1 + (1 - lerpPercent) * S2);
-		Q = glm::toMat4(glm::lerp(Q1, Q2, lerpPercent));
-		T = glm::translate(glm::identity<FMatrix>(), lerpPercent * T1 + (1 - lerpPercent) * T2);
+		FMatrix S, Q, T;
+
+		FVector SLerp = lerpPercent * S2 + (1 - lerpPercent) * S1;
+		S = glm::scale(SLerp);
+
+		FQuat QLerp = glm::lerp(Q1, Q2, lerpPercent);
+		Q = glm::toMat4(QLerp);
+
+		FVector TLerp = lerpPercent * T2 + (1 - lerpPercent) * T1;
+		T = glm::translate(TLerp);
+
+		//FVector Rotate = glm::eulerAngles(QLerp);
+		//FVector Rotate2 = { glm::degrees(Rotate.x), glm::degrees(Rotate.y), glm::degrees(Rotate.z) };
+
+		//if (i == 45) // lowarm_twist_01_r
+		//{
+		//	int a = 10;
+		//}
+
+		//if (i == 55) // thigh_r
+		//{
+		//	int a = 10;
+		//}
+
+		//if (i == 60) // thigh_twist_01_r
+		//{
+		//	int a = 10;
+		//}
+
+		//if (i == 56) // calf_r
+		//{
+		//	int a = 10;
+		//}
 
 		Result.push_back(T * Q * S);
 	}

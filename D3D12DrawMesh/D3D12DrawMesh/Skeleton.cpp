@@ -3,8 +3,8 @@
 vector<FMatrix> FSkeleton::GetJointOffset()
 {
 	vector<FMatrix> Inv;
-	vector<FMatrix> GlobalPoseMatrix;
-	vector<FMatrix> BindPosesMatrix;
+	vector<FMatrix> ParentToRoot;
+	vector<FMatrix> LocalToParent;
 	
 	if (BindPoses.size() == 0)
 	{
@@ -20,17 +20,19 @@ vector<FMatrix> FSkeleton::GetJointOffset()
 		FMatrix T = glm::translate(glm::identity<FMatrix>(), i.Translation);
 
 		FMatrix SQT = T * Q * S;
-		BindPosesMatrix.push_back(SQT);
+		LocalToParent.push_back(SQT);
 	}
 
-	GlobalPoseMatrix.push_back(BindPosesMatrix[0]);
+	ParentToRoot.push_back(LocalToParent[0]);
 
 	for (uint32 i = 1; i < Joints.size(); i++)
 	{
-		GlobalPoseMatrix.push_back(GlobalPoseMatrix[Joints[i].ParentIndex] * BindPosesMatrix[i]);
+		//ParentToRoot.push_back(LocalToParent[i] * ParentToRoot[Joints[i].ParentIndex]);
+		ParentToRoot.push_back(ParentToRoot[Joints[i].ParentIndex] * LocalToParent[i]);
+		assert(Joints[i].ParentIndex < i);
 	}
 
-	for (auto i : GlobalPoseMatrix)
+	for (auto i : ParentToRoot)
 	{
 		Inv.push_back(glm::inverse(i));
 	}

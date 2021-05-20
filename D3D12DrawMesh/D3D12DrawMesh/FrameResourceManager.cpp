@@ -184,7 +184,7 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 	vector<uint32> Indice = { 0, 1, 2 };
 
 	FStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(TriangleVertice, Indice,
-		{ { 1.f, 1.f, 1.f }, EulerToQuat({0.f, 0.f, 0.f}), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
+		{ { 1.f, 1.f, 1.f }, FQuat(0, 0, 0, 1), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
 
 	FVertexInputLayer InputLayer;
 	InputLayer.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
@@ -318,16 +318,11 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
 	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
 	{
-		const FRotator& Rotate = QuatToEuler(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat); // x roll y pitch z yaw
-
-		FMatrix RotateMatrix;
-		RotateMatrix = glm::rotate(glm::identity<FMatrix>(), glm::radians(-Rotate.Roll), FVector(1, 0, 0)); // roll
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(-Rotate.Pitch), FVector(0, 1, 0)); // pitch
-		RotateMatrix = glm::rotate(RotateMatrix, glm::radians(Rotate.Yaw), FVector(0, 0, 1)); // yaw
-
-		FMatrix ScaleMatrix = glm::scale(glm::identity<FMatrix>(), Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Scale);
-		FMatrix TranslateMatrix = glm::translate(glm::identity<FMatrix>(), Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Translation);
-
+		FMatrix RotateMatrix = glm::toMat4(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat);
+		//FVector Rotate = glm::eulerAngles(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat);
+		//FVector Rotate2 = { glm::degrees(Rotate.x), glm::degrees(Rotate.y), glm::degrees(Rotate.z) };
+		FMatrix ScaleMatrix = glm::scale(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Scale);
+		FMatrix TranslateMatrix = glm::translate(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Translation);
 		FMatrix WorldMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
 		// base pass cb
@@ -358,15 +353,15 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	// skeletalmesh
 	{
-		FMatrix ScaleMatrix = glm::scale(glm::identity<FMatrix>(), Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Scale);
+		FMatrix ScaleMatrix = glm::scale(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Scale);
 		FMatrix Quat = glm::toMat4(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Quat);
-		FMatrix TranslateMatrix = glm::translate(glm::identity<FMatrix>(), Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Translation);
+		FMatrix TranslateMatrix = glm::translate(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Translation);
 		FMatrix WorldMatrix = TranslateMatrix * Quat * ScaleMatrix; // use column matrix, multiple is right to left
 
 		array<FMatrix, 68> Palette;
 		for (uint32 i = 0; i < 68; i++)
 		{
-			Palette[i] = Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetProxy().GetPalette()[i];
+			Palette[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetProxy().GetPalette()[i]);
 		}
 
 		FSceneColor_SkeletalMesh SceneColorCB;

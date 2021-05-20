@@ -6,19 +6,17 @@
 #include <ext/matrix_float4x4.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtx/quaternion.hpp>
+#include <gtx/euler_angles.hpp>
+#include <gtx/transform.hpp>
+
+//#include <DirectXMath.h>
+//using namespace DirectX;
 
 using FVector2 = glm::vec2;
 using FVector = glm::vec3;
 using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;
 using FQuat = glm::tquat<float>;
-
-struct FRotator // order same with ue4
-{
-	float Roll;
-	float Pitch;
-	float Yaw;
-};
 
 struct FTransform
 {
@@ -31,22 +29,22 @@ float Atan2(const float& Y, const float& X);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);
 
-FRotator QuatToEuler(FQuat Quat);
-
-FQuat EulerToQuat(FRotator Euler);
-
-float FastAsin(float Value);
-
-float NormalizeAxis(float Angle);
-
-float ClampAxis(float Angle);
-
-float Fmod(float X, float Y);
-
-void SinCos(float* ScalarSin, float* ScalarCos, float Value);
-
-template< class T >
-T Clamp(const T X, const T Min, const T Max)
-{
-	return X < Min ? Min : X < Max ? X : Max;
-}
+//FRotator QuatToEuler(FQuat Quat);
+//
+//FQuat EulerToQuat(FRotator Euler);
+//
+//float FastAsin(float Value);
+//
+//float NormalizeAxis(float Angle);
+//
+//float ClampAxis(float Angle);
+//
+//float Fmod(float X, float Y);
+//
+//void SinCos(float* ScalarSin, float* ScalarCos, float Value);
+//
+//template< class T >
+//T Clamp(const T X, const T Min, const T Max)
+//{
+//	return X < Min ? Min : X < Max ? X : Max;
+//}

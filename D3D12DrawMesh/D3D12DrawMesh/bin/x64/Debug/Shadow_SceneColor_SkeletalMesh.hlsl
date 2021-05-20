@@ -81,9 +81,9 @@ PSInput VSMain(VSInput input)
     PSInput result;
 
 	float weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    weights[0] = input.BoneWeights.x / 255;
-    weights[1] = input.BoneWeights.y / 255;
-    weights[2] = input.BoneWeights.z / 255;
+    weights[0] = (float)input.BoneWeights.x / 255.f;
+    weights[1] = (float)input.BoneWeights.y / 255.f;
+    weights[2] = (float)input.BoneWeights.z / 255.f;
     weights[3] = 1.0f - weights[0] - weights[1] - weights[2];
 
     float3 posL = float3(0.0f, 0.0f, 0.0f);
