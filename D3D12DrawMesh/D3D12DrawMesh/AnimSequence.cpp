@@ -6,9 +6,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 
 	float frameLength = SequenceLength / (SampleNum - 1); // there are (SampleNum - 1) frames 
 	int frameIndex = floor(t / frameLength);
-	//frameIndex = 0;
 	float lerpPercent = (t - (frameLength * frameIndex)) / frameLength;
-	//lerpPercent = 0;
 
 	for (uint32 i = 0; i < Tracks.size(); i++)
 	{
@@ -74,29 +72,6 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 
 		FVector TLerp = lerpPercent * T2 + (1 - lerpPercent) * T1;
 		T = glm::translate(TLerp);
-
-		//FVector Rotate = glm::eulerAngles(QLerp);
-		//FVector Rotate2 = { glm::degrees(Rotate.x), glm::degrees(Rotate.y), glm::degrees(Rotate.z) };
-
-		//if (i == 45) // lowarm_twist_01_r
-		//{
-		//	int a = 10;
-		//}
-
-		//if (i == 55) // thigh_r
-		//{
-		//	int a = 10;
-		//}
-
-		//if (i == 60) // thigh_twist_01_r
-		//{
-		//	int a = 10;
-		//}
-
-		//if (i == 56) // calf_r
-		//{
-		//	int a = 10;
-		//}
 
 		Result.push_back(T * Q * S);
 	}

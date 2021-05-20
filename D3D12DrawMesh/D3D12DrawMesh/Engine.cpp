@@ -65,11 +65,6 @@ void FEngine::Tick()
 {
 	FRenderThread::Get()->WaitForRenderThread();
 
-	/*
-	*  Tick layer out:
-	*  Engine(main loop) --> Scene --> Camera
-	*                              --> Character --> SkeletalMeshComponent --> AnimInstance --> AnimInstanceProxy --> AnimSequence
-	*/
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 

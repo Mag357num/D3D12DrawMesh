@@ -16,9 +16,7 @@ void FAnimInstance::UpdateAnimation(const float& TotalSeconds)
 void FAnimInstanceProxy::UpdateAnimation(const float& TotalSeconds)
 {
 	// calculate pose according to tick
-	float a = TotalSeconds / Sequence->GetSequenceLength();
-	float aa = floor(a);
-	float dt = TotalSeconds - aa * Sequence->GetSequenceLength();
+	float dt = TotalSeconds - floor(TotalSeconds / Sequence->GetSequenceLength()) * Sequence->GetSequenceLength();
 	Palette = UpdatePalette(dt);
 }
 
