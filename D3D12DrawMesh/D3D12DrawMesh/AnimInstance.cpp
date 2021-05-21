@@ -2,10 +2,9 @@
 #include "SkeletalMesh.h"
 #include "Skeleton.h"
 
-void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, shared_ptr<FAnimSequence> Sequence)
+void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom)
 {
 	Proxy.SkeletalMeshCom = SkeletalMeshCom;
-	Proxy.Sequence = Sequence;
 }
 
 void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
@@ -21,7 +20,7 @@ void FAnimInstanceProxy::UpdateAnimation(const float& ElapsedSeconds)
 	}
 
 	TimePos += ElapsedSeconds;
-	float dt = TimePos - floor(TimePos / Sequence->GetSequenceLength() ) * Sequence->GetSequenceLength();
+	float dt = TimePos - floor(TimePos / SequenceMap["Run"]->GetSequenceLength() ) * SequenceMap["Run"]->GetSequenceLength();
 	//float dt = 0.01 * TotalSeconds - floor( 0.01 * TotalSeconds / Sequence->GetSequenceLength() ) * Sequence->GetSequenceLength() + 0.39;
 	Palette = UpdatePalette(dt);
 }
@@ -30,7 +29,7 @@ vector<FMatrix> FAnimInstanceProxy::UpdatePalette(float dt)
 {
 	vector<FMatrix> Result;
 	vector<FMatrix> JointOffset = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton()->GetJointOffset();
-	vector<FMatrix> AnimLocalToParent = Sequence->Interpolate(dt);
+	vector<FMatrix> AnimLocalToParent = SequenceMap["Run"]->Interpolate(dt);
 
 	vector<FMatrix> AnimGlobalPose;
 	AnimGlobalPose.push_back(AnimLocalToParent[0]);

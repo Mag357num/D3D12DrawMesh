@@ -44,10 +44,14 @@ void FEngine::Init()
 	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
 	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
 	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
-	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceRun_.dat"); // TODO: hard code
-	Seq->SetSkeleton(Ske.get());
+	shared_ptr<FAnimSequence> Seq_Run = FAssetManager::Get()->CreateAnimSequence(L"SequenceRun_.dat");
+	shared_ptr<FAnimSequence> Seq_Idle = FAssetManager::Get()->CreateAnimSequence(L"SequenceIdle_.dat");
+	Seq_Run->SetSkeleton(Ske.get());
+	Seq_Idle->SetSkeleton(Ske.get());
 	SkeMesh->SetSkeleton(Ske);
-	SkeMeshCom->InitAnimation(Seq);
+	SkeMeshCom->InitAnimation();
+	SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", Seq_Run));
+	SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", Seq_Idle));
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
 
 	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), { 200.f, 0.f, 0.f } });
