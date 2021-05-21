@@ -19,7 +19,7 @@ public:
 	void Tick(StepTimer& Timer);
 
 	// TODO: refactor here. add a Camera controler to manager and store all comera, create camera will be its work. scene only need to pick a camera as current camera.
-	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio) { return CurrentCamera.Init(PositionParam, UpDir, LookAt, Fov, AspectRatio); }
+	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height) { return CurrentCamera.Init(PositionParam, UpDir, LookAt, Fov, Width, Height); }
 	void SetDirectionLight(const FDirectionLight& Light) { DirectionLight = Light; }
 	void SetCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
 

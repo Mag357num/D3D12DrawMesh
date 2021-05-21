@@ -319,8 +319,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
 	{
 		FMatrix RotateMatrix = glm::toMat4(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat);
-		//FVector Rotate = glm::eulerAngles(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat);
-		//FVector Rotate2 = { glm::degrees(Rotate.x), glm::degrees(Rotate.y), glm::degrees(Rotate.z) };
 		FMatrix ScaleMatrix = glm::scale(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Scale);
 		FMatrix TranslateMatrix = glm::translate(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Translation);
 		FMatrix WorldMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left

@@ -8,15 +8,20 @@ void FAnimInstance::initAnimation(FSkeletalMeshComponent* SkeletalMeshCom, share
 	Proxy.Sequence = Sequence;
 }
 
-void FAnimInstance::UpdateAnimation(const float& TotalSeconds)
+void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 {
-	Proxy.UpdateAnimation(TotalSeconds);
+	Proxy.UpdateAnimation(ElapsedSeconds);
 }
 
-void FAnimInstanceProxy::UpdateAnimation(const float& TotalSeconds)
+void FAnimInstanceProxy::UpdateAnimation(const float& ElapsedSeconds)
 {
-	// calculate pose according to tick
-	float dt = TotalSeconds - floor( TotalSeconds / Sequence->GetSequenceLength() ) * Sequence->GetSequenceLength();
+	if (TimePos > 100.f)
+	{
+		TimePos = 0.0f;
+	}
+
+	TimePos += ElapsedSeconds;
+	float dt = TimePos - floor(TimePos / Sequence->GetSequenceLength() ) * Sequence->GetSequenceLength();
 	//float dt = 0.01 * TotalSeconds - floor( 0.01 * TotalSeconds / Sequence->GetSequenceLength() ) * Sequence->GetSequenceLength() + 0.39;
 	Palette = UpdatePalette(dt);
 }

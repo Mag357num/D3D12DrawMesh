@@ -54,7 +54,6 @@ public:
 	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { StaticMesh.SetMeshLODs(LODs); }
 	void SetStaticMesh(const UStaticMesh& SM) { StaticMesh = SM; }
 
-	const FTransform& GetTransform() const { return Transform; }
 	UStaticMesh& GetStaticMesh() { return StaticMesh; }
 	const wstring& GetShaderFileName() const { return ShaderFileName; }
 

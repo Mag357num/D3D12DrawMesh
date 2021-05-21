@@ -16,8 +16,10 @@ class ACamera // TODO: refactor: make ACamera a Actor
 public:
 	ACamera();
 
-	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio);
-	void Tick(const float& ElapsedSeconds);
+	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height);
+	void Tick_Wander(const float& ElapsedSeconds);
+	void Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, float Distance);
+	void Tick_Static(const float& ElapsedSeconds);
 	FMatrix GetViewMatrix() const;
 	FMatrix GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top ,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
@@ -32,12 +34,13 @@ public:
 	void OnMouseMove(const uint32& x, const uint32& y);
 
 	void GetEulerByLook(const FVector& LookAt);
-	void GetLookByEuler(const float& Pitch, const float& Yaw);
+	void UpdateLookByEuler(const float& Pitch, const float& Yaw);
 
 	void SetFov(const float& FovParam) { Fov = FovParam; }
 	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
 
 	FVector GetPosition() { return Position; }
+	FVector GetLook() { return LookDirection; }
 
 private:
 	void Reset();
@@ -60,17 +63,25 @@ private:
 	FVector InitialPosition;
 	FVector InitialUpDir;
 	FVector InitialLookAt;
+
 	FVector Position;
 	FVector LookDirection;
 	FVector UpDirection;
+
 	KeysPressed Keys;
-	FVector2 MouseCurrentPosition;
-	FVector2 MouseFirstPosition;
+
+	FVector2 MouseDown_CurrentPosition;
+	FVector2 MouseDown_FirstPosition;
+	FVector2 MouseMove_FirstPosition;
+	FVector2 MouseMove_CurrentPosition;
+
 	bool IsMouseDown;
-	bool IsMouseMove;
+
 	float MoveSpeed; // Speed at which the camera moves, in units per second.
 	float TurnSpeed; // Speed at which the camera turns, in radians per second.
+
 	float MouseSensibility;
+
 	float Yaw; // Relative to the +z axis.
 	float Pitch; // Relative to the xz plane.
 

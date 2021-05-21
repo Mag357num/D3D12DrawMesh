@@ -36,7 +36,7 @@ void ACamera::GetEulerByLook(const FVector& LookAt)
 	Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
 }
 
-void ACamera::GetLookByEuler(const float& Pitch, const float& Yaw)
+void ACamera::UpdateLookByEuler(const float& Pitch, const float& Yaw)
 {
 	LookDirection.x = cosf(Pitch) * cosf(Yaw);
 	LookDirection.y = cosf(Pitch) * sinf(Yaw);
@@ -47,7 +47,7 @@ void ACamera::GetLookByEuler(const float& Pitch, const float& Yaw)
 	if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0.f;
 }
 
-void ACamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float AspectRatio)
+void ACamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height)
 {
 	InitialPosition = PositionParam;
 	InitialUpDir = UpDir;
@@ -61,7 +61,9 @@ void ACamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVe
 	GetEulerByLook(LookAt);
 
 	SetFov(Fov);
-	SetAspectRatio(AspectRatio);
+	SetAspectRatio(Width / Height);
+
+	MouseMove_FirstPosition = FVector2(Width / 2, Height / 2);
 }
 
 void ACamera::SetMoveSpeed(const float & UnitsPerSecond)
@@ -83,13 +85,13 @@ void ACamera::Reset()
 	GetEulerByLook(LookDirection);
 }
 
-void ACamera::Tick(const float& ElapsedSeconds)
+void ACamera::Tick_Wander(const float& ElapsedSeconds)
 {
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
 	float KeyRotateInterval = TurnSpeed * ElapsedSeconds;
 
-	FVector2 MouseRotateInterval = MouseSensibility * (MouseCurrentPosition - MouseFirstPosition);
+	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
 
 	// wasd for movement
 	if (Keys.w)
@@ -111,19 +113,6 @@ void ACamera::Tick(const float& ElapsedSeconds)
 		Move.y -= MoveInterval;
 	}
 
-	
-	// qe for move up and down
-	if (Keys.q)
-		Move.z -= MoveInterval;
-	if (Keys.e)
-		Move.z += MoveInterval;
-
-	// press down mouse for looking direction
-	if (IsMouseDown && IsMouseMove)
-		Yaw += MouseRotateInterval.x;
-	if (IsMouseDown && IsMouseMove)
-		Pitch -= MouseRotateInterval.y;
-
 	// up down left right for movement
 	if (Keys.up)
 	{
@@ -144,13 +133,45 @@ void ACamera::Tick(const float& ElapsedSeconds)
 		Move.y -= MoveInterval;
 	}
 
+	// qe for move up and down
+	if (Keys.q)
+		Move.z -= MoveInterval;
+	if (Keys.e)
+		Move.z += MoveInterval;
+
+	// press down mouse for looking direction
+	if (IsMouseDown)
+	{
+		Yaw += MouseRotateInterval.x;
+		Pitch -= MouseRotateInterval.y;
+	}
+
 	Position.x += Move.x * cos(Pitch) * cos(Yaw) - Move.y * cos(Pitch) * sin(Yaw);
 	Position.y += Move.x * cos(Pitch) * sin(Yaw) + Move.y * cos(Pitch) * cos(Yaw);
 	Position.z += Move.z;
 
-	MouseFirstPosition = MouseCurrentPosition;
+	MouseDown_FirstPosition = MouseDown_CurrentPosition;
 
-	GetLookByEuler(Pitch, Yaw);
+	UpdateLookByEuler(Pitch, Yaw);
+}
+
+void ACamera::Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
+{
+	FVector2 MouseRotateInterval = MouseSensibility * (MouseMove_CurrentPosition - MouseMove_FirstPosition);
+	MouseMove_FirstPosition = MouseMove_CurrentPosition;
+
+	Yaw += MouseRotateInterval.x;
+	Pitch -= MouseRotateInterval.y;
+	UpdateLookByEuler(Pitch, Yaw);
+
+	FVector horizontalLook = FVector(GetLook().x, GetLook().y, 0);
+	horizontalLook = glm::normalize(horizontalLook) * Distance;
+	Position = TargetLocation - horizontalLook;
+}
+
+void ACamera::Tick_Static(const float& ElapsedSeconds)
+{
+	// do nothing
 }
 
 FMatrix ACamera::GetViewMatrix() const
@@ -248,8 +269,8 @@ void ACamera::OnKeyUp(const WPARAM& key)
 void ACamera::OnRightButtonDown(const uint32& x, const uint32& y)
 {
 	IsMouseDown = true;
-	MouseFirstPosition = { static_cast<float>(x), static_cast<float>(y) };
-	MouseCurrentPosition = MouseFirstPosition;
+	MouseDown_FirstPosition = { static_cast<float>(x), static_cast<float>(y) };
+	MouseDown_CurrentPosition = MouseDown_FirstPosition;
 }
 
 void ACamera::OnRightButtonUp()
@@ -261,7 +282,8 @@ void ACamera::OnMouseMove(const uint32& x, const uint32& y)
 {
 	if (IsMouseDown)
 	{
-		IsMouseMove = true;
-		MouseCurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
+		MouseDown_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
 	}
+
+	MouseMove_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
 }

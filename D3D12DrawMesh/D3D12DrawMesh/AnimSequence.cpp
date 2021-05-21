@@ -69,18 +69,27 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 
 		FMatrix S, Q, T;
 
-		FVector SLerp = lerpPercent * S2 + (1 - lerpPercent) * S1;
+		//FVector SLerp = lerpPercent * S2 + (1 - lerpPercent) * S1;
+		FVector SLerp = glm::lerp(S1, S2, lerpPercent);
 		S = glm::scale(SLerp);
 
-		//FQuat QLerp = glm::lerp( Q1, Q2, lerpPercent );
-		FQuat QLerp = lerpPercent * Q2 + (1 - lerpPercent) * Q1;
+		FQuat QLerp = glm::slerp(Q1, Q2, lerpPercent);
+		QLerp = glm::normalize(QLerp);
 		Q = glm::toMat4(QLerp);
 
-		FVector Rotate = glm::eulerAngles( Q1 );
-		FVector Rotate2 = { glm::degrees( Rotate.x ), glm::degrees( Rotate.y ), glm::degrees( Rotate.z ) };
-
-		FVector TLerp = lerpPercent * T2 + (1 - lerpPercent) * T1;
+		FVector TLerp = glm::lerp(T1, T2, lerpPercent);
 		T = glm::translate(TLerp);
+
+		//FVector RotateQ1 = glm::eulerAngles( Q1 );
+		//RotateQ1 = { glm::degrees(RotateQ1.x ), glm::degrees(RotateQ1.y ), glm::degrees(RotateQ1.z ) };
+
+		//FVector RotateQ2 = glm::eulerAngles(Q2);
+		//RotateQ2 = { glm::degrees(RotateQ2.x), glm::degrees(RotateQ2.y), glm::degrees(RotateQ2.z) };
+
+		//FVector RotateQLerp = glm::eulerAngles(QLerp);
+		//RotateQLerp = { glm::degrees(RotateQLerp.x), glm::degrees(RotateQLerp.y), glm::degrees(RotateQLerp.z) };
+
+
 
 		Result.push_back(T * Q * S);
 	}

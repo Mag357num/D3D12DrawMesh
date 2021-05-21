@@ -37,7 +37,7 @@ FEngine::~FEngine()
 void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
-	CurrentScene->SetCurrentCamera({ -600.f, 800.f, 100.f }, { 0.f, 0.f, 1.f }, { 1.f, -1.f, 0.2f }, 0.8f, AspectRatio); // TODO: hard code
+	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { -1.f, 0.f, -0.2f }, 0.8f, ResoWidth, ResoHeight); // TODO: hard code
 
 	// init a character to scene // TODO: this logic should not be engine's work
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
@@ -49,8 +49,8 @@ void FEngine::Init()
 	SkeMesh->SetSkeleton(Ske);
 	SkeMeshCom->InitAnimation(Seq);
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
+	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, { 0.f, 0.f, 0.f, 1.f }, { 200.f, 0.f, 0.f } });
 	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor_SkeletalMesh.hlsl");
-	SkeMeshCom->SetTransform({ {2, 2, 2}, {0, 0, 0, 1}, {-200, 500, 0} });
 
 	Cha->SetSkeletalMeshCom(SkeMeshCom);
 	CurrentScene->SetCharacter(Cha);
@@ -84,11 +84,13 @@ void FEngine::Destroy()
 void FEngine::OnKeyDown(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera().OnKeyDown(Key);
+	CurrentScene->GetCharacter()->OnKeyDown(Key);
 }
 
 void FEngine::OnKeyUp(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera().OnKeyUp(Key);
+	CurrentScene->GetCharacter()->OnKeyUp(Key);
 }
 
 void FEngine::OnMouseMove(uint32 x, uint32 y)
