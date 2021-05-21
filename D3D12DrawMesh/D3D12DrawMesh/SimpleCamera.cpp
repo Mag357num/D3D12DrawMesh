@@ -225,7 +225,7 @@ void ACamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
 		Keys.down = true;
 		break;
 	case VK_ESCAPE:
-		Reset();
+		//Reset(); // TODO: delete temporary
 		break;
 	}
 }
