@@ -359,7 +359,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		array<FMatrix, 68> Palette;
 		for (uint32 i = 0; i < 68; i++)
 		{
-			Palette[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetProxy().GetPalette()[i]);
+			Palette[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
 		}
 
 		FSceneColor_SkeletalMesh SceneColorCB;

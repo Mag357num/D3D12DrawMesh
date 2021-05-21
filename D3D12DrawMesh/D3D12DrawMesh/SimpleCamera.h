@@ -17,9 +17,9 @@ public:
 	ACamera();
 
 	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height);
-	void Tick_Wander(const float& ElapsedSeconds);
-	void Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, float Distance);
-	void Tick_Static(const float& ElapsedSeconds);
+	void Update_Wander(const float& ElapsedSeconds);
+	void Update_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance);
+	void Update_Static(const float& ElapsedSeconds);
 	FMatrix GetViewMatrix() const;
 	FMatrix GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top ,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;

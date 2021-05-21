@@ -48,6 +48,8 @@ FVector ACharacter::GetLook()
 
 void ACharacter::OnKeyDown(const WPARAM& key)
 {
+	SetCurrentAnim( "Run" );
+
 	switch (key)
 	{
 	case 'W':
@@ -85,6 +87,8 @@ void ACharacter::OnKeyDown(const WPARAM& key)
 
 void ACharacter::OnKeyUp(const WPARAM& key)
 {
+	SetCurrentAnim( "Idle" );
+
 	switch (key)
 	{
 	case 'W':
@@ -140,4 +144,9 @@ void ACharacter::OnMouseMove(const uint32& x, const uint32& y)
 	}
 
 	MouseMove_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
+}
+
+void ACharacter::SetCurrentAnim(string Key)
+{
+	GetSkeletalMeshCom()->GetAnimator().SetCurrentAnim( Key );
 }

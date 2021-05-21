@@ -59,7 +59,7 @@ private:
 	FAnimInstance Animator;
 
 public:
-	FAnimInstance GetAnimator() { return Animator; }
+	FAnimInstance& GetAnimator() { return Animator; }
 	void TickAnimation(const float& ElapsedSeconds) { Animator.UpdateAnimation(ElapsedSeconds); }
 
 	void AddSequence(std::pair<string, shared_ptr<FAnimSequence>> Seq) { Animator.AddSequence(Seq); }

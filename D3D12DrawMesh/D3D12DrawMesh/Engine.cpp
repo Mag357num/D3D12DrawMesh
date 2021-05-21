@@ -54,7 +54,7 @@ void FEngine::Init()
 	SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", Seq_Idle));
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
 
-	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), { 200.f, 0.f, 0.f } });
+	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), { 300.f, 200.f, 0.f } });
 	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor_SkeletalMesh.hlsl");
 
 	Cha->SetSkeletalMeshCom(SkeMeshCom);

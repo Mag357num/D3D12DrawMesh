@@ -85,7 +85,7 @@ void ACamera::Reset()
 	GetEulerByLook(LookDirection);
 }
 
-void ACamera::Tick_Wander(const float& ElapsedSeconds)
+void ACamera::Update_Wander(const float& ElapsedSeconds)
 {
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
@@ -155,7 +155,7 @@ void ACamera::Tick_Wander(const float& ElapsedSeconds)
 	UpdateLookByEuler(Pitch, Yaw);
 }
 
-void ACamera::Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
+void ACamera::Update_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
 {
 	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
 	MouseDown_FirstPosition = MouseDown_CurrentPosition;
@@ -170,7 +170,7 @@ void ACamera::Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, f
 	Position.z = 200.f;
 }
 
-void ACamera::Tick_Static(const float& ElapsedSeconds)
+void ACamera::Update_Static(const float& ElapsedSeconds)
 {
 	// do nothing
 }
