@@ -82,7 +82,7 @@ private:
 
 	float MouseSensibility;
 
-	float Yaw; // Relative to the +z axis.
+	float Yaw; // Relative to the +z axis. // TODO: use quaternion to replace euler angle and look dir
 	float Pitch; // Relative to the xz plane.
 
 	float Fov;

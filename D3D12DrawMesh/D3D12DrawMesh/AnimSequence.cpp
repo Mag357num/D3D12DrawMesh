@@ -80,17 +80,6 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 		FVector TLerp = glm::lerp(T1, T2, lerpPercent);
 		T = glm::translate(TLerp);
 
-		//FVector RotateQ1 = glm::eulerAngles( Q1 );
-		//RotateQ1 = { glm::degrees(RotateQ1.x ), glm::degrees(RotateQ1.y ), glm::degrees(RotateQ1.z ) };
-
-		//FVector RotateQ2 = glm::eulerAngles(Q2);
-		//RotateQ2 = { glm::degrees(RotateQ2.x), glm::degrees(RotateQ2.y), glm::degrees(RotateQ2.z) };
-
-		//FVector RotateQLerp = glm::eulerAngles(QLerp);
-		//RotateQLerp = { glm::degrees(RotateQLerp.x), glm::degrees(RotateQLerp.y), glm::degrees(RotateQLerp.z) };
-
-
-
 		Result.push_back(T * Q * S);
 	}
 

@@ -157,8 +157,8 @@ void ACamera::Tick_Wander(const float& ElapsedSeconds)
 
 void ACamera::Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
 {
-	FVector2 MouseRotateInterval = MouseSensibility * (MouseMove_CurrentPosition - MouseMove_FirstPosition);
-	MouseMove_FirstPosition = MouseMove_CurrentPosition;
+	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
+	MouseDown_FirstPosition = MouseDown_CurrentPosition;
 
 	Yaw += MouseRotateInterval.x;
 	Pitch -= MouseRotateInterval.y;
@@ -167,6 +167,7 @@ void ACamera::Tick_Target(const float& ElapsedSeconds, FVector TargetLocation, f
 	FVector horizontalLook = FVector(GetLook().x, GetLook().y, 0);
 	horizontalLook = glm::normalize(horizontalLook) * Distance;
 	Position = TargetLocation - horizontalLook;
+	Position.z = 200.f;
 }
 
 void ACamera::Tick_Static(const float& ElapsedSeconds)

@@ -5,6 +5,25 @@
 #define FLOAT_NON_FRACTIONAL (8388608.f) /* All single-precision floating point numbers greater than or equal to this have no fractional value. */
 #define INV_PI (0.31830988618f)
 
+FEuler QuatToEuler(FQuat Quat)
+{
+	// euler use in right hand coord, xyz: pitch yaw roll
+	FVector RightHandEuler = glm::eulerAngles(Quat);
+
+	// euler use in left hand coord, xyz: roll pitch yaw 
+	FEuler LeftHandEuler;
+	LeftHandEuler.Roll = RightHandEuler.x;
+	LeftHandEuler.Pitch = RightHandEuler.y;
+	LeftHandEuler.Yaw = RightHandEuler.z;
+
+	return LeftHandEuler;
+}
+
+FQuat EulerToQuat(FEuler Euler)
+{
+	return FQuat(FVector(Euler.Roll, Euler.Pitch, Euler.Yaw));
+}
+
 float Atan2(const float& Y, const float& X)
 {
 	const float absX = fabs(X);

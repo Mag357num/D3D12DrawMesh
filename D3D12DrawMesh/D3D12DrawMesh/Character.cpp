@@ -10,26 +10,40 @@ void ACharacter::Tick(const float& ElapsedSeconds)
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
 	float KeyRotateInterval = TurnSpeed * ElapsedSeconds;
+	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
 
 	if (Keys.w)
 	{
-		Move.x += MoveInterval;
+		Move.y += MoveInterval; // push w go forward because the character model face (0,1,0)
 	}
 	if (Keys.s)
 	{
-		Move.x -= MoveInterval;
+		Move.y -= MoveInterval;
 	}
 	if (Keys.d)
 	{
-		Move.y += MoveInterval;
+		Move.x -= MoveInterval;
 	}
 	if (Keys.a)
 	{
-		Move.y -= MoveInterval;
+		Move.x += MoveInterval;
 	}
 
+	FEuler Euler = QuatToEuler(GetSkeletalMeshCom()->GetTransform().Quat); // roll pitch yaw
+	Euler.Yaw += MouseRotateInterval.x; // yaw
+	MouseDown_FirstPosition = MouseDown_CurrentPosition;
+
 	FTransform& Trans = GetSkeletalMeshCom()->GetTransform();
-	Trans.Translation += Move;
+	Trans.Translation.x += Move.x * cos(Euler.Yaw) - Move.y * sin(Euler.Yaw);
+	Trans.Translation.y += Move.x * sin(Euler.Yaw) + Move.y * cos(Euler.Yaw);
+	Trans.Quat = EulerToQuat(Euler);
+}
+
+FVector ACharacter::GetLook()
+{
+	FMatrix MQ = glm::toMat4(GetSkeletalMeshCom()->GetTransform().Quat);
+	FVector4 Look4 = FVector4(0, 1, 0, 1) * MQ; // regard (0, 1, 0) as the init look dir because model face (0, 1, 0) when there are no rotate
+	return FVector(Look4.x, Look4.y, Look4.z);
 }
 
 void ACharacter::OnKeyDown(const WPARAM& key)
@@ -104,4 +118,26 @@ void ACharacter::OnKeyUp(const WPARAM& key)
 		Keys.down = false;
 		break;
 	}
+}
+
+void ACharacter::OnRightButtonDown(const uint32& x, const uint32& y)
+{
+	IsMouseDown = true;
+	MouseDown_FirstPosition = { static_cast<float>(x), static_cast<float>(y) };
+	MouseDown_CurrentPosition = MouseDown_FirstPosition;
+}
+
+void ACharacter::OnRightButtonUp()
+{
+	IsMouseDown = false;
+}
+
+void ACharacter::OnMouseMove(const uint32& x, const uint32& y)
+{
+	if (IsMouseDown)
+	{
+		MouseDown_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
+	}
+
+	MouseMove_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
 }

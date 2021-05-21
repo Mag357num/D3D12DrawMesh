@@ -22,6 +22,21 @@ struct FTransform
 	FVector Translation;
 };
 
+struct FEuler
+{
+	FEuler() = default;
+	FEuler(float Roll, float Pitch, float Yaw) : Roll(Roll), Pitch(Pitch), Yaw(Yaw) {}
+
+	float Roll;
+	float Pitch;
+	float Yaw;
+};
+
+FEuler QuatToEuler(FQuat Quat);
+
+FQuat EulerToQuat(FEuler Euler);
+
+
 float Atan2(const float& Y, const float& X);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);

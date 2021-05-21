@@ -61,6 +61,8 @@ private:
 public:
 	FAnimInstance GetAnimator() { return Animator; }
 	void TickAnimation(const float& ElapsedSeconds) { Animator.UpdateAnimation(ElapsedSeconds); }
+	void TickTransform(const float& ElapsedSeconds);
+
 	void InitAnimation(shared_ptr<FAnimSequence> Sequence) { Animator.initAnimation(this, Sequence); } // init this when init chararcter
 
 	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }

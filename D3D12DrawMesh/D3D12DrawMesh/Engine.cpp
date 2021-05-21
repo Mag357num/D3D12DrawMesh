@@ -37,19 +37,20 @@ FEngine::~FEngine()
 void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
-	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { -1.f, 0.f, -0.2f }, 0.8f, ResoWidth, ResoHeight); // TODO: hard code
+	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight); // TODO: hard code
 
 	// init a character to scene // TODO: this logic should not be engine's work
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
 	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
 	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
 	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
-	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceBinary_.dat"); // TODO: hard code
+	shared_ptr<FAnimSequence> Seq = FAssetManager::Get()->CreateAnimSequence(L"SequenceRun_.dat"); // TODO: hard code
 	Seq->SetSkeleton(Ske.get());
 	SkeMesh->SetSkeleton(Ske);
 	SkeMeshCom->InitAnimation(Seq);
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
-	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, { 0.f, 0.f, 0.f, 1.f }, { 200.f, 0.f, 0.f } });
+
+	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), { 200.f, 0.f, 0.f } });
 	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor_SkeletalMesh.hlsl");
 
 	Cha->SetSkeletalMeshCom(SkeMeshCom);
@@ -96,14 +97,17 @@ void FEngine::OnKeyUp(unsigned char Key)
 void FEngine::OnMouseMove(uint32 x, uint32 y)
 {
 	CurrentScene->GetCurrentCamera().OnMouseMove(x, y);
+	CurrentScene->GetCharacter()->OnMouseMove(x, y);
 }
 
 void FEngine::OnRightButtonDown(uint32 x, uint32 y)
 {
 	CurrentScene->GetCurrentCamera().OnRightButtonDown(x, y);
+	CurrentScene->GetCharacter()->OnRightButtonDown(x, y);
 }
 
 void FEngine::OnRightButtonUp()
 {
 	CurrentScene->GetCurrentCamera().OnRightButtonUp();
+	CurrentScene->GetCharacter()->OnRightButtonUp();
 }
