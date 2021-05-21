@@ -1,6 +1,6 @@
 ### 效果节点
 1. SkeletalMesh
-按w前进, 鼠标左/右键按住拖动前进视角
+  按w前进, 鼠标左/右键按住拖动前进视角
 ![img](README_img/SkeletalMesh.png)
 2. Bloom
 ![img](README_img/Bloom.png)
