@@ -88,25 +88,6 @@
   <ItemGroup>
     <ResourceCompile Include="D3D12DrawMesh.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Resource\BloomDownMat.hlsl" />
-    <FxCompile Include="Resource\BloomSetup.hlsl" />
-    <FxCompile Include="Resource\BloomUpMat.hlsl" />
-    <FxCompile Include="Resource\shaders.hlsl" />
-    <FxCompile Include="Resource\Shadow_SceneColor.hlsl" />
-    <FxCompile Include="Resource\Shadow_SceneColor_SkeletalMesh.hlsl" />
-    <FxCompile Include="Resource\Shadow_SceneColor_Sun.hlsl" />
-    <FxCompile Include="Resource\SunMerge.hlsl" />
-    <FxCompile Include="Resource\ToneMapping.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resource\Scene_.dat" />
-    <None Include="Resource\SequenceIdle_.dat" />
-    <None Include="Resource\SequenceRun_.dat" />
-    <None Include="Resource\SequenceWalk_.dat" />
-    <None Include="Resource\SkeletalMeshBinary_.dat" />
-    <None Include="Resource\SkeletonBinary_.dat" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
