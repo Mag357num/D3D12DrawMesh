@@ -9,5 +9,247 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{6f27a012-bc8f-48fa-ba58-d0421543f665}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\private\Actor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\ActorComponent.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\AnimInstance.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\AnimNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\AnimSequence.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\AssetManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Character.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\DX12DynamicRHI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\DynamicRHI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\FrameResourceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Joint.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Light.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\MathExtend.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Renderer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\RenderThread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Scene.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\SimpleCamera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\SkeletalMesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Skeleton.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\SkinnedWeightVertex.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\StaticMesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\StaticVertex.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Thread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Track.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Win32Application.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\public\Actor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\ActorComponent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\AnimInstance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\AnimNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\AnimSequence.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\AssetManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Character.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\d3dx12.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\DX12DynamicRHI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\DX12Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\DXSampleHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\DynamicRHI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\FrameResourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Joint.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Light.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\MathExtend.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Renderer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\RenderThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\RHIResource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\SimpleCamera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\SkeletalMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Skeleton.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\SkinnedWeightVertex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\StaticMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\StaticVertex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\StepTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Track.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Win32Application.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="D3D12DrawMesh.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Resource\BloomDownMat.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\BloomSetup.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\BloomUpMat.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\shaders.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\Shadow_SceneColor.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\Shadow_SceneColor_SkeletalMesh.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\Shadow_SceneColor_Sun.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\SunMerge.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+    <FxCompile Include="Resource\ToneMapping.hlsl">
+      <Filter>Resource</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resource\Scene_.dat">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resource\SequenceIdle_.dat">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resource\SequenceRun_.dat">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resource\SequenceWalk_.dat">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resource\SkeletalMeshBinary_.dat">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resource\SkeletonBinary_.dat">
+      <Filter>Resource</Filter>
+    </None>
   </ItemGroup>
 </Project>
