@@ -54,7 +54,7 @@ struct PSInput
 {
     float4 position : SV_POSITION;
     float4 worldpos : POSITION;
-	float4 shadowPosH :POSITION1;
+	float4 shadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
     float4 color : COLOR;
 };
@@ -68,7 +68,7 @@ PSInput VSMain(VSInput input)
     result.position = mul(result.worldpos, CameraVP);
     result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
-	result.shadowPosH = mul(result.worldpos, ShadowWorldToScreen);
+	result.shadowScreenPos = mul(result.worldpos, ShadowWorldToScreen);
 
     return result;
 }
@@ -94,7 +94,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, Light.DirectionLightDir))), 0.00005f);
-	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowPosH, bias);
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
 	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
 
 	return FrameBuffer;
