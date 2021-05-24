@@ -37,8 +37,7 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
-		// TODO: add a func to read shader file name, so different mesh can have different shader
-		if (i == 6) // TODO: hard coding
+		if (i == 6)
 		{
 			Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
 		}
@@ -85,7 +84,7 @@ vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 	Fin.read((char*)MeshLOD.GetIndices().data(), BufferByteSize);
 
 	vector<FStaticMeshLOD> MeshLODs;
-	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
+	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
 
@@ -158,7 +157,7 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	}
 
 	vector<FSkeletalMeshLOD> MeshLODs;
-	MeshLODs.push_back(MeshLOD); // TODO: default consider there is only one lod
+	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
 
@@ -237,7 +236,7 @@ shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileNam
 	{
 		float padding;
 		Fin.read((char*)&Ske->GetBindPoses()[i].Quat, 4 * sizeof(float));
-		Fin.read((char*)&Ske->GetBindPoses()[i].Translation, 3 * sizeof(float)); // TODO: VectorRegister is float4
+		Fin.read((char*)&Ske->GetBindPoses()[i].Translation, 3 * sizeof(float));
 		Fin.read((char*)&Ske->GetBindPoses()[i].Scale, 3 * sizeof(float));
 	}
 

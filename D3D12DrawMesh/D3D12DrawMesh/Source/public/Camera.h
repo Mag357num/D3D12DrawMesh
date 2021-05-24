@@ -26,8 +26,8 @@ public:
 	void SetMoveSpeed(const float & UnitsPerSecond);
 	void SetTurnSpeed(const float& RadiansPerSecond);
 
-	void OnKeyDown(const WPARAM& key);
-	void OnKeyUp(const WPARAM& key);
+	void OnKeyDown(const unsigned char& key);
+	void OnKeyUp(const unsigned char& key);
 
 	void OnRightButtonDown(const uint32& x, const uint32& y);
 	void OnRightButtonUp();

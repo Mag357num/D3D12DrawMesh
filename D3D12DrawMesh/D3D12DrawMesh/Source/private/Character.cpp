@@ -46,7 +46,7 @@ FVector ACharacter::GetLook()
 	return FVector(Look4.x, Look4.y, Look4.z);
 }
 
-void ACharacter::OnKeyDown(const WPARAM& key)
+void ACharacter::OnKeyDown(const unsigned char& key)
 {
 	SetCurrentAnim( "Run" );
 
@@ -85,7 +85,7 @@ void ACharacter::OnKeyDown(const WPARAM& key)
 	}
 }
 
-void ACharacter::OnKeyUp(const WPARAM& key)
+void ACharacter::OnKeyUp(const unsigned char& key)
 {
 	SetCurrentAnim( "Idle" );
 

@@ -38,8 +38,8 @@ public:
 	FVector& GetLocation() { return GetSkeletalMeshCom()->GetTransform().Translation; }
 	FVector GetLook();
 
-	void OnKeyDown( const WPARAM& key );
-	void OnKeyUp( const WPARAM& key );
+	void OnKeyDown( const unsigned char& key );
+	void OnKeyUp( const unsigned char& key );
 	void OnRightButtonDown( const uint32& x, const uint32& y );
 	void OnRightButtonUp();
 	void OnMouseMove( const uint32& x, const uint32& y );

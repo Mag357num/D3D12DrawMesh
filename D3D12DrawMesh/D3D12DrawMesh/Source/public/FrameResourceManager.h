@@ -84,6 +84,7 @@ public:
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
 };
+
 struct FSceneColor_SkeletalMesh
 {
 	FMatrix World;
@@ -92,7 +93,7 @@ struct FSceneColor_SkeletalMesh
 	array<FMatrix, 68> GBoneTransforms;
 	FVector4 CamEye;
 	FDirectionLight Light;
-	BOOL IsShadowMap; // TODO: BOOL is win dependent?
+	BOOL IsShadowMap;
 	float padding[3];
 };
 
@@ -103,7 +104,7 @@ struct FSceneColorCB // BlinnPhong
 	FMatrix ShadowTransForm;
 	FVector4 CamEye;
 	FDirectionLight Light;
-	BOOL IsShadowMap; // TODO: BOOL is win dependent?
+	BOOL IsShadowMap;
 	float padding[3];
 };
 

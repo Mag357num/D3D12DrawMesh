@@ -56,7 +56,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
-	vector<shared_ptr<FHandle>> Empty; // TODO: refactor
+	vector<shared_ptr<FHandle>> Empty;
 	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
 	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
 
@@ -93,7 +93,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshCo
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
-	vector<shared_ptr<FHandle>> Empty; // TODO: refactor
+	vector<shared_ptr<FHandle>> Empty;
 	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 4608, Empty);
 	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 4608, Empty);
 

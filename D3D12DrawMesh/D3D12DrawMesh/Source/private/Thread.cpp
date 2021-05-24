@@ -83,7 +83,7 @@ void FThread::SetName()
 	struct THREADNAME_INFO
 	{
 		uint32 dwType;	   // Must be 0x1000.
-		LPCSTR szName;	   // Pointer to name (in user addr space). // TODO: platform dependency
+		LPCSTR szName;	   // Pointer to name (in user addr space).
 		uint32 dwThreadID; // Thread ID (-1=caller thread).
 		uint32 dwFlags;	   // Reserved for future use, must be zero.
 	};

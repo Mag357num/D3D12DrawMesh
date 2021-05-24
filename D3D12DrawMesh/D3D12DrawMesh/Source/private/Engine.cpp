@@ -37,13 +37,12 @@ FEngine::~FEngine()
 void FEngine::Init()
 {
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Resource\\Scene_.dat");
-	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight); // TODO: hard code
+	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight);
 
-	// init a character to scene // TODO: this logic should not be engine's work
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
 	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
-	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat"); // TODO: hard code
-	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"Resource\\SkeletonBinary_.dat"); // TODO: hard code
+	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat");
+	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"Resource\\SkeletonBinary_.dat");
 	shared_ptr<FAnimSequence> Seq_Run = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceRun_.dat");
 	shared_ptr<FAnimSequence> Seq_Idle = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceIdle_.dat");
 	Seq_Run->SetSkeleton(Ske.get());
@@ -62,7 +61,7 @@ void FEngine::Init()
 
 	// thread
 	FRenderThread::CreateRenderThread();
-	FRenderThread::Get()->Start(); // TODO: Start() will make DoRender invoked after every "one" task, which is not so right
+	FRenderThread::Get()->Start();
 	FRenderThread::Get()->CreateFrameResource(CurrentScene);
 }
 

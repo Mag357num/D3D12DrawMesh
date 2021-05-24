@@ -190,7 +190,7 @@ FMatrix ACamera::GetOrthoProjMatrix(const float& Left, const float& Right, const
 	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
 }
 
-void ACamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
+void ACamera::OnKeyDown(const unsigned char& key)
 {
 	switch (key)
 	{
@@ -225,12 +225,12 @@ void ACamera::OnKeyDown(const WPARAM& key) //TODO: paltform dependent
 		Keys.down = true;
 		break;
 	case VK_ESCAPE:
-		//Reset(); // TODO: delete temporary
+		//Reset();
 		break;
 	}
 }
 
-void ACamera::OnKeyUp(const WPARAM& key)
+void ACamera::OnKeyUp(const unsigned char& key)
 {
 	switch (key)
 	{

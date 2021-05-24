@@ -129,7 +129,7 @@ namespace RHI
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
 
-		static D3D12_INPUT_ELEMENT_DESC InputElementDescs[20]; // TODO: why static? // TODO:only assign a num that is certainly bigger than actual Element.size()
+		D3D12_INPUT_ELEMENT_DESC InputElementDescs[20];
 		for (uint32 i = 0; i < Layer.Elements.size(); i++)
 		{
 			InputElementDescs[i] =
@@ -354,7 +354,7 @@ namespace RHI
 		Device->CreateConstantBufferView(&CbvDesc, LastCpuHandleCbSr);
 		FDX12CB->CBHandle->As<FDX12GpuHandle>()->Handle = LastGpuHandleCbSr;
 
-		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
@@ -362,7 +362,7 @@ namespace RHI
 	{
 		Device->CreateShaderResourceView(ShaderResource, &SrvDesc, LastCpuHandleCbSr);
 		Handle->As<FDX12GpuHandle>()->Handle = LastGpuHandleCbSr; // srv need gpu handle
-		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)); // TODO: have the risk of race
+		LastCpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		LastGpuHandleCbSr.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 	}
 
@@ -370,12 +370,11 @@ namespace RHI
 	{
 		Device->CreateDepthStencilView(DsResource, &DsvDesc, LastCpuHandleDs);
 		Handle->As<FDX12CpuHandle>()->Handle = LastCpuHandleDs; // dsv need cpu handle
-		LastCpuHandleDs.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)); // TODO: have the risk of race
+		LastCpuHandleDs.Offset(Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
 	}
 
 	void FDX12DynamicRHI::ChooseSupportedFeatureVersion(D3D12_FEATURE_DATA_ROOT_SIGNATURE& featureData, const D3D_ROOT_SIGNATURE_VERSION& Version)
 	{
-		// This is the highest version the sample supports. If CheckFeatureSupport succeeds, the HighestVersion returned will not be greater than this.
 		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
 
 		if (FAILED(Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
@@ -732,8 +731,8 @@ namespace RHI
 		ComPtr<ID3DBlob> Error;
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[20]; // TODO: hard coding
-		CD3DX12_ROOT_PARAMETER1 rootParameters[20]; // TODO: hard coding
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[20];
+		CD3DX12_ROOT_PARAMETER1 rootParameters[20];
 
 		for (uint32 i = 0; i < InputLayer.Elements.size(); i++)
 		{
