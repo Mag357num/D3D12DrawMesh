@@ -85,9 +85,6 @@
     <ClInclude Include="Source\public\Track.h" />
     <ClInclude Include="Source\public\Win32Application.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="D3D12DrawMesh.rc" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

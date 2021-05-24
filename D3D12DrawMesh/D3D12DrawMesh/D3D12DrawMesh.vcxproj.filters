@@ -200,7 +200,4 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="D3D12DrawMesh.rc" />
-  </ItemGroup>
 </Project>
