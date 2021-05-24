@@ -136,9 +136,6 @@
     <ClInclude Include="Source\public\Scene.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Source\public\SimpleCamera.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Source\public\stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -194,6 +191,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Source\public\Thread\Thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

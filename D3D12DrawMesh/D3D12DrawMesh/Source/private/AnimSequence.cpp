@@ -8,11 +8,6 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 	int frameIndex = floor(t / frameLength);
 	float lerpPercent = (t - (frameLength * frameIndex)) / frameLength;
 
-	//frameIndex = 12;
-	//lerpPercent = 0.5866;
-
-	//lerpPercent = 0;
-
 	for (uint32 i = 0; i < Tracks.size(); i++)
 	{
 		FVector S1, S2, T1, T2;
@@ -69,7 +64,6 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 
 		FMatrix S, Q, T;
 
-		//FVector SLerp = lerpPercent * S2 + (1 - lerpPercent) * S1;
 		FVector SLerp = glm::lerp(S1, S2, lerpPercent);
 		S = glm::scale(SLerp);
 

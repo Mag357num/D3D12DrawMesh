@@ -208,52 +208,52 @@ void FFrameResourceManager::CreatePostProcessMaterials(FFrameResource& FrameRes)
 	// bloom setup
 	vector<shared_ptr<FHandle>> TexHandles;
 	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
-	TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"BloomSetup.hlsl", 256, TexHandles);
+	TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"Resource\\BloomSetup.hlsl", 256, TexHandles);
 
 	// bloom down
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
-	TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+	TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
-	TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+	TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
-	TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+	TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
-	TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"BloomDownMat.hlsl", 256, TexHandles);
+	TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	// bloom up
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[3]->SrvHandle);
-	TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+	TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[0]->SrvHandle);
-	TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+	TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[1]->SrvHandle);
-	TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"BloomUpMat.hlsl", 256, TexHandles);
+	TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	// sun merge
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[2]->SrvHandle);
-	TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"SunMerge.hlsl", 256, TexHandles);
+	TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"Resource\\SunMerge.hlsl", 256, TexHandles);
 
 	// tonemapping
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
 	TexHandles.push_back(FrameRes.GetSunMergeMap()->SrvHandle);
-	TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"ToneMapping.hlsl", 256, TexHandles);
+	TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"Resource\\ToneMapping.hlsl", 256, TexHandles);
 }
 
 void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)

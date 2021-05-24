@@ -40,11 +40,11 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		// TODO: add a func to read shader file name, so different mesh can have different shader
 		if (i == 6) // TODO: hard coding
 		{
-			Com->SetShaderFileName(L"Shadow_SceneColor.hlsl");
+			Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
 		}
 		else
 		{
-			Com->SetShaderFileName(L"Shadow_SceneColor.hlsl");
+			Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
 		}
 
 		Actor.GetComs().push_back(Com);

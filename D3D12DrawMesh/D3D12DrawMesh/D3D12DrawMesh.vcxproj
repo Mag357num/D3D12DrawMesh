@@ -54,6 +54,7 @@
     <ClInclude Include="Source\public\Actor.h" />
     <ClInclude Include="Source\public\ActorComponent.h" />
     <ClInclude Include="Source\public\AssetManager.h" />
+    <ClInclude Include="Source\public\Camera.h" />
     <ClInclude Include="Source\public\Character.h" />
     <ClInclude Include="Source\public\d3dx12.h" />
     <ClInclude Include="Source\public\DXSampleHelper.h" />
@@ -67,7 +68,6 @@
     <ClInclude Include="Source\public\RHI\DynamicRHI.h" />
     <ClInclude Include="Source\public\RHI\RHIResource.h" />
     <ClInclude Include="Source\public\Scene.h" />
-    <ClInclude Include="Source\public\SimpleCamera.h" />
     <ClInclude Include="Source\public\SkeletonAnimation\AnimInstance.h" />
     <ClInclude Include="Source\public\SkeletonAnimation\AnimNode.h" />
     <ClInclude Include="Source\public\SkeletonAnimation\AnimSequence.h" />
@@ -148,7 +148,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);Source\public;ThirdParty\glm\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);ThirdParty\glm\glm;Source\public;Source\public\RHI;Source\public\SkeletonAnimation;Source\public\StaticMesh;Source\public\Thread;</IncludePath>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath);</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -756,10 +756,8 @@ namespace RHI
 		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
 
 		WCHAR assetsPath[512];
-		GetAssetsPath(assetsPath, _countof(assetsPath));
-		std::wstring m_assetsPath = assetsPath + ShaderFileName;
-		Mat->VS = CreateVertexShader(m_assetsPath);
-		Mat->PS = CreatePixelShader(m_assetsPath);
+		Mat->VS = CreateVertexShader(ShaderFileName);
+		Mat->PS = CreatePixelShader(ShaderFileName);
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
 		Mat->TexHandles = TexHandles;
 		return Mat;

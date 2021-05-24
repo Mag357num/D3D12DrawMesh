@@ -36,16 +36,16 @@ FEngine::~FEngine()
 
 void FEngine::Init()
 {
-	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Scene_.dat");
+	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Resource\\Scene_.dat");
 	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight); // TODO: hard code
 
 	// init a character to scene // TODO: this logic should not be engine's work
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
 	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
-	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"SkeletalMeshBinary_.dat"); // TODO: hard code
-	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"SkeletonBinary_.dat"); // TODO: hard code
-	shared_ptr<FAnimSequence> Seq_Run = FAssetManager::Get()->CreateAnimSequence(L"SequenceRun_.dat");
-	shared_ptr<FAnimSequence> Seq_Idle = FAssetManager::Get()->CreateAnimSequence(L"SequenceIdle_.dat");
+	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat"); // TODO: hard code
+	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"Resource\\SkeletonBinary_.dat"); // TODO: hard code
+	shared_ptr<FAnimSequence> Seq_Run = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceRun_.dat");
+	shared_ptr<FAnimSequence> Seq_Idle = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceIdle_.dat");
 	Seq_Run->SetSkeleton(Ske.get());
 	Seq_Idle->SetSkeleton(Ske.get());
 	SkeMesh->SetSkeleton(Ske);
@@ -55,7 +55,7 @@ void FEngine::Init()
 	SkeMeshCom->SetSkeletalMesh(SkeMesh);
 
 	SkeMeshCom->SetTransform({ { 1.f, 1.f, 1.f }, FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), { 300.f, 200.f, 0.f } });
-	SkeMeshCom->SetShaderFileName(L"Shadow_SceneColor_SkeletalMesh.hlsl");
+	SkeMeshCom->SetShaderFileName(L"Resource\\Shadow_SceneColor_SkeletalMesh.hlsl");
 
 	Cha->SetSkeletalMeshCom(SkeMeshCom);
 	CurrentScene->SetCharacter(Cha);
