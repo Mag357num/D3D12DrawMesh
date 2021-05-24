@@ -1,5 +1,5 @@
 #include "Character.h"
-#include "SimpleCamera.h"
+#include "Camera.h"
 #include "ActorComponent.h"
 #include "SkeletalMesh.h"
 

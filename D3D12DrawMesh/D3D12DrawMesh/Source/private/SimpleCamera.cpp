@@ -9,7 +9,7 @@
 //
 //*********************************************************
 
-#include "SimpleCamera.h"
+#include "Camera.h"
 #include <cmath>
 #include "MathExtend.h"
 #include <gtc/matrix_transform.hpp>

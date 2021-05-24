@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "SimpleCamera.h"
+#include "Camera.h"
 #include "DynamicRHI.h"
 #include "StepTimer.h"
 #include "Scene.h"

@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
-#include "SimpleCamera.h"
+#include "Camera.h"
 #include "StaticMesh.h"
 #include "Light.h"
 #include "Character.h"
