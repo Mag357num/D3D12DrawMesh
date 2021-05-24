@@ -18,15 +18,14 @@ struct LightState
     float3 DirectionLightColor;
 	float DirectionLightIntensity;
     float3 DirectionLightDir;
-	float padding;
 };
 
 cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 World;
     float4x4 CameraVP;
-	float4x4 ShadowTransForm;
-	float4x4 gBoneTransforms[68];
+	float4x4 ShadowWorldToScreen;
+	float4x4 GBoneTransforms[68];
     float4 CamEye;
 	LightState Light;
 	bool IsShadowPass;
@@ -91,11 +90,8 @@ PSInput VSMain(VSInput input)
     float3 tangentL = float3(0.0f, 0.0f, 0.0f);
     for(int i = 0; i < 4; ++i)
     {
-        // Assume no nonuniform scaling when transforming normals, so 
-        // that we do not have to use the inverse-transpose.
-
-        posL += weights[i] * mul(float4(input.position, 1.0f), gBoneTransforms[input.BoneIndices[i]]).xyz;
-        normalL += weights[i] * mul(input.normal, (float3x3)gBoneTransforms[input.BoneIndices[i]]);
+        posL += weights[i] * mul(float4(input.position, 1.0f), GBoneTransforms[input.BoneIndices[i]]).xyz;
+        normalL += weights[i] * mul(input.normal, (float3x3)GBoneTransforms[input.BoneIndices[i]]);
     }
 
     input.position = posL;
@@ -109,7 +105,7 @@ PSInput VSMain(VSInput input)
 
 	if(!IsShadowPass)
 	{
-		result.shadowPosH = mul(result.worldpos, ShadowTransForm);
+		result.shadowPosH = mul(result.worldpos, ShadowWorldToScreen);
 	}
 
     return result;

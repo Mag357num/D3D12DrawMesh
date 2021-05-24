@@ -23,7 +23,6 @@ private:
 	vector<FFrameMesh> StaticMeshArray;
 	FFrameMesh SkeletalMesh;
 
-	shared_ptr<FTexture> NullTexture;
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
@@ -43,13 +42,11 @@ public:
 	vector<FFrameMesh>& GetStaticMeshArray() { return StaticMeshArray; }
 	FFrameMesh& GetSkeletalMesh() { return SkeletalMesh; }
 
-	void SetNullTexture(const shared_ptr<FTexture>& Tex) { NullTexture = Tex; }
 	void SetShadowMap(const shared_ptr<FTexture>& Tex) { ShadowMap = Tex; }
 	void SetDsMap(const shared_ptr<FTexture>& Tex) { DepthStencilMap = Tex; }
 	void SetSceneColorMap(const shared_ptr<FTexture>& Tex) { SceneColorMap = Tex; }
 	void SetClampSampler(const shared_ptr<FSampler>& Sam) { ClampSampler = Sam; }
 	void SetWarpSampler(const shared_ptr<FSampler>& Sam) { WarpSampler = Sam; }
-	const shared_ptr<FTexture>& GetNullTexture() const { return NullTexture; }
 	const shared_ptr<FTexture>& GetShadowMap() const { return ShadowMap; }
 	const shared_ptr<FTexture>& GetDsMap() const { return DepthStencilMap; }
 	const shared_ptr<FTexture>& GetSceneColorMap() const { return SceneColorMap; }
@@ -74,7 +71,7 @@ public:
 	void InitFrameResource(const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	FFrameMesh CreateFrameMesh(FStaticMeshComponent& MeshComponent);
+	FFrameMesh CreateFrameMesh(FStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
 	FFrameMesh CreateFrameMesh(FSkeletalMeshComponent& MeshComponent);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);
@@ -85,27 +82,34 @@ public:
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
 };
 
+struct FShadowMappingCB_SkeletalMesh
+{
+	FMatrix WVP;
+	array<FMatrix, 68> GBoneTransforms;
+};
+
 struct FSceneColor_SkeletalMesh
 {
 	FMatrix World;
 	FMatrix CamViewProj;
-	FMatrix ShadowTransForm;
+	FMatrix ShadowWorldToScreen;
 	array<FMatrix, 68> GBoneTransforms;
 	FVector4 CamEye;
 	FDirectionLight Light;
-	BOOL IsShadowMap;
-	float padding[3];
+};
+
+struct FShadowMappingCB
+{
+	FMatrix WVP;
 };
 
 struct FSceneColorCB // BlinnPhong
 {
 	FMatrix World;
 	FMatrix CamViewProj;
-	FMatrix ShadowTransForm;
+	FMatrix ShadowWorldToScreen;
 	FVector4 CamEye;
 	FDirectionLight Light;
-	BOOL IsShadowMap;
-	float padding[3];
 };
 
 struct FBloomSetupCB

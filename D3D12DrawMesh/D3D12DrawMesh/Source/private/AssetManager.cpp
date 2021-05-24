@@ -37,14 +37,14 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
-		if (i == 6)
-		{
-			Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
-		}
-		else
-		{
-			Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
-		}
+		//if (i == 6)
+		//{
+		//	Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
+		//}
+		//else
+		//{
+		//	Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
+		//}
 
 		Actor.GetComs().push_back(Com);
 		TargetScene->GetStaticMeshActors().push_back(Actor);
@@ -234,7 +234,6 @@ shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileNam
 	Ske->GetBindPoses().resize(JointNum);
 	for (uint32 i = 0; i < JointNum; i++)
 	{
-		float padding;
 		Fin.read((char*)&Ske->GetBindPoses()[i].Quat, 4 * sizeof(float));
 		Fin.read((char*)&Ske->GetBindPoses()[i].Translation, 3 * sizeof(float));
 		Fin.read((char*)&Ske->GetBindPoses()[i].Scale, 3 * sizeof(float));

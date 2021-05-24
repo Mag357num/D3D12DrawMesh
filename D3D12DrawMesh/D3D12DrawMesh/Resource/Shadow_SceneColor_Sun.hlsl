@@ -18,14 +18,13 @@ struct LightState
     float3 DirectionLightColor;
 	float DirectionLightIntensity;
     float3 DirectionLightDir;
-	float padding;
 };
 
 cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 World;
     float4x4 CameraVP;
-	float4x4 ShadowTransForm;
+	float4x4 ShadowWorldToScreen;
     float4 CamEye;
 	LightState Light;
 	bool IsShadowPass;
@@ -85,7 +84,7 @@ PSInput VSMain(VSInput input)
 
 	if(!IsShadowPass)
 	{
-		result.shadowPosH = mul(result.worldpos, ShadowTransForm);
+		result.shadowPosH = mul(result.worldpos, ShadowWorldToScreen);
 	}
 
     return result;

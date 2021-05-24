@@ -57,14 +57,12 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 
 	// material
 	vector<shared_ptr<FHandle>> Empty;
-	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
-	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 256, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping.hlsl", 256, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor.hlsl", 256, Empty);
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	MeshComFrameRes.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->ShadowMat.get());
 
 	// shadow map pipeline
@@ -94,14 +92,12 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshCo
 
 	// material
 	vector<shared_ptr<FHandle>> Empty;
-	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 4608, Empty);
-	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(MeshComponent.GetShaderFileName(), 4608, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_SkeletalMesh.hlsl", 4608, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_SkeletalMesh.hlsl", 4608, Empty);
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	MeshComFrameRes.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->ShadowMat.get());
 
 	// shadow map pipeline
@@ -116,10 +112,6 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshCo
 
 void FFrameResourceManager::CreateMapsForShadow(FFrameResource& FrameRes)
 {
-	// create and commit null texture
-	FrameRes.SetNullTexture(GDynamicRHI->CreateTexture(FTextureType::ORDINARY_SHADER_RESOURCE_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetNullTexture().get(), FResViewType::SRV_RVT);
-
 	// create and commit shadow map
 	FrameRes.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameRes.GetShadowMapSize(), FrameRes.GetShadowMapSize()));
 	GDynamicRHI->CommitTextureAsView(FrameRes.GetShadowMap().get(), FResViewType::DSV_RVT);
@@ -313,7 +305,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.5f, 0.0f, 0.0f, 0.0f,
 		0.0f, -0.5f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
+		0.5f, 0.5f, 0.0f, 1.0f); // screen space transform
 
 	const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
 	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
@@ -327,20 +319,18 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FSceneColorCB SceneColorCB;
 		SceneColorCB.World = glm::transpose(WorldMatrix);
 		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
-		SceneColorCB.ShadowTransForm = glm::transpose(LightScr * LightProj * LightView);
+		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);
 		SceneColorCB.CamEye = FVector4(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.0f);
 		SceneColorCB.Light.Dir = LightDirNored;
 		SceneColorCB.Light.Color = Scene->GetDirectionLight().Color;
 		SceneColorCB.Light.Intensity = Scene->GetDirectionLight().Intensity;
-		SceneColorCB.IsShadowMap = FALSE;
 		RHI::FCBData SceneColorPassData;
 		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&SceneColorCB);
 		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
 
 		// shadow pass cb
-		FSceneColorCB ShadowCbStruct = SceneColorCB;
-		ShadowCbStruct.CamViewProj = glm::transpose(LightProj * LightView);
-		ShadowCbStruct.IsShadowMap = TRUE;
+		FShadowMappingCB ShadowCbStruct;
+		ShadowCbStruct.WVP = glm::transpose(LightProj * LightView * WorldMatrix);
 		RHI::FCBData ShadowPassData;
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
 		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
@@ -365,21 +355,20 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FSceneColor_SkeletalMesh SceneColorCB;
 		SceneColorCB.World = glm::transpose(WorldMatrix);
 		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
-		SceneColorCB.ShadowTransForm = glm::transpose(LightScr * LightProj * LightView);
+		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);
 		SceneColorCB.GBoneTransforms = Palette;
 		SceneColorCB.CamEye = FVector4(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.0f);
 		SceneColorCB.Light.Dir = LightDirNored;
 		SceneColorCB.Light.Color = Scene->GetDirectionLight().Color;
 		SceneColorCB.Light.Intensity = Scene->GetDirectionLight().Intensity;
-		SceneColorCB.IsShadowMap = FALSE;
 		RHI::FCBData SceneColorPassData;
 		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&SceneColorCB);
 		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
 
 		// shadow pass cb
-		FSceneColor_SkeletalMesh ShadowCbStruct = SceneColorCB;
-		ShadowCbStruct.CamViewProj = glm::transpose(LightProj * LightView);
-		ShadowCbStruct.IsShadowMap = TRUE;
+		FShadowMappingCB_SkeletalMesh ShadowCbStruct;
+		ShadowCbStruct.WVP = glm::transpose(LightProj * LightView * WorldMatrix);
+		ShadowCbStruct.GBoneTransforms = Palette;
 		RHI::FCBData ShadowPassData;
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
 		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
