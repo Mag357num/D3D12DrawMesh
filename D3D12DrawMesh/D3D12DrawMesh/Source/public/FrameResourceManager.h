@@ -5,6 +5,64 @@
 
 using namespace RHI;
 
+struct FShadowMappingCB_SkeletalMesh
+{
+	FMatrix WVP;
+	array<FMatrix, 68> GBoneTransforms;
+};
+
+struct FSceneColorCB_SkeletalMesh
+{
+	FMatrix World;
+	FMatrix CamViewProj;
+	FVector4 CamEye;
+	FMatrix ShadowWorldToScreen;
+	FDirectionLight Light;
+	float padding;
+	array<FMatrix, 68> GBoneTransforms;
+};
+
+struct FShadowMappingCB_StaticMesh
+{
+	FMatrix WVP;
+};
+
+struct FSceneColorCB_StaticMesh // BlinnPhong
+{
+	FMatrix World;
+	FMatrix CamViewProj;
+	FVector4 CamEye;
+	FMatrix ShadowWorldToScreen;
+	FDirectionLight Light;
+};
+
+struct FBloomSetupCB
+{
+	FVector4 BufferSizeAndInvSize;
+	float BloomThreshold;
+};
+
+struct FBloomDownCB
+{
+	FVector4 BufferSizeAndInvSize;
+	float BloomDownScale;
+};
+
+struct FBloomUpCB
+{
+	FVector4 BufferASizeAndInvSize;
+	FVector4 BufferBSizeAndInvSize;
+	FVector4 BloomTintA;
+	FVector4 BloomTintB;
+	FVector2 BloomUpScales;
+};
+
+struct FSunMergeCB
+{
+	FVector4 BloomUpSizeAndInvSize;
+	FVector BloomColor;
+};
+
 struct FFrameMesh
 {
 	shared_ptr<FMesh> Mesh;
@@ -17,12 +75,15 @@ class FFrameResource
 private:
 	const uint32 ShadowMapSize = 8192;
 
+	// postprocess static mesh
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
 
+	// other static mesh
 	vector<FFrameMesh> StaticMeshArray;
 	FFrameMesh SkeletalMesh;
 
+	// textures
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FSampler> ClampSampler;
@@ -80,61 +141,4 @@ public:
 	void CreatePostProcessTriangle(FFrameResource& FrameRes);
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
-};
-
-struct FShadowMappingCB_SkeletalMesh
-{
-	FMatrix WVP;
-	array<FMatrix, 68> GBoneTransforms;
-};
-
-struct FSceneColor_SkeletalMesh
-{
-	FMatrix World;
-	FMatrix CamViewProj;
-	FMatrix ShadowWorldToScreen;
-	array<FMatrix, 68> GBoneTransforms;
-	FVector4 CamEye;
-	FDirectionLight Light;
-};
-
-struct FShadowMappingCB
-{
-	FMatrix WVP;
-};
-
-struct FSceneColorCB // BlinnPhong
-{
-	FMatrix World;
-	FMatrix CamViewProj;
-	FMatrix ShadowWorldToScreen;
-	FVector4 CamEye;
-	FDirectionLight Light;
-};
-
-struct FBloomSetupCB
-{
-	FVector4 BufferSizeAndInvSize;
-	float BloomThreshold;
-};
-
-struct FBloomDownCB
-{
-	FVector4 BufferSizeAndInvSize;
-	float BloomDownScale;
-};
-
-struct FBloomUpCB
-{
-	FVector4 BufferASizeAndInvSize;
-	FVector4 BufferBSizeAndInvSize;
-	FVector4 BloomTintA;
-	FVector4 BloomTintB;
-	FVector2 BloomUpScales;
-};
-
-struct FSunMergeCB
-{
-	FVector4 BloomUpSizeAndInvSize;
-	FVector BloomColor;
 };

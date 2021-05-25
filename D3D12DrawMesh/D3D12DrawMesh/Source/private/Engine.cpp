@@ -102,14 +102,14 @@ void FEngine::OnMouseMove(uint32 x, uint32 y)
 	CurrentScene->GetCharacter()->OnMouseMove(x, y);
 }
 
-void FEngine::OnRightButtonDown(uint32 x, uint32 y)
+void FEngine::OnButtonDown(uint32 x, uint32 y)
 {
-	CurrentScene->GetCurrentCamera().OnRightButtonDown(x, y);
-	CurrentScene->GetCharacter()->OnRightButtonDown(x, y);
+	CurrentScene->GetCurrentCamera().OnButtonDown(x, y);
+	CurrentScene->GetCharacter()->OnButtonDown(x, y);
 }
 
-void FEngine::OnRightButtonUp()
+void FEngine::OnButtonUp()
 {
-	CurrentScene->GetCurrentCamera().OnRightButtonUp();
-	CurrentScene->GetCharacter()->OnRightButtonUp();
+	CurrentScene->GetCurrentCamera().OnButtonUp();
+	CurrentScene->GetCharacter()->OnButtonUp();
 }

@@ -37,15 +37,6 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
-		//if (i == 6)
-		//{
-		//	Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
-		//}
-		//else
-		//{
-		//	Com->SetShaderFileName(L"Resource\\Shadow_SceneColor.hlsl");
-		//}
-
 		Actor.GetComs().push_back(Com);
 		TargetScene->GetStaticMeshActors().push_back(Actor);
 	}

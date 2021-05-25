@@ -99,14 +99,14 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 		{
 			UINT x = LOWORD(lParam);
 			UINT y = HIWORD(lParam);
-			pEngine->OnRightButtonDown(x, y);
+			pEngine->OnButtonDown(x, y);
 		}
 		return 0;
 
 	case WM_RBUTTONUP:
 		if (pEngine)
 		{
-			pEngine->OnRightButtonUp();
+			pEngine->OnButtonUp();
 		}
 		return 0;
 
@@ -115,14 +115,14 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 		{
 			UINT x = LOWORD(lParam);
 			UINT y = HIWORD(lParam);
-			pEngine->OnRightButtonDown(x, y); // same with right button
+			pEngine->OnButtonDown(x, y);
 		}
 		return 0;
 
 	case WM_LBUTTONUP:
 		if (pEngine)
 		{
-			pEngine->OnRightButtonUp(); // same with right button
+			pEngine->OnButtonUp(); // same with right button
 		}
 		return 0;
 

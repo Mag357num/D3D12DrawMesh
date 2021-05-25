@@ -17,8 +17,6 @@
 ACamera::ACamera():
 	InitialPosition(500.f, 0.f, 0.f),
 	Position(InitialPosition),
-	Yaw(3.141592654f),
-	Pitch(0.0f),
 	LookDirection(-1.f, 0.f, 0.f),
 	UpDirection(0.f, 0.f, 1.f),
 	MoveSpeed(300.0f),
@@ -28,12 +26,6 @@ ACamera::ACamera():
 	TurnSpeed(1.570796327f),
 	Keys{}
 {
-}
-
-void ACamera::GetEulerByLook(const FVector& LookAt)
-{
-	Yaw = Atan2(LookAt.y, LookAt.x);
-	Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
 }
 
 void ACamera::UpdateLookByEuler(const float& Pitch, const float& Yaw)
@@ -57,9 +49,6 @@ void ACamera::Init(const FVector& PositionParam, const FVector& UpDir, const FVe
 	UpDirection = UpDir;
 	LookDirection = LookAt;
 
-	// regard the yaw start at x+ dir, pitch start at x+ dir, roll start at y+ dir.
-	GetEulerByLook(LookAt);
-
 	SetFov(Fov);
 	SetAspectRatio(Width / Height);
 
@@ -81,17 +70,19 @@ void ACamera::Reset()
 	Position = InitialPosition;
 	UpDirection = InitialUpDir;
 	LookDirection = InitialLookAt;
-	
-	GetEulerByLook(LookDirection);
 }
 
-void ACamera::Update_Wander(const float& ElapsedSeconds)
+void ACamera::UpdateCameraParam_Wander(const float& ElapsedSeconds)
 {
 	FVector Move(0.f, 0.f, 0.f);
 	float MoveInterval = MoveSpeed * ElapsedSeconds;
 	float KeyRotateInterval = TurnSpeed * ElapsedSeconds;
-
 	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
+	MouseDown_FirstPosition = MouseDown_CurrentPosition;
+
+	FVector2 YawPitch = GetEulerByLook(LookDirection);
+	float& Yaw = YawPitch.x;
+	float& Pitch = YawPitch.y;
 
 	// wasd for movement
 	if (Keys.w)
@@ -139,40 +130,59 @@ void ACamera::Update_Wander(const float& ElapsedSeconds)
 	if (Keys.e)
 		Move.z += MoveInterval;
 
+	// update camera position
+	Position.x += Move.x * cos(Pitch) * cos(Yaw) - Move.y * cos(Pitch) * sin(Yaw);
+	Position.y += Move.x * cos(Pitch) * sin(Yaw) + Move.y * cos(Pitch) * cos(Yaw);
+	Position.z += Move.z;
+
 	// press down mouse for looking direction
 	if (IsMouseDown)
 	{
 		Yaw += MouseRotateInterval.x;
 		Pitch -= MouseRotateInterval.y;
+
+		// update camera lookat dir
+		UpdateLookByEuler(Pitch, Yaw);
 	}
 
-	Position.x += Move.x * cos(Pitch) * cos(Yaw) - Move.y * cos(Pitch) * sin(Yaw);
-	Position.y += Move.x * cos(Pitch) * sin(Yaw) + Move.y * cos(Pitch) * cos(Yaw);
-	Position.z += Move.z;
-
-	MouseDown_FirstPosition = MouseDown_CurrentPosition;
-
-	UpdateLookByEuler(Pitch, Yaw);
+	if (Move != FVector(0, 0, 0) || IsMouseDown)
+	{
+		IsChanged = true;
+	}
 }
 
-void ACamera::Update_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
+void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance)
 {
 	FVector2 MouseRotateInterval = MouseSensibility * (MouseDown_CurrentPosition - MouseDown_FirstPosition);
 	MouseDown_FirstPosition = MouseDown_CurrentPosition;
+	FVector2 YawPitch = GetEulerByLook(LookDirection);
+	float& Yaw = YawPitch.x;
+	float& Pitch = YawPitch.y;
 
-	Yaw += MouseRotateInterval.x;
-	Pitch -= MouseRotateInterval.y;
-	UpdateLookByEuler(Pitch, Yaw);
+	// update lookat dir
+	if (IsMouseDown)
+	{
+		Yaw += MouseRotateInterval.x;
+		Pitch -= MouseRotateInterval.y;
+		UpdateLookByEuler(Pitch, Yaw);
+	}
 
-	FVector horizontalLook = FVector(GetLook().x, GetLook().y, 0);
-	horizontalLook = glm::normalize(horizontalLook) * Distance;
-	Position = TargetLocation - horizontalLook;
+	// update position
+	FVector HorizontalLook = FVector(GetLook().x, GetLook().y, 0);
+	HorizontalLook = glm::normalize(HorizontalLook) * Distance;
+	bool IsPosChanged = Position.x != (TargetLocation - HorizontalLook).x || Position.y != (TargetLocation - HorizontalLook).y;
+	if (IsPosChanged || IsMouseDown)
+	{
+		IsChanged = true;
+	}
+	Position = TargetLocation - HorizontalLook;
 	Position.z = 200.f;
 }
 
-void ACamera::Update_Static(const float& ElapsedSeconds)
+void ACamera::UpdateCameraParam_Static(const float& ElapsedSeconds)
 {
 	// do nothing
+	IsChanged = false;
 }
 
 FMatrix ACamera::GetViewMatrix() const
@@ -267,14 +277,14 @@ void ACamera::OnKeyUp(const unsigned char& key)
 	}
 }
 
-void ACamera::OnRightButtonDown(const uint32& x, const uint32& y)
+void ACamera::OnButtonDown(const uint32& x, const uint32& y)
 {
 	IsMouseDown = true;
 	MouseDown_FirstPosition = { static_cast<float>(x), static_cast<float>(y) };
 	MouseDown_CurrentPosition = MouseDown_FirstPosition;
 }
 
-void ACamera::OnRightButtonUp()
+void ACamera::OnButtonUp()
 {
 	IsMouseDown = false;
 }
@@ -287,4 +297,32 @@ void ACamera::OnMouseMove(const uint32& x, const uint32& y)
 	}
 
 	MouseMove_CurrentPosition = { static_cast<float>(x), static_cast<float>(y) };
+}
+
+void ACamera::Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
+{
+	switch (Mode)
+	{
+	case FCameraMoveMode::WANDER:
+
+		UpdateCameraParam_Wander(ElapsedSeconds);
+		break;
+	case FCameraMoveMode::AROUNDTARGET:
+
+		UpdateCameraParam_AroundTarget(ElapsedSeconds, TargetLocation, Distance);
+		break;
+	case FCameraMoveMode::STATIC:
+
+		UpdateCameraParam_Static(ElapsedSeconds);
+		break;
+	default:
+		break;
+	}
+}
+
+FVector2 ACamera::GetEulerByLook(const FVector& LookAt)
+{
+	float Yaw = Atan2(LookAt.y, LookAt.x);
+	float Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
+	return FVector2(Yaw, Pitch);
 }

@@ -25,6 +25,7 @@
     <ClCompile Include="Source\private\AnimNode.cpp" />
     <ClCompile Include="Source\private\AnimSequence.cpp" />
     <ClCompile Include="Source\private\AssetManager.cpp" />
+    <ClCompile Include="Source\private\Camera.cpp" />
     <ClCompile Include="Source\private\Character.cpp" />
     <ClCompile Include="Source\private\DX12DynamicRHI.cpp" />
     <ClCompile Include="Source\private\DynamicRHI.cpp" />
@@ -37,7 +38,6 @@
     <ClCompile Include="Source\private\Renderer.cpp" />
     <ClCompile Include="Source\private\RenderThread.cpp" />
     <ClCompile Include="Source\private\Scene.cpp" />
-    <ClCompile Include="Source\private\SimpleCamera.cpp" />
     <ClCompile Include="Source\private\SkeletalMesh.cpp" />
     <ClCompile Include="Source\private\Skeleton.cpp" />
     <ClCompile Include="Source\private\SkinnedWeightVertex.cpp" />

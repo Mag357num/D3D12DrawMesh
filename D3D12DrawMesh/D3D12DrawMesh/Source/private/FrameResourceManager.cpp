@@ -57,8 +57,8 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 
 	// material
 	vector<shared_ptr<FHandle>> Empty;
-	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping.hlsl", 256, Empty);
-	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor.hlsl", 256, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_StaticMesh.hlsl", 256, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_StaticMesh.hlsl", 256, Empty);
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
@@ -289,9 +289,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
-	ACamera& MainCamera = Scene->GetCurrentCamera();
-	FMatrix CamView = MainCamera.GetViewMatrix();
-	FMatrix CamProj = MainCamera.GetPerspProjMatrix(1.0f, 3000.0f);
+	FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
+	FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
 
 	// TODO: change the way to build Light Cam, add a algorithm to calculate bounding box size
 	FVector LightPos = { 450.f, 0.f, 450.f };
@@ -305,7 +304,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		0.5f, 0.0f, 0.0f, 0.0f,
 		0.0f, -0.5f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f); // screen space transform
+		0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
 
 	const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
 	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
@@ -316,7 +315,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FMatrix WorldMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
 
 		// base pass cb
-		FSceneColorCB SceneColorCB;
+		FSceneColorCB_StaticMesh SceneColorCB;
 		SceneColorCB.World = glm::transpose(WorldMatrix);
 		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
 		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);
@@ -329,7 +328,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
 
 		// shadow pass cb
-		FShadowMappingCB ShadowCbStruct;
+		FShadowMappingCB_StaticMesh ShadowCbStruct;
 		ShadowCbStruct.WVP = glm::transpose(LightProj * LightView * WorldMatrix);
 		RHI::FCBData ShadowPassData;
 		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
@@ -352,7 +351,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			Palette[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
 		}
 
-		FSceneColor_SkeletalMesh SceneColorCB;
+		FSceneColorCB_SkeletalMesh SceneColorCB;
 		SceneColorCB.World = glm::transpose(WorldMatrix);
 		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
 		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);

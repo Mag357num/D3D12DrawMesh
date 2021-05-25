@@ -40,8 +40,8 @@ public:
 
 	void OnKeyDown( const unsigned char& key );
 	void OnKeyUp( const unsigned char& key );
-	void OnRightButtonDown( const uint32& x, const uint32& y );
-	void OnRightButtonUp();
+	void OnButtonDown( const uint32& x, const uint32& y );
+	void OnButtonUp();
 	void OnMouseMove( const uint32& x, const uint32& y );
 	void SetCurrentAnim(string Key);
 

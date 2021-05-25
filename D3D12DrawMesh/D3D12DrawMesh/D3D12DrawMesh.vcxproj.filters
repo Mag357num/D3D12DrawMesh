@@ -68,9 +68,6 @@
     <ClCompile Include="Source\private\Scene.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Source\private\SimpleCamera.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="Source\private\SkeletalMesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -96,6 +93,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Source\private\Win32Application.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\private\Camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

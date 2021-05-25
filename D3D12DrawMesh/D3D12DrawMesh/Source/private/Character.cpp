@@ -124,14 +124,14 @@ void ACharacter::OnKeyUp(const unsigned char& key)
 	}
 }
 
-void ACharacter::OnRightButtonDown(const uint32& x, const uint32& y)
+void ACharacter::OnButtonDown(const uint32& x, const uint32& y)
 {
 	IsMouseDown = true;
 	MouseDown_FirstPosition = { static_cast<float>(x), static_cast<float>(y) };
 	MouseDown_CurrentPosition = MouseDown_FirstPosition;
 }
 
-void ACharacter::OnRightButtonUp()
+void ACharacter::OnButtonUp()
 {
 	IsMouseDown = false;
 }

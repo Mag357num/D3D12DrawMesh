@@ -35,8 +35,8 @@ public:
 	void OnKeyDown(unsigned char Key);
 	void OnKeyUp(unsigned char Key);
     void OnMouseMove(uint32 x, uint32 y);
-	void OnRightButtonDown(uint32 x, uint32 y);
-	void OnRightButtonUp();
+	void OnButtonDown(uint32 x, uint32 y);
+	void OnButtonUp();
 
     // Accessors.
     uint32 GetWidth() const { return ResoWidth; }

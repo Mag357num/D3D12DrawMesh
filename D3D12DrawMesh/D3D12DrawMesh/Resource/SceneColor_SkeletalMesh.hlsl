@@ -24,10 +24,10 @@ cbuffer SceneConstantBuffer : register(b0)
 {
     float4x4 World;
     float4x4 CameraVP;
-	float4x4 ShadowWorldToScreen;
-	float4x4 GBoneTransforms[68];
 	float4 CamEye;
+	float4x4 ShadowWorldToScreen;
 	LightState Light;
+	float4x4 GBoneTransforms[68];
 };
 
 float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
