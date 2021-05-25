@@ -68,7 +68,6 @@ namespace RHI
 		ThrowIfFailed(Factory->CreateSwapChainForHwnd(RHICommandQueue.Get(), Win32Application::GetHwnd(), &swapChainDesc, nullptr, nullptr, &SwapChain));
 		ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 		ThrowIfFailed(SwapChain.As(&RHISwapChain)); // convert different version of swapchain type
-		GetBackBufferIndex();
 
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap);
@@ -224,7 +223,7 @@ namespace RHI
 	}
 
 	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBuffer(const uint32& Size)
-{
+	{
 		shared_ptr<FDX12CB> DX12CB = make_shared<FDX12CB>();
 		DX12CB->CBHandle = make_shared<FDX12GpuHandle>();
 
@@ -258,9 +257,14 @@ namespace RHI
 		return DX12CB;
 	}
 
-	void FDX12DynamicRHI::UpdateConstantBuffer(FMaterial* Mat, FCBData* Data)
+	void FDX12DynamicRHI::UpdateConstantBuffer_deprecated(FMaterial* Mat, FCBData* Data)
 	{
 		memcpy(Mat->CB->As<FDX12CB>()->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
+	}
+
+	void FDX12DynamicRHI::WriteConstantBuffer(FCB* CB, void* Src, size_t Size)
+	{
+		memcpy(CB->As<FDX12CB>()->UploadBufferVirtualAddress, Src, Size);
 	}
 
 	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)

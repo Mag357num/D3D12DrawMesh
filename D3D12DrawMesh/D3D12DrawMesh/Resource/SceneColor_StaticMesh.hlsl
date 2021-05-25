@@ -3,74 +3,82 @@ SamplerState sampleClamp : register(s0);
 
 struct LightState
 {
-    float3 DirectionLightColor;
+	float3 DirectionLightColor;
 	float DirectionLightIntensity;
-    float3 DirectionLightDir;
+	float3 DirectionLightDir;
 };
 
-cbuffer SceneConstantBuffer : register(b0)
+cbuffer StaticMeshConstantBuffer : register(b0)
 {
-    float4x4 World;
-    float4x4 CameraVP;
-    float4 CamEye;
-	float4x4 ShadowWorldToScreen;
+	float4x4 World;
+};
+
+cbuffer CameraConstantBuffer : register(b1)
+{
+	float4x4 CameraVP;
+	float4 CamEye;
+};
+
+cbuffer LightConstantBuffer : register(b2)
+{
+	float4x4 VPMatrix;
+	float4x4 ScreenMatrix;
 	LightState Light;
 };
 
 float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
 {
-    float2 TexCoord = ScreenSpacePos.xy;
-    float ActualDepth = ScreenSpacePos.z - bias;
+	float2 TexCoord = ScreenSpacePos.xy;
+	float ActualDepth = ScreenSpacePos.z - bias;
 
 	uint width, height, numMips;
-    shadowMap.GetDimensions(0, width, height, numMips);
-    float2 ShadowMapDims = float2(width, height);
+	shadowMap.GetDimensions(0, width, height, numMips);
+	float2 ShadowMapDims = float2(width, height);
 
-    float4 PixelCoordFrac = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    PixelCoordFrac.xy = frac(ShadowMapDims * TexCoord);
-    PixelCoordFrac.zw = 1.0f - PixelCoordFrac.xy;
-    float4 BilinearWeights = PixelCoordFrac.zxzx * PixelCoordFrac.wwyy;
+	float4 PixelCoordFrac = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	PixelCoordFrac.xy = frac(ShadowMapDims * TexCoord);
+	PixelCoordFrac.zw = 1.0f - PixelCoordFrac.xy;
+	float4 BilinearWeights = PixelCoordFrac.zxzx * PixelCoordFrac.wwyy;
 
-    float2 TexelUnits = 1.0f / ShadowMapDims;
-    float4 SampleDepths;
-    SampleDepths.x = shadowMap.Sample(sampleClamp, TexCoord);
-    SampleDepths.y = shadowMap.Sample(sampleClamp, TexCoord + float2(TexelUnits.x, 0.0f));
-    SampleDepths.z = shadowMap.Sample(sampleClamp, TexCoord + float2(0.0f, TexelUnits.y));
-    SampleDepths.w = shadowMap.Sample(sampleClamp, TexCoord + TexelUnits);
+	float2 TexelUnits = 1.0f / ShadowMapDims;
+	float4 SampleDepths;
+	SampleDepths.x = shadowMap.Sample(sampleClamp, TexCoord);
+	SampleDepths.y = shadowMap.Sample(sampleClamp, TexCoord + float2(TexelUnits.x, 0.0f));
+	SampleDepths.z = shadowMap.Sample(sampleClamp, TexCoord + float2(0.0f, TexelUnits.y));
+	SampleDepths.w = shadowMap.Sample(sampleClamp, TexCoord + TexelUnits);
 
-    float4 ShadowTests = (SampleDepths > ActualDepth) ? 1.0f : 0.0f;
-    return dot(BilinearWeights, ShadowTests);
+	float4 ShadowTests = (SampleDepths > ActualDepth) ? 1.0f : 0.0f;
+	return dot(BilinearWeights, ShadowTests);
 }
 
 struct VSInput
 {
-    float3 position    : POSITION;
-    float3 normal    : NORMAL;
-    float2 uv0        : TEXCOORD0;
-    float4 color    : COLOR;
+	float3 position    : POSITION;
+	float3 normal    : NORMAL;
+	float2 uv0        : TEXCOORD0;
+	float4 color    : COLOR;
 };
 
 struct PSInput
 {
-    float4 position : SV_POSITION;
-    float4 worldpos : POSITION;
+	float4 position : SV_POSITION;
+	float4 worldpos : POSITION;
 	float4 shadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
-    float4 color : COLOR;
+	float4 color : COLOR;
 };
 
 PSInput VSMain(VSInput input)
 {
-    PSInput result;
-
-    result.position = mul(float4(input.position, 1.0f), World);
+	PSInput result;
+	result.position = mul(float4(input.position, 1.0f), World);
 	result.worldpos = result.position;
-    result.position = mul(result.worldpos, CameraVP);
-    result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
+	result.position = mul(result.worldpos, CameraVP);
+	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
-	result.shadowScreenPos = mul(result.worldpos, ShadowWorldToScreen);
+	result.shadowScreenPos = mul(result.worldpos, mul(VPMatrix, ScreenMatrix));
 
-    return result;
+	return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET

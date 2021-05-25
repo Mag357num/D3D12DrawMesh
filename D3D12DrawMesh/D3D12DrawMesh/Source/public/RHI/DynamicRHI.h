@@ -41,7 +41,8 @@ namespace RHI
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) = 0;
 
 		// Resource process
-		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) = 0;
+		virtual void UpdateConstantBuffer_deprecated(FMaterial* Mat, FCBData* Data) = 0;
+		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) = 0;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
@@ -74,7 +75,7 @@ namespace RHI
 		// sync
 		virtual void CreateFenceAndEvent() = 0;
 		virtual uint32 GetFrameNum() = 0;
-		virtual uint32 GetFramIndex() = 0;
+		virtual uint32 GetCurrentFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 

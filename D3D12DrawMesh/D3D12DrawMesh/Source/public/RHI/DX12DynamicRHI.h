@@ -42,7 +42,8 @@ namespace RHI
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) override;
 
 		// Resource process
-		virtual void UpdateConstantBuffer(FMaterial* Mat, FCBData* Data) override;
+		virtual void UpdateConstantBuffer_deprecated(FMaterial* Mat, FCBData* Data) override;
+		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
@@ -73,7 +74,7 @@ namespace RHI
 		// sync
 		virtual void CreateFenceAndEvent() override;
 		virtual uint32 GetFrameNum() override { return FrameNum; }
-		virtual uint32 GetFramIndex() override { return FrameIndex; }
+		virtual uint32 GetCurrentFramIndex() override { return CurrentFrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
 
@@ -113,7 +114,7 @@ namespace RHI
 		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
 		static const uint32 FrameNum = 1;
-		uint32 FrameIndex = 0; // TODO: only have one Frame
+		uint32 CurrentFrameIndex = 0; // TODO: only have one Frame
 		// handles
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDs;

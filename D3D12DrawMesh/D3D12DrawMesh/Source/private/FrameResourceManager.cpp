@@ -5,13 +5,16 @@
 #include "MathExtend.h"
 #include "AssetManager.h"
 
-void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
+void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	FrameResArray.resize(FrameCount);
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex) // init res for each frame
 	{
 		FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
+		InitCameraConstantBuffer(Scene, FrameRes);
+		InitLightConstantBuffer(Scene, FrameRes);
+		InitPaletteConstantBuffer(Scene, FrameRes);
 		CreateMapsForShadow(FrameRes);
 		CreateSamplers(FrameRes);
 		CreateMapsForScene(FrameRes);
@@ -23,7 +26,7 @@ void FFrameResourceManager::InitFrameResource(const uint32& FrameCount)
 void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameNum)
 {
 	RHI::GDynamicRHI->BegineCreateResource();
-	InitFrameResource(FrameNum);
+	InitFrameResource(Scene.get(), FrameNum);
 
 	for (uint32 FrameIndex = 0; FrameIndex < FrameNum; ++FrameIndex)
 	{
@@ -60,14 +63,21 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_StaticMesh.hlsl", 256, Empty);
 	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_StaticMesh.hlsl", 256, Empty);
 
+	// write world matrix to constant buffer
+	FMatrix WorldMatrix = transpose(translate(MeshComponent.GetTransform().Translation) * toMat4(MeshComponent.GetTransform().Quat) * scale(MeshComponent.GetTransform().Scale));
+	GDynamicRHI->WriteConstantBuffer(MeshComFrameRes.MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
+
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	MeshComFrameRes.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->ShadowMat.get());
 
-	// shadow map pipeline
+	// scene color pipeline
 	ShaderInputLayer.Elements.clear();
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	MeshComFrameRes.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->SceneColorMat.get());
@@ -92,22 +102,87 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshCo
 
 	// material
 	vector<shared_ptr<FHandle>> Empty;
-	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_SkeletalMesh.hlsl", 4608, Empty);
-	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_SkeletalMesh.hlsl", 4608, Empty);
+	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_SkeletalMesh.hlsl", 256, Empty);
+	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_SkeletalMesh.hlsl", 256, Empty);
+
+	// write world matrix to constant buffer
+	FMatrix WorldMatrix = transpose(translate(MeshComponent.GetTransform().Translation) * toMat4(MeshComponent.GetTransform().Quat) * scale(MeshComponent.GetTransform().Scale));
+	GDynamicRHI->WriteConstantBuffer(MeshComFrameRes.MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
 
 	// shadow map pipeline
 	FShaderInputLayer ShaderInputLayer;
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	MeshComFrameRes.MeshRes->ShadowPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_UNKNOWN, 0, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->ShadowMat.get());
 
 	// shadow map pipeline
 	ShaderInputLayer.Elements.clear();
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	MeshComFrameRes.MeshRes->SceneColorPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R16G16B16A16_FLOAT, 1, MeshComFrameRes.Mesh->InputLayer, ShaderInputLayer, MeshComFrameRes.MeshRes->SceneColorMat.get());
 
 	return MeshComFrameRes;
+}
+
+void FFrameResourceManager::InitCameraConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+{
+	FrameRes.SetCameraCB(GDynamicRHI->CreateConstantBuffer(256));
+
+	FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
+	FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
+	FMatrix CamVP = glm::transpose(CamProj * CamView);
+	FVector4 Eye(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.f);
+
+	struct CameraCB
+	{
+		FMatrix CamVP;
+		FVector4 Eye;
+	} CBInstance = { CamVP, Eye };
+
+	GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
+}
+
+void FFrameResourceManager::InitLightConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+{
+	FrameRes.SetLightCB(GDynamicRHI->CreateConstantBuffer(256));
+
+	FVector LightPos = { 450.f, 0.f, 450.f }; // TODO: need to calculate bounding box of scene and determine this LightPos
+	FVector LightDirNored = glm::normalize(Scene->GetDirectionLight().Dir);
+	FVector LightTarget = LightPos + LightDirNored;
+	FVector LightUpDir = { 0.f, 0.f, 1.f };
+
+	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
+	FMatrix LightProj = glm::orthoLH_ZO(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f); // TODO: need to calculate bounding box of scene and determine this LightProj
+	FMatrix LightScr(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
+
+	struct LightCB
+	{
+		FMatrix VPMatrix;
+		FMatrix ScreenMatrix;
+		FDirectionLight Light;
+	} CBInstance;
+
+	CBInstance.VPMatrix = glm::transpose(LightProj * LightView);
+	CBInstance.ScreenMatrix = glm::transpose(LightScr);
+	CBInstance.Light.Dir = LightDirNored;
+	CBInstance.Light.Color = Scene->GetDirectionLight().Color;
+	CBInstance.Light.Intensity = Scene->GetDirectionLight().Intensity;
+
+	GDynamicRHI->WriteConstantBuffer(FrameRes.GetLightCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(LightCB));
+}
+
+void FFrameResourceManager::InitPaletteConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+{
+	FrameRes.SetPaletteCB(GDynamicRHI->CreateConstantBuffer(4352));
 }
 
 void FFrameResourceManager::CreateMapsForShadow(FFrameResource& FrameRes)
@@ -289,92 +364,41 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
-	FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
-	FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
-
-	// TODO: change the way to build Light Cam, add a algorithm to calculate bounding box size
-	FVector LightPos = { 450.f, 0.f, 450.f };
-	FVector LightDirNored = glm::normalize(Scene->GetDirectionLight().Dir);
-	FVector LightTarget = LightPos + LightDirNored;
-	FVector LightUpDir = { 0.f, 0.f, 1.f };
-
-	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
-	FMatrix LightProj = glm::orthoLH_ZO(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f);
-	FMatrix LightScr(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
-
-	const uint32 ActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
-	for (uint32 MeshIndex = 0; MeshIndex < ActorNum; ++MeshIndex)
+	// camera
+	if (Scene->GetCurrentCamera().IsChanged == true)
 	{
-		FMatrix RotateMatrix = glm::toMat4(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Quat);
-		FMatrix ScaleMatrix = glm::scale(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Scale);
-		FMatrix TranslateMatrix = glm::translate(Scene->GetStaticMeshActors()[MeshIndex].GetComs()[0]->GetTransform().Translation);
-		FMatrix WorldMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix; // use column matrix, multiple is right to left
+		FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
+		FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
+		FMatrix CamVP = glm::transpose(CamProj * CamView);
+		FVector4 Eye(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.f);
 
-		// base pass cb
-		FSceneColorCB_StaticMesh SceneColorCB;
-		SceneColorCB.World = glm::transpose(WorldMatrix);
-		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
-		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);
-		SceneColorCB.CamEye = FVector4(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.0f);
-		SceneColorCB.Light.Dir = LightDirNored;
-		SceneColorCB.Light.Color = Scene->GetDirectionLight().Color;
-		SceneColorCB.Light.Intensity = Scene->GetDirectionLight().Intensity;
-		RHI::FCBData SceneColorPassData;
-		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&SceneColorCB);
-		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
-
-		// shadow pass cb
-		FShadowMappingCB_StaticMesh ShadowCbStruct;
-		ShadowCbStruct.WVP = glm::transpose(LightProj * LightView * WorldMatrix);
-		RHI::FCBData ShadowPassData;
-		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
-		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
-
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetStaticMeshArray()[MeshIndex].MeshRes->ShadowMat.get(), &ShadowPassData);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetStaticMeshArray()[MeshIndex].MeshRes->SceneColorMat.get(), &SceneColorPassData);
-	}
-
-	// skeletalmesh
-	{
-		FMatrix ScaleMatrix = glm::scale(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Scale);
-		FMatrix Quat = glm::toMat4(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Quat);
-		FMatrix TranslateMatrix = glm::translate(Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform().Translation);
-		FMatrix WorldMatrix = TranslateMatrix * Quat * ScaleMatrix; // use column matrix, multiple is right to left
-
-		array<FMatrix, 68> Palette;
-		for (uint32 i = 0; i < 68; i++)
+		struct CameraCB
 		{
-			Palette[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
-		}
+			FMatrix CamVP;
+			FVector4 Eye;
+		} CBInstance = { CamVP, Eye };
 
-		FSceneColorCB_SkeletalMesh SceneColorCB;
-		SceneColorCB.World = glm::transpose(WorldMatrix);
-		SceneColorCB.CamViewProj = glm::transpose(CamProj * CamView);
-		SceneColorCB.ShadowWorldToScreen = glm::transpose(LightScr * LightProj * LightView);
-		SceneColorCB.GBoneTransforms = Palette;
-		SceneColorCB.CamEye = FVector4(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.0f);
-		SceneColorCB.Light.Dir = LightDirNored;
-		SceneColorCB.Light.Color = Scene->GetDirectionLight().Color;
-		SceneColorCB.Light.Intensity = Scene->GetDirectionLight().Intensity;
-		RHI::FCBData SceneColorPassData;
-		SceneColorPassData.DataBuffer = reinterpret_cast<void*>(&SceneColorCB);
-		SceneColorPassData.BufferSize = sizeof(SceneColorCB);
-
-		// shadow pass cb
-		FShadowMappingCB_SkeletalMesh ShadowCbStruct;
-		ShadowCbStruct.WVP = glm::transpose(LightProj * LightView * WorldMatrix);
-		ShadowCbStruct.GBoneTransforms = Palette;
-		RHI::FCBData ShadowPassData;
-		ShadowPassData.DataBuffer = reinterpret_cast<void*>(&ShadowCbStruct);
-		ShadowPassData.BufferSize = sizeof(ShadowCbStruct);
-
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetSkeletalMesh().MeshRes->ShadowMat.get(), &ShadowPassData);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetSkeletalMesh().MeshRes->SceneColorMat.get(), &SceneColorPassData);
+		GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
+		Scene->GetCurrentCamera().IsChanged = false;
 	}
+
+	// character position
+	auto MeshComponent = Scene->GetCharacter()->GetSkeletalMeshCom();
+	FMatrix WorldMatrix = transpose(translate(MeshComponent->GetTransform().Translation) * toMat4(MeshComponent->GetTransform().Quat) * scale(MeshComponent->GetTransform().Scale));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.GetSkeletalMesh().MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
+
+	// animation
+	struct PaletteCB
+	{
+		array<FMatrix, 68> GBoneTransforms;
+	} CBInstance;
+
+	for (uint32 i = 0; i < 68; i++)
+	{
+		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
+	}
+
+	GDynamicRHI->WriteConstantBuffer(FrameRes.GetPaletteCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
 
 
 
@@ -388,7 +412,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	RHI::FCBData BloomSetupPassData;
 	BloomSetupPassData.DataBuffer = reinterpret_cast<void*>(&BloomSetupStruct);
 	BloomSetupPassData.BufferSize = sizeof(BloomSetupStruct);
-	GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->BloomSetupMat.get(), &BloomSetupPassData);
+	GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomSetupMat.get(), &BloomSetupPassData);
 
 	// bloom down
 	for (uint32 i = 0; i < 4; i++)
@@ -399,7 +423,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		RHI::FCBData BloomDwonPassData;
 		BloomDwonPassData.DataBuffer = reinterpret_cast<void*>(&BloomDwonStruct);
 		BloomDwonPassData.BufferSize = sizeof(BloomDwonStruct);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->BloomDownMat[i].get(), &BloomDwonPassData);
+		GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomDownMat[i].get(), &BloomDwonPassData);
 	}
 
 	// bloom up
@@ -423,7 +447,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		RHI::FCBData BloomUpPassData;
 		BloomUpPassData.DataBuffer = reinterpret_cast<void*>(&BloomUpStruct);
 		BloomUpPassData.BufferSize = sizeof(BloomUpStruct);
-		GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->BloomUpMat[2-i].get(), &BloomUpPassData);
+		GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomUpMat[2-i].get(), &BloomUpPassData);
 	}
 
 	// sun merge
@@ -433,5 +457,5 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	RHI::FCBData SunMergePassData;
 	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
 	SunMergePassData.BufferSize = sizeof(SunMergeStruct);
-	GDynamicRHI->UpdateConstantBuffer(FrameRes.GetPostProcessTriangleRes()->SunMergeMat.get(), &SunMergePassData);
+	GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->SunMergeMat.get(), &SunMergePassData);
 }

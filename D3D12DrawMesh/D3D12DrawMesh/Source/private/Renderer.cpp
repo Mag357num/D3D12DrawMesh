@@ -19,7 +19,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(i.MeshRes->ShadowMat->CB->CBHandle);
+			Handles.push_back(i.MeshRes->SceneColorMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetLightCB()->CBHandle);
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
@@ -30,13 +31,16 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 		{
 			RHI->SetPipelineState(FrameRes->GetSkeletalMesh().MeshRes->ShadowPipeline.get());
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->ShadowMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->SceneColorMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetLightCB()->CBHandle);
+			Handles.push_back(FrameRes->GetPaletteCB()->CBHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawMesh(FrameRes->GetSkeletalMesh().Mesh.get());
 		}
 
 		RHI->TransitTextureState(FrameRes->GetShadowMap().get(), FRESOURCE_STATES::RESOURCE_STATE_DEPTH_WRITE, FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
+
 	// scene color pass
 	{
 		SCOPED_EVENT("SceneColor");
@@ -55,6 +59,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(i.MeshRes->SceneColorMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetCameraCB()->CBHandle);
+			Handles.push_back(FrameRes->GetLightCB()->CBHandle);
 			Handles.push_back(FrameRes->GetShadowMap()->SrvHandle);
 			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 			RHI->SetShaderInput(Handles);
@@ -68,6 +74,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			RHI->SetPipelineState(FrameRes->GetSkeletalMesh().MeshRes->SceneColorPipeline.get());
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(FrameRes->GetSkeletalMesh().MeshRes->SceneColorMat->CB->CBHandle);
+			Handles.push_back(FrameRes->GetCameraCB()->CBHandle);
+			Handles.push_back(FrameRes->GetLightCB()->CBHandle);
+			Handles.push_back(FrameRes->GetPaletteCB()->CBHandle);
 			Handles.push_back(FrameRes->GetShadowMap()->SrvHandle);
 			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 			RHI->SetShaderInput(Handles);

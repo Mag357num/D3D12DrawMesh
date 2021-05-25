@@ -15,6 +15,8 @@ using FVector4 = glm::vec4;
 using FMatrix = glm::mat4;
 using FQuat = glm::tquat<float>;
 
+using namespace glm;
+
 struct FTransform
 {
 	FVector Scale;

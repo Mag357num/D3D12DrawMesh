@@ -27,11 +27,9 @@ struct FShadowMappingCB_StaticMesh
 	FMatrix WVP;
 };
 
-struct FSceneColorCB_StaticMesh // BlinnPhong
+struct FSceneColorCB_StaticMesh
 {
 	FMatrix World;
-	FMatrix CamViewProj;
-	FVector4 CamEye;
 	FMatrix ShadowWorldToScreen;
 	FDirectionLight Light;
 };
@@ -79,9 +77,14 @@ private:
 	shared_ptr<FMesh> PostProcessTriangle;
 	shared_ptr<FMeshRes> PostProcessTriangleRes;
 
-	// other static mesh
+	// mesh
 	vector<FFrameMesh> StaticMeshArray;
 	FFrameMesh SkeletalMesh;
+
+	// constant buffer
+	shared_ptr<FCB> CameraCB;
+	shared_ptr<FCB> LightCB;
+	shared_ptr<FCB> PaletteCB;
 
 	// textures
 	shared_ptr<FTexture> ShadowMap;
@@ -102,6 +105,13 @@ public:
 	const shared_ptr<FMeshRes>& GetPostProcessTriangleRes() const { return PostProcessTriangleRes; }
 	vector<FFrameMesh>& GetStaticMeshArray() { return StaticMeshArray; }
 	FFrameMesh& GetSkeletalMesh() { return SkeletalMesh; }
+
+	void SetCameraCB(shared_ptr<FCB> CB) { CameraCB = CB; }
+	void SetLightCB(shared_ptr<FCB> CB) { LightCB = CB; }
+	void SetPaletteCB(shared_ptr<FCB> CB) { PaletteCB = CB; }
+	shared_ptr<FCB> GetCameraCB() { return CameraCB; }
+	shared_ptr<FCB> GetLightCB() { return LightCB; }
+	shared_ptr<FCB> GetPaletteCB() { return PaletteCB; }
 
 	void SetShadowMap(const shared_ptr<FTexture>& Tex) { ShadowMap = Tex; }
 	void SetDsMap(const shared_ptr<FTexture>& Tex) { DepthStencilMap = Tex; }
@@ -129,11 +139,14 @@ private:
 	vector<FFrameResource> FrameResArray; // every frame own a FFrameResource
 public:
 	vector<FFrameResource>& GetFrameRes() { return FrameResArray; }
-	void InitFrameResource(const uint32& FrameCount);
+	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 	FFrameMesh CreateFrameMesh(FStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
 	FFrameMesh CreateFrameMesh(FSkeletalMeshComponent& MeshComponent);
+	void InitCameraConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
+	void InitLightConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
+	void InitPaletteConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);
 	void CreateMapsForScene(FFrameResource& FrameRes);
