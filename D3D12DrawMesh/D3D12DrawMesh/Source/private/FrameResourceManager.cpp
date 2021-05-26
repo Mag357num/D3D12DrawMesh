@@ -400,8 +400,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	GDynamicRHI->WriteConstantBuffer(FrameRes.GetPaletteCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
 
-
-
 	// update postprocess
 	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
 	

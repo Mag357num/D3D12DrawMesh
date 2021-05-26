@@ -24,9 +24,12 @@ public:
 	void SetCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
 
 	// TODO: refactor here. createCharacter should not be Scene's work
-
 	ACamera& GetCurrentCamera() { return CurrentCamera; }
 	ACharacter* GetCharacter() { return CurrentCharacter.get(); }
 	const FDirectionLight& GetDirectionLight() const { return DirectionLight; }
 	vector<AStaticMeshActor>& GetStaticMeshActors() { return StaticMeshActors; }
+
+	void AddStaticMeshActor(AStaticMeshActor Actor) { StaticMeshActors.push_back(Actor); }
+
+
 };

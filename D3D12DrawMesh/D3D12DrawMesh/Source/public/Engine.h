@@ -26,6 +26,8 @@ public:
 	void OnButtonDown(uint32 x, uint32 y);
 	void OnButtonUp();
 
+	shared_ptr<FScene> CreateScene() { return make_shared<FScene>(); }
+
 	uint32 GetWidth() const { return ResoWidth; }
 	uint32 GetHeight() const { return ResoHeight; }
 	const wchar_t* GetTitle() const { return Title.c_str(); }
@@ -48,7 +50,7 @@ private:
 	StepTimer Timer;
 
 	// scene
-	shared_ptr <FScene> CurrentScene;
+	shared_ptr<FScene> CurrentScene;
 
 	// manager
 	shared_ptr<FAssetManager> AssetManager;

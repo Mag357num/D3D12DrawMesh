@@ -36,6 +36,9 @@ FEngine::~FEngine()
 
 void FEngine::Init()
 {
+	CurrentScene = CreateScene();
+
+	CurrentScene->AddStaticMeshActor();
 	CurrentScene = FAssetManager::Get()->LoadStaticMeshActorsCreateScene(L"Resource\\Scene_.dat");
 	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight);
 

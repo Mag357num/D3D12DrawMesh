@@ -33,12 +33,11 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	{
 		AStaticMeshActor Actor;
 		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-
 		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
-		Actor.GetComs().push_back(Com);
-		TargetScene->GetStaticMeshActors().push_back(Actor);
+		Actor.SetStaticMeshComponent(Com);
+		TargetScene->AddStaticMeshActor(Actor);
 	}
 
 	Fin.close();

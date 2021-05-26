@@ -63,5 +63,7 @@ public:
 
 class AStaticMeshActor : public AActor
 {
-	// contain a static mesh component
+public:
+	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
+	FStaticMeshComponent* GetStaticMeshComponent();
 };
