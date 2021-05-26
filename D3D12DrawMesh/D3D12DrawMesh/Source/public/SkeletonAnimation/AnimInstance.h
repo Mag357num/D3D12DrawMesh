@@ -20,10 +20,7 @@ private:
 	float TimePos = 0.0f;
 
 public:
-	void SetCurrentAnim( string Key )
-	{
-		CurrentAnimation = Key;
-	}
+	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
 	void initAnimation( FSkeletalMeshComponent* SkeCom ) { SkeletalMeshCom = SkeCom; }
 	void UpdateAnimation(const float& TotalSeconds);
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq ) { SequenceMap.insert( Seq ); }

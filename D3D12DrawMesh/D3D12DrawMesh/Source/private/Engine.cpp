@@ -48,6 +48,7 @@ void FEngine::Init()
 	Seq_Run->SetSkeleton(Ske.get());
 	Seq_Idle->SetSkeleton(Ske.get());
 	SkeMesh->SetSkeleton(Ske);
+
 	SkeMeshCom->InitAnimation();
 	SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", Seq_Run));
 	SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", Seq_Idle));

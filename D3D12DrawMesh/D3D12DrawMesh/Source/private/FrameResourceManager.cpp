@@ -63,7 +63,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 	MeshComFrameRes.MeshRes->ShadowMat = GDynamicRHI->CreateMaterial(L"Resource\\ShadowMapping_StaticMesh.hlsl", 256, Empty);
 	MeshComFrameRes.MeshRes->SceneColorMat = GDynamicRHI->CreateMaterial(L"Resource\\SceneColor_StaticMesh.hlsl", 256, Empty);
 
-	// write world matrix to constant buffer
+	// write world matrix to constant buffer of SceneColorMat, ShadowMat dont need cb data
 	FMatrix WorldMatrix = transpose(translate(MeshComponent.GetTransform().Translation) * toMat4(MeshComponent.GetTransform().Quat) * scale(MeshComponent.GetTransform().Scale));
 	GDynamicRHI->WriteConstantBuffer(MeshComFrameRes.MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
 

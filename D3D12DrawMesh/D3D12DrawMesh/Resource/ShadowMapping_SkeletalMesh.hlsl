@@ -1,10 +1,3 @@
-struct LightState
-{
-	float3 DirectionLightColor;
-	float DirectionLightIntensity;
-	float3 DirectionLightDir;
-};
-
 cbuffer StaticMeshConstantBuffer : register(b0)
 {
 	float4x4 World;
@@ -13,8 +6,6 @@ cbuffer StaticMeshConstantBuffer : register(b0)
 cbuffer LightConstantBuffer : register(b1)
 {
 	float4x4 VPMatrix;
-	float4x4 ScreenMatrix;
-	LightState Light;
 };
 
 cbuffer LightConstantBuffer : register(b2)

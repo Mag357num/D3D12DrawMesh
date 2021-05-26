@@ -36,7 +36,6 @@ class FSkeletalMesh
 {
 private:
 	shared_ptr<FSkeleton> Skeleton;
-
 	vector<FSkeletalMeshLOD> MeshLODs;
 
 public:

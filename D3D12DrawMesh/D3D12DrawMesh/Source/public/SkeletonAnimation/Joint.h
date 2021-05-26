@@ -6,4 +6,3 @@ struct FJoint
 	string JointName;
 	int ParentIndex;
 };
-
