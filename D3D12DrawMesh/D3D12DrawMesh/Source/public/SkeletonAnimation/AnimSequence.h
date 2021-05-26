@@ -18,7 +18,7 @@ public:
 	vector<FTrack>& GetTracks() { return Tracks; }
 	vector<int>& GetTrackToJointIndexMapTable() { return TrackToJointIndexMapTable; }
 
-	vector<FMatrix> Interpolate(float t);
+	vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<enum class FRetargetType> ReList);
 
 	void SetSkeleton(FSkeleton* Ske) { Skeleton = Ske; }
 

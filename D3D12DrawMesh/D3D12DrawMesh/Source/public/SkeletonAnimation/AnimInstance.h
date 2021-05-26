@@ -1,6 +1,14 @@
 #pragma once
 #include "AnimSequence.h"
 
+// Retarget type determine joint use bindpose SQT data or animation sequence SQT data
+// Have a effect on FAnimSequence::Interpolate()
+enum class FRetargetType
+{
+	SKELETON = 0,
+	ANIMATION = 1,
+};
+
 class FSkeletalMeshComponent;
 class FAnimInstance
 {

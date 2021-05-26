@@ -1,14 +1,3 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #pragma once
 
 #include "Camera.h"
@@ -23,46 +12,44 @@ extern FEngine* GEngine;
 class FEngine
 {
 public:
-    FEngine(uint32 width, uint32 height, std::wstring name);
-    virtual ~FEngine();
+	FEngine(uint32 width, uint32 height, std::wstring name);
+	virtual ~FEngine();
 
-    void Init();
-    void Tick(); // update
-    void Render();
-    void Destroy();
+	void Init();
+	void Tick();
+	void Render();
+	void Destroy();
 
-    // Samples override the event handlers to handle specific messages.
 	void OnKeyDown(unsigned char Key);
 	void OnKeyUp(unsigned char Key);
-    void OnMouseMove(uint32 x, uint32 y);
+	void OnMouseMove(uint32 x, uint32 y);
 	void OnButtonDown(uint32 x, uint32 y);
 	void OnButtonUp();
 
-    // Accessors.
-    uint32 GetWidth() const { return ResoWidth; }
-    uint32 GetHeight() const { return ResoHeight; }
-    const wchar_t* GetTitle() const { return Title.c_str(); }
-    StepTimer& GetTimer() { return Timer; }
+	uint32 GetWidth() const { return ResoWidth; }
+	uint32 GetHeight() const { return ResoHeight; }
+	const wchar_t* GetTitle() const { return Title.c_str(); }
+	StepTimer& GetTimer() { return Timer; }
 
 protected:
-    // Viewport dimensions.
-    uint32 ResoWidth;
-    uint32 ResoHeight;
-    float AspectRatio;
+	// Viewport dimensions.
+	uint32 ResoWidth;
+	uint32 ResoHeight;
+	float AspectRatio;
 
-    // Adapter info.
-    bool IsUseWarpDevice;
+	// Adapter info.
+	bool IsUseWarpDevice;
 
 private:
-    // Window title.
-    std::wstring Title;
+	// Window title.
+	std::wstring Title;
 
-    // timer
-    StepTimer Timer;
+	// timer
+	StepTimer Timer;
 
-    // scene
+	// scene
 	shared_ptr <FScene> CurrentScene;
 
-    // manager
+	// manager
 	shared_ptr<FAssetManager> AssetManager;
 };

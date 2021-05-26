@@ -1,18 +1,20 @@
 #include "AnimSequence.h"
+#include "AnimInstance.h"
 
-vector<FMatrix> FAnimSequence::Interpolate(float t)
+vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FRetargetType> ReList)
 {
 	vector<FMatrix> Result;
+	vector<FPose>& BindPoses = Ske->GetBindPoses();
 
-	float frameLength = SequenceLength / (SampleNum - 1); // there are (SampleNum - 1) frames 
-	int frameIndex = floor(t / frameLength);
-	float lerpPercent = (t - (frameLength * frameIndex)) / frameLength;
+	float FrameLength = SequenceLength / (SampleNum - 1); // there are (SampleNum - 1) frames 
+	int FrameIndex = floor(t / FrameLength);
+	float LerpPercent = (t - (FrameLength * FrameIndex)) / FrameLength;
 
+	FVector S1, S2, T1, T2;
+	FQuat Q1, Q2;
+	FMatrix MS, MQ, MT;
 	for (uint32 i = 0; i < Tracks.size(); i++)
 	{
-		FVector S1, S2, T1, T2;
-		FQuat Q1, Q2;
-
 		// Interpolate
 		if (Tracks[i].ScaleSamples.size() == 0)
 		{
@@ -26,8 +28,8 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 		}
 		else
 		{
-			S1 = Tracks[i].ScaleSamples[frameIndex];
-			S2 = Tracks[i].ScaleSamples[frameIndex + 1];
+			S1 = Tracks[i].ScaleSamples[FrameIndex];
+			S2 = Tracks[i].ScaleSamples[FrameIndex + 1];
 		}
 
 		if (Tracks[i].QuatSamples.size() == 0)
@@ -42,39 +44,39 @@ vector<FMatrix> FAnimSequence::Interpolate(float t)
 		}
 		else
 		{
-			Q1 = Tracks[i].QuatSamples[frameIndex];
-			Q2 = Tracks[i].QuatSamples[frameIndex + 1];
+			Q1 = Tracks[i].QuatSamples[FrameIndex];
+			Q2 = Tracks[i].QuatSamples[FrameIndex + 1];
 		}
 
-		if (Tracks[i].TranslationSamples.size() == 0)
+		if (ReList[i] == FRetargetType::ANIMATION)
 		{
-			T1 = FVector(0, 0, 0);
+			if (Tracks[i].TranslationSamples.size() == 0)
+			{
+				T1 = FVector(0, 0, 0);
+				T2 = T1;
+			}
+			else if (Tracks[i].TranslationSamples.size() == 1)
+			{
+				T1 = Tracks[i].TranslationSamples[0];
+				T2 = T1;
+			}
+			else
+			{
+				T1 = Tracks[i].TranslationSamples[FrameIndex];
+				T2 = Tracks[i].TranslationSamples[FrameIndex + 1];
+			}
+		}
+		else if (ReList[i] == FRetargetType::SKELETON)
+		{
+			T1 = BindPoses[i].Translation;
 			T2 = T1;
 		}
-		else if (Tracks[i].TranslationSamples.size() == 1)
-		{
-			T1 = Tracks[i].TranslationSamples[0];
-			T2 = T1;
-		}
-		else
-		{
-			T1 = Tracks[i].TranslationSamples[frameIndex];
-			T2 = Tracks[i].TranslationSamples[frameIndex + 1];
-		}
 
-		FMatrix S, Q, T;
+		MS = scale(lerp(S1, S2, LerpPercent));
+		MQ = toMat4(normalize(slerp(Q1, Q2, LerpPercent)));
+		MT = translate(lerp(T1, T2, LerpPercent));
 
-		FVector SLerp = glm::lerp(S1, S2, lerpPercent);
-		S = glm::scale(SLerp);
-
-		FQuat QLerp = glm::slerp(Q1, Q2, lerpPercent);
-		QLerp = glm::normalize(QLerp);
-		Q = glm::toMat4(QLerp);
-
-		FVector TLerp = glm::lerp(T1, T2, lerpPercent);
-		T = glm::translate(TLerp);
-
-		Result.push_back(T * Q * S);
+		Result.push_back(MT * MQ * MS);
 	}
 
 	return Result;

@@ -10,15 +10,22 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 	}
 
 	TimePos += ElapsedSeconds;
-	float dt = TimePos - floor(TimePos / SequenceMap[CurrentAnimation]->GetSequenceLength() ) * SequenceMap[CurrentAnimation]->GetSequenceLength();
-	Palette = UpdatePalette(dt);
+	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
+	Palette = UpdatePalette(fmod(TimePos, SequenceLength));
 }
 
-vector<FMatrix> FAnimInstance::UpdatePalette(float dt)
+vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)
 {
 	vector<FMatrix> Result;
-	vector<FMatrix> JointOffset = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton()->GetJointOffset();
-	vector<FMatrix> AnimLocalToParent = SequenceMap[CurrentAnimation]->Interpolate(dt);
+	FSkeleton* Ske = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton();
+	vector<FMatrix> JointOffset = Ske->GetJointOffset();
+
+	// root and pelvis use animation translation, other joint use skeleton translation(same with ue4)
+	vector<FRetargetType> RetargetList(Ske->GetJoints().size(), FRetargetType::SKELETON);
+	RetargetList[0] = FRetargetType::ANIMATION;
+	RetargetList[1] = FRetargetType::ANIMATION;
+
+	vector<FMatrix> AnimLocalToParent = SequenceMap[CurrentAnimation]->Interpolate(Dt, Ske, RetargetList);
 
 	vector<FMatrix> AnimGlobalPose;
 	AnimGlobalPose.push_back(AnimLocalToParent[0]);
