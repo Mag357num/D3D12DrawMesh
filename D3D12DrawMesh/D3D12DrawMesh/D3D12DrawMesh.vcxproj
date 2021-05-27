@@ -31,7 +31,6 @@
     <ClCompile Include="Source\private\DynamicRHI.cpp" />
     <ClCompile Include="Source\private\Engine.cpp" />
     <ClCompile Include="Source\private\FrameResourceManager.cpp" />
-    <ClCompile Include="Source\private\GameThread.cpp" />
     <ClCompile Include="Source\private\Joint.cpp" />
     <ClCompile Include="Source\private\Light.cpp" />
     <ClCompile Include="Source\private\Main.cpp" />
@@ -81,7 +80,6 @@
     <ClInclude Include="Source\public\StaticMesh\StaticVertex.h" />
     <ClInclude Include="Source\public\stdafx.h" />
     <ClInclude Include="Source\public\StepTimer.h" />
-    <ClInclude Include="Source\public\Thread\GameThread.h" />
     <ClInclude Include="Source\public\Thread\RenderThread.h" />
     <ClInclude Include="Source\public\Thread\Thread.h" />
     <ClInclude Include="Source\public\Win32Application.h" />

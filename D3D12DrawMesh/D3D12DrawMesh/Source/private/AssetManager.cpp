@@ -45,6 +45,32 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	return TargetScene;
 }
 
+void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<AStaticMeshActor>& Actors)
+{
+	std::ifstream Fin(BinFileName, std::ios::binary);
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("open file faild.");
+	}
+
+	uint32 ActorNum;
+	Fin.read((char*)&ActorNum, sizeof(uint32));
+
+	for (uint32 i = 0; i < ActorNum; i++)
+	{
+		AStaticMeshActor Actor;
+		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
+		Com->SetTransform(ReadTransform(Fin));
+
+		Actor.SetStaticMeshComponent(Com);
+		Actors.push_back(Actor);
+	}
+
+	Fin.close();
+}
+
 vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 {
 	FStaticMeshLOD MeshLOD;
