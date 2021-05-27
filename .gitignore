@@ -4,3 +4,4 @@ D3D12DrawMesh/D3D12DrawMesh/docbook/*
 D3D12DrawMesh/D3D12DrawMesh/obj/*
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.ilk
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.pdb
+D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.exe
