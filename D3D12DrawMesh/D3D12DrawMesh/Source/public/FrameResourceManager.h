@@ -5,35 +5,6 @@
 
 using namespace RHI;
 
-struct FShadowMappingCB_SkeletalMesh
-{
-	FMatrix WVP;
-	array<FMatrix, 68> GBoneTransforms;
-};
-
-struct FSceneColorCB_SkeletalMesh
-{
-	FMatrix World;
-	FMatrix CamViewProj;
-	FVector4 CamEye;
-	FMatrix ShadowWorldToScreen;
-	FDirectionLight Light;
-	float padding;
-	array<FMatrix, 68> GBoneTransforms;
-};
-
-struct FShadowMappingCB_StaticMesh
-{
-	FMatrix WVP;
-};
-
-struct FSceneColorCB_StaticMesh
-{
-	FMatrix World;
-	FMatrix ShadowWorldToScreen;
-	FDirectionLight Light;
-};
-
 struct FBloomSetupCB
 {
 	FVector4 BufferSizeAndInvSize;
@@ -154,4 +125,8 @@ public:
 	void CreatePostProcessTriangle(FFrameResource& FrameRes);
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
+
+	void TransitToFR(class ACamera Cam, FFrameResource& FR);
+	void TransitToFR(class FLight Cam, FFrameResource& FR);
+
 };

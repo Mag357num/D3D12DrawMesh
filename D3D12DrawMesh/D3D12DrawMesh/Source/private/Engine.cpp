@@ -34,8 +34,10 @@ FEngine::~FEngine()
 {
 }
 
-void FEngine::Init()
+void FEngine::Init(void* WindowHandle)
 {
+	HWindow = WindowHandle;
+
 	CurrentScene = CreateScene();
 	vector<AStaticMeshActor> StaticMeshActors;
 	FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
@@ -120,4 +122,33 @@ void FEngine::OnButtonUp()
 {
 	CurrentScene->GetCurrentCamera().OnButtonUp();
 	CurrentScene->GetCharacter()->OnButtonUp();
+}
+
+void FEngine::CalculateFrameStats()
+{
+	static int frameCnt = 0;
+	static float timeElapsed = 0.0f;
+	std::wstring mMainWndCaption = L"d3d App";
+
+	frameCnt++;
+
+	// Compute averages over one second period.
+	if ((Timer.GetTotalSeconds() - timeElapsed) >= 1.0f)
+	{
+		float fps = (float)frameCnt; // fps = frameCnt / 1
+		float mspf = 1000.0f / fps;
+
+		wstring fpsStr = std::to_wstring(fps);
+		wstring mspfStr = std::to_wstring(mspf);
+
+		wstring windowText = mMainWndCaption +
+			L"    fps: " + fpsStr +
+			L"   mspf: " + mspfStr;
+
+		SetWindowText((HWND)HWindow, windowText.c_str());
+
+		// Reset for next average.
+		frameCnt = 0;
+		timeElapsed += 1.0f;
+	}
 }

@@ -43,7 +43,7 @@ int Win32Application::Run(FEngine* pEngine, HINSTANCE hInstance, int nCmdShow)
 		pEngine);
 
 	// Initialize the sample. OnInit is defined in each child-implementation of DXSample.
-	pEngine->Init();
+	pEngine->Init((void*)m_hwnd);
 
 	ShowWindow(m_hwnd, nCmdShow);
 
@@ -138,6 +138,7 @@ LRESULT CALLBACK Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wP
 	case WM_PAINT:
 		if (pEngine)
 		{
+			pEngine->CalculateFrameStats();
 			pEngine->Tick();
 			pEngine->Render();
 		}

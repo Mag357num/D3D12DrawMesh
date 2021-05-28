@@ -15,7 +15,7 @@ public:
 	FEngine(uint32 width, uint32 height, std::wstring name);
 	virtual ~FEngine();
 
-	void Init();
+	void Init(void* WindowHandle);
 	void Tick();
 	void Render();
 	void Destroy();
@@ -32,6 +32,8 @@ public:
 	uint32 GetHeight() const { return ResoHeight; }
 	const wchar_t* GetTitle() const { return Title.c_str(); }
 	StepTimer& GetTimer() { return Timer; }
+	void CalculateFrameStats();
+
 
 protected:
 	// Viewport dimensions.
@@ -43,6 +45,9 @@ protected:
 	bool IsUseWarpDevice;
 
 private:
+	// window handle
+	void* HWindow;
+
 	// Window title.
 	std::wstring Title;
 
