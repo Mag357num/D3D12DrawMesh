@@ -50,7 +50,7 @@ public:
 	~TSkeletalMesh() = default;
 };
 
-class TSkeletalMeshComponent : public FActorComponent
+class TSkeletalMeshComponent : public TActorComponent
 {
 private:
 	shared_ptr<TSkeletalMesh> SkeletalMesh;

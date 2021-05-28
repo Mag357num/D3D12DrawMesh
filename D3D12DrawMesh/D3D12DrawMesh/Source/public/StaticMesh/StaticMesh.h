@@ -39,7 +39,7 @@ public:
 	~TStaticMesh() = default;
 };
 
-class TStaticMeshComponent : public FActorComponent
+class TStaticMeshComponent : public TActorComponent
 {
 private:
 	shared_ptr<TStaticMesh> StaticMesh;

@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-class FActorComponent
+class TActorComponent
 {
 protected:
 	FTransform Transform;
@@ -10,8 +10,8 @@ public:
 
 	FTransform& GetTransform() { return Transform; }
 
-	FActorComponent() = default;
-	~FActorComponent() = default;
+	TActorComponent() = default;
+	~TActorComponent() = default;
 
 	template <typename T>
 	inline T* As() { return static_cast<T*>(this); }
