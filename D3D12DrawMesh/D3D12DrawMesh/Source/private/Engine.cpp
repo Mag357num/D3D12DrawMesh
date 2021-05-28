@@ -79,7 +79,7 @@ void FEngine::Tick()
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 
-	// TODO: remove FrameRes concept add into the tick layer out, update static mesh's constant buffer when tick them
+	// TODO: remove FrameRes concept add into the tick layer, update static mesh's constant buffer when tick them
 	FRenderThread::Get()->UpdateFrameRes(CurrentScene.get());
 }
 

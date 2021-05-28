@@ -8,11 +8,11 @@ namespace RHI
 {
 	struct FCommand
 	{
-		FCommand(ComPtr<ID3D12CommandQueue> CQ) { CommandQueue = CQ; }
+		FCommand(ID3D12CommandQueue* CQ) { CommandQueue = CQ; }
 
 		ComPtr<ID3D12CommandAllocator> Allocator;
 		ComPtr<ID3D12GraphicsCommandList> CommandList;
-		ComPtr<ID3D12CommandQueue> CommandQueue;
+		ID3D12CommandQueue* CommandQueue;
 
 		void Create(ComPtr<ID3D12Device> Device);
 		void Close();

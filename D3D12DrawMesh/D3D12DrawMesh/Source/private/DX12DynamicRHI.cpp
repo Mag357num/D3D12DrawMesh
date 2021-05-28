@@ -95,7 +95,7 @@ namespace RHI
 		LastGpuHandleSampler = SamplerHeap->GetGPUDescriptorHandleForHeapStart();
 
 		// command
-		FCommand DrawCommandList(RHICommandQueue);
+		FCommand DrawCommandList(RHICommandQueue.Get());
 		DrawCommandList.Create(Device);
 		DrawCommandList.Close();
 		CommandLists.push_back(DrawCommandList);
