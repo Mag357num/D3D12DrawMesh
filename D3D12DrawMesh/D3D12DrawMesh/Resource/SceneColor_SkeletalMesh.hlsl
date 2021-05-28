@@ -8,16 +8,6 @@ struct LightState
 	float3 DirectionLightDir;
 };
 
-// cbuffer SceneConstantBuffer : register(b0)
-// {
-//     float4x4 World;
-//     float4x4 CameraVP;
-// 	float4 CamEye;
-// 	float4x4 ShadowWorldToScreen;
-// 	LightState Light;
-// 	float4x4 GBoneTransforms[68];
-// };
-
 cbuffer StaticMeshConstantBuffer : register(b0)
 {
 	float4x4 World;

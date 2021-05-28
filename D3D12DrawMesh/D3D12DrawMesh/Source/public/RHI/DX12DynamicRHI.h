@@ -42,7 +42,6 @@ namespace RHI
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) override;
 
 		// Resource process
-		virtual void UpdateConstantBuffer_deprecated(FMaterial* Mat, FCBData* Data) override;
 		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;

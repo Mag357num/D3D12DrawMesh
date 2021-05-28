@@ -67,12 +67,11 @@ namespace RHI
 	{
 	};
 
-	enum class FPassType;
 	struct FMaterial : public FRHIResource
 	{
-		FPassType Type;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
+		unordered_map<string, float> ConstantBufferParam;
 		shared_ptr<FCB> CB;
 		vector<shared_ptr<FHandle>> TexHandles;
 	};
@@ -87,19 +86,9 @@ namespace RHI
 	{
 		shared_ptr<FPipeline> ShadowPipeline;
 		shared_ptr<FPipeline> SceneColorPipeline;
-		shared_ptr<FPipeline> BloomSetupPipeline;
-		shared_ptr<FPipeline> BloomDownPipeline;
-		shared_ptr<FPipeline> BloomUpPipeline;
-		shared_ptr<FPipeline> SunMergePipeline;
-		shared_ptr<FPipeline> ToneMappingPipeline;
 
 		shared_ptr<FMaterial> ShadowMat;
 		shared_ptr<FMaterial> SceneColorMat;
-		shared_ptr<FMaterial> BloomSetupMat;
-		shared_ptr<FMaterial> BloomDownMat[4];
-		shared_ptr<FMaterial> BloomUpMat[3];
-		shared_ptr<FMaterial> SunMergeMat;
-		shared_ptr<FMaterial> ToneMappingMat;
 	};
 
 	struct FTexture : public FRHIResource

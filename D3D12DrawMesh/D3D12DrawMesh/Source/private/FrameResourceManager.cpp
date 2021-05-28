@@ -20,6 +20,9 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 		CreateMapsForScene(FrameRes);
 		CreateMapsForPostProcess(FrameRes);
 		CreatePostProcessTriangle(FrameRes);
+		CreatePostProcessMaterials(FrameRes);
+		InitPostProcessConstantBuffer(FrameRes);
+		CreatePostProcessPipelines(FrameRes);
 	}
 }
 
@@ -261,71 +264,132 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 
 	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component, InputLayer));
 	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
-
-	CreatePostProcessMaterials(FrameRes);
-	CreatePostProcessPipelines(FrameRes);
 }
 
 void FFrameResourceManager::CreatePostProcessMaterials(FFrameResource& FrameRes)
 {
-	FMeshRes* TriRes = FrameRes.GetPostProcessTriangleRes().get();
-	FMesh* Tri = FrameRes.GetPostProcessTriangle().get();
-
 	// create postprocess material
 	// bloom setup
 	vector<shared_ptr<FHandle>> TexHandles;
 	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
-	TriRes->BloomSetupMat = GDynamicRHI->CreateMaterial(L"Resource\\BloomSetup.hlsl", 256, TexHandles);
+	FrameRes.BloomSetupMat = GDynamicRHI->CreateMaterial(L"Resource\\BloomSetup.hlsl", 256, TexHandles);
 
 	// bloom down
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
-	TriRes->BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
+	FrameRes.BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
-	TriRes->BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
+	FrameRes.BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
-	TriRes->BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
+	FrameRes.BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
-	TriRes->BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
+	FrameRes.BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	// bloom up
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[3]->SrvHandle);
-	TriRes->BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
+	FrameRes.BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[0]->SrvHandle);
-	TriRes->BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
+	FrameRes.BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[1]->SrvHandle);
-	TriRes->BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
+	FrameRes.BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	// sun merge
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
 	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[2]->SrvHandle);
-	TriRes->SunMergeMat = GDynamicRHI->CreateMaterial(L"Resource\\SunMerge.hlsl", 256, TexHandles);
+	FrameRes.SunMergeMat = GDynamicRHI->CreateMaterial(L"Resource\\SunMerge.hlsl", 256, TexHandles);
 
 	// tonemapping
 	TexHandles.clear();
 	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
 	TexHandles.push_back(FrameRes.GetSunMergeMap()->SrvHandle);
-	TriRes->ToneMappingMat = GDynamicRHI->CreateMaterial(L"Resource\\ToneMapping.hlsl", 256, TexHandles);
+	FrameRes.ToneMappingMat = GDynamicRHI->CreateMaterial(L"Resource\\ToneMapping.hlsl", 256, TexHandles);
+}
+
+void FFrameResourceManager::InitPostProcessConstantBuffer(FFrameResource& FrameRes)
+{
+	// update postprocess
+	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
+
+	// bloom setup
+	struct FBloomSetupCB
+	{
+		FVector4 BufferSizeAndInvSize;
+		float BloomThreshold;
+	} BloomSetupStruct;
+	BloomSetupStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 4.f);
+	BloomSetupStruct.BloomThreshold = 1.0f;
+	GDynamicRHI->WriteConstantBuffer(FrameRes.BloomSetupMat->CB.get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(BloomSetupStruct));
+
+	// bloom down
+	for (uint32 i = 0; i < 4; i++)
+	{
+		struct FBloomDownCB
+		{
+			FVector4 BufferSizeAndInvSize;
+			float BloomDownScale;
+		} BloomDwonStruct;
+		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 1))));
+		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
+		GDynamicRHI->WriteConstantBuffer(FrameRes.BloomDownMat[i]->CB.get(), reinterpret_cast<void*>(&BloomDwonStruct), sizeof(BloomDwonStruct));
+	}
+
+	// bloom up
+	static const FVector4 BloomTint1 = FVector4(0.3465f);
+	static const FVector4 BloomTint2 = FVector4(0.138f);
+	static const FVector4 BloomTint3 = FVector4(0.1176f);
+	static const FVector4 BloomTint4 = FVector4(0.066f);
+	static const FVector4 BloomTint5 = FVector4(0.066f);
+	static const float BloomIntensity = 1.0f;
+	static const FVector4 BloomTintAs[3] = { BloomTint4, BloomTint3 * BloomIntensity, BloomTint2 * BloomIntensity };
+	static const FVector4 BloomTintBs[3] = { BloomTint5, FVector4(1.0f, 1.0f, 1.0f, 0.0f), FVector4(1.0f, 1.0f, 1.0f, 0.0f) };
+	for (int i = 2; i >= 0; i--)
+	{
+		struct FBloomUpCB
+		{
+			FVector4 BufferASizeAndInvSize;
+			FVector4 BufferBSizeAndInvSize;
+			FVector4 BloomTintA;
+			FVector4 BloomTintB;
+			FVector2 BloomUpScales;
+		} BloomUpStruct;
+		BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 1))));
+		BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 2))));
+		BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
+		BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
+		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
+		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
+		GDynamicRHI->WriteConstantBuffer(FrameRes.BloomUpMat[2 - i]->CB.get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
+	}
+
+	// sun merge
+	struct FSunMergeCB
+	{
+		FVector4 BloomUpSizeAndInvSize;
+		FVector BloomColor;
+	} SunMergeStruct;
+	SunMergeStruct.BloomUpSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 8.f);
+	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
+	GDynamicRHI->WriteConstantBuffer(FrameRes.SunMergeMat->CB.get(), reinterpret_cast<void*>(&SunMergeStruct), sizeof(SunMergeStruct));
+
 }
 
 void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
 {
-	FMeshRes* TriRes = FrameRes.GetPostProcessTriangleRes().get();
 	FMesh* Tri = FrameRes.GetPostProcessTriangle().get();
 
 	// pipeline
@@ -334,10 +398,10 @@ void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	TriRes->BloomSetupPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomSetupMat.get());
+	FrameRes.BloomSetupPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, FrameRes.BloomSetupMat.get());
 
 	// bloom down
-	TriRes->BloomDownPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomDownMat[0].get());
+	FrameRes.BloomDownPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, FrameRes.BloomDownMat[0].get());
 
 	// bloom up
 	ShaderInputLayer.Elements.clear();
@@ -346,17 +410,17 @@ void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	TriRes->BloomUpPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->BloomUpMat[0].get());
+	FrameRes.BloomUpPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, FrameRes.BloomUpMat[0].get());
 
 	// sun merge
-	TriRes->SunMergePipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, TriRes->SunMergeMat.get());
+	FrameRes.SunMergePipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R11G11B10_FLOAT, 1, Tri->InputLayer, ShaderInputLayer, FrameRes.SunMergeMat.get());
 
 	// tone mapping
 	ShaderInputLayer.Elements.clear();
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	ShaderInputLayer.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	TriRes->ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R8G8B8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, TriRes->ToneMappingMat.get());
+	FrameRes.ToneMappingPipeline = GDynamicRHI->CreatePipeline(FFormat::FORMAT_R8G8B8A8_UNORM, 1, Tri->InputLayer, ShaderInputLayer, FrameRes.ToneMappingMat.get());
 
 }
 
@@ -399,61 +463,4 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 
 	GDynamicRHI->WriteConstantBuffer(FrameRes.GetPaletteCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
-
-	// update postprocess
-	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
-	
-	// bloom setup
-	FBloomSetupCB BloomSetupStruct;
-	BloomSetupStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 4.f);
-	BloomSetupStruct.BloomThreshold = 1.0f;
-	RHI::FCBData BloomSetupPassData;
-	BloomSetupPassData.DataBuffer = reinterpret_cast<void*>(&BloomSetupStruct);
-	BloomSetupPassData.BufferSize = sizeof(BloomSetupStruct);
-	GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomSetupMat.get(), &BloomSetupPassData);
-
-	// bloom down
-	for (uint32 i = 0; i < 4; i++)
-	{
-		FBloomDownCB BloomDwonStruct;
-		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight  / (4.f * static_cast<float>(pow(2, i + 1))));
-		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
-		RHI::FCBData BloomDwonPassData;
-		BloomDwonPassData.DataBuffer = reinterpret_cast<void*>(&BloomDwonStruct);
-		BloomDwonPassData.BufferSize = sizeof(BloomDwonStruct);
-		GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomDownMat[i].get(), &BloomDwonPassData);
-	}
-
-	// bloom up
-	static const FVector4 BloomTint1 = FVector4(0.3465f);
-	static const FVector4 BloomTint2 = FVector4(0.138f);
-	static const FVector4 BloomTint3 = FVector4(0.1176f);
-	static const FVector4 BloomTint4 = FVector4(0.066f);
-	static const FVector4 BloomTint5 = FVector4(0.066f);
-	static const float BloomIntensity = 1.0f;
-	static const FVector4 BloomTintAs[3] = { BloomTint4, BloomTint3 * BloomIntensity, BloomTint2 * BloomIntensity };
-	static const FVector4 BloomTintBs[3] = { BloomTint5, FVector4(1.0f, 1.0f, 1.0f, 0.0f), FVector4(1.0f, 1.0f, 1.0f, 0.0f) };
-	for (int i = 2; i >= 0; i--)
-	{
-		FBloomUpCB BloomUpStruct;
-		BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 1))));
-		BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 2))));
-		BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
-		BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
-		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
-		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
-		RHI::FCBData BloomUpPassData;
-		BloomUpPassData.DataBuffer = reinterpret_cast<void*>(&BloomUpStruct);
-		BloomUpPassData.BufferSize = sizeof(BloomUpStruct);
-		GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->BloomUpMat[2-i].get(), &BloomUpPassData);
-	}
-
-	// sun merge
-	FSunMergeCB SunMergeStruct;
-	SunMergeStruct.BloomUpSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 8.f);
-	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
-	RHI::FCBData SunMergePassData;
-	SunMergePassData.DataBuffer = reinterpret_cast<void*>(&SunMergeStruct);
-	SunMergePassData.BufferSize = sizeof(SunMergeStruct);
-	GDynamicRHI->UpdateConstantBuffer_deprecated(FrameRes.GetPostProcessTriangleRes()->SunMergeMat.get(), &SunMergePassData);
 }

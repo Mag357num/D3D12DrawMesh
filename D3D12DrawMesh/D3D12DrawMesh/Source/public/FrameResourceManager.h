@@ -5,33 +5,6 @@
 
 using namespace RHI;
 
-struct FBloomSetupCB
-{
-	FVector4 BufferSizeAndInvSize;
-	float BloomThreshold;
-};
-
-struct FBloomDownCB
-{
-	FVector4 BufferSizeAndInvSize;
-	float BloomDownScale;
-};
-
-struct FBloomUpCB
-{
-	FVector4 BufferASizeAndInvSize;
-	FVector4 BufferBSizeAndInvSize;
-	FVector4 BloomTintA;
-	FVector4 BloomTintB;
-	FVector2 BloomUpScales;
-};
-
-struct FSunMergeCB
-{
-	FVector4 BloomUpSizeAndInvSize;
-	FVector BloomColor;
-};
-
 struct FFrameMesh
 {
 	shared_ptr<FMesh> Mesh;
@@ -67,6 +40,21 @@ private:
 	shared_ptr<FTexture> SunMergeMap;
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
+
+public:
+	// pipeline
+	shared_ptr<FPipeline> BloomSetupPipeline;
+	shared_ptr<FPipeline> BloomDownPipeline;
+	shared_ptr<FPipeline> BloomUpPipeline;
+	shared_ptr<FPipeline> SunMergePipeline;
+	shared_ptr<FPipeline> ToneMappingPipeline;
+
+	// material
+	shared_ptr<FMaterial> BloomSetupMat;
+	shared_ptr<FMaterial> BloomDownMat[4];
+	shared_ptr<FMaterial> BloomUpMat[3];
+	shared_ptr<FMaterial> SunMergeMat;
+	shared_ptr<FMaterial> ToneMappingMat;
 
 public:
 	const uint32& GetShadowMapSize() const { return ShadowMapSize; }
@@ -124,6 +112,7 @@ public:
 	void CreateMapsForPostProcess(FFrameResource& FrameRes);
 	void CreatePostProcessTriangle(FFrameResource& FrameRes);
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
+	void InitPostProcessConstantBuffer(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
 
 	void TransitToFR(class ACamera Cam, FFrameResource& FR);

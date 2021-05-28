@@ -89,7 +89,6 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 	{
 		SCOPED_EVENT("Post Process");
 		{
-			auto& TriRes = FrameRes->GetPostProcessTriangleRes();
 			auto& Tri = FrameRes->GetPostProcessTriangle();
 
 			SCOPED_EVENT("Bloom");
@@ -102,11 +101,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-					RHI->SetPipelineState(TriRes->BloomSetupPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomSetupPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomSetupMat->CB->CBHandle);
-					Handles.push_back(TriRes->BloomSetupMat->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomSetupMat->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomSetupMat->TexHandles[0]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
@@ -122,11 +121,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
-					RHI->SetPipelineState(TriRes->BloomDownPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomDownPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomDownMat[0]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomDownMat[0]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomDownMat[0]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomDownMat[0]->TexHandles[0]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
@@ -142,11 +141,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
-					RHI->SetPipelineState(TriRes->BloomDownPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomDownPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomDownMat[1]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomDownMat[1]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomDownMat[1]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomDownMat[1]->TexHandles[0]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
@@ -162,11 +161,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
-					RHI->SetPipelineState(TriRes->BloomDownPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomDownPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomDownMat[2]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomDownMat[2]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomDownMat[2]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomDownMat[2]->TexHandles[0]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
@@ -182,11 +181,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 64), static_cast<float>(RHI->GetHeight() / 64), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 64, RHI->GetHeight() / 64);
-					RHI->SetPipelineState(TriRes->BloomDownPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomDownPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomDownMat[3]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomDownMat[3]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomDownMat[3]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomDownMat[3]->TexHandles[0]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
@@ -202,12 +201,12 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 32), static_cast<float>(RHI->GetHeight() / 32), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 32, RHI->GetHeight() / 32);
-					RHI->SetPipelineState(TriRes->BloomUpPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomUpPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomUpMat[0]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomUpMat[0]->TexHandles[0]);
-					Handles.push_back(TriRes->BloomUpMat[0]->TexHandles[1]);
+					Handles.push_back(FrameRes->BloomUpMat[0]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomUpMat[0]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomUpMat[0]->TexHandles[1]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					Handles.push_back(FrameRes->GetWarpSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
@@ -224,12 +223,12 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 16), static_cast<float>(RHI->GetHeight() / 16), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 16, RHI->GetHeight() / 16);
-					RHI->SetPipelineState(TriRes->BloomUpPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomUpPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomUpMat[1]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomUpMat[1]->TexHandles[0]);
-					Handles.push_back(TriRes->BloomUpMat[1]->TexHandles[1]);
+					Handles.push_back(FrameRes->BloomUpMat[1]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomUpMat[1]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomUpMat[1]->TexHandles[1]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					Handles.push_back(FrameRes->GetWarpSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
@@ -246,12 +245,12 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 8), static_cast<float>(RHI->GetHeight() / 8), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 8, RHI->GetHeight() / 8);
-					RHI->SetPipelineState(TriRes->BloomUpPipeline.get());
+					RHI->SetPipelineState(FrameRes->BloomUpPipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->BloomUpMat[2]->CB->CBHandle);
-					Handles.push_back(TriRes->BloomUpMat[2]->TexHandles[0]);
-					Handles.push_back(TriRes->BloomUpMat[2]->TexHandles[1]);
+					Handles.push_back(FrameRes->BloomUpMat[2]->CB->CBHandle);
+					Handles.push_back(FrameRes->BloomUpMat[2]->TexHandles[0]);
+					Handles.push_back(FrameRes->BloomUpMat[2]->TexHandles[1]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					Handles.push_back(FrameRes->GetWarpSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
@@ -268,12 +267,12 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 					RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
 					RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
-					RHI->SetPipelineState(TriRes->SunMergePipeline.get());
+					RHI->SetPipelineState(FrameRes->SunMergePipeline.get());
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(TriRes->SunMergeMat->CB->CBHandle);
-					Handles.push_back(TriRes->SunMergeMat->TexHandles[0]);
-					Handles.push_back(TriRes->SunMergeMat->TexHandles[1]);
+					Handles.push_back(FrameRes->SunMergeMat->CB->CBHandle);
+					Handles.push_back(FrameRes->SunMergeMat->TexHandles[0]);
+					Handles.push_back(FrameRes->SunMergeMat->TexHandles[1]);
 					Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 					Handles.push_back(FrameRes->GetWarpSampler()->SamplerHandle);
 					RHI->SetShaderInput(Handles);
@@ -291,11 +290,11 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResource* FrameRes)
 			RHI->ClearDepthStencil(FrameRes->GetDsMap().get());
 			RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
 			RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
-			RHI->SetPipelineState(TriRes->ToneMappingPipeline.get());
+			RHI->SetPipelineState(FrameRes->ToneMappingPipeline.get());
 
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(TriRes->ToneMappingMat->TexHandles[0]);
-			Handles.push_back(TriRes->ToneMappingMat->TexHandles[1]);
+			Handles.push_back(FrameRes->ToneMappingMat->TexHandles[0]);
+			Handles.push_back(FrameRes->ToneMappingMat->TexHandles[1]);
 			Handles.push_back(FrameRes->GetClampSampler()->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 

@@ -257,11 +257,6 @@ namespace RHI
 		return DX12CB;
 	}
 
-	void FDX12DynamicRHI::UpdateConstantBuffer_deprecated(FMaterial* Mat, FCBData* Data)
-	{
-		memcpy(Mat->CB->As<FDX12CB>()->UploadBufferVirtualAddress, Data->DataBuffer, Data->BufferSize);
-	}
-
 	void FDX12DynamicRHI::WriteConstantBuffer(FCB* CB, void* Src, size_t Size)
 	{
 		memcpy(CB->As<FDX12CB>()->UploadBufferVirtualAddress, Src, Size);
