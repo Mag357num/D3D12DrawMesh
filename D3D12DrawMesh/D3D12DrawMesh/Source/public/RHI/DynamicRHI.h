@@ -30,8 +30,8 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(FStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
-		virtual shared_ptr<FMesh> CreateMesh(FSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
+		virtual shared_ptr<FMesh> CreateMesh(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
+		virtual shared_ptr<FMesh> CreateMesh(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;

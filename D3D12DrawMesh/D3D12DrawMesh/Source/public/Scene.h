@@ -12,7 +12,7 @@ class FScene
 private:
 	ACamera CurrentCamera; // TODO: change to std::vector<FCamera> Cameras
 	FDirectionLight DirectionLight; // TODO: extend to a array of lights
-	vector<AStaticMeshActor> StaticMeshActors;
+	vector<TStaticMeshActor> StaticMeshActors;
 	shared_ptr<ACharacter> CurrentCharacter; // create by a character manager
 
 public:
@@ -27,9 +27,9 @@ public:
 	ACamera& GetCurrentCamera() { return CurrentCamera; }
 	ACharacter* GetCharacter() { return CurrentCharacter.get(); }
 	const FDirectionLight& GetDirectionLight() const { return DirectionLight; }
-	vector<AStaticMeshActor>& GetStaticMeshActors() { return StaticMeshActors; }
+	vector<TStaticMeshActor>& GetStaticMeshActors() { return StaticMeshActors; }
 
-	void AddStaticMeshActor(AStaticMeshActor Actor) { StaticMeshActors.push_back(Actor); }
+	void AddStaticMeshActor(TStaticMeshActor Actor) { StaticMeshActors.push_back(Actor); }
 
 
 };

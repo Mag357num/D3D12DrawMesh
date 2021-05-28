@@ -32,7 +32,7 @@ public:
 };
 
 class FSkeleton;
-class FSkeletalMesh
+class TSkeletalMesh
 {
 private:
 	shared_ptr<FSkeleton> Skeleton;
@@ -46,14 +46,14 @@ public:
 
 	FSkeleton* GetSkeleton() { return Skeleton.get(); }
 
-	FSkeletalMesh() = default;
-	~FSkeletalMesh() = default;
+	TSkeletalMesh() = default;
+	~TSkeletalMesh() = default;
 };
 
-class FSkeletalMeshComponent : public FActorComponent
+class TSkeletalMeshComponent : public FActorComponent
 {
 private:
-	shared_ptr<FSkeletalMesh> SkeletalMesh;
+	shared_ptr<TSkeletalMesh> SkeletalMesh;
 	wstring ShaderFileName;
 	FAnimInstance Animator;
 
@@ -64,14 +64,14 @@ public:
 	void AddSequence(std::pair<string, shared_ptr<FAnimSequence>> Seq) { Animator.AddSequence(Seq); }
 	void InitAnimation() { Animator.initAnimation(this); } // init this when init chararcter
 
-	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
+	void SetSkeletalMesh(shared_ptr<TSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
 	void SetShaderFileName(const wstring& Name) { ShaderFileName = Name; }
 
 	wstring& GetShaderFileName() { return ShaderFileName; }
-	FSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
+	TSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
 
-	FSkeletalMeshComponent() = default;
-	~FSkeletalMeshComponent() = default;
+	TSkeletalMeshComponent() = default;
+	~TSkeletalMeshComponent() = default;
 };
 
 class ASkeletalMeshActor : public AActor

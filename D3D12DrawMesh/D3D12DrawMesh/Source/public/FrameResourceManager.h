@@ -113,8 +113,8 @@ public:
 	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	FFrameMesh CreateFrameMesh(FStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
-	FFrameMesh CreateFrameMesh(FSkeletalMeshComponent& MeshComponent);
+	FFrameMesh CreateFrameMesh(TStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
+	FFrameMesh CreateFrameMesh(TSkeletalMeshComponent& MeshComponent);
 	void InitCameraConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
 	void InitLightConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
 	void InitPaletteConstantBuffer(FScene* Scene, FFrameResource& FrameRes);

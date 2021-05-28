@@ -38,14 +38,14 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 		FrameResource.GetStaticMeshArray().resize(StaticMeshActorNum);
 		for (uint32 i = 0; i < StaticMeshActorNum; ++i)
 		{
-			FrameResource.GetStaticMeshArray()[i] = CreateFrameMesh(*Scene->GetStaticMeshActors()[i].GetComs()[0]->As<FStaticMeshComponent>());
+			FrameResource.GetStaticMeshArray()[i] = CreateFrameMesh(*Scene->GetStaticMeshActors()[i].GetComs()[0]->As<TStaticMeshComponent>());
 		}
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComponent)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(TStaticMeshComponent& MeshComponent)
 {
 	FFrameMesh MeshComFrameRes;
 
@@ -85,7 +85,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(FStaticMeshComponent& MeshComp
 	return MeshComFrameRes;
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(FSkeletalMeshComponent& MeshComponent)
+FFrameMesh FFrameResourceManager::CreateFrameMesh(TSkeletalMeshComponent& MeshComponent)
 {
 	FFrameMesh MeshComFrameRes;
 
@@ -250,7 +250,7 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 
 	vector<uint32> Indice = { 0, 1, 2 };
 
-	FStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(TriangleVertice, Indice,
+	TStaticMeshComponent Component = FAssetManager::Get()->CreateStaticMeshComponent(TriangleVertice, Indice,
 		{ { 1.f, 1.f, 1.f }, FQuat(0, 0, 0, 1), { 0.f, 0.f, 0.f } }); // didnt use triangle's transform
 
 	FVertexInputLayer InputLayer;

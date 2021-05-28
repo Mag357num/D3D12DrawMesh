@@ -31,10 +31,10 @@ private:
 	FVector2 MouseMove_CurrentPosition;
 
 public:
-	void SetSkeletalMeshCom( shared_ptr<FSkeletalMeshComponent> SkeMesh ) { Components.push_back( SkeMesh ); }
+	void SetSkeletalMeshCom( shared_ptr<TSkeletalMeshComponent> SkeMesh ) { Components.push_back( SkeMesh ); }
 	void Tick( const float& ElapsedSeconds );
 
-	FSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<FSkeletalMeshComponent>(); }
+	TSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<TSkeletalMeshComponent>(); }
 	FVector& GetLocation() { return GetSkeletalMeshCom()->GetTransform().Translation; }
 	FVector GetLook();
 

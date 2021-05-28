@@ -39,7 +39,7 @@ void FEngine::Init(void* WindowHandle)
 	HWindow = WindowHandle;
 
 	CurrentScene = CreateScene();
-	vector<AStaticMeshActor> StaticMeshActors;
+	vector<TStaticMeshActor> StaticMeshActors;
 	FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
 	for (auto i : StaticMeshActors)
 	{
@@ -49,8 +49,8 @@ void FEngine::Init(void* WindowHandle)
 	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight);
 
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
-	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
-	shared_ptr<FSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat");
+	shared_ptr<TSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();
+	shared_ptr<TSkeletalMesh> SkeMesh = FAssetManager::Get()->CreateSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat");
 	shared_ptr<FSkeleton> Ske = FAssetManager::Get()->CreateSkeleton(L"Resource\\SkeletonBinary_.dat");
 	shared_ptr<FAnimSequence> Seq_Run = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceRun_.dat");
 	shared_ptr<FAnimSequence> Seq_Idle = FAssetManager::Get()->CreateAnimSequence(L"Resource\\SequenceIdle_.dat");

@@ -31,9 +31,9 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		AStaticMeshActor Actor;
-		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
+		TStaticMeshActor Actor;
+		shared_ptr<TStaticMeshComponent> Com = make_shared<TStaticMeshComponent>();
+		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
 		Actor.SetStaticMeshComponent(Com);
@@ -45,7 +45,7 @@ shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	return TargetScene;
 }
 
-void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<AStaticMeshActor>& Actors)
+void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<TStaticMeshActor>& Actors)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -59,9 +59,11 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		AStaticMeshActor Actor;
-		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-		Com->GetStaticMesh().SetMeshLODs(ReadStaticMeshLODs(Fin));
+		TStaticMeshActor Actor;
+		shared_ptr<TStaticMeshComponent> Com = make_shared<TStaticMeshComponent>();
+		shared_ptr<TStaticMesh> SM = make_shared<TStaticMesh>();
+		Com->SetStaticMesh(SM);
+		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
 		Actor.SetStaticMeshComponent(Com);
@@ -192,19 +194,20 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 	return Trans;
 }
 
-FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
+
+TStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
 {
-	FStaticMeshComponent Component;
+	TStaticMeshComponent Component;
 	vector<FStaticMeshLOD> Lods;
 	Lods.push_back(FStaticMeshLOD(Vertices, Indices));
-	UStaticMesh StaticMesh;
-	StaticMesh.SetMeshLODs(Lods);
+	shared_ptr<TStaticMesh> StaticMesh = make_shared<TStaticMesh>();
+	StaticMesh->SetMeshLODs(Lods);
 	Component.SetStaticMesh(StaticMesh);
 	Component.SetTransform(Transform);
 	return Component;
 }
 
-shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
+shared_ptr<TSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -213,7 +216,7 @@ shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& Bi
 		throw std::exception("open file faild.");
 	}
 
-	shared_ptr<FSkeletalMesh> SkeMesh = make_shared<FSkeletalMesh>();
+	shared_ptr<TSkeletalMesh> SkeMesh = make_shared<TSkeletalMesh>();
 
 	SkeMesh->SetSkeletalMeshLods(ReadSkeletalMeshLods(Fin));
 
@@ -339,12 +342,12 @@ shared_ptr<class ACharacter> FAssetManager::CreateCharacter()
 	return make_shared<ACharacter>();
 }
 
-shared_ptr<class FSkeletalMeshComponent> FAssetManager::CreateSkeletalMeshComponent()
+shared_ptr<class TSkeletalMeshComponent> FAssetManager::CreateSkeletalMeshComponent()
 {
-	return make_shared<FSkeletalMeshComponent>();
+	return make_shared<TSkeletalMeshComponent>();
 }
 
-shared_ptr<class FSkeletalMesh> FAssetManager::CreateSkeletalMesh(const std::wstring& SkeletalMeshFileName)
+shared_ptr<class TSkeletalMesh> FAssetManager::CreateSkeletalMesh(const std::wstring& SkeletalMeshFileName)
 {
 	return FAssetManager::Get()->LoadSkeletalMesh(SkeletalMeshFileName);
 }

@@ -27,43 +27,39 @@ public:
 	~FStaticMeshLOD() = default;
 };
 
-class UStaticMesh
+class TStaticMesh
 {
 private:
 	vector<FStaticMeshLOD> MeshLODs;
 public:
-	void ResizeLOD(const uint32& Size) { MeshLODs.resize(Size); }
 	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { MeshLODs = LODs; }
 	const vector<FStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
 
-	UStaticMesh() = default;
-	~UStaticMesh() = default;
+	TStaticMesh() = default;
+	~TStaticMesh() = default;
 };
 
-class FStaticMeshComponent : public FActorComponent
+class TStaticMeshComponent : public FActorComponent
 {
 private:
-	UStaticMesh StaticMesh; // TODO: change to a smart ptr to divide the UStaticMesh with FStaticMeshComponent
+	shared_ptr<TStaticMesh> StaticMesh;
 	wstring ShaderFileName;
 
 public:
-	void ResizeLOD(const uint32& Size) { StaticMesh.ResizeLOD(Size); }
-
 	void SetTransform(const FTransform& Trans) { Transform = Trans; }
 	void SetShaderFileName(const wstring& Name) { ShaderFileName = Name; }
-	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { StaticMesh.SetMeshLODs(LODs); }
-	void SetStaticMesh(const UStaticMesh& SM) { StaticMesh = SM; }
+	void SetStaticMesh(shared_ptr<TStaticMesh> SM) { StaticMesh = SM; }
 
-	UStaticMesh& GetStaticMesh() { return StaticMesh; }
+	TStaticMesh* GetStaticMesh() { return StaticMesh.get(); }
 	const wstring& GetShaderFileName() const { return ShaderFileName; }
 
-	FStaticMeshComponent() = default;
-	~FStaticMeshComponent() = default;
+	TStaticMeshComponent() = default;
+	~TStaticMeshComponent() = default;
 };
 
-class AStaticMeshActor : public AActor
+class TStaticMeshActor : public AActor
 {
 public:
-	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
-	FStaticMeshComponent* GetStaticMeshComponent();
+	void SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> Com);
+	TStaticMeshComponent* GetStaticMeshComponent();
 };

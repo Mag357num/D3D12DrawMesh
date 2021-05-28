@@ -551,14 +551,14 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(FStaticMeshComponent& MeshComponent, FVertexInputLayer Layer)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].GetIndices().size());
 
-		const vector<FStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetVertices2();
+		const vector<FStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].GetVertices2();
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(FStaticVertex));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().size() * sizeof(uint32));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].GetIndices().size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -617,7 +617,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetStaticMesh().GetMeshLODs()[0].GetIndices().data();
+		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].GetIndices().data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -634,7 +634,7 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(FSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
+	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
 	{
 		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].GetIndice().size());
