@@ -98,14 +98,14 @@ private:
 	vector<FFrameResource> FrameResArray; // every frame own a FFrameResource
 public:
 	vector<FFrameResource>& GetFrameRes() { return FrameResArray; }
-	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
-	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
-	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
+	void InitFrameResource(TScene* Scene, const uint32& FrameCount);
+	void CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameCount);
+	void UpdateFrameResources(TScene* Scene, const uint32& FrameIndex);
 	FFrameMesh CreateFrameMesh(TStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
 	FFrameMesh CreateFrameMesh(TSkeletalMeshComponent& MeshComponent);
-	void InitCameraConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
-	void InitLightConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
-	void InitPaletteConstantBuffer(FScene* Scene, FFrameResource& FrameRes);
+	void InitCameraConstantBuffer(TScene* Scene, FFrameResource& FrameRes);
+	void InitLightConstantBuffer(TScene* Scene, FFrameResource& FrameRes);
+	void InitPaletteConstantBuffer(TScene* Scene, FFrameResource& FrameRes);
 	void CreateMapsForShadow(FFrameResource& FrameRes);
 	void CreateSamplers(FFrameResource& FrameRes);
 	void CreateMapsForScene(FFrameResource& FrameRes);

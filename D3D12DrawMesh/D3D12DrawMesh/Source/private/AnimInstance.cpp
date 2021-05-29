@@ -17,7 +17,7 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)
 {
 	vector<FMatrix> Result;
-	FSkeleton* Ske = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton();
+	TSkeleton* Ske = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton();
 	vector<FMatrix> JointOffset = Ske->GetJointOffset();
 
 	// root and pelvis use animation translation, other joint use skeleton translation(same with ue4)

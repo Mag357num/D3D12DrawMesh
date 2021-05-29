@@ -14,7 +14,53 @@ enum class FCameraMoveMode
 class ACamera // TODO: refactor: make ACamera a Actor
 {
 public:
+	// if camera parameter changed, need to update constant buffers related to camera parameter
+	bool IsChanged = true;
+
+private:
+	struct KeysPressed
+	{
+		bool w;
+		bool a;
+		bool s;
+		bool d;
+		bool q;
+		bool e;
+
+		bool left;
+		bool right;
+		bool up;
+		bool down;
+	} Keys = {};
+
+	// the backup date of init/reset camera
+	FVector InitialPosition;
+	FVector InitialUpDir;
+	FVector InitialLookAt;
+
+	// the parameter to determine a camera
+	FVector Position;
+	FVector LookDirection;
+	FVector UpDirection;
+	float Fov = 90.f;
+	float AspectRatio = 1.7777777f;
+
+	// camera movement variable
+	float MoveSpeed = 300.0f; // Speed at which the camera moves, in units per second.
+	float TurnSpeed = 1.570796327f; // Speed at which the camera turns, in radians per second.
+	float MouseSensibility = 0.005f;
+
+	// camera event variable
+	FVector2 MouseDown_CurrentPosition;
+	FVector2 MouseDown_FirstPosition;
+	FVector2 MouseMove_FirstPosition;
+	FVector2 MouseMove_CurrentPosition;
+	bool IsMouseDown = false;
+
+public:
 	ACamera();
+	~ACamera() = default;
+	ACamera( const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height );
 
 	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height);
 	void Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0, 0, 0), float Distance = 0.f);
@@ -43,49 +89,5 @@ public:
 	FVector GetPosition() { return Position; }
 	FVector GetLook() { return LookDirection; }
 
-public:
-	// if camera parameter changed, need to update constant buffers related to camera parameter
-	bool IsChanged = true;
-
-private:
 	void Reset();
-
-	struct KeysPressed
-	{
-		bool w;
-		bool a;
-		bool s;
-		bool d;
-		bool q;
-		bool e;
-
-		bool left;
-		bool right;
-		bool up;
-		bool down;
-	} Keys;
-
-	// the backup date of init/reset camera
-	FVector InitialPosition;
-	FVector InitialUpDir;
-	FVector InitialLookAt;
-
-	// the parameter to determine a camera
-	FVector Position;
-	FVector LookDirection;
-	FVector UpDirection;
-	float Fov;
-	float AspectRatio;
-
-	// camera movement variable
-	float MoveSpeed; // Speed at which the camera moves, in units per second.
-	float TurnSpeed; // Speed at which the camera turns, in radians per second.
-	float MouseSensibility;
-
-	// camera event variable
-	FVector2 MouseDown_CurrentPosition;
-	FVector2 MouseDown_FirstPosition;
-	FVector2 MouseMove_FirstPosition;
-	FVector2 MouseMove_CurrentPosition;
-	bool IsMouseDown;
 };

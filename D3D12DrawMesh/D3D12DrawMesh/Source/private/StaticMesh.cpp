@@ -1,6 +1,6 @@
 #include "StaticMesh.h"
 
-void TStaticMeshActor::SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> Com)
+void AStaticMeshActor::SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> Com)
 {
 	if (Components.size() == 0)
 	{
@@ -12,7 +12,7 @@ void TStaticMeshActor::SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> C
 	}
 }
 
-TStaticMeshComponent* TStaticMeshActor::GetStaticMeshComponent()
+TStaticMeshComponent* AStaticMeshActor::GetStaticMeshComponent()
 {
 	if (Components.size() == 0)
 	{

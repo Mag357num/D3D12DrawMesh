@@ -5,7 +5,7 @@
 #include "MathExtend.h"
 #include "AssetManager.h"
 
-void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
+void FFrameResourceManager::InitFrameResource(TScene* Scene, const uint32& FrameCount)
 {
 	FrameResArray.resize(FrameCount);
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex) // init res for each frame
@@ -26,7 +26,7 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	}
 }
 
-void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameNum)
+void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameNum)
 {
 	RHI::GDynamicRHI->BegineCreateResource();
 	InitFrameResource(Scene.get(), FrameNum);
@@ -132,14 +132,14 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(TSkeletalMeshComponent& MeshCo
 	return MeshComFrameRes;
 }
 
-void FFrameResourceManager::InitCameraConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
 {
 	FrameRes.SetCameraCB(GDynamicRHI->CreateConstantBuffer(256));
 
-	FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
-	FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
+	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
+	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
 	FMatrix CamVP = glm::transpose(CamProj * CamView);
-	FVector4 Eye(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.f);
+	FVector4 Eye(Scene->GetCurrentCamera()->GetPosition().x, Scene->GetCurrentCamera()->GetPosition().y, Scene->GetCurrentCamera()->GetPosition().z, 1.f);
 
 	struct CameraCB
 	{
@@ -150,7 +150,7 @@ void FFrameResourceManager::InitCameraConstantBuffer(FScene* Scene, FFrameResour
 	GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
 }
 
-void FFrameResourceManager::InitLightConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
 {
 	FrameRes.SetLightCB(GDynamicRHI->CreateConstantBuffer(256));
 
@@ -183,7 +183,7 @@ void FFrameResourceManager::InitLightConstantBuffer(FScene* Scene, FFrameResourc
 	GDynamicRHI->WriteConstantBuffer(FrameRes.GetLightCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(LightCB));
 }
 
-void FFrameResourceManager::InitPaletteConstantBuffer(FScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitPaletteConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
 {
 	FrameRes.SetPaletteCB(GDynamicRHI->CreateConstantBuffer(4352));
 }
@@ -246,10 +246,10 @@ void FFrameResourceManager::CreateMapsForPostProcess(FFrameResource& FrameRes)
 void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 {
 	// create postprocess mesh and mesh resource
-	vector<FStaticVertex> TriangleVertice;
-	TriangleVertice.push_back(FStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
-	TriangleVertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
-	TriangleVertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
+	vector<TStaticVertex> TriangleVertice;
+	TriangleVertice.push_back(TStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
+	TriangleVertice.push_back(TStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
+	TriangleVertice.push_back(TStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
 
 	vector<uint32> Indice = { 0, 1, 2 };
 
@@ -424,17 +424,17 @@ void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
 
 }
 
-void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
+void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& FrameIndex)
 {
 	FFrameResource& FrameRes = FrameResArray[FrameIndex];
 
 	// camera
-	if (Scene->GetCurrentCamera().IsChanged == true)
+	if (Scene->GetCurrentCamera()->IsChanged == true)
 	{
-		FMatrix CamView = Scene->GetCurrentCamera().GetViewMatrix();
-		FMatrix CamProj = Scene->GetCurrentCamera().GetPerspProjMatrix(1.0f, 3000.0f);
+		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
+		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
 		FMatrix CamVP = glm::transpose(CamProj * CamView);
-		FVector4 Eye(Scene->GetCurrentCamera().GetPosition().x, Scene->GetCurrentCamera().GetPosition().y, Scene->GetCurrentCamera().GetPosition().z, 1.f);
+		FVector4 Eye(Scene->GetCurrentCamera()->GetPosition().x, Scene->GetCurrentCamera()->GetPosition().y, Scene->GetCurrentCamera()->GetPosition().z, 1.f);
 
 		struct CameraCB
 		{
@@ -443,7 +443,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		} CBInstance = { CamVP, Eye };
 
 		GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
-		Scene->GetCurrentCamera().IsChanged = false;
+		Scene->GetCurrentCamera()->IsChanged = false;
 	}
 
 	// character position

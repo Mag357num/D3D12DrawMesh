@@ -21,8 +21,8 @@ public:
 
 	static FRenderThread* Get();
 
-	void CreateFrameResource(shared_ptr<class FScene> Scene);
-	void UpdateFrameRes(FScene* Scene);
+	void CreateFrameResource(shared_ptr<class TScene> Scene);
+	void UpdateFrameRes(TScene* Scene);
 	void WaitForRenderThread();
 
 private:

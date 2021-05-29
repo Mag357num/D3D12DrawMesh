@@ -3,18 +3,24 @@
 #include "MathExtend.h"
 #include <gtc/matrix_transform.hpp>
 
-ACamera::ACamera():
-	InitialPosition(500.f, 0.f, 0.f),
-	Position(InitialPosition),
-	LookDirection(-1.f, 0.f, 0.f),
-	UpDirection(0.f, 0.f, 1.f),
-	MoveSpeed(300.0f),
-	MouseSensibility(0.005f),
-	Fov(90.f),
-	AspectRatio(1.7777777f),
-	TurnSpeed(1.570796327f),
-	Keys{}
+ACamera::ACamera() :
+	InitialPosition( 500.f, 0.f, 0.f ),
+	Position( InitialPosition ),
+	LookDirection( -1.f, 0.f, 0.f ),
+	UpDirection( 0.f, 0.f, 1.f ),
+	MoveSpeed( 300.0f ),
+	MouseSensibility( 0.005f ),
+	Fov( 90.f ),
+	AspectRatio( 1.7777777f ),
+	TurnSpeed( 1.570796327f ),
+	Keys{},
+	IsMouseDown(false)
 {
+}
+
+ACamera::ACamera( const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height )
+{
+	Init( PositionParam, UpDir, LookAt, Fov, Width, Height );
 }
 
 void ACamera::UpdateLookByEuler(const float& Pitch, const float& Yaw)

@@ -4,7 +4,7 @@
 
 using FPose = FTransform;
 
-class FSkeleton
+class TSkeleton
 {
 private:
 	vector<FJoint> Joints;
@@ -17,6 +17,6 @@ public:
 	vector<FMatrix> GetJointOffset(); // Bind Pose inverse matrix: to transform vertex into joint space
 	unordered_map<string, int>& GetNameToIndexMap() { return NameToIndexMap; }
 
-	FSkeleton() = default;
-	~FSkeleton() = default;
+	TSkeleton() = default;
+	~TSkeleton() = default;
 };

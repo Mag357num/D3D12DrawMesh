@@ -1,6 +1,6 @@
 #include "Skeleton.h"
 
-vector<FMatrix> FSkeleton::GetJointOffset()
+vector<FMatrix> TSkeleton::GetJointOffset()
 {
 	vector<FMatrix> Inv;
 	vector<FMatrix> ParentToRoot;
@@ -8,7 +8,7 @@ vector<FMatrix> FSkeleton::GetJointOffset()
 	
 	if (BindPoses.size() == 0)
 	{
-		throw std::exception("skeleton didnt initialize!");
+		throw std::exception("ERROR: Skeleton Uninitialize!");
 	}
 
 	for (auto i : BindPoses)
