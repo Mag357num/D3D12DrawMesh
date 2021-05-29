@@ -34,7 +34,6 @@ vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)
 	{
 		int ParentIndex = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton()->GetJoints()[i].ParentIndex;
 		FMatrix ParentToRoot = AnimGlobalPose[ParentIndex];
-		assert(ParentIndex < i);
 		AnimGlobalPose.push_back(ParentToRoot * AnimLocalToParent[i]);
 	}
 

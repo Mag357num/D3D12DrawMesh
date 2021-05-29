@@ -7,7 +7,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FReta
 	vector<FPose>& BindPoses = Ske->GetBindPoses();
 
 	float FrameLength = SequenceLength / (SampleNum - 1); // there are (SampleNum - 1) frames 
-	int FrameIndex = floor(t / FrameLength);
+	int FrameIndex = static_cast<int>(floor(t / FrameLength));
 	float LerpPercent = (t - (FrameLength * FrameIndex)) / FrameLength;
 
 	FVector S1, S2, T1, T2;

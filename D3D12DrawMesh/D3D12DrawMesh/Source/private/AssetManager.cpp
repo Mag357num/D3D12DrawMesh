@@ -259,7 +259,7 @@ shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileNam
 	}
 
 	vector<string> JointName;
-	int ElementNum;
+	uint32 ElementNum;
 	Fin.read((char*)&ElementNum, sizeof(int));
 	JointName.resize(ElementNum);
 	for (uint32 i = 0; i < ElementNum; i++)

@@ -25,7 +25,7 @@ vector<FMatrix> FSkeleton::GetJointOffset()
 
 	ParentToRoot.push_back(LocalToParent[0]);
 
-	for (uint32 i = 1; i < Joints.size(); i++)
+	for (int i = 1; i < Joints.size(); i++)
 	{
 		ParentToRoot.push_back(ParentToRoot[Joints[i].ParentIndex] * LocalToParent[i]);
 		assert(Joints[i].ParentIndex < i);

@@ -46,7 +46,7 @@ void FEngine::Init(void* WindowHandle)
 		CurrentScene->AddStaticMeshActor(i);
 	}
 
-	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, ResoWidth, ResoHeight);
+	CurrentScene->SetCurrentCamera({ 1000.f, 0.f, 300.f }, { 0.f, 0.f, 1.f }, { 0.f, 1.f, -0.2f }, 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight));
 
 	shared_ptr<ACharacter> Cha = FAssetManager::Get()->CreateCharacter();
 	shared_ptr<TSkeletalMeshComponent> SkeMeshCom = FAssetManager::Get()->CreateSkeletalMeshComponent();

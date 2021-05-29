@@ -753,7 +753,6 @@ namespace RHI
 	{
 		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
 
-		WCHAR assetsPath[512];
 		Mat->VS = CreateVertexShader(ShaderFileName);
 		Mat->PS = CreatePixelShader(ShaderFileName);
 		Mat->CB = CreateConstantBuffer(ConstantBufferSize);

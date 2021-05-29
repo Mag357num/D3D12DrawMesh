@@ -114,8 +114,4 @@ public:
 	void CreatePostProcessMaterials(FFrameResource& FrameRes);
 	void InitPostProcessConstantBuffer(FFrameResource& FrameRes);
 	void CreatePostProcessPipelines(FFrameResource& FrameRes);
-
-	void TransitToFR(class ACamera Cam, FFrameResource& FR);
-	void TransitToFR(class FLight Cam, FFrameResource& FR);
-
 };
