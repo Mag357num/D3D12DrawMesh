@@ -28,7 +28,7 @@ private:
 	// constant buffer
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> LightCB;
-	shared_ptr<FCB> PaletteCB;
+	shared_ptr<FCB> CharacterPaletteCB;
 
 	// textures
 	shared_ptr<FTexture> ShadowMap;
@@ -67,10 +67,10 @@ public:
 
 	void SetCameraCB(shared_ptr<FCB> CB) { CameraCB = CB; }
 	void SetLightCB(shared_ptr<FCB> CB) { LightCB = CB; }
-	void SetPaletteCB(shared_ptr<FCB> CB) { PaletteCB = CB; }
+	void SetPaletteCB(shared_ptr<FCB> CB) { CharacterPaletteCB = CB; }
 	shared_ptr<FCB> GetCameraCB() { return CameraCB; }
 	shared_ptr<FCB> GetLightCB() { return LightCB; }
-	shared_ptr<FCB> GetPaletteCB() { return PaletteCB; }
+	shared_ptr<FCB> GetPaletteCB() { return CharacterPaletteCB; }
 
 	void SetShadowMap(const shared_ptr<FTexture>& Tex) { ShadowMap = Tex; }
 	void SetDsMap(const shared_ptr<FTexture>& Tex) { DepthStencilMap = Tex; }

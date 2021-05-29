@@ -53,6 +53,12 @@
   <ItemGroup>
     <ClInclude Include="Source\public\Actor.h" />
     <ClInclude Include="Source\public\ActorComponent.h" />
+    <ClInclude Include="Source\public\Animation\AnimInstance.h" />
+    <ClInclude Include="Source\public\Animation\AnimNode.h" />
+    <ClInclude Include="Source\public\Animation\AnimSequence.h" />
+    <ClInclude Include="Source\public\Animation\Joint.h" />
+    <ClInclude Include="Source\public\Animation\Skeleton.h" />
+    <ClInclude Include="Source\public\Animation\Track.h" />
     <ClInclude Include="Source\public\AssetManager.h" />
     <ClInclude Include="Source\public\Camera.h" />
     <ClInclude Include="Source\public\Character.h" />
@@ -60,8 +66,13 @@
     <ClInclude Include="Source\public\DXSampleHelper.h" />
     <ClInclude Include="Source\public\Engine.h" />
     <ClInclude Include="Source\public\FrameResourceManager.h" />
+    <ClInclude Include="Source\public\Key.h" />
     <ClInclude Include="Source\public\Light.h" />
     <ClInclude Include="Source\public\MathExtend.h" />
+    <ClInclude Include="Source\public\Mesh\SkeletalMesh.h" />
+    <ClInclude Include="Source\public\Mesh\SkinnedWeightVertex.h" />
+    <ClInclude Include="Source\public\Mesh\StaticMesh.h" />
+    <ClInclude Include="Source\public\Mesh\StaticVertex.h" />
     <ClInclude Include="Source\public\Renderer.h" />
     <ClInclude Include="Source\public\RHI\DX12DynamicRHI.h" />
     <ClInclude Include="Source\public\RHI\DX12Resource.h" />
@@ -148,7 +159,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);ThirdParty\glm\glm;Source\public;Source\public\RHI;Source\public\SkeletonAnimation;Source\public\StaticMesh;Source\public\Thread;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);ThirdParty\glm\glm;Source\public;Source\public\RHI;Source\public\Animation;Source\public\Mesh;Source\public\Thread;</IncludePath>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(CommonExecutablePath);</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

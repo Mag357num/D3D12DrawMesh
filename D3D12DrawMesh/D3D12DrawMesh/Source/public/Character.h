@@ -2,29 +2,17 @@
 #include "stdafx.h"
 #include "SkeletalMesh.h"
 #include "Actor.h"
+#include "Key.h"
 
 class ACharacter : public AActor
 {
 private:
-	struct KeysPressed
-	{
-		bool w;
-		bool a;
-		bool s;
-		bool d;
-		bool q;
-		bool e;
-		bool left;
-		bool right;
-		bool up;
-		bool down;
-	};
-
-	KeysPressed Keys;
+	KeysPressed Keys = {};
 	float MoveSpeed = 300.f;
 	float TurnSpeed = 1.570796327f;
 	float MouseSensibility = 0.005f;
-	bool IsMouseDown;
+	bool IsMouseDown = false;
+
 	FVector2 MouseDown_CurrentPosition;
 	FVector2 MouseDown_FirstPosition;
 	FVector2 MouseMove_FirstPosition;

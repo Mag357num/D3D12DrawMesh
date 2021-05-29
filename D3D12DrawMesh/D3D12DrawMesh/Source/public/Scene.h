@@ -14,7 +14,7 @@ private:
 	shared_ptr<ACharacter> CurrentCharacter; // create by a character manager
 	shared_ptr<ACamera> CurrentCamera;
 	vector<ACamera> SceneCameras;
-	FDirectionLight DirectionLight; // TODO: extend to a array of lights
+	FDirectionLight DirectionLight; // TODO: extend to a array of lights ptr
 	vector<AStaticMeshActor> StaticMeshActors;
 	vector<ASkeletalMeshActor> SkeletalMeshActors;
 

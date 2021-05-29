@@ -196,5 +196,38 @@
     <ClInclude Include="Source\public\Camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Source\public\Animation\AnimInstance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Animation\AnimNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Animation\AnimSequence.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Animation\Joint.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Animation\Skeleton.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Animation\Track.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Mesh\SkeletalMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Mesh\SkinnedWeightVertex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Mesh\StaticMesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Mesh\StaticVertex.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\Key.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

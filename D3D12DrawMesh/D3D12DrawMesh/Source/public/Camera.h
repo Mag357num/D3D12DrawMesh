@@ -1,8 +1,7 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
 #pragma once
+#include "stdafx.h"
+#include "Key.h"
+#include "Actor.h"
 
 enum class FCameraMoveMode
 {
@@ -11,27 +10,14 @@ enum class FCameraMoveMode
 	STATIC = 2,
 };
 
-class ACamera // TODO: refactor: make ACamera a Actor
+class ACamera : public AActor
 {
 public:
 	// if camera parameter changed, need to update constant buffers related to camera parameter
 	bool IsChanged = true;
 
 private:
-	struct KeysPressed
-	{
-		bool w;
-		bool a;
-		bool s;
-		bool d;
-		bool q;
-		bool e;
-
-		bool left;
-		bool right;
-		bool up;
-		bool down;
-	} Keys = {};
+	KeysPressed Keys = {};
 
 	// the backup date of init/reset camera
 	FVector InitialPosition;
@@ -67,27 +53,25 @@ public:
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
 	void UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance);
 	void UpdateCameraParam_Static(const float& ElapsedSeconds);
+
 	FMatrix GetViewMatrix() const;
 	FMatrix GetPerspProjMatrix(const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
 	FMatrix GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top ,const float& NearPlane = 1.0f, const float& FarPlane = 1000.0f) const;
-	void SetMoveSpeed(const float & UnitsPerSecond);
-	void SetTurnSpeed(const float& RadiansPerSecond);
+	FVector GetPosition() { return Position; }
+	FVector GetLook() { return LookDirection; }
+	FVector2 GetEulerByLook( const FVector& LookAt );
+	void UpdateLookByEuler( const float& Pitch, const float& Yaw );
 
 	void OnKeyDown(const unsigned char& key);
 	void OnKeyUp(const unsigned char& key);
-
 	void OnButtonDown(const uint32& x, const uint32& y);
 	void OnButtonUp();
 	void OnMouseMove(const uint32& x, const uint32& y);
 
-	FVector2 GetEulerByLook(const FVector& LookAt);
-	void UpdateLookByEuler(const float& Pitch, const float& Yaw);
-
+	void SetMoveSpeed( const float& UnitsPerSecond );
+	void SetTurnSpeed( const float& RadiansPerSecond );
 	void SetFov(const float& FovParam) { Fov = FovParam; }
 	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; }
-
-	FVector GetPosition() { return Position; }
-	FVector GetLook() { return LookDirection; }
 
 	void Reset();
 };
