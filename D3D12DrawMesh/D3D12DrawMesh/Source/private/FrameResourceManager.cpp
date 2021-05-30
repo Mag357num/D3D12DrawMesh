@@ -7,50 +7,179 @@
 
 void FFrameResourceManager::InitFrameResource(TScene* Scene, const uint32& FrameCount)
 {
-	FrameResArray.resize(FrameCount);
-	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex) // init res for each frame
-	{
-		FFrameResource& FrameRes = FrameResArray[FrameIndex];
+	// single buffer frame resource
+	InitLightConstantBuffer( Scene, SingleBufferFrameRes );
+	CreateSamplers();
+	CreatePostProcessTriangle();
 
-		InitCameraConstantBuffer(Scene, FrameRes);
-		InitLightConstantBuffer(Scene, FrameRes);
-		InitPaletteConstantBuffer(Scene, FrameRes);
-		CreateMapsForShadow(FrameRes);
-		CreateSamplers(FrameRes);
-		CreateMapsForScene(FrameRes);
-		CreateMapsForPostProcess(FrameRes);
-		CreatePostProcessTriangle(FrameRes);
-		CreatePostProcessMaterials(FrameRes);
-		InitPostProcessConstantBuffer(FrameRes);
-		CreatePostProcessPipelines(FrameRes);
+	// multi buffer frame resource
+	MultiBufferFrameRes.resize( FrameCount );
+	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
+	{
+		FMultiBufferFrameResource& DFrameRes = MultiBufferFrameRes[FrameIndex];
+
+		InitCameraConstantBuffer(Scene, DFrameRes);
+		InitCharacterPaletteConstantBuffer(Scene, DFrameRes);
+		CreateMapsForShadow(DFrameRes);
+		CreateMapsForScene(DFrameRes);
+		CreateMapsForPostProcess(DFrameRes);
+
+		// TODO: move to single buffer frame resource
+		CreatePostProcessMaterials( DFrameRes );
+		InitPostProcessConstantBuffer( DFrameRes );
+		CreatePostProcessPipelines( DFrameRes );
 	}
 }
 
 void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameNum)
 {
+	// TODO: param hard coding
+	const wstring Shader_ShadowPass_StaticMesh = L"Resource\\ShadowMapping_StaticMesh.hlsl";
+	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\ShadowMapping_SkeletalMesh.hlsl";
+	const wstring Shader_ScenePass_StaticMesh = L"Resource\\SceneColor_StaticMesh.hlsl";
+	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\SceneColor_SkeletalMesh.hlsl";
+
+	const uint32 CbSize_ShadowPass_StaticMesh = 256;
+	const uint32 CbSize_ShadowPass_SkeletalMesh = 256;
+	const uint32 CbSize_ScenePass_StaticMesh = 256;
+	const uint32 CbSize_ScenePass_SkeletalMesh = 256;
+
+	FVertexInputLayer VIL_StaticMesh;
+	VIL_StaticMesh.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
+	VIL_StaticMesh.Elements.push_back( { "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 } );
+	VIL_StaticMesh.Elements.push_back( { "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 } );
+	VIL_StaticMesh.Elements.push_back( { "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 } );
+
+	FVertexInputLayer VIL_SkeletalMesh;
+	VIL_SkeletalMesh.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
+	VIL_SkeletalMesh.Elements.push_back( { "NORMAL", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 12, 0, 0 } );
+	VIL_SkeletalMesh.Elements.push_back( { "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 } );
+	VIL_SkeletalMesh.Elements.push_back( { "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 } );
+	VIL_SkeletalMesh.Elements.push_back( { "WEIGHTS", 0, FFormat::FORMAT_R16G16B16A16_UINT, 0, 48, 0, 0 } ); // array<uint16, 4>
+	VIL_SkeletalMesh.Elements.push_back( { "BONEINDICES", 0, FFormat::FORMAT_R16G16B16A16_UINT, 0, 56, 0, 0 } ); // array<uint16, 4>
+
+	FShaderInputLayer SIL_ShadowPass_StaticMesh;
+	SIL_ShadowPass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ShadowPass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+
+	FShaderInputLayer SIL_ScenePass_StaticMesh;
+	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
+
+	FShaderInputLayer SIL_ShadowPass_SkeletalMesh;
+	SIL_ShadowPass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ShadowPass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ShadowPass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+
+	FShaderInputLayer SIL_ScenePass_SkeletalMesh;
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
+
+
 	RHI::GDynamicRHI->BegineCreateResource();
 	InitFrameResource(Scene.get(), FrameNum);
 
+	// character
+	SingleBufferFrameRes.CharacterMesh = GDynamicRHI->CreateMesh_new( *Scene->GetCharacter()->GetSkeletalMeshCom() );
+
+	// static frame resource
+	for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
+	{
+		SingleBufferFrameRes.StaticMeshes.push_back( GDynamicRHI->CreateMesh_new( *Scene->GetStaticMeshActors()[i].GetComs()[0]->As<TStaticMeshComponent>() ) );
+	}
+
+	// dynamic frame resource
 	for (uint32 FrameIndex = 0; FrameIndex < FrameNum; ++FrameIndex)
 	{
-		FFrameResource& FrameResource = FrameResArray[FrameIndex];
+		FMultiBufferFrameResource& DFrameRes = MultiBufferFrameRes[FrameIndex];
 
-		FrameResource.GetSkeletalMesh() = CreateFrameMesh(*Scene->GetCharacter()->GetSkeletalMeshCom());
-
-		const uint32 StaticMeshActorNum = static_cast<uint32>(Scene->GetStaticMeshActors().size());
-		FrameResource.GetStaticMeshArray().resize(StaticMeshActorNum);
-		for (uint32 i = 0; i < StaticMeshActorNum; ++i)
+		// character mesh render resource
 		{
-			FrameResource.GetStaticMeshArray()[i] = CreateFrameMesh(*Scene->GetStaticMeshActors()[i].GetComs()[0]->As<TStaticMeshComponent>());
+			shared_ptr<FRenderResource_new> RR_ShadowPass_SkeletalMesh = CreateRenderResource
+			(
+				Shader_ShadowPass_SkeletalMesh,
+				CbSize_ShadowPass_SkeletalMesh,
+				VIL_SkeletalMesh,
+				SIL_ShadowPass_SkeletalMesh,
+				FFormat::FORMAT_UNKNOWN,
+				0
+			);
+			FTransform& Trans = Scene->GetCharacter()->GetSkeletalMeshCom()->GetTransform();
+			FMatrix WVP = transpose( Scene->GetDirectionLight().GetLightVPMatrix() * translate( Trans.Translation ) * toMat4( Trans.Quat ) * scale( Trans.Scale ) );
+			GDynamicRHI->WriteConstantBuffer( RR_ShadowPass_SkeletalMesh->CB, );
+			DFrameRes.RR_ShadowPass.push_back( RR_ShadowPass_SkeletalMesh ); // store in DFrameRes
+			SingleBufferFrameRes.CharacterMesh->RR_ShadowPass.push_back( RR_ShadowPass_SkeletalMesh.get() ); // leave a ref in mesh
+
+
+			shared_ptr<FRenderResource_new> RR_ScenePass_SkeletalMesh = CreateRenderResource
+			(
+				Shader_ScenePass_SkeletalMesh,
+				CbSize_ScenePass_SkeletalMesh,
+				VIL_SkeletalMesh,
+				SIL_ScenePass_SkeletalMesh,
+				FFormat::FORMAT_R16G16B16A16_FLOAT,
+				1
+			);
+			DFrameRes.RR_ScenePass.push_back( RR_ScenePass_SkeletalMesh );
+			SingleBufferFrameRes.CharacterMesh->RR_ScenePass.push_back( RR_ScenePass_SkeletalMesh.get() );
+		}
+
+
+		// static mesh render resource
+		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
+		{
+			shared_ptr<FRenderResource_new> RR_ShadowPass_StaticMesh = CreateRenderResource
+			(
+				Shader_ShadowPass_StaticMesh,
+				CbSize_ShadowPass_StaticMesh,
+				VIL_StaticMesh,
+				SIL_ShadowPass_StaticMesh,
+				FFormat::FORMAT_UNKNOWN,
+				0
+			);
+			DFrameRes.RR_ShadowPass.push_back(RR_ShadowPass_StaticMesh);
+			SingleBufferFrameRes.StaticMeshes[i]->RR_ShadowPass.push_back( RR_ShadowPass_StaticMesh.get() );
+
+			shared_ptr<FRenderResource_new> RR_ScenePass_StaticMesh = CreateRenderResource
+			(
+				Shader_ScenePass_StaticMesh,
+				CbSize_ScenePass_StaticMesh,
+				VIL_StaticMesh,
+				SIL_ScenePass_StaticMesh,
+				FFormat::FORMAT_R16G16B16A16_FLOAT,
+				1
+			);
+			DFrameRes.RR_ScenePass.push_back(RR_ScenePass_StaticMesh);
+			SingleBufferFrameRes.StaticMeshes[i]->RR_ScenePass.push_back( RR_ScenePass_StaticMesh.get() );
 		}
 	}
 
+	InitFMeshConstantBuffer();
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(TStaticMeshComponent& MeshComponent)
+shared_ptr<RHI::FRenderResource_new> FFrameResourceManager::CreateRenderResource( const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum )
 {
-	FFrameMesh MeshComFrameRes;
+	shared_ptr<FRenderResource_new> RR = make_shared<FRenderResource_new>();
+	RR->VS = GDynamicRHI->CreateVertexShader( Shader );
+	RR->PS = GDynamicRHI->CreatePixelShader( Shader );
+	RR->CB = GDynamicRHI->CreateConstantBuffer( Size );
+	RR->Sig = GDynamicRHI->CreateRootSignatrue( SIL );
+	RR->PSO = GDynamicRHI->CreatePso( RtFormat, VIL, RtNum, RR->VS.get(), RR->PS.get(), RR->Sig.get() );
+
+	return RR;
+}
+
+FFrameMesh_deprecated FFrameResourceManager::CreateFrameMesh_deprecated(TStaticMeshComponent& MeshComponent)
+{
+	FFrameMesh_deprecated MeshComFrameRes;
 
 	FVertexInputLayer InputLayer;
 	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
@@ -58,7 +187,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(TStaticMeshComponent& MeshComp
 	InputLayer.Elements.push_back({ "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 });
 	InputLayer.Elements.push_back({ "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 });
 
-	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent, InputLayer);
+	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh_deprecated(MeshComponent, InputLayer);
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
@@ -88,9 +217,9 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(TStaticMeshComponent& MeshComp
 	return MeshComFrameRes;
 }
 
-FFrameMesh FFrameResourceManager::CreateFrameMesh(TSkeletalMeshComponent& MeshComponent)
+FFrameMesh_deprecated FFrameResourceManager::CreateFrameMesh_deprecated(TSkeletalMeshComponent& MeshComponent)
 {
-	FFrameMesh MeshComFrameRes;
+	FFrameMesh_deprecated MeshComFrameRes;
 
 	FVertexInputLayer InputLayer;
 	InputLayer.Elements.push_back({ "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 });
@@ -100,7 +229,7 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(TSkeletalMeshComponent& MeshCo
 	InputLayer.Elements.push_back({ "WEIGHTS", 0, FFormat::FORMAT_R16G16B16A16_UINT, 0, 48, 0, 0 }); // array<uint16, 4>
 	InputLayer.Elements.push_back({ "BONEINDICES", 0, FFormat::FORMAT_R16G16B16A16_UINT, 0, 56, 0, 0 }); // array<uint16, 4>
 
-	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh(MeshComponent, InputLayer);
+	MeshComFrameRes.Mesh = GDynamicRHI->CreateMesh_deprecated(MeshComponent, InputLayer);
 	MeshComFrameRes.MeshRes = make_shared<FMeshRes>();
 
 	// material
@@ -132,9 +261,9 @@ FFrameMesh FFrameResourceManager::CreateFrameMesh(TSkeletalMeshComponent& MeshCo
 	return MeshComFrameRes;
 }
 
-void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.SetCameraCB(GDynamicRHI->CreateConstantBuffer(256));
+	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
 
 	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
 	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
@@ -147,20 +276,13 @@ void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FFrameResour
 		FVector4 Eye;
 	} CBInstance = { CamVP, Eye };
 
-	GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
 }
 
-void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FSingleBufferFrameResource& FrameRes)
 {
-	FrameRes.SetLightCB(GDynamicRHI->CreateConstantBuffer(256));
+	FrameRes.StaticSkyLightCB = GDynamicRHI->CreateConstantBuffer(256);
 
-	FVector LightPos = { 450.f, 0.f, 450.f }; // TODO: need to calculate bounding box of scene and determine this LightPos
-	FVector LightDirNored = glm::normalize(Scene->GetDirectionLight().Dir);
-	FVector LightTarget = LightPos + LightDirNored;
-	FVector LightUpDir = { 0.f, 0.f, 1.f };
-
-	FMatrix LightView = glm::lookAtLH(LightPos, LightTarget, LightUpDir);
-	FMatrix LightProj = glm::orthoLH_ZO(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f); // TODO: need to calculate bounding box of scene and determine this LightProj
 	FMatrix LightScr(
 		0.5f, 0.0f, 0.0f, 0.0f,
 		0.0f, -0.5f, 0.0f, 0.0f,
@@ -174,76 +296,75 @@ void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FFrameResourc
 		FDirectionLight Light;
 	} CBInstance;
 
-	CBInstance.VPMatrix = glm::transpose(LightProj * LightView);
+	CBInstance.VPMatrix = glm::transpose(Scene->GetDirectionLight().GetLightVPMatrix());
 	CBInstance.ScreenMatrix = glm::transpose(LightScr);
-	CBInstance.Light.Dir = LightDirNored;
-	CBInstance.Light.Color = Scene->GetDirectionLight().Color;
-	CBInstance.Light.Intensity = Scene->GetDirectionLight().Intensity;
+	CBInstance.Light = Scene->GetDirectionLight();
+	CBInstance.Light.Dir = glm::normalize( CBInstance.Light.Dir );
 
-	GDynamicRHI->WriteConstantBuffer(FrameRes.GetLightCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(LightCB));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(LightCB));
 }
 
-void FFrameResourceManager::InitPaletteConstantBuffer(TScene* Scene, FFrameResource& FrameRes)
+void FFrameResourceManager::InitCharacterPaletteConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.SetPaletteCB(GDynamicRHI->CreateConstantBuffer(4352));
+	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352);
 }
 
-void FFrameResourceManager::CreateMapsForShadow(FFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForShadow(FMultiBufferFrameResource& FrameRes)
 {
 	// create and commit shadow map
-	FrameRes.SetShadowMap(GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameRes.GetShadowMapSize(), FrameRes.GetShadowMapSize()));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetShadowMap().get(), FResViewType::DSV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetShadowMap().get(), FResViewType::SRV_RVT);
+	FrameRes.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameRes.ShadowMapSize, FrameRes.ShadowMapSize);
+	GDynamicRHI->CommitTextureAsView(FrameRes.ShadowMap.get(), FResViewType::DSV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.ShadowMap.get(), FResViewType::SRV_RVT);
 }
 
-void FFrameResourceManager::CreateSamplers(FFrameResource& FrameRes)
+void FFrameResourceManager::CreateSamplers()
 {
 	// create and commit sampler
-	FrameRes.SetClampSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST));
-	FrameRes.SetWarpSampler(GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST));
+	SingleBufferFrameRes.ClampSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::CLAMP_ST);
+	SingleBufferFrameRes.WarpSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST);
 }
 
-void FFrameResourceManager::CreateMapsForScene(FFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForScene(FMultiBufferFrameResource& FrameRes)
 {
 	// create and commit Ds map
-	FrameRes.SetDsMap(GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetDsMap().get(), FResViewType::DSV_RVT);
+	FrameRes.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+	GDynamicRHI->CommitTextureAsView(FrameRes.DepthStencilMap.get(), FResViewType::DSV_RVT);
 
 	// create and commit scene color
-	FrameRes.SetSceneColorMap(GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight()));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetSceneColorMap().get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetSceneColorMap().get(), FResViewType::SRV_RVT);
+	FrameRes.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::SRV_RVT);
 }
 
-void FFrameResourceManager::CreateMapsForPostProcess(FFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& FrameRes)
 {
 	// create and commit bloom down and up texture
-	FrameRes.SetBloomSetupMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomSetupMap().get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomSetupMap().get(), FResViewType::SRV_RVT);
+	FrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
 
 	for (uint32 i = 0; i < 4; i++)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 3 + i));
-		FrameRes.GetBloomDownMapArray().push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomDownMapArray()[i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomDownMapArray()[i].get(), FResViewType::SRV_RVT);
+		FrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
 	}
 
 	for (int i = 4; i > 1; i--)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 1 + i));
-		FrameRes.GetBloomUpMapArray().push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomUpMapArray()[4 - i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameRes.GetBloomUpMapArray()[4 - i].get(), FResViewType::SRV_RVT);
+		FrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::SRV_RVT);
 	}
 
-	FrameRes.SetSunMergeMap(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4));
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetSunMergeMap().get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.GetSunMergeMap().get(), FResViewType::SRV_RVT);
+	FrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
 }
 
-void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
+void FFrameResourceManager::CreatePostProcessTriangle()
 {
 	// create postprocess mesh and mesh resource
 	vector<TStaticVertex> TriangleVertice;
@@ -262,65 +383,65 @@ void FFrameResourceManager::CreatePostProcessTriangle(FFrameResource& FrameRes)
 	InputLayer.Elements.push_back( { "TEXCOORD", 0, FFormat::FORMAT_R32G32_FLOAT, 0, 24, 0, 0 } );
 	InputLayer.Elements.push_back( { "COLOR", 0, FFormat::FORMAT_R32G32B32A32_FLOAT, 0, 32, 0, 0 } );
 
-	FrameRes.SetPostProcessTriangle(GDynamicRHI->CreateMesh(Component, InputLayer));
-	FrameRes.SetPostProcessTriangleRes(make_shared<FMeshRes>());
+	SingleBufferFrameRes.PostProcessTriangle = GDynamicRHI->CreateMesh_deprecated(Component, InputLayer);
+	SingleBufferFrameRes.PostProcessTriangleRes = make_shared<FMeshRes>();
 }
 
-void FFrameResourceManager::CreatePostProcessMaterials(FFrameResource& FrameRes)
+void FFrameResourceManager::CreatePostProcessMaterials(FMultiBufferFrameResource& FrameRes)
 {
 	// create postprocess material
 	// bloom setup
 	vector<shared_ptr<FHandle>> TexHandles;
-	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
+	TexHandles.push_back(FrameRes.SceneColorMap->SrvHandle);
 	FrameRes.BloomSetupMat = GDynamicRHI->CreateMaterial(L"Resource\\BloomSetup.hlsl", 256, TexHandles);
 
 	// bloom down
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomSetupMap->SrvHandle);
 	FrameRes.BloomDownMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[0]->SrvHandle);
 	FrameRes.BloomDownMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[1]->SrvHandle);
 	FrameRes.BloomDownMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[2]->SrvHandle);
 	FrameRes.BloomDownMat[3] = GDynamicRHI->CreateMaterial(L"Resource\\BloomDownMat.hlsl", 256, TexHandles);
 
 	// bloom up
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[2]->SrvHandle);
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[3]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[2]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[3]->SrvHandle);
 	FrameRes.BloomUpMat[0] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[1]->SrvHandle);
-	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[0]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[1]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomUpMapArray[0]->SrvHandle);
 	FrameRes.BloomUpMat[1] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomDownMapArray()[0]->SrvHandle);
-	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[1]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomDownMapArray[0]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomUpMapArray[1]->SrvHandle);
 	FrameRes.BloomUpMat[2] = GDynamicRHI->CreateMaterial(L"Resource\\BloomUpMat.hlsl", 256, TexHandles);
 
 	// sun merge
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetBloomSetupMap()->SrvHandle);
-	TexHandles.push_back(FrameRes.GetBloomUpMapArray()[2]->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomSetupMap->SrvHandle);
+	TexHandles.push_back(FrameRes.BloomUpMapArray[2]->SrvHandle);
 	FrameRes.SunMergeMat = GDynamicRHI->CreateMaterial(L"Resource\\SunMerge.hlsl", 256, TexHandles);
 
 	// tonemapping
 	TexHandles.clear();
-	TexHandles.push_back(FrameRes.GetSceneColorMap()->SrvHandle);
-	TexHandles.push_back(FrameRes.GetSunMergeMap()->SrvHandle);
+	TexHandles.push_back(FrameRes.SceneColorMap->SrvHandle);
+	TexHandles.push_back(FrameRes.SunMergeMap->SrvHandle);
 	FrameRes.ToneMappingMat = GDynamicRHI->CreateMaterial(L"Resource\\ToneMapping.hlsl", 256, TexHandles);
 }
 
-void FFrameResourceManager::InitPostProcessConstantBuffer(FFrameResource& FrameRes)
+void FFrameResourceManager::InitPostProcessConstantBuffer(FMultiBufferFrameResource& FrameRes)
 {
 	// update postprocess
 	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
@@ -388,9 +509,9 @@ void FFrameResourceManager::InitPostProcessConstantBuffer(FFrameResource& FrameR
 
 }
 
-void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
+void FFrameResourceManager::CreatePostProcessPipelines(FMultiBufferFrameResource& FrameRes)
 {
-	FMesh* Tri = FrameRes.GetPostProcessTriangle().get();
+	FMesh_deprecated* Tri = SingleBufferFrameRes.PostProcessTriangle.get();
 
 	// pipeline
 	// bloom setup
@@ -426,7 +547,7 @@ void FFrameResourceManager::CreatePostProcessPipelines(FFrameResource& FrameRes)
 
 void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& FrameIndex)
 {
-	FFrameResource& FrameRes = FrameResArray[FrameIndex];
+	FMultiBufferFrameResource& FrameRes = MultiBufferFrameRes[FrameIndex];
 
 	// camera
 	if (Scene->GetCurrentCamera()->IsChanged == true)
@@ -442,14 +563,14 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 			FVector4 Eye;
 		} CBInstance = { CamVP, Eye };
 
-		GDynamicRHI->WriteConstantBuffer(FrameRes.GetCameraCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
+		GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
 		Scene->GetCurrentCamera()->IsChanged = false;
 	}
 
 	// character position
 	auto MeshComponent = Scene->GetCharacter()->GetSkeletalMeshCom();
 	FMatrix WorldMatrix = transpose(translate(MeshComponent->GetTransform().Translation) * toMat4(MeshComponent->GetTransform().Quat) * scale(MeshComponent->GetTransform().Scale));
-	GDynamicRHI->WriteConstantBuffer(FrameRes.GetSkeletalMesh().MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.SkeletalMesh.MeshRes->SceneColorMat->CB.get(), reinterpret_cast<void*>(&WorldMatrix), sizeof(FMatrix));
 
 	// animation
 	struct PaletteCB
@@ -462,5 +583,5 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
 	}
 
-	GDynamicRHI->WriteConstantBuffer(FrameRes.GetPaletteCB().get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
 }

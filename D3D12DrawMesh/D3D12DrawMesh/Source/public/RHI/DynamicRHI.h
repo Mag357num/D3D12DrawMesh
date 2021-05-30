@@ -30,8 +30,11 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
-		virtual shared_ptr<FMesh> CreateMesh(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
+		virtual shared_ptr<FMesh_new> CreateMesh_new( TStaticMeshComponent& MeshComponent ) = 0;
+		virtual shared_ptr<FMesh_new> CreateMesh_new( TSkeletalMeshComponent& MeshComponent ) = 0;
+
+		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated( TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer ) = 0;
+		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
@@ -46,7 +49,7 @@ namespace RHI
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
 		virtual void ClearRenderTarget(FHandle* Handle) = 0;
-		virtual void DrawMesh(FMesh* Mesh) = 0;
+		virtual void DrawMesh(FMesh_deprecated* Mesh) = 0;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;

@@ -56,22 +56,12 @@ namespace RHI
 		vector<FInputElement> Elements;
 	};
 
-	struct FMesh : public FRHIResource
-	{
-		FMesh() = default;
-		uint32 IndexNum;
-		FVertexInputLayer InputLayer;
-	};
-
-	struct FRootSignatrue : public FRHIResource
-	{
-	};
+	struct FRootSignatrue : public FRHIResource {};
 
 	struct FMaterial : public FRHIResource
 	{
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
-		unordered_map<string, float> ConstantBufferParam;
 		shared_ptr<FCB> CB;
 		vector<shared_ptr<FHandle>> TexHandles;
 	};
@@ -80,6 +70,28 @@ namespace RHI
 	{
 		shared_ptr<FPipelineState> PSO;
 		shared_ptr<FRootSignatrue> Sig;
+	};
+
+	struct FRenderResource_new
+	{
+		shared_ptr<FPipelineState> PSO;
+		shared_ptr<FRootSignatrue> Sig;
+		shared_ptr<FShader> VS;
+		shared_ptr<FShader> PS;
+		shared_ptr<FCB> CB;
+	};
+
+	struct FMesh_deprecated : public FRHIResource
+	{
+		uint32 IndexNum;
+		FVertexInputLayer InputLayer;
+	};
+
+	struct FMesh_new : public FRHIResource
+	{
+		uint32 IndexNum;
+		vector<FRenderResource_new*> RR_ShadowPass; // only reference
+		vector<FRenderResource_new*> RR_ScenePass;
 	};
 
 	struct FMeshRes : public FRHIResource

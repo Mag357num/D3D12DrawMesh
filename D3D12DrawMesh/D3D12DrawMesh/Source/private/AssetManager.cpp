@@ -4,7 +4,7 @@
 #include "SkeletalMesh.h"
 #include "Skeleton.h"
 
-using RHI::FMesh;
+using RHI::FMesh_deprecated;
 using RHI::FMeshRes;
 using RHI::GDynamicRHI;
 

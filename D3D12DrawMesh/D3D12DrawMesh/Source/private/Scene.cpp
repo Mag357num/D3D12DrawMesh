@@ -7,7 +7,7 @@ void TScene::Tick(StepTimer& Timer)
 	GetCurrentCamera()->Update(static_cast<float>(Timer.GetElapsedSeconds()), FCameraMoveMode::AROUNDTARGET, GetCharacter()->GetLocation(), 300.f);
 }
 
-const FDirectionLight& TScene::GetDirectionLight() const
+FDirectionLight& TScene::GetDirectionLight()
 {
 	return DirectionLight;
 }

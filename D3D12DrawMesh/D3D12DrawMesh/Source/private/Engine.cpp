@@ -5,7 +5,7 @@
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
-using RHI::FMesh;
+using RHI::FMesh_deprecated;
 using RHI::FMeshRes;
 
 FEngine* GEngine = nullptr;
@@ -41,7 +41,10 @@ void FEngine::Init(void* WindowHandle)
 	// camera
 	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
 
-	// 
+	// light
+	CurrentScene->SetDirectionLight(FDirectionLight());
+
+	// character
 	shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
 	{
 		shared_ptr<TSkeletalMeshComponent> SkeMeshCom = make_shared<TSkeletalMeshComponent>();
@@ -71,10 +74,6 @@ void FEngine::Tick()
 
 	// TODO: remove FrameRes concept add into the tick layer, update static mesh's constant buffer when tick them
 	FRenderThread::Get()->UpdateFrameRes(CurrentScene.get());
-}
-
-void FEngine::Render()
-{
 }
 
 void FEngine::Destroy()

@@ -30,7 +30,7 @@ public:
 	// TODO: refactor here. createCharacter should not be Scene's work
 	ACamera* GetCurrentCamera() { return CurrentCamera.get(); }
 	ACharacter* GetCharacter() { return CurrentCharacter.get(); }
-	const FDirectionLight& GetDirectionLight() const;
+	FDirectionLight& GetDirectionLight();
 	vector<AStaticMeshActor>& GetStaticMeshActors();
 	void AddStaticMeshActor( AStaticMeshActor Actor );
 };

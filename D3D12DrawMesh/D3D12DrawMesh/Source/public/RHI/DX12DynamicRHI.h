@@ -31,8 +31,11 @@ namespace RHI
 			const uint32& ResoHeight) override;
 
 		// Resource Create
-		virtual shared_ptr<FMesh> CreateMesh(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
-		virtual shared_ptr<FMesh> CreateMesh(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
+		virtual shared_ptr<FMesh_new> CreateMesh_new( TStaticMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FMesh_new> CreateMesh_new( TSkeletalMeshComponent& MeshComponent ) override;
+
+		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
+		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
 		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;
@@ -47,7 +50,7 @@ namespace RHI
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
-		virtual void DrawMesh(FMesh* Mesh) override;
+		virtual void DrawMesh(FMesh_deprecated* Mesh) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;

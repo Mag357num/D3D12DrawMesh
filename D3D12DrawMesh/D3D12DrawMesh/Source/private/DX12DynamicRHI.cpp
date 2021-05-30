@@ -103,11 +103,11 @@ namespace RHI
 		CreateFenceAndEvent();
 	}
 
-	void FDX12DynamicRHI::DrawMesh(FMesh* Mesh)
+	void FDX12DynamicRHI::DrawMesh(FMesh_deprecated* Mesh)
 	{
-		CommandLists[0].CommandList->IASetIndexBuffer(&Mesh->As<FDX12Mesh>()->IndexBufferView);
-		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &Mesh->As<FDX12Mesh>()->VertexBufferView);
-		CommandLists[0].CommandList->DrawIndexedInstanced(Mesh->As<FDX12Mesh>()->IndexNum, 1, 0, 0, 0);
+		CommandLists[0].CommandList->IASetIndexBuffer(&Mesh->As<FDX12Mesh_deprecated>()->IndexBufferView);
+		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &Mesh->As<FDX12Mesh_deprecated>()->VertexBufferView);
+		CommandLists[0].CommandList->DrawIndexedInstanced(Mesh->As<FDX12Mesh_deprecated>()->IndexNum, 1, 0, 0, 0);
 	}
 
 	void FDX12DynamicRHI::SetViewport(float Left, float Right, float Width, float Height, float MinDepth /*= 0.f*/, float MaxDepth /*= 1.f*/)
@@ -546,9 +546,171 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer)
+	shared_ptr<RHI::FMesh_new> FDX12DynamicRHI::CreateMesh_new( TStaticMeshComponent& MeshComponent )
 	{
-		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
+		shared_ptr<RHI::FDX12Mesh_new> Mesh = make_shared<RHI::FDX12Mesh_new>();
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size());
+
+		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertices;
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( TStaticVertex ));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size() * sizeof( uint32 ));
+		auto CommandList = CommandLists[0].CommandList;
+
+		// vertex buffer
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( VertexBufferSize ),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->VertexBuffer ) ) );
+
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( VertexBufferSize ),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->VertexBufferUploadHeap ) ) );
+
+		//NAME_D3D12_OBJECT(Mesh->VertexBuffer);
+
+		// Copy data to the intermediate upload heap and then schedule a copy 
+		// from the upload heap to the vertex buffer.
+		D3D12_SUBRESOURCE_DATA vertexData = {};
+		vertexData.pData = VertexBuffer.data();
+		vertexData.RowPitch = VertexBufferSize;
+		vertexData.SlicePitch = vertexData.RowPitch;
+
+		UpdateSubresources<1>( CommandList.Get(), Mesh->VertexBuffer.Get(), Mesh->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData );
+		CommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( Mesh->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER ) );
+
+		// Initialize the vertex buffer view.
+		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
+		Mesh->VertexBufferView.StrideInBytes = sizeof( TStaticVertex );
+		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
+
+		// index buffer
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( IndexBufferSize ),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->IndexBuffer ) ) );
+
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( IndexBufferSize ),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->IndexBufferUploadHeap ) ) );
+
+		//NAME_D3D12_OBJECT(Mesh->IndexBuffer);
+
+		// Copy data to the intermediate upload heap and then schedule a copy 
+		// from the upload heap to the index buffer.
+		D3D12_SUBRESOURCE_DATA indexData = {};
+		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.data();
+		indexData.RowPitch = IndexBufferSize;
+		indexData.SlicePitch = indexData.RowPitch;
+
+		UpdateSubresources<1>( CommandList.Get(), Mesh->IndexBuffer.Get(), Mesh->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData );
+		CommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( Mesh->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER ) );
+
+		// Describe the index buffer view.
+		Mesh->IndexBufferView.BufferLocation = Mesh->IndexBuffer->GetGPUVirtualAddress();
+		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
+
+		return Mesh;
+	}
+
+	shared_ptr<RHI::FMesh_new> FDX12DynamicRHI::CreateMesh_new( TSkeletalMeshComponent& MeshComponent )
+	{
+		shared_ptr<RHI::FDX12Mesh_new> Mesh = make_shared<RHI::FDX12Mesh_new>();
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
+
+		vector<TSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( TSkeletalVertex ));
+		uint32 IndexBufferSize = static_cast<uint32>(Mesh->IndexNum * sizeof( uint32 ));
+		auto CommandList = CommandLists[0].CommandList;
+
+		// vertex buffer
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( VertexBufferSize ),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->VertexBuffer ) ) );
+
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( VertexBufferSize ),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->VertexBufferUploadHeap ) ) );
+
+		//NAME_D3D12_OBJECT(Mesh->VertexBuffer);
+
+		// Copy data to the intermediate upload heap and then schedule a copy 
+		// from the upload heap to the vertex buffer.
+		D3D12_SUBRESOURCE_DATA vertexData = {};
+		vertexData.pData = VertexBuffer.data();
+		vertexData.RowPitch = VertexBufferSize;
+		vertexData.SlicePitch = vertexData.RowPitch;
+
+		UpdateSubresources<1>( CommandList.Get(), Mesh->VertexBuffer.Get(), Mesh->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData );
+		CommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( Mesh->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER ) );
+
+		// Initialize the vertex buffer view.
+		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
+		Mesh->VertexBufferView.StrideInBytes = sizeof( TSkeletalVertex );
+		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
+
+		// index buffer
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_DEFAULT ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( IndexBufferSize ),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->IndexBuffer ) ) );
+
+		ThrowIfFailed( Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES( D3D12_HEAP_TYPE_UPLOAD ),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer( IndexBufferSize ),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &Mesh->IndexBufferUploadHeap ) ) );
+
+		//NAME_D3D12_OBJECT(Mesh->IndexBuffer);
+
+		// Copy data to the intermediate upload heap and then schedule a copy 
+		// from the upload heap to the index buffer.
+		D3D12_SUBRESOURCE_DATA indexData = {};
+		indexData.pData = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.data();
+		indexData.RowPitch = IndexBufferSize;
+		indexData.SlicePitch = indexData.RowPitch;
+
+		UpdateSubresources<1>( CommandList.Get(), Mesh->IndexBuffer.Get(), Mesh->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData );
+		CommandList->ResourceBarrier( 1, &CD3DX12_RESOURCE_BARRIER::Transition( Mesh->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER ) );
+
+		// Describe the index buffer view.
+		Mesh->IndexBufferView.BufferLocation = Mesh->IndexBuffer->GetGPUVirtualAddress();
+		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
+
+		return Mesh;
+	}
+
+	shared_ptr<RHI::FMesh_deprecated> FDX12DynamicRHI::CreateMesh_deprecated( TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer )
+	{
+		shared_ptr<RHI::FDX12Mesh_deprecated> Mesh = make_shared<RHI::FDX12Mesh_deprecated>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size());
 
 		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertices;
@@ -629,9 +791,9 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMesh> FDX12DynamicRHI::CreateMesh(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
+	shared_ptr<RHI::FMesh_deprecated> FDX12DynamicRHI::CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
 	{
-		shared_ptr<RHI::FDX12Mesh> Mesh = make_shared<RHI::FDX12Mesh>();
+		shared_ptr<RHI::FDX12Mesh_deprecated> Mesh = make_shared<RHI::FDX12Mesh_deprecated>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
 
 		vector<TSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;

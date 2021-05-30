@@ -17,7 +17,6 @@ public:
 
 	void Init(void* WindowHandle);
 	void Tick();
-	void Render();
 	void Destroy();
 
 	void OnKeyDown(unsigned char Key);
