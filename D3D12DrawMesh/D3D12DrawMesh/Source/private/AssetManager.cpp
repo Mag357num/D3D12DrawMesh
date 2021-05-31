@@ -4,8 +4,6 @@
 #include "SkeletalMesh.h"
 #include "Skeleton.h"
 
-using RHI::FMesh_deprecated;
-using RHI::FMeshRes;
 using RHI::GDynamicRHI;
 
 FAssetManager* FAssetManager::GAssetManager = new FAssetManager;
@@ -92,14 +90,14 @@ vector<TStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 
 	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
-	MeshLOD.Vertices.resize(static_cast<int>(BufferByteSize / sizeof(float)));
-	Fin.read((char*)MeshLOD.Vertices.data(), BufferByteSize);
+	MeshLOD.Vertice.resize(static_cast<int>(BufferByteSize / sizeof(float)));
+	Fin.read((char*)MeshLOD.Vertice.data(), BufferByteSize);
 
 	Fin.read((char*)&VertexNum, sizeof(int));
 	BufferByteSize = VertexNum * sizeof(int);
 
-	MeshLOD.Indices.resize(VertexNum);
-	Fin.read((char*)MeshLOD.Indices.data(), BufferByteSize);
+	MeshLOD.Indice.resize(VertexNum);
+	Fin.read((char*)MeshLOD.Indice.data(), BufferByteSize);
 
 	vector<TStaticMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD);

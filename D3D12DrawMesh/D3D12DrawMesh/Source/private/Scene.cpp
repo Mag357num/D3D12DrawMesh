@@ -3,8 +3,8 @@
 
 void TScene::Tick(StepTimer& Timer)
 {
-	GetCharacter()->Tick(static_cast<float>(Timer.GetElapsedSeconds()));
-	GetCurrentCamera()->Update(static_cast<float>(Timer.GetElapsedSeconds()), FCameraMoveMode::AROUNDTARGET, GetCharacter()->GetLocation(), 300.f);
+	GetCurrentCharacter()->Tick(static_cast<float>(Timer.GetElapsedSeconds()));
+	GetCurrentCamera()->Update(static_cast<float>(Timer.GetElapsedSeconds()), FCameraMoveMode::AROUNDTARGET, GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransform().Translation, 300.f);
 }
 
 FDirectionLight& TScene::GetDirectionLight()

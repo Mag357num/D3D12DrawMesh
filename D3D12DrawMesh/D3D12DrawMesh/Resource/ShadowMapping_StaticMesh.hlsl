@@ -1,11 +1,6 @@
 cbuffer StaticMeshConstantBuffer : register(b0)
 {
-	float4x4 World;
-};
-
-cbuffer LightConstantBuffer : register(b1)
-{
-	float4x4 VPMatrix;
+	float4x4 WVP;
 };
 
 struct VSInput
@@ -25,7 +20,6 @@ struct PSInput
 PSInput VSMain(VSInput input)
 {
 	PSInput result;
-	float4x4 WVP = mul(World, VPMatrix);
 	result.position = mul(float4(input.position, 1.0f), WVP);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
 	return result;

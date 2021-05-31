@@ -30,12 +30,10 @@ namespace RHI
 			const uint32& ResoHeight) = 0;
 
 		// Resource Create
-		virtual shared_ptr<FMesh_new> CreateMesh_new( TStaticMeshComponent& MeshComponent ) = 0;
-		virtual shared_ptr<FMesh_new> CreateMesh_new( TSkeletalMeshComponent& MeshComponent ) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry( TStaticMeshComponent& MeshComponent ) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry(TSkeletalMeshComponent& MeshComponent) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry(TStaticMeshLOD& Lod) = 0;
 
-		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated( TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer ) = 0;
-		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) = 0;
-		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) = 0;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
@@ -45,19 +43,20 @@ namespace RHI
 
 		// Resource process
 		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) = 0;
+		virtual void SetTextureState(FTexture* Tex, FRESOURCE_STATES State) = 0;
+		virtual void SwitchTextureState(FTexture* Tex, FRESOURCE_STATES S1, FRESOURCE_STATES S2) = 0;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) = 0;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
 		virtual void ClearRenderTarget(FHandle* Handle) = 0;
-		virtual void DrawMesh(FMesh_deprecated* Mesh) = 0;
+		virtual void DrawMesh(FGeometry* Mesh) = 0;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
 
 		// Pipeline
-		virtual shared_ptr<FPipeline> CreatePipeline(FFormat RtFormat, uint32 RtNum, FVertexInputLayer VertexInputLayer, FShaderInputLayer ShaderInputLayer, FMaterial* Mat) = 0;
 		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
-		virtual void SetPipelineState(FPipeline* Pipe) = 0;
+		virtual void SetPipelineState(FRenderResource* RR) = 0;
 		virtual void SetShaderInput(vector<shared_ptr<FHandle>> Handles) = 0;
 
 		// Output Merger
@@ -76,7 +75,7 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() = 0;
-		virtual uint32 GetFrameNum() = 0;
+		virtual uint32 GetFrameCount() = 0;
 		virtual uint32 GetCurrentFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
@@ -103,3 +102,4 @@ public:
 #define MACRO_COMBINE_DIRECT(X, Y) X##Y
 #define MACRO_COMBINE(X, Y) MACRO_COMBINE_DIRECT(X, Y)
 #define SCOPED_EVENT(__NAME__) FScopedEvent MACRO_COMBINE(ScopedEvent, __LINE__)(__NAME__)
+//#define SCOPED_EVENT_F(...) SCOPED_EVENT(fmt::format(__VA_ARGS__).c_str())

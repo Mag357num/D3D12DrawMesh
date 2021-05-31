@@ -12,9 +12,9 @@ struct FLight
 struct FDirectionLight : public FLight
 {
 	FVector Dir = { -1.f, 0.f, -1.f };
+	FMatrix VPMatrix;
 
 	FMatrix GetLightVPMatrix();
-	FMatrix VPMatrix;
 };
 
 struct FPointLight : public FLight

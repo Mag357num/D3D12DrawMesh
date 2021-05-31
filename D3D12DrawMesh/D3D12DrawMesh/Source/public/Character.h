@@ -23,8 +23,6 @@ public:
 	void Tick( const float& ElapsedSeconds );
 
 	TSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<TSkeletalMeshComponent>(); }
-	FVector& GetLocation() { return GetSkeletalMeshCom()->GetTransform().Translation; }
-	FVector GetLook();
 
 	void OnKeyDown( const unsigned char& key );
 	void OnKeyUp( const unsigned char& key );

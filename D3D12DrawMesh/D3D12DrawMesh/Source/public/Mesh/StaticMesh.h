@@ -7,11 +7,11 @@
 struct TStaticMeshLOD
 {
 public:
-	vector<TStaticVertex> Vertices;
-	vector<uint32> Indices;
+	vector<TStaticVertex> Vertice;
+	vector<uint32> Indice;
 public:
 	TStaticMeshLOD() = default;
-	TStaticMeshLOD( const vector<TStaticVertex>& Vertices, const vector<uint32>& Indices ) : Vertices( Vertices ), Indices( Indices ) { }
+	TStaticMeshLOD( const vector<TStaticVertex>& Vertice, const vector<uint32>& Indice ) : Vertice( Vertice ), Indice( Indice ) { }
 	~TStaticMeshLOD() = default;
 };
 
@@ -44,5 +44,5 @@ class AStaticMeshActor : public AActor
 {
 public:
 	void SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> Com);
-	TStaticMeshComponent* GetStaticMeshComponent();
+	TStaticMeshComponent* GetStaticMeshCom();
 };

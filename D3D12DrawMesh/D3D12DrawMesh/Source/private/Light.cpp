@@ -4,7 +4,7 @@ FMatrix FDirectionLight::GetLightVPMatrix()
 {
 	if (IsChanged)
 	{
-		FVector LightPos = Position;
+		FVector& LightPos = Position;
 		FVector LightDirNored = glm::normalize( Dir );
 		FVector LightTarget = LightPos + LightDirNored;
 		FVector LightUpDir = { 0.f, 0.f, 1.f };  // TODO: hard coding

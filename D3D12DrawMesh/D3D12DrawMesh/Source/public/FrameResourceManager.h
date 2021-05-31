@@ -5,17 +5,21 @@
 
 using namespace RHI;
 
-struct FFrameMesh_deprecated
-{
-	shared_ptr<FMesh_deprecated> Mesh;
-	shared_ptr<FMeshRes> MeshRes;
-};
-
 struct FSingleBufferFrameResource
 {
-	shared_ptr<FMesh_new> CharacterMesh;
-	vector<shared_ptr<FMesh_new>> StaticMeshes;
-	vector<shared_ptr<FMesh_new>> PPTriangle; // post process triangle
+	// meshes
+	shared_ptr<FGeometry> CharacterMesh;
+	vector<shared_ptr<FGeometry>> StaticMeshes;
+	shared_ptr<FGeometry> PPTriangle; // post process triangle
+
+	// render resources
+	unordered_map<FGeometry*, shared_ptr<FRenderResource>> RRMap_ShadowPass;
+	unordered_map<FGeometry*, shared_ptr<FRenderResource>> RRMap_ScenePass;
+	shared_ptr<FRenderResource> RR_BloomSetup;
+	shared_ptr<FRenderResource> RR_BloomDown[4];
+	shared_ptr<FRenderResource> RR_BloomUp[3];
+	shared_ptr<FRenderResource> RR_SunMerge;
+	shared_ptr<FRenderResource> RR_ToneMapping;
 
 	// static light
 	shared_ptr<FCB> StaticSkyLightCB;
@@ -23,25 +27,17 @@ struct FSingleBufferFrameResource
 	// sampler
 	shared_ptr<FSampler> ClampSampler;
 	shared_ptr<FSampler> WarpSampler;
-
-	// postprocess static mesh
-	shared_ptr<FMesh_deprecated> PostProcessTriangle;
-	shared_ptr<FMeshRes> PostProcessTriangleRes;
 };
 
 struct FMultiBufferFrameResource
 {
 	const uint32 ShadowMapSize = 8192;
 
-	// render resource of mesh
-	vector<shared_ptr<FRenderResource_new>> RR_ShadowPass;
-	vector<shared_ptr<FRenderResource_new>> RR_ScenePass;
-
 	// constant buffer
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> CharacterPaletteCB;
 
-	// textures
+	// textures // TODO: move to single buffer frame resource
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FTexture> SceneColorMap;
@@ -49,38 +45,22 @@ struct FMultiBufferFrameResource
 	shared_ptr<FTexture> SunMergeMap;
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
-
-	// pipeline
-	shared_ptr<FPipeline> BloomSetupPipeline;
-	shared_ptr<FPipeline> BloomDownPipeline;
-	shared_ptr<FPipeline> BloomUpPipeline;
-	shared_ptr<FPipeline> SunMergePipeline;
-	shared_ptr<FPipeline> ToneMappingPipeline;
-
-	// material
-	shared_ptr<FMaterial> BloomSetupMat;
-	shared_ptr<FMaterial> BloomDownMat[4];
-	shared_ptr<FMaterial> BloomUpMat[3];
-	shared_ptr<FMaterial> SunMergeMat;
-	shared_ptr<FMaterial> ToneMappingMat;
 };
 
 class FFrameResourceManager
 {
 private:
-	FSingleBufferFrameResource SingleBufferFrameRes;
-	vector<FMultiBufferFrameResource> MultiBufferFrameRes;
+	FSingleBufferFrameResource SFrameRes;
+	vector<FMultiBufferFrameResource> MFrameRes;
 public:
-	FSingleBufferFrameResource& GetStaticFrameRes() { return SingleBufferFrameRes; }
-	vector<FMultiBufferFrameResource>& GetDynamicFrameRes() { return MultiBufferFrameRes; }
+	FSingleBufferFrameResource& GetSingleFrameRes() { return SFrameRes; }
+	vector<FMultiBufferFrameResource>& GetMultiFrameRes() { return MFrameRes; }
 	void InitFrameResource(TScene* Scene, const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(TScene* Scene, const uint32& FrameIndex);
 
-	shared_ptr<FRenderResource_new> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum);
+	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
-	FFrameMesh_deprecated CreateFrameMesh_deprecated(TStaticMeshComponent& MeshComponent); // TODO: combine the two CreateFrameMesh
-	FFrameMesh_deprecated CreateFrameMesh_deprecated(TSkeletalMeshComponent& MeshComponent);
 	void InitCameraConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void InitLightConstantBuffer(TScene* Scene, FSingleBufferFrameResource& FrameRes);
 	void InitCharacterPaletteConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes);
@@ -88,8 +68,6 @@ public:
 	void CreateSamplers();
 	void CreateMapsForScene(FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForPostProcess(FMultiBufferFrameResource& FrameRes);
-	void CreatePostProcessTriangle();
-	void CreatePostProcessMaterials(FMultiBufferFrameResource& FrameRes);
-	void InitPostProcessConstantBuffer(FMultiBufferFrameResource& FrameRes);
-	void CreatePostProcessPipelines(FMultiBufferFrameResource& FrameRes);
+	void CreatePPTriangle();
+	void CreatePPTriangleRR();
 };

@@ -103,25 +103,10 @@ namespace RHI
 		CreateFenceAndEvent();
 	}
 
-	void FDX12DynamicRHI::DrawMesh(FMesh_deprecated* Mesh)
-	{
-		CommandLists[0].CommandList->IASetIndexBuffer(&Mesh->As<FDX12Mesh_deprecated>()->IndexBufferView);
-		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &Mesh->As<FDX12Mesh_deprecated>()->VertexBufferView);
-		CommandLists[0].CommandList->DrawIndexedInstanced(Mesh->As<FDX12Mesh_deprecated>()->IndexNum, 1, 0, 0, 0);
-	}
-
 	void FDX12DynamicRHI::SetViewport(float Left, float Right, float Width, float Height, float MinDepth /*= 0.f*/, float MaxDepth /*= 1.f*/)
 	{
 		D3D12_VIEWPORT ShadowViewport = CD3DX12_VIEWPORT(Left, Right, Width, Height, MinDepth, MaxDepth);
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
-	}
-
-	shared_ptr<RHI::FPipeline> FDX12DynamicRHI::CreatePipeline(FFormat RtFormat, uint32 RtNum, FVertexInputLayer VertexInputLayer, FShaderInputLayer ShaderInputLayer, FMaterial* Mat)
-	{
-		shared_ptr<FPipeline> Pipeline = make_shared<FPipeline>();
-		Pipeline->Sig = GDynamicRHI->CreateRootSignatrue(ShaderInputLayer);
-		Pipeline->PSO = GDynamicRHI->CreatePso(RtFormat, VertexInputLayer, RtNum, Mat->VS.get(), Mat->PS.get(), Pipeline->Sig.get());
-		return Pipeline;
 	}
 
 	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
@@ -171,10 +156,10 @@ namespace RHI
 		return Pso;
 	}
 
-	void FDX12DynamicRHI::SetPipelineState(FPipeline* Pipe)
+	void FDX12DynamicRHI::SetPipelineState(FRenderResource* RR)
 	{
-		CommandLists[0].CommandList->SetPipelineState(Pipe->PSO->As<FDX12PipelineState>()->PSO.Get());
-		CommandLists[0].CommandList->SetGraphicsRootSignature(Pipe->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
+		CommandLists[0].CommandList->SetPipelineState(RR->PSO->As<FDX12PipelineState>()->PSO.Get());
+		CommandLists[0].CommandList->SetGraphicsRootSignature(RR->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
 	}
 
 	void FDX12DynamicRHI::SetShaderInput(vector<shared_ptr<FHandle>> Handles)
@@ -262,8 +247,37 @@ namespace RHI
 		memcpy(CB->As<FDX12CB>()->UploadBufferVirtualAddress, Src, Size);
 	}
 
+	void FDX12DynamicRHI::SetTextureState(FTexture* Tex, FRESOURCE_STATES State)
+	{
+		if (Tex->TexState == State)
+		{
+			return;
+		}
+		else
+		{
+			TransitTextureState(Tex, Tex->TexState, State);
+		}
+	}
+
+	void FDX12DynamicRHI::SwitchTextureState(FTexture* Tex, FRESOURCE_STATES S1, FRESOURCE_STATES S2)
+	{
+		if (Tex->TexState == S1)
+		{
+			TransitTextureState(Tex, S1, S2);
+		}
+		else if (Tex->TexState == S2)
+		{
+			TransitTextureState(Tex, S2, S1);
+		}
+		else
+		{
+			throw std::exception("ERROR: current state neither s1 nor s2!");
+		}
+	}
+
 	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)
 	{
+		Tex->TexState = To;
 		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Tex->As<FDX12Texture>()->DX12Texture.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
 	}
 
@@ -310,6 +324,13 @@ namespace RHI
 	void FDX12DynamicRHI::ClearDepthStencil(FTexture* Tex)
 	{
 		CommandLists[0].CommandList->ClearDepthStencilView(Tex->As<FDX12Texture>()->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	}
+
+	void FDX12DynamicRHI::DrawMesh(FGeometry* Mesh)
+	{
+		CommandLists[0].CommandList->IASetIndexBuffer(&Mesh->As<FDx12Geometry>()->IndexBufferView);
+		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &Mesh->As<FDx12Geometry>()->VertexBufferView);
+		CommandLists[0].CommandList->DrawIndexedInstanced(Mesh->As<FDx12Geometry>()->IndexNum, 1, 0, 0, 0);
 	}
 
 	FDX12DynamicRHI::FDX12DynamicRHI()
@@ -454,7 +475,7 @@ namespace RHI
 				uint32 adapterIndex = 0;
 				DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(
 					adapterIndex,
-					requestHighPerformanceAdapter == true ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_UNSPECIFIED,
+					requestHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_UNSPECIFIED,
 					IID_PPV_ARGS(&adapter));
 				++adapterIndex)
 			{
@@ -546,14 +567,14 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FMesh_new> FDX12DynamicRHI::CreateMesh_new( TStaticMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( TStaticMeshComponent& MeshComponent )
 	{
-		shared_ptr<RHI::FDX12Mesh_new> Mesh = make_shared<RHI::FDX12Mesh_new>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size());
+		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size());
 
-		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertices;
+		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertice;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( TStaticVertex ));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size() * sizeof( uint32 ));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size() * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -612,7 +633,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.data();
+		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -627,9 +648,9 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMesh_new> FDX12DynamicRHI::CreateMesh_new( TSkeletalMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( TSkeletalMeshComponent& MeshComponent )
 	{
-		shared_ptr<RHI::FDX12Mesh_new> Mesh = make_shared<RHI::FDX12Mesh_new>();
+		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
 
 		vector<TSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
@@ -708,14 +729,14 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FMesh_deprecated> FDX12DynamicRHI::CreateMesh_deprecated( TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry(TStaticMeshLOD& Lod)
 	{
-		shared_ptr<RHI::FDX12Mesh_deprecated> Mesh = make_shared<RHI::FDX12Mesh_deprecated>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size());
+		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
+		Mesh->IndexNum = static_cast<uint32>(Lod.Indice.size());
 
-		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertices;
+		const vector<TStaticVertex>& VertexBuffer = Lod.Vertice;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(TStaticVertex));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.size() * sizeof(uint32));
+		uint32 IndexBufferSize = static_cast<uint32>(Lod.Indice.size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -774,7 +795,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indices.data();
+		indexData.pData = Lod.Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -785,91 +806,6 @@ namespace RHI
 		Mesh->IndexBufferView.BufferLocation = Mesh->IndexBuffer->GetGPUVirtualAddress();
 		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
-
-		Mesh->InputLayer = Layer;
-
-		return Mesh;
-	}
-
-	shared_ptr<RHI::FMesh_deprecated> FDX12DynamicRHI::CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer)
-	{
-		shared_ptr<RHI::FDX12Mesh_deprecated> Mesh = make_shared<RHI::FDX12Mesh_deprecated>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
-
-		vector<TSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
-		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(TSkeletalVertex));
-		uint32 IndexBufferSize = static_cast<uint32>(Mesh->IndexNum * sizeof(uint32));
-		auto CommandList = CommandLists[0].CommandList;
-
-		// vertex buffer
-		ThrowIfFailed(Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS(&Mesh->VertexBuffer)));
-
-		ThrowIfFailed(Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(VertexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&Mesh->VertexBufferUploadHeap)));
-
-		//NAME_D3D12_OBJECT(Mesh->VertexBuffer);
-
-		// Copy data to the intermediate upload heap and then schedule a copy 
-		// from the upload heap to the vertex buffer.
-		D3D12_SUBRESOURCE_DATA vertexData = {};
-		vertexData.pData = VertexBuffer.data();
-		vertexData.RowPitch = VertexBufferSize;
-		vertexData.SlicePitch = vertexData.RowPitch;
-
-		UpdateSubresources<1>(CommandList.Get(), Mesh->VertexBuffer.Get(), Mesh->VertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Mesh->VertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-		// Initialize the vertex buffer view.
-		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = sizeof(TSkeletalVertex);
-		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
-
-		// index buffer
-		ThrowIfFailed(Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS(&Mesh->IndexBuffer)));
-
-		ThrowIfFailed(Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(IndexBufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&Mesh->IndexBufferUploadHeap)));
-
-		//NAME_D3D12_OBJECT(Mesh->IndexBuffer);
-
-		// Copy data to the intermediate upload heap and then schedule a copy 
-		// from the upload heap to the index buffer.
-		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.data();
-		indexData.RowPitch = IndexBufferSize;
-		indexData.SlicePitch = indexData.RowPitch;
-
-		UpdateSubresources<1>(CommandList.Get(), Mesh->IndexBuffer.Get(), Mesh->IndexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-		CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Mesh->IndexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-		// Describe the index buffer view.
-		Mesh->IndexBufferView.BufferLocation = Mesh->IndexBuffer->GetGPUVirtualAddress();
-		Mesh->IndexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		Mesh->IndexBufferView.SizeInBytes = IndexBufferSize;
-
-		Mesh->InputLayer = Layer;
 
 		return Mesh;
 	}
@@ -909,17 +845,6 @@ namespace RHI
 		ThrowIfFailed(Device->CreateRootSignature(0, Signature->GetBufferPointer(), Signature->GetBufferSize(), IID_PPV_ARGS(&Sig->RootSignature)));
 
 		return Sig;
-	}
-
-	shared_ptr<RHI::FMaterial> FDX12DynamicRHI::CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles)
-	{
-		shared_ptr<FMaterial> Mat = make_shared<FMaterial>();
-
-		Mat->VS = CreateVertexShader(ShaderFileName);
-		Mat->PS = CreatePixelShader(ShaderFileName);
-		Mat->CB = CreateConstantBuffer(ConstantBufferSize);
-		Mat->TexHandles = TexHandles;
-		return Mat;
 	}
 
 	void FDX12DynamicRHI::CreateFenceAndEvent()
@@ -1013,6 +938,7 @@ namespace RHI
 			ClearValue.get(),
 			IID_PPV_ARGS(&Texture->DX12Texture)));
 
+		Texture->TexState = static_cast<FRESOURCE_STATES>(ResState);
 		return Texture;
 	}
 

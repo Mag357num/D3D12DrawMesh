@@ -12,7 +12,7 @@ void AStaticMeshActor::SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> C
 	}
 }
 
-TStaticMeshComponent* AStaticMeshActor::GetStaticMeshComponent()
+TStaticMeshComponent* AStaticMeshActor::GetStaticMeshCom()
 {
 	if (Components.size() == 0)
 	{

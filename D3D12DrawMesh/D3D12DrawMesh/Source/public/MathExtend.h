@@ -34,9 +34,9 @@ struct FEuler
 	float Yaw;
 };
 
-FEuler QuatToEuler(FQuat Quat);
-
-FQuat EulerToQuat(FEuler Euler);
+FVector GetLook(const FQuat& Quat);
+FEuler QuatToEuler(const FQuat& Quat);
+FQuat EulerToQuat(const FEuler& Euler);
 
 
 float Atan2(const float& Y, const float& X);

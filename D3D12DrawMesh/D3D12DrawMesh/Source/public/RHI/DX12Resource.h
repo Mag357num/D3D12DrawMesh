@@ -55,17 +55,7 @@ namespace RHI
 		void* UploadBufferVirtualAddress;
 	};
 
-	struct FDX12Mesh_new : public FMesh_new
-	{
-		ComPtr<ID3D12Resource> VertexBuffer;
-		ComPtr<ID3D12Resource> IndexBuffer;
-		D3D12_VERTEX_BUFFER_VIEW VertexBufferView;
-		D3D12_INDEX_BUFFER_VIEW IndexBufferView;
-		ComPtr<ID3D12Resource> VertexBufferUploadHeap;
-		ComPtr<ID3D12Resource> IndexBufferUploadHeap;
-	};
-
-	struct FDX12Mesh_deprecated : public FMesh_deprecated
+	struct FDx12Geometry : public FGeometry
 	{
 		ComPtr<ID3D12Resource> VertexBuffer;
 		ComPtr<ID3D12Resource> IndexBuffer;

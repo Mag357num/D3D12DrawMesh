@@ -5,8 +5,6 @@
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
-using RHI::FMesh_deprecated;
-using RHI::FMeshRes;
 
 FEngine* GEngine = nullptr;
 
@@ -57,7 +55,7 @@ void FEngine::Init(void* WindowHandle)
 		}
 		Cha->SetSkeletalMeshCom( SkeMeshCom );
 	}
-	CurrentScene->SetCharacter(Cha);
+	CurrentScene->SetCurrentCharacter(Cha);
 
 	// thread
 	FRenderThread::CreateRenderThread();
@@ -84,31 +82,31 @@ void FEngine::Destroy()
 void FEngine::OnKeyDown(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera()->OnKeyDown(Key);
-	CurrentScene->GetCharacter()->OnKeyDown(Key);
+	CurrentScene->GetCurrentCharacter()->OnKeyDown(Key);
 }
 
 void FEngine::OnKeyUp(unsigned char Key)
 {
 	CurrentScene->GetCurrentCamera()->OnKeyUp(Key);
-	CurrentScene->GetCharacter()->OnKeyUp(Key);
+	CurrentScene->GetCurrentCharacter()->OnKeyUp(Key);
 }
 
 void FEngine::OnMouseMove(uint32 x, uint32 y)
 {
 	CurrentScene->GetCurrentCamera()->OnMouseMove(x, y);
-	CurrentScene->GetCharacter()->OnMouseMove(x, y);
+	CurrentScene->GetCurrentCharacter()->OnMouseMove(x, y);
 }
 
 void FEngine::OnButtonDown(uint32 x, uint32 y)
 {
 	CurrentScene->GetCurrentCamera()->OnButtonDown(x, y);
-	CurrentScene->GetCharacter()->OnButtonDown(x, y);
+	CurrentScene->GetCurrentCharacter()->OnButtonDown(x, y);
 }
 
 void FEngine::OnButtonUp()
 {
 	CurrentScene->GetCurrentCamera()->OnButtonUp();
-	CurrentScene->GetCharacter()->OnButtonUp();
+	CurrentScene->GetCurrentCharacter()->OnButtonUp();
 }
 
 void FEngine::CalculateFrameStats()

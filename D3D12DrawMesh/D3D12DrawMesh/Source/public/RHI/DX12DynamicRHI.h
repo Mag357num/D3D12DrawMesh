@@ -31,12 +31,10 @@ namespace RHI
 			const uint32& ResoHeight) override;
 
 		// Resource Create
-		virtual shared_ptr<FMesh_new> CreateMesh_new( TStaticMeshComponent& MeshComponent ) override;
-		virtual shared_ptr<FMesh_new> CreateMesh_new( TSkeletalMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry( TStaticMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry( TSkeletalMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry(TStaticMeshLOD& Lod) override;
 
-		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TStaticMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
-		virtual shared_ptr<FMesh_deprecated> CreateMesh_deprecated(TSkeletalMeshComponent& MeshComponent, FVertexInputLayer Layer) override;
-		virtual shared_ptr<FMaterial> CreateMaterial(const wstring& ShaderFileName, uint32 ConstantBufferSize, vector<shared_ptr<FHandle>> TexHandles) override;
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) override;
@@ -46,19 +44,20 @@ namespace RHI
 
 		// Resource process
 		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) override;
+		virtual void SetTextureState(FTexture* Tex, FRESOURCE_STATES State) override;
+		virtual void SwitchTextureState(FTexture* Tex, FRESOURCE_STATES S1, FRESOURCE_STATES S2) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
-		virtual void DrawMesh(FMesh_deprecated* Mesh) override;
+		virtual void DrawMesh(FGeometry* Mesh) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;
 
 		// Pipeline
-		virtual shared_ptr<FPipeline> CreatePipeline(FFormat RtFormat, uint32 RtNum, FVertexInputLayer VertexInputLayer, FShaderInputLayer ShaderInputLayer, FMaterial* Mat) override;
 		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) override;
-		virtual void SetPipelineState(FPipeline* Pipe) override;
+		virtual void SetPipelineState(FRenderResource* RR) override;
 		virtual void SetShaderInput(vector<shared_ptr<FHandle>> Handles) override;
 
 		// Output Merger
@@ -75,7 +74,7 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() override;
-		virtual uint32 GetFrameNum() override { return FrameNum; }
+		virtual uint32 GetFrameCount() override { return FrameCount; }
 		virtual uint32 GetCurrentFramIndex() override { return CurrentFrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
@@ -115,8 +114,10 @@ namespace RHI
 		HANDLE FenceEvent;
 		int FenceValue;
 		ComPtr<ID3D12Fence> Fence;
-		static const uint32 FrameNum = 1;
+
+		static const uint32 FrameCount = 1; // multi buffering num
 		uint32 CurrentFrameIndex = 0; // TODO: only have one Frame
+
 		// handles
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleDs;

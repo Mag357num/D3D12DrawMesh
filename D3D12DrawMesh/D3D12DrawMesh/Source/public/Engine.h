@@ -33,6 +33,8 @@ public:
 	StepTimer& GetTimer() { return Timer; }
 	void CalculateFrameStats();
 
+	bool UseShadow() { return bUseShadow; }
+	bool UsePostProcess() { return bUsePostProcess; }
 
 protected:
 	// Viewport dimensions.
@@ -44,6 +46,10 @@ protected:
 	bool IsUseWarpDevice;
 
 private:
+	// toggle
+	bool bUseShadow = true;
+	bool bUsePostProcess = true;
+
 	// window handle
 	void* HWindow;
 

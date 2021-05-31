@@ -58,54 +58,26 @@ namespace RHI
 
 	struct FRootSignatrue : public FRHIResource {};
 
-	struct FMaterial : public FRHIResource
-	{
-		shared_ptr<FShader> VS;
-		shared_ptr<FShader> PS;
-		shared_ptr<FCB> CB;
-		vector<shared_ptr<FHandle>> TexHandles;
-	};
-
-	struct FPipeline
-	{
-		shared_ptr<FPipelineState> PSO;
-		shared_ptr<FRootSignatrue> Sig;
-	};
-
-	struct FRenderResource_new
+	struct FRenderResource
 	{
 		shared_ptr<FPipelineState> PSO;
 		shared_ptr<FRootSignatrue> Sig;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
-		shared_ptr<FCB> CB;
+		vector<shared_ptr<FCB>> CBs; // is a vector beacuse multi buffering
 	};
 
-	struct FMesh_deprecated : public FRHIResource
+	struct FGeometry : public FRHIResource
 	{
 		uint32 IndexNum;
-		FVertexInputLayer InputLayer;
 	};
 
-	struct FMesh_new : public FRHIResource
-	{
-		uint32 IndexNum;
-		vector<FRenderResource_new*> RR_ShadowPass; // only reference
-		vector<FRenderResource_new*> RR_ScenePass;
-	};
-
-	struct FMeshRes : public FRHIResource
-	{
-		shared_ptr<FPipeline> ShadowPipeline;
-		shared_ptr<FPipeline> SceneColorPipeline;
-
-		shared_ptr<FMaterial> ShadowMat;
-		shared_ptr<FMaterial> SceneColorMat;
-	};
-
+	enum class FRESOURCE_STATES;
 	struct FTexture : public FRHIResource
 	{
 		virtual ~FTexture() = default;
+
+		FRESOURCE_STATES TexState;
 		shared_ptr<FHandle> DsvHandle;
 		shared_ptr<FHandle> RtvHandle;
 		shared_ptr<FHandle> SrvHandle;
@@ -177,12 +149,6 @@ namespace RHI
 		CLAMP_ST = 0,
 		WARP_ST = 1,
 		MIRROR_ST = 2,
-	};
-
-	enum class FMeshType_deprecated
-	{
-		SCENE_MESH_FT = 0,
-		PostProcess_MESH_FT = 1,
 	};
 
 	enum class FRESOURCE_STATES // enum values are same with dx

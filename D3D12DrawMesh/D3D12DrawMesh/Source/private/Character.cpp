@@ -33,17 +33,10 @@ void ACharacter::Tick(const float& ElapsedSeconds)
 	Euler.Yaw += MouseRotateInterval.x; // yaw
 	MouseDown_FirstPosition = MouseDown_CurrentPosition;
 
-	FTransform& Trans = GetSkeletalMeshCom()->GetTransform();
+	FTransform Trans = GetSkeletalMeshCom()->GetTransform();
 	Trans.Translation.x += Move.x * cos(Euler.Yaw) - Move.y * sin(Euler.Yaw);
 	Trans.Translation.y += Move.x * sin(Euler.Yaw) + Move.y * cos(Euler.Yaw);
 	Trans.Quat = EulerToQuat(Euler);
-}
-
-FVector ACharacter::GetLook()
-{
-	FMatrix MQ = glm::toMat4(GetSkeletalMeshCom()->GetTransform().Quat);
-	FVector4 Look4 = FVector4(0, 1, 0, 1) * MQ; // regard (0, 1, 0) as the init look dir because model face (0, 1, 0) when there are no rotate
-	return FVector(Look4.x, Look4.y, Look4.z);
 }
 
 void ACharacter::OnKeyDown(const unsigned char& key)

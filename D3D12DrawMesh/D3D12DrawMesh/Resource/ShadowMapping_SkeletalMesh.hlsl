@@ -1,14 +1,9 @@
 cbuffer StaticMeshConstantBuffer : register(b0)
 {
-	float4x4 World;
+	float4x4 WVP;
 };
 
 cbuffer LightConstantBuffer : register(b1)
-{
-	float4x4 VPMatrix;
-};
-
-cbuffer LightConstantBuffer : register(b2)
 {
 	float4x4 GBoneTransforms[68];
 };
@@ -47,7 +42,6 @@ PSInput VSMain(VSInput input)
 
 	input.position = posL;
 
-	float4x4 WVP = mul(World, VPMatrix);
 	result.position = mul(float4(input.position, 1.0f), WVP);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
 	return result;
