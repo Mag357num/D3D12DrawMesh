@@ -5,11 +5,16 @@
 #define FLOAT_NON_FRACTIONAL (8388608.f) /* All single-precision floating point numbers greater than or equal to this have no fractional value. */
 #define INV_PI (0.31830988618f)
 
-FVector GetLook(const FQuat& Quat)
+FVector QuatToLook(const FQuat& Quat)
 {
 	FMatrix MQ = glm::toMat4(Quat);
 	FVector4 Look4 = FVector4(0, 1, 0, 1) * MQ; // regard (0, 1, 0) as the init look dir because model face (0, 1, 0) when there are no rotate
 	return FVector(Look4.x, Look4.y, Look4.z);
+}
+
+FQuat LookToQuat(const FVector& Look)
+{
+	return FQuat(0, 0, 0, 1);
 }
 
 FEuler QuatToEuler(const FQuat& Quat)

@@ -46,9 +46,6 @@ struct FMultiBufferFrameResource
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
 
-	//
-	FMatrix Palette;
-
 };
 
 class FFrameResourceManager
@@ -62,6 +59,8 @@ public:
 	void InitFrameResource(TScene* Scene, const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(TScene* Scene, const uint32& FrameIndex);
+	void UpdatePalette(vector<FMatrix> Palette, const uint32& FrameIndex);
+	//void UpdateTest(int test, const uint32& FrameIndex);
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 

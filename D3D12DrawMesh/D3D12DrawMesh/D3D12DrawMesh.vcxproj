@@ -27,6 +27,7 @@
     <ClCompile Include="Source\private\AssetManager.cpp" />
     <ClCompile Include="Source\private\Camera.cpp" />
     <ClCompile Include="Source\private\Character.cpp" />
+    <ClCompile Include="Source\private\DeviceEventProcessor.cpp" />
     <ClCompile Include="Source\private\DX12DynamicRHI.cpp" />
     <ClCompile Include="Source\private\DynamicRHI.cpp" />
     <ClCompile Include="Source\private\Engine.cpp" />
@@ -63,6 +64,7 @@
     <ClInclude Include="Source\public\Camera.h" />
     <ClInclude Include="Source\public\Character.h" />
     <ClInclude Include="Source\public\d3dx12.h" />
+    <ClInclude Include="Source\public\DeviceEventProcessor.h" />
     <ClInclude Include="Source\public\DXSampleHelper.h" />
     <ClInclude Include="Source\public\Engine.h" />
     <ClInclude Include="Source\public\FrameResourceManager.h" />

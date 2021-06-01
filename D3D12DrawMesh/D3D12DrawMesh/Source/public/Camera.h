@@ -17,8 +17,6 @@ public:
 	bool IsChanged = true;
 
 private:
-	KeysPressed Keys = {};
-
 	// the backup date of init/reset camera
 	FVector InitialPosition;
 	FVector InitialUpDir;
@@ -27,7 +25,7 @@ private:
 	// the parameter to determine a camera
 	FVector Position;
 	FVector LookDirection;
-	FVector UpDirection;
+	FVector UpDirection = { 0.f, 0.f, 1.f }; // UpDirection is the up direction in world space
 	float Fov = 90.f;
 	float AspectRatio = 1.7777777f;
 
@@ -36,19 +34,15 @@ private:
 	float TurnSpeed = 1.570796327f; // Speed at which the camera turns, in radians per second.
 	float MouseSensibility = 0.005f;
 
-	// camera event variable
-	FVector2 MouseDown_CurrentPosition;
-	FVector2 MouseDown_FirstPosition;
-	FVector2 MouseMove_FirstPosition;
-	FVector2 MouseMove_CurrentPosition;
-	bool IsMouseDown = false;
+private:
+	class FStaticMeshComponent* GetStaticMeshCom();
 
 public:
 	ACamera();
 	~ACamera() = default;
 	ACamera( const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height );
 
-	void Init(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height);
+	void Init(const FVector& Eye, const FVector& Up, const FVector& LookAt, float Fov, float Width, float Height);
 	void Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0, 0, 0), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
 	void UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, FVector TargetLocation, float Distance);
@@ -61,12 +55,6 @@ public:
 	FVector GetLook() { return LookDirection; }
 	FVector2 GetEulerByLook( const FVector& LookAt );
 	void UpdateLookByEuler( const float& Pitch, const float& Yaw );
-
-	void OnKeyDown(const unsigned char& key);
-	void OnKeyUp(const unsigned char& key);
-	void OnButtonDown(const uint32& x, const uint32& y);
-	void OnButtonUp();
-	void OnMouseMove(const uint32& x, const uint32& y);
 
 	void SetMoveSpeed( const float& UnitsPerSecond );
 	void SetTurnSpeed( const float& RadiansPerSecond );

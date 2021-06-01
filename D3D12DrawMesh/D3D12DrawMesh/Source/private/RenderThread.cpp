@@ -44,7 +44,7 @@ void FRenderThread::DoRender()
 	RenderCV.wait(Lock, [this]() { return RenderTaskNum > 0; });
 
 	FRenderer Renderer;
-	Renderer.Render(RHI::GDynamicRHI.get(), FrameResourceManager.get());
+	Renderer.Render(GDynamicRHI, FrameResourceManager.get());
 	--RenderTaskNum;
 	RenderCV.notify_all();
 }
@@ -85,6 +85,23 @@ void FRenderThread::UpdateFrameRes(TScene* Scene)
 			FrameResourceManager->UpdateFrameResources(Scene, GDynamicRHI->GetCurrentFramIndex());
 		});
 }
+
+void FRenderThread::UpdatePalette(vector<FMatrix> Palette)
+{
+	RENDER_THREAD([this, Palette]()
+		{
+			FrameResourceManager->UpdatePalette(Palette, GDynamicRHI->GetCurrentFramIndex());
+		});
+}
+
+//void FRenderThread::UpdateTest(int test)
+//{
+//	RENDER_THREAD([this, test]()
+//		{
+//			Sleep(1000);
+//			FrameResourceManager->UpdateTest(test, GDynamicRHI->GetCurrentFramIndex());
+//		});
+//}
 
 void FRenderThread::WaitForRenderThread()
 {

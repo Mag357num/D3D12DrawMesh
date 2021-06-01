@@ -6,11 +6,24 @@
 
 using RHI::GDynamicRHI;
 
-FAssetManager* FAssetManager::GAssetManager = new FAssetManager;
+FAssetManager* FAssetManager::GAssetManager = nullptr;
 
 FAssetManager* FAssetManager::Get()
 {
 	return GAssetManager;
+}
+
+void FAssetManager::CreateAssetManager()
+{
+	assert(GAssetManager == nullptr);
+	GAssetManager = new FAssetManager();
+}
+
+void FAssetManager::DestroyAssetManager()
+{
+	assert(GAssetManager != nullptr);
+	delete GAssetManager;
+	GAssetManager = nullptr;
 }
 
 shared_ptr<TScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName)

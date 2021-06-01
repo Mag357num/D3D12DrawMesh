@@ -98,6 +98,9 @@
     <ClCompile Include="Source\private\Camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Source\private\DeviceEventProcessor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\public\Actor.h">
@@ -227,6 +230,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Source\public\Key.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\public\DeviceEventProcessor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,4 @@
 #pragma once
-#include <unordered_map>
-#include <memory>
 #include "stdafx.h"
 #include "Scene.h"
 #include "DynamicRHI.h"
@@ -13,7 +11,9 @@ private:
 
 public:
 	static FAssetManager* Get();
-	
+	static void CreateAssetManager();
+	static void DestroyAssetManager();
+
 	//TODO: regard component as a basic functional unit, so change this func to LoadStaticMeshComponent and CreateScene(StaticMeshActors)
 	shared_ptr<TScene> LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName);
 	void LoadStaticMeshActors(const std::wstring& BinFileName, vector<AStaticMeshActor>& Actors);

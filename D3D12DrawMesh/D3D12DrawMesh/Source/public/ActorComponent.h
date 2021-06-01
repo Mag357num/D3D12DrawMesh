@@ -8,18 +8,13 @@ protected:
 	FTransform Transform;
 	FMatrix TransMatrix;
 public:
-	void SetTransform(const FTransform& Trans)
-	{
-		Transform = Trans;
-		TransMatrix = translate(Trans.Translation) * toMat4(Trans.Quat) * scale(Trans.Scale);
-		Dirty = false;
-	}
-
-	void SetScale(const FVector Scale) { Transform.Scale = Scale; Dirty = true; }
-	void SetQuat(const FQuat Quat) { Transform.Quat = Quat; Dirty = true; }
-	void SetTranslate(const FVector Translate) { Transform.Translation = Translate; Dirty = true; }
-
 	const bool& IsDirty() const { return Dirty; }
+
+	void SetScale(const FVector& Scale) { Transform.Scale = Scale; Dirty = true; }
+	void SetQuat(const FQuat& Quat) { Transform.Quat = Quat; Dirty = true; }
+	void SetTranslate(const FVector& Translate) { Transform.Translation = Translate; Dirty = true; }
+	void SetTransform(const FTransform& Trans) { Transform = Trans; Dirty = true; }
+	void SetMatrix(const FMatrix& Matrix);
 	const FTransform& GetTransform() const { return Transform; }
 	const FMatrix& GetTransMatrix()
 	{

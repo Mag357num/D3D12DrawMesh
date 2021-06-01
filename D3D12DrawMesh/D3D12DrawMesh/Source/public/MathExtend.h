@@ -12,7 +12,7 @@
 using FVector2 = glm::vec2;
 using FVector = glm::vec3;
 using FVector4 = glm::vec4;
-using FMatrix = glm::mat4;
+using FMatrix = glm::mat4; // FMatrix[column][row]
 using FQuat = glm::tquat<float>;
 
 using namespace glm;
@@ -34,7 +34,8 @@ struct FEuler
 	float Yaw;
 };
 
-FVector GetLook(const FQuat& Quat);
+FVector QuatToLook(const FQuat& Quat);
+FQuat LookToQuat(const FVector& Look);
 FEuler QuatToEuler(const FQuat& Quat);
 FQuat EulerToQuat(const FEuler& Euler);
 

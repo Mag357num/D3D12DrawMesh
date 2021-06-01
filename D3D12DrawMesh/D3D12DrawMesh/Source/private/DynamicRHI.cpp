@@ -4,13 +4,21 @@
 using namespace RHI;
 
 // Globals.
-shared_ptr<FDynamicRHI> RHI::GDynamicRHI = nullptr;
+FDynamicRHI* RHI::GDynamicRHI = nullptr;
 
 void FDynamicRHI::CreateRHI()
 {
 #if defined (_WINDOWS)
-	RHI::GDynamicRHI = make_shared<FDX12DynamicRHI>();
+	assert(GDynamicRHI == nullptr);
+	GDynamicRHI = new FDX12DynamicRHI();
 #else
 #error("No avaible RHI.")
 #endif
+}
+
+void RHI::FDynamicRHI::DestroyRHI()
+{
+	assert(GDynamicRHI != nullptr);
+	delete GDynamicRHI;
+	GDynamicRHI = nullptr;
 }

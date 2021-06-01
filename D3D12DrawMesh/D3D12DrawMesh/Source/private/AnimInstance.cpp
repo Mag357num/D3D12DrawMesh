@@ -1,6 +1,7 @@
 #include "AnimInstance.h"
 #include "SkeletalMesh.h"
 #include "Skeleton.h"
+#include "RenderThread.h"
 
 void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 {
@@ -12,6 +13,9 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 	TimePos += ElapsedSeconds;
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
 	Palette = UpdatePalette(fmod(TimePos, SequenceLength));
+	FRenderThread::Get()->UpdatePalette(Palette);
+	//test++;
+	//FRenderThread::Get()->UpdateTest(test);
 }
 
 vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)

@@ -496,7 +496,10 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 			// TODO: static mesh transform may change
 		}
 	}
+}
 
+void FFrameResourceManager::UpdatePalette(vector<FMatrix> Palette, const uint32& FrameIndex)
+{
 	// animation
 	struct PaletteCB
 	{
@@ -505,7 +508,12 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 
 	for (uint32 i = 0; i < 68; i++)
 	{
-		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
+		CBInstance.GBoneTransforms[i] = glm::transpose(Palette[i]);
 	}
-	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(PaletteCB));
+	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
+
+//void FFrameResourceManager::UpdateTest(int test, const uint32& FrameIndex)
+//{
+//	int a = test;
+//}

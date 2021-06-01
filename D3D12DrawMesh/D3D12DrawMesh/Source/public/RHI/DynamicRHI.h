@@ -7,7 +7,7 @@
 namespace RHI
 {
 	class FDynamicRHI;
-	extern shared_ptr<FDynamicRHI> GDynamicRHI;
+	extern FDynamicRHI* GDynamicRHI;
 	extern constexpr uint32 BACKBUFFER_NUM = 2;
 
 	enum
@@ -26,6 +26,7 @@ namespace RHI
 
 		// init
 		static void CreateRHI();
+		static void DestroyRHI();
 		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
 			const uint32& ResoHeight) = 0;
 

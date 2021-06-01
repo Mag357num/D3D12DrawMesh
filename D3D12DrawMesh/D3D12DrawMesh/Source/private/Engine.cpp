@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "DynamicRHI.h"
 #include "RenderThread.h"
+#include "DeviceEventProcessor.h"
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
@@ -26,6 +27,10 @@ void FEngine::Init(void* WindowHandle)
 {
 	HWindow = WindowHandle;
 
+	// asset manager
+	FAssetManager::CreateAssetManager();
+	FDeviceEventProcessor::CreateEventProcessor();
+
 	CurrentScene = CreateScene();
 
 	// static mesh actors
@@ -37,7 +42,7 @@ void FEngine::Init(void* WindowHandle)
 	}
 
 	// camera
-	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
+	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, 0.f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
 
 	// light
 	CurrentScene->SetDirectionLight(FDirectionLight());
@@ -67,46 +72,45 @@ void FEngine::Tick()
 {
 	FRenderThread::Get()->WaitForRenderThread();
 
+	// GAME tick
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
+	FDeviceEventProcessor::Get()->Tick();
 
-	// TODO: remove FrameRes concept add into the tick layer, update static mesh's constant buffer when tick them
 	FRenderThread::Get()->UpdateFrameRes(CurrentScene.get());
 }
 
 void FEngine::Destroy()
 {
+	FAssetManager::DestroyAssetManager();
+	FDeviceEventProcessor::DestroyEventProcessor();
 	FRenderThread::DestroyRenderThread();
+	FDynamicRHI::DestroyRHI();
 }
 
 void FEngine::OnKeyDown(unsigned char Key)
 {
-	CurrentScene->GetCurrentCamera()->OnKeyDown(Key);
-	CurrentScene->GetCurrentCharacter()->OnKeyDown(Key);
+	FDeviceEventProcessor::Get()->OnKeyDown(Key);
 }
 
 void FEngine::OnKeyUp(unsigned char Key)
 {
-	CurrentScene->GetCurrentCamera()->OnKeyUp(Key);
-	CurrentScene->GetCurrentCharacter()->OnKeyUp(Key);
+	FDeviceEventProcessor::Get()->OnKeyUp(Key);
 }
 
 void FEngine::OnMouseMove(uint32 x, uint32 y)
 {
-	CurrentScene->GetCurrentCamera()->OnMouseMove(x, y);
-	CurrentScene->GetCurrentCharacter()->OnMouseMove(x, y);
+	FDeviceEventProcessor::Get()->OnMouseMove(x, y);
 }
 
 void FEngine::OnButtonDown(uint32 x, uint32 y)
 {
-	CurrentScene->GetCurrentCamera()->OnButtonDown(x, y);
-	CurrentScene->GetCurrentCharacter()->OnButtonDown(x, y);
+	FDeviceEventProcessor::Get()->OnButtonDown(x, y);
 }
 
 void FEngine::OnButtonUp()
 {
-	CurrentScene->GetCurrentCamera()->OnButtonUp();
-	CurrentScene->GetCurrentCharacter()->OnButtonUp();
+	FDeviceEventProcessor::Get()->OnButtonUp();
 }
 
 void FEngine::CalculateFrameStats()
