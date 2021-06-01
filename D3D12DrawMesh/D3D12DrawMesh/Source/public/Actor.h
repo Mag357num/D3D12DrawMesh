@@ -5,10 +5,10 @@
 class AActor
 {
 protected:
-	vector<shared_ptr<TActorComponent>> Components;
+	vector<shared_ptr<FActorComponent>> Components;
 
 public:
-	vector<shared_ptr<TActorComponent>>& GetComs() { return Components; }
+	vector<shared_ptr<FActorComponent>>& GetComs() { return Components; }
 
 	AActor() = default;
 	~AActor() = default;

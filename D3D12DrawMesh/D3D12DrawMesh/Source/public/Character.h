@@ -19,10 +19,10 @@ private:
 	FVector2 MouseMove_CurrentPosition;
 
 public:
-	void SetSkeletalMeshCom( shared_ptr<TSkeletalMeshComponent> SkeMesh ) { Components.push_back( SkeMesh ); }
+	void SetSkeletalMeshCom( shared_ptr<FSkeletalMeshComponent> SkeMesh ) { Components.push_back( SkeMesh ); }
 	void Tick( const float& ElapsedSeconds );
 
-	TSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<TSkeletalMeshComponent>(); }
+	FSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<FSkeletalMeshComponent>(); }
 
 	void OnKeyDown( const unsigned char& key );
 	void OnKeyUp( const unsigned char& key );

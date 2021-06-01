@@ -290,10 +290,10 @@ void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& 
 void FFrameResourceManager::CreatePPTriangle()
 {
 	// create postprocess mesh and mesh resource
-	TStaticMeshLOD Lod;
-	Lod.Vertice.push_back(TStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
-	Lod.Vertice.push_back(TStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
-	Lod.Vertice.push_back(TStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
+	FStaticMeshLOD Lod;
+	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
+	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
+	Lod.Vertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
 	Lod.Indice = { 0, 1, 2 };
 	SFrameRes.PPTriangle = GDynamicRHI->CreateGeometry(Lod);
 }

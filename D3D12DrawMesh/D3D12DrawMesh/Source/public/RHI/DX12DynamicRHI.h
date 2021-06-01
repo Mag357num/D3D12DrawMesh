@@ -31,9 +31,9 @@ namespace RHI
 			const uint32& ResoHeight) override;
 
 		// Resource Create
-		virtual shared_ptr<FGeometry> CreateGeometry( TStaticMeshComponent& MeshComponent ) override;
-		virtual shared_ptr<FGeometry> CreateGeometry( TSkeletalMeshComponent& MeshComponent ) override;
-		virtual shared_ptr<FGeometry> CreateGeometry(TStaticMeshLOD& Lod) override;
+		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry( FSkeletalMeshComponent& MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshLOD& Lod) override;
 
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;

@@ -4,45 +4,45 @@
 #include "Actor.h"
 #include "StaticVertex.h"
 
-struct TStaticMeshLOD
+struct FStaticMeshLOD
 {
 public:
-	vector<TStaticVertex> Vertice;
+	vector<FStaticVertex> Vertice;
 	vector<uint32> Indice;
 public:
-	TStaticMeshLOD() = default;
-	TStaticMeshLOD( const vector<TStaticVertex>& Vertice, const vector<uint32>& Indice ) : Vertice( Vertice ), Indice( Indice ) { }
-	~TStaticMeshLOD() = default;
+	FStaticMeshLOD() = default;
+	FStaticMeshLOD( const vector<FStaticVertex>& Vertice, const vector<uint32>& Indice ) : Vertice( Vertice ), Indice( Indice ) { }
+	~FStaticMeshLOD() = default;
 };
 
-class TStaticMesh
+class FStaticMesh
 {
 private:
-	vector<TStaticMeshLOD> MeshLODs;
+	vector<FStaticMeshLOD> MeshLODs;
 public:
-	TStaticMesh() = default;
-	~TStaticMesh() = default;
+	FStaticMesh() = default;
+	~FStaticMesh() = default;
 
-	void SetMeshLODs(const vector<TStaticMeshLOD>& LODs) { MeshLODs = LODs; }
-	const vector<TStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
+	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { MeshLODs = LODs; }
+	const vector<FStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
 };
 
-class TStaticMeshComponent : public TActorComponent
+class FStaticMeshComponent : public FActorComponent
 {
 private:
-	shared_ptr<TStaticMesh> StaticMesh;
+	shared_ptr<FStaticMesh> StaticMesh;
 
 public:
-	TStaticMeshComponent() = default;
-	~TStaticMeshComponent() = default;
+	FStaticMeshComponent() = default;
+	~FStaticMeshComponent() = default;
 
-	void SetStaticMesh(shared_ptr<TStaticMesh> SM) { StaticMesh = SM; }
-	TStaticMesh* GetStaticMesh() { return StaticMesh.get(); }
+	void SetStaticMesh(shared_ptr<FStaticMesh> SM) { StaticMesh = SM; }
+	FStaticMesh* GetStaticMesh() { return StaticMesh.get(); }
 };
 
 class AStaticMeshActor : public AActor
 {
 public:
-	void SetStaticMeshComponent(shared_ptr<TStaticMeshComponent> Com);
-	TStaticMeshComponent* GetStaticMeshCom();
+	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
+	FStaticMeshComponent* GetStaticMeshCom();
 };

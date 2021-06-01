@@ -1,6 +1,6 @@
 #include "SkeletalMesh.h"
 
-void ASkeletalMeshActor::SetSkeletalMeshComponent( shared_ptr<TSkeletalMeshComponent> Com )
+void ASkeletalMeshActor::SetSkeletalMeshComponent( shared_ptr<FSkeletalMeshComponent> Com )
 {
 	if (Components.size() == 0)
 	{
@@ -12,7 +12,7 @@ void ASkeletalMeshActor::SetSkeletalMeshComponent( shared_ptr<TSkeletalMeshCompo
 	}
 }
 
-TSkeletalMeshComponent* ASkeletalMeshActor::GetSkeletalMeshComponent()
+FSkeletalMeshComponent* ASkeletalMeshActor::GetSkeletalMeshComponent()
 {
 	if (Components.size() == 0)
 	{
@@ -20,11 +20,11 @@ TSkeletalMeshComponent* ASkeletalMeshActor::GetSkeletalMeshComponent()
 	}
 	else
 	{
-		return Components[0].get()->As<TSkeletalMeshComponent>();
+		return Components[0].get()->As<FSkeletalMeshComponent>();
 	}
 }
 
-void TSkeletalMeshComponent::AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq )
+void FSkeletalMeshComponent::AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq )
 {
 	if (SkeletalMesh->GetSkeleton() == nullptr)
 	{

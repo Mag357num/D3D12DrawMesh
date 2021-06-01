@@ -1,7 +1,7 @@
 #include "AnimSequence.h"
 #include "AnimInstance.h"
 
-vector<FMatrix> FAnimSequence::Interpolate(float t, TSkeleton* Ske, vector<FRetargetType> ReList)
+vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FRetargetType> ReList)
 {
 	vector<FMatrix> Result;
 	vector<FPose>& BindPoses = Ske->GetBindPoses();

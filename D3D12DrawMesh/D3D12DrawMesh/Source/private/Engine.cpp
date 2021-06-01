@@ -45,7 +45,7 @@ void FEngine::Init(void* WindowHandle)
 	// character
 	shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
 	{
-		shared_ptr<TSkeletalMeshComponent> SkeMeshCom = make_shared<TSkeletalMeshComponent>();
+		shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
 		{
 			SkeMeshCom->SetSkeletalMesh( FAssetManager::Get()->LoadSkeletalMesh( L"Resource\\SkeletalMeshBinary_.dat" ) );
 			SkeMeshCom->GetSkeletalMesh()->SetSkeleton( FAssetManager::Get()->LoadSkeleton( L"Resource\\SkeletonBinary_.dat" ) );

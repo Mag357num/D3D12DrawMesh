@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-class TActorComponent
+class FActorComponent
 {
 protected:
 	bool Dirty = true;
@@ -30,8 +30,8 @@ public:
 		return TransMatrix;
 	}
 
-	TActorComponent() = default;
-	~TActorComponent() = default;
+	FActorComponent() = default;
+	~FActorComponent() = default;
 
 	template <typename T>
 	inline T* As() { return static_cast<T*>(this); }

@@ -5,7 +5,7 @@
 #include "ActorComponent.h"
 #include "Actor.h"
 
-struct TSkeletalVertex
+struct FSkeletalVertex
 {
 	FVector Pos;
 	FVector Nor;
@@ -15,42 +15,42 @@ struct TSkeletalVertex
 	array<uint16, 4> InfluJointIndice;
 };
 
-struct TSkeletalMeshLOD
+struct FSkeletalMeshLOD
 {
 	vector<FSkinnedWeightVertex> SkinnedWeightVertexArray;
-	vector<TSkeletalVertex> SkeletalVertexArray;
+	vector<FSkeletalVertex> SkeletalVertexArray;
 	vector<uint32> Indice;
 };
 
-class TSkeleton;
-class TSkeletalMesh
+class FSkeleton;
+class FSkeletalMesh
 {
 private:
-	shared_ptr<TSkeleton> Skeleton;
-	vector<TSkeletalMeshLOD> MeshLODs;
+	shared_ptr<FSkeleton> Skeleton;
+	vector<FSkeletalMeshLOD> MeshLODs;
 
 public:
-	TSkeletalMesh() = default;
-	~TSkeletalMesh() = default;
+	FSkeletalMesh() = default;
+	~FSkeletalMesh() = default;
 
 	// skeleton
-	void SetSkeleton(shared_ptr<TSkeleton> Ske) { Skeleton = Ske; };
-	TSkeleton* GetSkeleton() { return Skeleton.get(); }
+	void SetSkeleton(shared_ptr<FSkeleton> Ske) { Skeleton = Ske; };
+	FSkeleton* GetSkeleton() { return Skeleton.get(); }
 
 	// lod
-	void SetSkeletalMeshLods( const vector<TSkeletalMeshLOD>& LODs ) { MeshLODs = LODs; }
-	vector<TSkeletalMeshLOD>& GetMeshLODs() { return MeshLODs; }
+	void SetSkeletalMeshLods( const vector<FSkeletalMeshLOD>& LODs ) { MeshLODs = LODs; }
+	vector<FSkeletalMeshLOD>& GetMeshLODs() { return MeshLODs; }
 };
 
-class TSkeletalMeshComponent : public TActorComponent
+class FSkeletalMeshComponent : public FActorComponent
 {
 private:
-	shared_ptr<TSkeletalMesh> SkeletalMesh;
+	shared_ptr<FSkeletalMesh> SkeletalMesh;
 	FAnimInstance Animator;
 
 public:
-	TSkeletalMeshComponent() { Animator.initAnimation(this); };
-	~TSkeletalMeshComponent() = default;
+	FSkeletalMeshComponent() { Animator.initAnimation(this); };
+	~FSkeletalMeshComponent() = default;
 
 	// animator
 	FAnimInstance& GetAnimator() { return Animator; }
@@ -58,12 +58,12 @@ public:
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq );
 
 	// skeletal mesh
-	void SetSkeletalMesh(shared_ptr<TSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
-	TSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
+	void SetSkeletalMesh(shared_ptr<FSkeletalMesh> SkeM) { SkeletalMesh = SkeM; }
+	FSkeletalMesh* GetSkeletalMesh() { return SkeletalMesh.get(); }
 };
 
 class ASkeletalMeshActor : public AActor
 {
-	void SetSkeletalMeshComponent( shared_ptr<TSkeletalMeshComponent> Com );
-	TSkeletalMeshComponent* GetSkeletalMeshComponent();
+	void SetSkeletalMeshComponent( shared_ptr<FSkeletalMeshComponent> Com );
+	FSkeletalMeshComponent* GetSkeletalMeshComponent();
 };

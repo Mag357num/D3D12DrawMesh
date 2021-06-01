@@ -1,6 +1,6 @@
 #include "Skeleton.h"
 
-vector<FMatrix> TSkeleton::GetJointOffset()
+vector<FMatrix> FSkeleton::GetJointOffset()
 {
 	vector<FMatrix> Inv;
 	vector<FMatrix> ParentToRoot;

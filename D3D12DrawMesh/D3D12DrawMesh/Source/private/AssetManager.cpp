@@ -30,7 +30,7 @@ shared_ptr<TScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wst
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
 		AStaticMeshActor Actor;
-		shared_ptr<TStaticMeshComponent> Com = make_shared<TStaticMeshComponent>();
+		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
@@ -58,8 +58,8 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
 		AStaticMeshActor Actor;
-		shared_ptr<TStaticMeshComponent> Com = make_shared<TStaticMeshComponent>();
-		shared_ptr<TStaticMesh> SM = make_shared<TStaticMesh>();
+		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+		shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
 		Com->SetStaticMesh(SM);
 		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
@@ -71,9 +71,9 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 	Fin.close();
 }
 
-vector<TStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
+vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 {
-	TStaticMeshLOD MeshLOD;
+	FStaticMeshLOD MeshLOD;
 
 	if (!Fin.is_open())
 	{
@@ -99,14 +99,14 @@ vector<TStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 	MeshLOD.Indice.resize(VertexNum);
 	Fin.read((char*)MeshLOD.Indice.data(), BufferByteSize);
 
-	vector<TStaticMeshLOD> MeshLODs;
+	vector<FStaticMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
 
-vector<TSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
+vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 {
-	TSkeletalMeshLOD MeshLOD;
+	FSkeletalMeshLOD MeshLOD;
 
 	if (!Fin.is_open())
 	{
@@ -121,7 +121,7 @@ vector<TSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	Fin.read((char*)&VertexNum, sizeof(int));
 	BufferByteSize = VertexNum * VertexStride;
 
-	vector<TStaticVertex> StaticVertice;
+	vector<FStaticVertex> StaticVertice;
 	StaticVertice.resize(VertexNum);
 	Fin.read((char*)StaticVertice.data(), BufferByteSize);
 
@@ -161,7 +161,7 @@ vector<TSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 			JointIndice[j] = MeshLOD.SkinnedWeightVertexArray[i].GetJointIndice()[j];
 		}
 
-		TSkeletalVertex Vertex =
+		FSkeletalVertex Vertex =
 		{ 
 			StaticVertice[i].Pos,
 			StaticVertice[i].Nor,
@@ -173,7 +173,7 @@ vector<TSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 		MeshLOD.SkeletalVertexArray.push_back(Vertex);
 	}
 
-	vector<TSkeletalMeshLOD> MeshLODs;
+	vector<FSkeletalMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
@@ -194,19 +194,19 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 }
 
 
-TStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<TStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
+FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
 {
-	TStaticMeshComponent Component;
-	vector<TStaticMeshLOD> Lods;
-	Lods.push_back(TStaticMeshLOD(Vertices, Indices));
-	shared_ptr<TStaticMesh> StaticMesh = make_shared<TStaticMesh>();
+	FStaticMeshComponent Component;
+	vector<FStaticMeshLOD> Lods;
+	Lods.push_back(FStaticMeshLOD(Vertices, Indices));
+	shared_ptr<FStaticMesh> StaticMesh = make_shared<FStaticMesh>();
 	StaticMesh->SetMeshLODs(Lods);
 	Component.SetStaticMesh(StaticMesh);
 	Component.SetTransform(Transform);
 	return Component;
 }
 
-shared_ptr<TSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
+shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -215,7 +215,7 @@ shared_ptr<TSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& Bi
 		throw std::exception("ERROR:  open file faild.");
 	}
 
-	shared_ptr<TSkeletalMesh> SkeMesh = make_shared<TSkeletalMesh>();
+	shared_ptr<FSkeletalMesh> SkeMesh = make_shared<FSkeletalMesh>();
 
 	SkeMesh->SetSkeletalMeshLods(ReadSkeletalMeshLods(Fin));
 
@@ -224,7 +224,7 @@ shared_ptr<TSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& Bi
 	return SkeMesh;
 }
 
-shared_ptr<TSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileName)
+shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileName)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -233,7 +233,7 @@ shared_ptr<TSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileNam
 		throw std::exception("ERROR:  open file faild.");
 	}
 
-	shared_ptr<TSkeleton> Ske = make_shared<TSkeleton>();
+	shared_ptr<FSkeleton> Ske = make_shared<FSkeleton>();
 
 	uint32 JointNum;
 	Fin.read((char*)&JointNum, sizeof(int));

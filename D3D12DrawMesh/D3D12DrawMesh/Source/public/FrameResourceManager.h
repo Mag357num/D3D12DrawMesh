@@ -45,6 +45,10 @@ struct FMultiBufferFrameResource
 	shared_ptr<FTexture> SunMergeMap;
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
+
+	//
+	FMatrix Palette;
+
 };
 
 class FFrameResourceManager

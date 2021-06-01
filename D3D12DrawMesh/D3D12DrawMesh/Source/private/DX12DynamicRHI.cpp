@@ -567,13 +567,13 @@ namespace RHI
 		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( TStaticMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FStaticMeshComponent& MeshComponent )
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size());
 
-		const vector<TStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertice;
-		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( TStaticVertex ));
+		const vector<FStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertice;
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( FStaticVertex ));
 		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size() * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
 
@@ -608,7 +608,7 @@ namespace RHI
 
 		// Initialize the vertex buffer view.
 		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = sizeof( TStaticVertex );
+		Mesh->VertexBufferView.StrideInBytes = sizeof( FStaticVertex );
 		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// index buffer
@@ -648,13 +648,13 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( TSkeletalMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FSkeletalMeshComponent& MeshComponent )
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
 		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
 
-		vector<TSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
-		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( TSkeletalVertex ));
+		vector<FSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( FSkeletalVertex ));
 		uint32 IndexBufferSize = static_cast<uint32>(Mesh->IndexNum * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
 
@@ -689,7 +689,7 @@ namespace RHI
 
 		// Initialize the vertex buffer view.
 		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = sizeof( TSkeletalVertex );
+		Mesh->VertexBufferView.StrideInBytes = sizeof( FSkeletalVertex );
 		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// index buffer
@@ -729,13 +729,13 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry(TStaticMeshLOD& Lod)
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry(FStaticMeshLOD& Lod)
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
 		Mesh->IndexNum = static_cast<uint32>(Lod.Indice.size());
 
-		const vector<TStaticVertex>& VertexBuffer = Lod.Vertice;
-		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(TStaticVertex));
+		const vector<FStaticVertex>& VertexBuffer = Lod.Vertice;
+		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(FStaticVertex));
 		uint32 IndexBufferSize = static_cast<uint32>(Lod.Indice.size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
@@ -770,7 +770,7 @@ namespace RHI
 
 		// Initialize the vertex buffer view.
 		Mesh->VertexBufferView.BufferLocation = Mesh->VertexBuffer->GetGPUVirtualAddress();
-		Mesh->VertexBufferView.StrideInBytes = sizeof(TStaticVertex);
+		Mesh->VertexBufferView.StrideInBytes = sizeof(FStaticVertex);
 		Mesh->VertexBufferView.SizeInBytes = VertexBufferSize;
 
 		// index buffer
