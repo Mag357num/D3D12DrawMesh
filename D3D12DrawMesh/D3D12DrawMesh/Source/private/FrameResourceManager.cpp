@@ -185,7 +185,8 @@ void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FMultiBuffer
 	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
 	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
 	FMatrix CamVP = glm::transpose(CamProj * CamView);
-	FVector4 Eye(Scene->GetCurrentCamera()->GetPosition().x, Scene->GetCurrentCamera()->GetPosition().y, Scene->GetCurrentCamera()->GetPosition().z, 1.f);
+	const FVector& CamPos = Scene->GetCurrentCamera()->GetStaticMeshCom()->GetTransform().Translation;
+	FVector4 Eye(CamPos.x, CamPos.y, CamPos.z, 1.f);
 
 	struct CameraCB
 	{
@@ -462,13 +463,13 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
 
 	// camera
-	if (Scene->GetCurrentCamera()->IsChanged)
+	if (Scene->GetCurrentCamera()->GetStaticMeshCom()->IsDirty())
 	{
 		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
 		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
 		FMatrix CamVP = glm::transpose(CamProj * CamView);
-		FVector4 Eye(Scene->GetCurrentCamera()->GetPosition().x, Scene->GetCurrentCamera()->GetPosition().y, Scene->GetCurrentCamera()->GetPosition().z, 1.f);
-
+		const FVector& CamPos = Scene->GetCurrentCamera()->GetStaticMeshCom()->GetTransform().Translation;
+		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
 		struct CameraCB
 		{
 			FMatrix CamVP;
@@ -476,7 +477,7 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 		} CBInstance = { CamVP, Eye };
 
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
-		Scene->GetCurrentCamera()->IsChanged = false;
+		Scene->GetCurrentCamera()->GetStaticMeshCom()->SetDirtyValue(false);
 	}
 
 	// character position

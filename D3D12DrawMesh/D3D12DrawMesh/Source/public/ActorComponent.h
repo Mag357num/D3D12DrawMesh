@@ -10,6 +10,7 @@ protected:
 public:
 	const bool& IsDirty() const { return Dirty; }
 
+	void SetDirtyValue(const bool& Value ) { Dirty = Value; }
 	void SetScale(const FVector& Scale) { Transform.Scale = Scale; Dirty = true; }
 	void SetQuat(const FQuat& Quat) { Transform.Quat = Quat; Dirty = true; }
 	void SetTranslate(const FVector& Translate) { Transform.Translation = Translate; Dirty = true; }
