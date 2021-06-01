@@ -93,11 +93,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 		0,
 		GDynamicRHI->GetFrameCount()
 	);
-	FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransMatrix());
-	FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Wrold);
+	FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransMatrix());
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
-		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(FMatrix));
+		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 	}
 	SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
 
@@ -112,9 +111,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 		1,
 		GDynamicRHI->GetFrameCount()
 	);
+	FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransMatrix());
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
-		GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(FMatrix));
+		GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
 	}
 	SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
 
@@ -133,11 +133,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 			0,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetTransMatrix());
-		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Wrold);
+		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetTransMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
-			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
@@ -152,9 +151,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 			1,
 			GDynamicRHI->GetFrameCount()
 		);
+		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetTransMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
-			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
 		}
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
 
@@ -210,15 +210,21 @@ void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FSingleBuffer
 	{
 		FMatrix VPMatrix;
 		FMatrix ScreenMatrix;
-		FDirectionLight Light;
+		struct LightState
+		{
+			FVector DirectionLightColor;
+			float DirectionLightIntensity;
+			FVector DirectionLightDir;
+		} Light;
 	} CBInstance;
 
 	CBInstance.VPMatrix = glm::transpose(Scene->GetDirectionLight().GetLightVPMatrix());
 	CBInstance.ScreenMatrix = glm::transpose(LightScr);
-	CBInstance.Light = Scene->GetDirectionLight();
-	CBInstance.Light.Dir = glm::normalize( CBInstance.Light.Dir );
+	CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight().Color;
+	CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight().Intensity;
+	CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight().Dir );
 
-	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(LightCB));
+	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
 
 void FFrameResourceManager::InitCharacterPaletteConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes)
