@@ -54,7 +54,7 @@ public:
 
 	// animator
 	FAnimInstance& GetAnimator() { return Animator; }
-	void TickAnimation(const float& ElapsedSeconds) { Animator.UpdateAnimation(ElapsedSeconds); }
+	void TickAnimation(const float& ElapsedSeconds) { Animator.TickAnimation(ElapsedSeconds); }
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq );
 
 	// skeletal mesh

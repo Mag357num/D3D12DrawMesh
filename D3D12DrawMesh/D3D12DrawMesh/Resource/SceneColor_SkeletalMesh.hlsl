@@ -16,7 +16,7 @@ cbuffer StaticMeshConstantBuffer : register(b0)
 cbuffer CameraConstantBuffer : register(b1)
 {
 	float4x4 CameraVP;
-	float4 CamEye;
+	float3 CamEye;
 };
 
 cbuffer LightConstantBuffer : register(b2)

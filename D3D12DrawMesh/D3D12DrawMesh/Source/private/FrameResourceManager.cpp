@@ -422,22 +422,22 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
 
-	// camera
-	if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
-	{
-		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
-		FMatrix CamVP = glm::transpose(CamProj * CamView);
-		const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
-		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
-		struct CameraCB
-		{
-			FMatrix CamVP;
-			FVector4 Eye;
-		} CBInstance = { CamVP, Eye };
+	//// camera
+	//if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
+	//{
+	//	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
+	//	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
+	//	FMatrix CamVP = glm::transpose(CamProj * CamView);
+	//	const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
+	//	FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
+	//	struct CameraConstantBuffer
+	//	{
+	//		FMatrix CamVP;
+	//		FVector4 Eye;
+	//	} CBInstance = { CamVP, Eye };
 
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
-	}
+	//	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
+	//}
 
 	// character position
 	if (CurrentCharacter->GetSkeletalMeshCom()->IsDirty())
@@ -485,9 +485,18 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 }
 
+void FFrameResourceManager::UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex)
+{
+	struct CameraConstantBuffer
+	{
+		FMatrix CamVP;
+		FVector Eye;
+	} CBInstance = { VP, Eye };
+	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+}
+
 void FFrameResourceManager::UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex)
 {
-	// animation
 	struct PaletteCB
 	{
 		array<FMatrix, 68> GBoneTransforms;

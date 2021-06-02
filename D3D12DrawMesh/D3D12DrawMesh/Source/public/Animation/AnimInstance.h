@@ -22,9 +22,9 @@ private:
 public:
 	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
 	void initAnimation( FSkeletalMeshComponent* SkeCom ) { SkeletalMeshCom = SkeCom; }
-	void UpdateAnimation(const float& TotalSeconds);
+	void TickAnimation(const float& TotalSeconds);
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq ) { SequenceMap.insert( Seq ); }
-	vector<FMatrix> UpdatePalette( float dt );
+	vector<FMatrix> TickPalette( float dt );
 	vector<FMatrix>& GetPalette() { return Palette; }
 
 	FAnimInstance() = default;

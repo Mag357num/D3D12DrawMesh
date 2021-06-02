@@ -3,7 +3,7 @@
 #include "Skeleton.h"
 #include "RenderThread.h"
 
-void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
+void FAnimInstance::TickAnimation(const float& ElapsedSeconds)
 {
 	if (TimePos > 100.f)
 	{
@@ -12,11 +12,11 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 
 	TimePos += ElapsedSeconds;
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
-	Palette = UpdatePalette(fmod(TimePos, SequenceLength));
+	Palette = TickPalette(fmod(TimePos, SequenceLength));
 	FRenderThread::Get()->UpdateFrameResPalette(Palette);
 }
 
-vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)
+vector<FMatrix> FAnimInstance::TickPalette(float Dt)
 {
 	vector<FMatrix> Result;
 	FSkeleton* Ske = SkeletalMeshCom->GetSkeletalMesh()->GetSkeleton();

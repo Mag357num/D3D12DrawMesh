@@ -66,6 +66,7 @@ void FEngine::Init(void* WindowHandle)
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
 	FRenderThread::Get()->CreateFrameResource(CurrentScene);
+
 }
 
 void FEngine::Tick()

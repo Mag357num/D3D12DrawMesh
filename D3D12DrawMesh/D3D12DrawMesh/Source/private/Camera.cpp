@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "StaticMesh.h"
 #include "DeviceEventProcessor.h"
+#include "RenderThread.h"
 
 ACamera::ACamera()
 {
@@ -155,9 +156,14 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	FVector HorizontalLook = glm::normalize(FVector( LookDir.x, LookDir.y, 0 )) * Distance;
 	const FVector TheoryPos = TargetPosLift - HorizontalLook;
 	const FVector& ActualPos = GetTransform().Translation;
-	if (ActualPos != TheoryPos || bIsMouseDown) // change position or rotate view direction
+	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
 		SetTranslate( TheoryPos );
+	}
+
+	if (bIsMouseDown || ActualPos != TheoryPos)
+	{
+		FRenderThread::Get()->UpdateFrameResCamera(transpose(GetPerspProjMatrix() * GetViewMatrix()), GetTransform().Translation);
 	}
 }
 
@@ -273,4 +279,7 @@ void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector Ta
 	default:
 		break;
 	}
+
+
+
 }

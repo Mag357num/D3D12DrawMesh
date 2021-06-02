@@ -59,6 +59,7 @@ public:
 	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
 	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
+	void UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex);
 	void UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex);
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
