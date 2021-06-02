@@ -23,8 +23,7 @@ public:
 
 	void CreateFrameResource(shared_ptr<class FScene> Scene);
 	void UpdateFrameRes(FScene* Scene);
-	void UpdatePalette(vector<FMatrix> Palette);
-	//void UpdateTest(int test);
+	void UpdateFrameResPalette(vector<FMatrix> Palette);
 	void WaitForRenderThread();
 
 private:

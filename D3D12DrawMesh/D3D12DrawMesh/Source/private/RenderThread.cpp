@@ -86,22 +86,13 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 		});
 }
 
-void FRenderThread::UpdatePalette(vector<FMatrix> Palette)
+void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
 {
 	RENDER_THREAD([this, Palette]()
 		{
-			FrameResourceManager->UpdatePalette(Palette, GDynamicRHI->GetCurrentFramIndex());
+			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetCurrentFramIndex());
 		});
 }
-
-//void FRenderThread::UpdateTest(int test)
-//{
-//	RENDER_THREAD([this, test]()
-//		{
-//			Sleep(1000);
-//			FrameResourceManager->UpdateTest(test, GDynamicRHI->GetCurrentFramIndex());
-//		});
-//}
 
 void FRenderThread::WaitForRenderThread()
 {

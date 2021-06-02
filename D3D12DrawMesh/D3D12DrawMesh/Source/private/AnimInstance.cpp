@@ -13,9 +13,7 @@ void FAnimInstance::UpdateAnimation(const float& ElapsedSeconds)
 	TimePos += ElapsedSeconds;
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
 	Palette = UpdatePalette(fmod(TimePos, SequenceLength));
-	FRenderThread::Get()->UpdatePalette(Palette);
-	//test++;
-	//FRenderThread::Get()->UpdateTest(test);
+	FRenderThread::Get()->UpdateFrameResPalette(Palette);
 }
 
 vector<FMatrix> FAnimInstance::UpdatePalette(float Dt)

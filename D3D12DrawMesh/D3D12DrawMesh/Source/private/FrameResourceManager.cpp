@@ -498,7 +498,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 }
 
-void FFrameResourceManager::UpdatePalette(vector<FMatrix> Palette, const uint32& FrameIndex)
+void FFrameResourceManager::UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex)
 {
 	// animation
 	struct PaletteCB
@@ -512,8 +512,3 @@ void FFrameResourceManager::UpdatePalette(vector<FMatrix> Palette, const uint32&
 	}
 	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
-
-//void FFrameResourceManager::UpdateTest(int test, const uint32& FrameIndex)
-//{
-//	int a = test;
-//}

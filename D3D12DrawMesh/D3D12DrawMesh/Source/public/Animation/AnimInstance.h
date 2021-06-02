@@ -18,7 +18,6 @@ private:
 	unordered_map<string, shared_ptr<FAnimSequence>> SequenceMap;
 	string CurrentAnimation = "Idle";
 	float TimePos = 0.0f;
-	//int test = 0;
 
 public:
 	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
