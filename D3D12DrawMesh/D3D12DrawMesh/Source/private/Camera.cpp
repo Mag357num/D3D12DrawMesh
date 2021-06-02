@@ -7,49 +7,28 @@ ACamera::ACamera()
 	Components.push_back(make_shared<FStaticMeshComponent>());
 }
 
-FStaticMeshComponent* ACamera::GetStaticMeshCom()
-{
-	if (Components.size() == 0)
-	{
-		return nullptr;
-	}
-	else
-	{
-		return Components[0].get()->As<FStaticMeshComponent>();
-	}
-}
-
-ACamera::ACamera( const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height )
+ACamera::ACamera(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
 {
 	Components.push_back(make_shared<FStaticMeshComponent>());
-	Init( PositionParam, UpDir, LookAt, Fov, Width, Height );
+	Init(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane );
 }
 
-void ACamera::UpdateLookByEuler_deprecated(const float& Pitch, const float& Yaw)
-{
-	//LookDirection.x = cosf(Pitch) * cosf(Yaw);
-	//LookDirection.y = cosf(Pitch) * sinf(Yaw);
-	//LookDirection.z = sinf(Pitch);
-
-	//if (fabs(LookDirection.x) < 0.001f) LookDirection.x = 0.f;
-	//if (fabs(LookDirection.y) < 0.001f) LookDirection.y = 0.f;
-	//if (fabs(LookDirection.z) < 0.001f) LookDirection.z = 0.f;
-}
-
-void ACamera::Init(const FVector& Eye, const FVector& Up, const FVector& LookAt, float Fov, float Width, float Height)
+void ACamera::Init(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane, const float& FarPlane)
 {
 	InitialPosition = Eye;
 	InitialUpDir = Up;
 	InitialLookAt = LookAt;
 
 	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
-	FMatrix ComponentMatrix = glm::inverse(glm::lookAtLH(Eye, Eye + LookAt * 10.0f, Up));
-	GetStaticMeshCom()->SetMatrix(ComponentMatrix);
-
-	UpDirection = Up;
+	VMatrix = glm::lookAtLH(Eye, Eye + LookAt * 10.0f, Up);
+	VDirty = false;
+	SetWorldMatrix(glm::inverse(VMatrix));
 
 	SetFov(Fov);
 	SetAspectRatio(Width / Height);
+	SetViewPlane(NearPlane, FarPlane);
+	PMatrix = glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+	PDirty = false;
 }
 
 void ACamera::SetMoveSpeed(const float & UnitsPerSecond)
@@ -157,7 +136,7 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
 	FVector2 MouseRotateInterval = MouseSensibility * MouseMoveDelta; // Interval between tick
 
-	FEuler Euler = QuatToEuler(GetStaticMeshCom()->GetTransform().Quat);
+	FEuler Euler = QuatToEuler(GetTransform().Quat);
 	float& Yaw = Euler.Yaw;
 	float& Pitch = Euler.Pitch;
 	float& Roll = Euler.Roll;
@@ -167,19 +146,18 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	{
 		Yaw += MouseRotateInterval.x;
 		Roll += MouseRotateInterval.y;
-		GetStaticMeshCom()->SetQuat( EulerToQuat(FEuler(Roll, Pitch, Yaw)) );
+		SetQuat(EulerToQuat(FEuler(Roll, Pitch, Yaw)));
 	}
 
 	// update position
 	const FVector TargetPosLift = TargetPos + FVector( 0, 0, 200 ); // lift the camera for 200
-	auto a = GetStaticMeshCom()->GetTransMatrix();
-	FVector LookDir = FVector4( 0, 0, 1, 0 ) * GetStaticMeshCom()->GetTransMatrix(); // directional vector dont translate
+	const FVector LookDir = GetWorldMatrix() * FVector4(0, 0, 1, 0); // directional vector dont translate
 	FVector HorizontalLook = glm::normalize(FVector( LookDir.x, LookDir.y, 0 )) * Distance;
 	const FVector TheoryPos = TargetPosLift - HorizontalLook;
-	const FVector& ActualPos = GetStaticMeshCom()->GetTransform().Translation;
+	const FVector& ActualPos = GetTransform().Translation;
 	if (ActualPos != TheoryPos || bIsMouseDown) // change position or rotate view direction
 	{
-		GetStaticMeshCom()->SetTranslate( TheoryPos );
+		SetTranslate( TheoryPos );
 	}
 }
 
@@ -190,17 +168,90 @@ void ACamera::UpdateCameraParam_Static(const float& ElapsedSeconds)
 
 FMatrix ACamera::GetViewMatrix()
 {
-	return inverse(GetStaticMeshCom()->GetTransMatrix());
+	if (VDirty)
+	{
+		VMatrix = inverse(Components[0]->GetWorldMatrix());
+		VDirty = false;
+	}
+	return VMatrix;
 }
 
-FMatrix ACamera::GetPerspProjMatrix(const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+FMatrix ACamera::GetPerspProjMatrix()
 {
-	return glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+	if (PDirty)
+	{
+		PMatrix = glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+		PDirty = false;
+	}
+	return PMatrix;
 }
 
-FMatrix ACamera::GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 1000.0f*/) const
+FMatrix ACamera::GetOrthoProjMatrix(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
 {
 	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
+}
+
+void ACamera::SetQuat(const FQuat& Quat)
+{
+	if (Components.size() == 0)
+	{
+		throw std::exception("ERROR: Camera dont have component!");
+	}
+	else
+	{
+		Components[0]->SetQuat(Quat);
+		VDirty = true;
+	}
+}
+
+void ACamera::SetTranslate(const FVector& Trans)
+{
+	if (Components.size() == 0)
+	{
+		throw std::exception("ERROR: Camera dont have component!");
+	}
+	else
+	{
+		Components[0]->SetTranslate(Trans);
+		VDirty = true;
+	}
+}
+
+void ACamera::SetWorldMatrix(const FMatrix& W)
+{
+	if (Components.size() == 0)
+	{
+		throw std::exception("ERROR: Camera dont have component!");
+	}
+	else
+	{
+		Components[0]->SetWorldMatrix(W);
+		VDirty = true;
+	}
+}
+
+const FTransform& ACamera::GetTransform()
+{
+	if (Components.size() == 0)
+	{
+		throw std::exception("ERROR: Camera dont have component!");
+	}
+	else
+	{
+		return Components[0]->GetTransform();
+	}
+}
+
+const FMatrix& ACamera::GetWorldMatrix()
+{
+	if (Components.size() == 0)
+	{
+		throw std::exception("ERROR: Camera dont have component!");
+	}
+	else
+	{
+		return Components[0]->GetWorldMatrix();
+	}
 }
 
 void ACamera::Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
@@ -222,12 +273,4 @@ void ACamera::Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector 
 	default:
 		break;
 	}
-}
-
-FVector2 ACamera::GetEulerByLook_deprecated(const FVector& LookAt)
-{
-	// assume rotate from FVector(1, 0, 0)
-	float Yaw = Atan2(LookAt.y, LookAt.x);
-	float Pitch = Atan2(LookAt.z, sqrt(LookAt.x * LookAt.x + LookAt.y * LookAt.y));
-	return FVector2(Yaw, Pitch);
 }

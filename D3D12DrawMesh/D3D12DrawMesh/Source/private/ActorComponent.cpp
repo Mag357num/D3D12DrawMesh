@@ -1,8 +1,8 @@
 #include "ActorComponent.h"
 
-void FActorComponent::SetMatrix(const FMatrix& Matrix)
+void FActorComponent::SetWorldMatrix(const FMatrix& Matrix)
 {
-	TransMatrix = Matrix;
+	WorldMatrix = Matrix;
 
 	Transform.Quat = glm::quat_cast(Matrix);
 	Transform.Translation = FVector(Matrix[3][0], Matrix[3][1], Matrix[3][2]);  // FMatrix[column][row]

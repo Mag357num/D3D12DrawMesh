@@ -23,7 +23,7 @@ public:
 
 	// TODO: refactor here. add a Camera controler to manager and store all comera, create camera will be its work. scene only need to pick a camera as current camera.
 	void SetCurrentCamera( shared_ptr<ACamera> Cam ) { CurrentCamera = Cam; }
-	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, float Fov, float Width, float Height) { return CurrentCamera->Init(PositionParam, UpDir, LookAt, Fov, Width, Height); }
+	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.f, const float& FarPlane = 5000.f) { return CurrentCamera->Init(PositionParam, UpDir, LookAt, Fov, Width, Height, NearPlane, FarPlane); }
 	void SetDirectionLight(const FDirectionLight& Light) { DirectionLight = Light; }
 	void SetCurrentCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
 

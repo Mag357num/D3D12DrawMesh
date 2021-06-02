@@ -6,24 +6,24 @@ class FActorComponent
 protected:
 	bool Dirty = true;
 	FTransform Transform;
-	FMatrix TransMatrix;
+	FMatrix WorldMatrix;
 public:
 	const bool& IsDirty() const { return Dirty; }
 
-	void SetDirtyValue(const bool& Value ) { Dirty = Value; }
 	void SetScale(const FVector& Scale) { Transform.Scale = Scale; Dirty = true; }
 	void SetQuat(const FQuat& Quat) { Transform.Quat = Quat; Dirty = true; }
 	void SetTranslate(const FVector& Translate) { Transform.Translation = Translate; Dirty = true; }
 	void SetTransform(const FTransform& Trans) { Transform = Trans; Dirty = true; }
-	void SetMatrix(const FMatrix& Matrix);
+	void SetWorldMatrix(const FMatrix& Matrix);
 	const FTransform& GetTransform() const { return Transform; }
-	const FMatrix& GetTransMatrix()
+	const FMatrix& GetWorldMatrix()
 	{
 		if (Dirty)
 		{
-			TransMatrix = translate(Transform.Translation) * toMat4(Transform.Quat) * scale(Transform.Scale);
+			WorldMatrix = translate(Transform.Translation) * toMat4(Transform.Quat) * scale(Transform.Scale);
+			Dirty = false;
 		}
-		return TransMatrix;
+		return WorldMatrix;
 	}
 
 	FActorComponent() = default;

@@ -93,7 +93,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 		0,
 		GDynamicRHI->GetFrameCount()
 	);
-	FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransMatrix());
+	FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
 		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
@@ -111,7 +111,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 		1,
 		GDynamicRHI->GetFrameCount()
 	);
-	FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransMatrix());
+	FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
 		GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
@@ -133,7 +133,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 			0,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetTransMatrix());
+		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
@@ -151,7 +151,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScen
 			1,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetTransMatrix());
+		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
@@ -183,9 +183,9 @@ void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FMultiBuffer
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
 
 	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
+	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
 	FMatrix CamVP = glm::transpose(CamProj * CamView);
-	const FVector& CamPos = Scene->GetCurrentCamera()->GetStaticMeshCom()->GetTransform().Translation;
+	const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
 	FVector4 Eye(CamPos.x, CamPos.y, CamPos.z, 1.f);
 
 	struct CameraCB
@@ -463,12 +463,12 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
 
 	// camera
-	if (Scene->GetCurrentCamera()->GetStaticMeshCom()->IsDirty())
+	if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
 	{
 		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix(1.0f, 3000.0f);
+		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
 		FMatrix CamVP = glm::transpose(CamProj * CamView);
-		const FVector& CamPos = Scene->GetCurrentCamera()->GetStaticMeshCom()->GetTransform().Translation;
+		const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
 		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
 		struct CameraCB
 		{
@@ -477,14 +477,13 @@ void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& Fr
 		} CBInstance = { CamVP, Eye };
 
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
-		Scene->GetCurrentCamera()->GetStaticMeshCom()->SetDirtyValue(false);
 	}
 
 	// character position
 	if (CurrentCharacter->GetSkeletalMeshCom()->IsDirty())
 	{
-		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * CurrentCharacter->GetSkeletalMeshCom()->GetTransMatrix());
-		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetTransMatrix());
+		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
+		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(FMatrix));
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 	}
