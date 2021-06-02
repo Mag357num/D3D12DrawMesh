@@ -441,7 +441,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	{
 		array<FMatrix, 68> GBoneTransforms;
 	} CBInstance;
-
+	
 	for (uint32 i = 0; i < 68; i++)
 	{
 		CBInstance.GBoneTransforms[i] = glm::identity<FMatrix>();

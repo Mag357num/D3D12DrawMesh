@@ -66,12 +66,10 @@ void FEngine::Init(void* WindowHandle)
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
 	FRenderThread::Get()->CreateFrameResource(CurrentScene);
-
 }
 
 void FEngine::Tick()
 {
-
 	// GAME tick
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now

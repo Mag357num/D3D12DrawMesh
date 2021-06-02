@@ -40,12 +40,6 @@ void FRenderThread::Run()
 
 void FRenderThread::DoRender()
 {
-	std::unique_lock<std::mutex> Lock(Mutex);
-	RenderCV.wait(Lock, [this]()
-		{
-			return FrameTaskNum > 0;
-		});
-
 	const uint32& FrameIndex = GDynamicRHI->GetFramIndex();
 	FMultiBufferFrameResource& MFrameRes = FrameResourceManager->GetMultiFrameRes()[FrameIndex];
 	FSingleBufferFrameResource& SFrameRes = FrameResourceManager->GetSingleFrameRes();
