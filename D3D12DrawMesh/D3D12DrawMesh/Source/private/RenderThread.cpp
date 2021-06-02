@@ -12,7 +12,7 @@ FRenderThread::FRenderThread()
 void FRenderThread::Run()
 {
 	RHI::GDynamicRHI->CreateRHI();
-	RHI::GDynamicRHI->RHIInit(false, RHI::BACKBUFFER_NUM, GEngine->GetWidth(), GEngine->GetHeight());
+	RHI::GDynamicRHI->RHIInit(false, RHI::BACKBUFFER_NUM);
 
 	while (IsRunning)
 	{
@@ -43,8 +43,12 @@ void FRenderThread::DoRender()
 	std::unique_lock<std::mutex> Lock(Mutex);
 	RenderCV.wait(Lock, [this]() { return RenderTaskNum > 0; });
 
+	const uint32 FrameIndex = GDynamicRHI->GetCurrentFramIndex();
+	FMultiBufferFrameResource& MFrameRes = FrameResourceManager->GetMultiFrameRes()[FrameIndex];
+	FSingleBufferFrameResource& SFrameRes = FrameResourceManager->GetSingleFrameRes();
+
 	FRenderer Renderer;
-	Renderer.Render(GDynamicRHI, FrameResourceManager.get());
+	Renderer.Render(GDynamicRHI, FrameIndex, SFrameRes, MFrameRes);
 	--RenderTaskNum;
 	RenderCV.notify_all();
 }

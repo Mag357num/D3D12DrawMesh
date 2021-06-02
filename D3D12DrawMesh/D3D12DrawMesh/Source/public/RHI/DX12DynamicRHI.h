@@ -27,8 +27,7 @@ namespace RHI
 		~FDX12DynamicRHI() = default;
 
 		// init
-		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
-			const uint32& ResoHeight) override;
+		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount) override;
 
 		// Resource Create
 		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) override;
@@ -74,8 +73,8 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() override;
-		virtual uint32 GetFrameCount() override { return FrameCount; }
-		virtual uint32 GetCurrentFramIndex() override { return CurrentFrameIndex; }
+		virtual const uint32& GetFrameCount() override { return FrameCount; }
+		virtual const uint32& GetCurrentFramIndex() override { return CurrentFrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
 

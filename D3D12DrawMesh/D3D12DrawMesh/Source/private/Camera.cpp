@@ -254,7 +254,7 @@ const FMatrix& ACamera::GetWorldMatrix()
 	}
 }
 
-void ACamera::Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
+void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
 {
 	switch (Mode)
 	{

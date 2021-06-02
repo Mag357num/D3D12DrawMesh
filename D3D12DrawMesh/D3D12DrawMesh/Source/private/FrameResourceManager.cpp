@@ -9,7 +9,7 @@
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	// single buffer frame resource
-	InitLightConstantBuffer( Scene, SFrameRes );
+	CreateLightConstantBuffer( Scene, SFrameRes );
 	CreateSamplers();
 	CreatePPTriangle();
 	CreatePPTriangleRR();
@@ -18,8 +18,8 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	MFrameRes.resize( FrameCount );
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
 	{
-		InitCameraConstantBuffer(Scene, MFrameRes[FrameIndex]);
-		InitCharacterPaletteConstantBuffer(Scene, MFrameRes[FrameIndex]);
+		CreateCameraConstantBuffer(Scene, MFrameRes[FrameIndex]);
+		CreateCharacterPaletteConstantBuffer(Scene, MFrameRes[FrameIndex]);
 		CreateMapsForShadow(MFrameRes[FrameIndex]);
 		CreateMapsForScene(MFrameRes[FrameIndex]);
 		CreateMapsForPostProcess(MFrameRes[FrameIndex]);
@@ -178,59 +178,19 @@ shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( co
 	return RR;
 }
 
-void FFrameResourceManager::InitCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
-
-	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
-	FMatrix CamVP = glm::transpose(CamProj * CamView);
-	const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
-	FVector4 Eye(CamPos.x, CamPos.y, CamPos.z, 1.f);
-
-	struct CameraCB
-	{
-		FMatrix CamVP;
-		FVector4 Eye;
-	} CBInstance = { CamVP, Eye };
-
-	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
 }
 
-void FFrameResourceManager::InitLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes)
 {
 	FrameRes.StaticSkyLightCB = GDynamicRHI->CreateConstantBuffer(256);
-
-	FMatrix LightScr(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
-
-	struct LightCB
-	{
-		FMatrix VPMatrix;
-		FMatrix ScreenMatrix;
-		struct LightState
-		{
-			FVector DirectionLightColor;
-			float DirectionLightIntensity;
-			FVector DirectionLightDir;
-		} Light;
-	} CBInstance;
-
-	CBInstance.VPMatrix = glm::transpose(Scene->GetDirectionLight().GetLightVPMatrix());
-	CBInstance.ScreenMatrix = glm::transpose(LightScr);
-	CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight().Color;
-	CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight().Intensity;
-	CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight().Dir );
-
-	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
 
-void FFrameResourceManager::InitCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352);
+	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352); // TODO: hard coding
 }
 
 void FFrameResourceManager::CreateMapsForShadow(FMultiBufferFrameResource& FrameRes)
@@ -251,11 +211,11 @@ void FFrameResourceManager::CreateSamplers()
 void FFrameResourceManager::CreateMapsForScene(FMultiBufferFrameResource& FrameRes)
 {
 	// create and commit Ds map
-	FrameRes.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+	FrameRes.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GEngine->GetWidth(), GEngine->GetHeight());
 	GDynamicRHI->CommitTextureAsView(FrameRes.DepthStencilMap.get(), FResViewType::DSV_RVT);
 
 	// create and commit scene color
-	FrameRes.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GDynamicRHI->GetWidth(), GDynamicRHI->GetHeight());
+	FrameRes.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GEngine->GetWidth(), GEngine->GetHeight());
 	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::RTV_RVT);
 	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::SRV_RVT);
 }
@@ -263,14 +223,14 @@ void FFrameResourceManager::CreateMapsForScene(FMultiBufferFrameResource& FrameR
 void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& FrameRes)
 {
 	// create and commit bloom down and up texture
-	FrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+	FrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
 	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
 	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
 
 	for (uint32 i = 0; i < 4; i++)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 3 + i));
-		FrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		FrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
 		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
 	}
@@ -278,12 +238,12 @@ void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& 
 	for (int i = 4; i > 1; i--)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 1 + i));
-		FrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / ShrinkTimes, GDynamicRHI->GetHeight() / ShrinkTimes));
+		FrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
 		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::RTV_RVT);
 		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::SRV_RVT);
 	}
 
-	FrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GDynamicRHI->GetWidth() / 4, GDynamicRHI->GetHeight() / 4);
+	FrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
 	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
 	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
 }
@@ -301,7 +261,7 @@ void FFrameResourceManager::CreatePPTriangle()
 
 void FFrameResourceManager::CreatePPTriangleRR()
 {
-	FVector2 WidthAndHeight = FVector2(static_cast<float>(GDynamicRHI->GetWidth()), static_cast<float>(GDynamicRHI->GetHeight()));
+	FVector2 WidthAndHeight = FVector2(static_cast<float>(GEngine->GetWidth()), static_cast<float>(GEngine->GetHeight()));
 	static const FVector4 BloomTint1 = FVector4(0.3465f);
 	static const FVector4 BloomTint2 = FVector4(0.138f);
 	static const FVector4 BloomTint3 = FVector4(0.1176f);
@@ -495,6 +455,33 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		{
 			// TODO: static mesh transform may change
 		}
+	}
+
+	if (true) // TODO: change to light dirty
+	{
+		FMatrix LightScr(
+			0.5f, 0.0f, 0.0f, 0.0f,
+			0.0f, -0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
+		struct LightCB
+		{
+			FMatrix VPMatrix;
+			FMatrix ScreenMatrix;
+			struct LightState
+			{
+				FVector DirectionLightColor;
+				float DirectionLightIntensity;
+				FVector DirectionLightDir;
+			} Light;
+		} CBInstance;
+		CBInstance.VPMatrix = glm::transpose(Scene->GetDirectionLight().GetLightVPMatrix());
+		CBInstance.ScreenMatrix = glm::transpose(LightScr);
+		CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight().Color;
+		CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight().Intensity;
+		CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight().Dir);
+
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 	}
 }
 

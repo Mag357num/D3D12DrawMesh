@@ -1,32 +1,28 @@
 #include "Renderer.h"
 #include "Engine.h"
 
-void FRenderer::Render(FDynamicRHI* RHI, FFrameResourceManager* FrameManager)
+void FRenderer::Render(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
 {
 	RHI->FrameBegin();
 	
 	if (GEngine->UseShadow())
 	{
-		RenderShadow(RHI, FrameManager);
+		RenderShadow(RHI, FrameIndex, SFrameRes, MFrameRes);
 	}
 
-	RenderScene(RHI, FrameManager);
+	RenderScene(RHI, FrameIndex, SFrameRes, MFrameRes);
 
 	if (GEngine->UsePostProcess())
 	{
-		RenderPostProcess(RHI, FrameManager);
+		RenderPostProcess(RHI, FrameIndex, SFrameRes, MFrameRes);
 	}
 
 	// transition
 	RHI->FrameEnd();
 }
 
-void FRenderer::RenderShadow(FDynamicRHI* RHI, FFrameResourceManager* FrameManager)
+void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
 {
-	const uint32 FrameIndex = RHI->GetCurrentFramIndex();
-	FMultiBufferFrameResource& MFrameRes = FrameManager->GetMultiFrameRes()[FrameIndex];
-	FSingleBufferFrameResource& SFrameRes = FrameManager->GetSingleFrameRes();
-
 	// shadow pass
 	{
 		SCOPED_EVENT("ShadowDepth");
@@ -67,12 +63,11 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, FFrameResourceManager* FrameManag
 	}
 }
 
-void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResourceManager* FrameManager)
+void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
 {
-	const uint32 FrameIndex = RHI->GetCurrentFramIndex();
-	FMultiBufferFrameResource& MFrameRes = FrameManager->GetMultiFrameRes()[FrameIndex];
-	FSingleBufferFrameResource& SFrameRes = FrameManager->GetSingleFrameRes();
 	FHandle* Rt = GEngine->UsePostProcess() ? MFrameRes.SceneColorMap->RtvHandle.get() : RHI->GetBackBufferHandle();
+	const uint32& Width = GEngine->GetWidth();
+	const uint32& Height = GEngine->GetHeight();
 
 	// scene color pass
 	{
@@ -81,8 +76,8 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResourceManager* FrameManage
 		RHI->ClearRenderTarget(MFrameRes.SceneColorMap->RtvHandle.get());
 		RHI->SetRenderTarget(1, Rt, MFrameRes.DepthStencilMap->DsvHandle.get());
 		RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
-		RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
+		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
+		RHI->SetScissor(0, 0, Width, Height);
 
 		// draw character
 		{
@@ -120,15 +115,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, FFrameResourceManager* FrameManage
 	}
 }
 
-void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* FrameManager)
+void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
 {
-	const uint32 FrameIndex = RHI->GetCurrentFramIndex();
-	FMultiBufferFrameResource& MFrameRes = FrameManager->GetMultiFrameRes()[FrameIndex];
-	FSingleBufferFrameResource& SFrameRes = FrameManager->GetSingleFrameRes();
+	const uint32& Width = GEngine->GetWidth();
+	const uint32& Height = GEngine->GetHeight();
 
 	SCOPED_EVENT("Post Process");
 	{
-		auto& Tri = FrameManager->GetSingleFrameRes().PPTriangle;
+		auto& Tri = SFrameRes.PPTriangle;
 		SCOPED_EVENT("Bloom");
 		{
 			// bloom setup
@@ -138,8 +132,8 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* Frame
 				RHI->ClearRenderTarget(MFrameRes.BloomSetupMap->RtvHandle.get());
 				RHI->SetRenderTarget(1, MFrameRes.BloomSetupMap->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
 				RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
-				RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
+				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / 4), static_cast<float>(Height / 4), 0.f, 1.f);
+				RHI->SetScissor(0, 0, Width / 4, Height / 4);
 
 				RHI->SetPipelineState(SFrameRes.RR_BloomSetup.get());
 
@@ -168,8 +162,8 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* Frame
 					RHI->ClearRenderTarget(MFrameRes.BloomDownMapArray[i]->RtvHandle.get());
 					RHI->SetRenderTarget(1, MFrameRes.BloomDownMapArray[i]->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
 					RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / static_cast<uint32>(pow(2, 3 + i))), static_cast<float>(RHI->GetHeight() / static_cast<uint32>(pow(2, 3 + i))), 0.f, 1.f);
-					RHI->SetScissor(0, 0, RHI->GetWidth() / static_cast<uint32>(pow(2, 3 + i)), RHI->GetHeight() / static_cast<uint32>(pow(2, 3 + i)));
+					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 3 + i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 3 + i))), 0.f, 1.f);
+					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 3 + i)), Height / static_cast<uint32>(pow(2, 3 + i)));
 
 					RHI->SetPipelineState(SFrameRes.RR_BloomDown[i].get());
 
@@ -203,8 +197,8 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* Frame
 					RHI->ClearRenderTarget(MFrameRes.BloomUpMapArray[i]->RtvHandle.get());
 					RHI->SetRenderTarget(1, MFrameRes.BloomUpMapArray[i]->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
 					RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / static_cast<uint32>(pow(2, 5 - i))), static_cast<float>(RHI->GetHeight() / static_cast<uint32>(pow(2, 5 - i))), 0.f, 1.f);
-					RHI->SetScissor(0, 0, RHI->GetWidth() / static_cast<uint32>(pow(2, 5 - i)), RHI->GetHeight() / static_cast<uint32>(pow(2, 5 - i)));
+					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 5 - i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 5 - i))), 0.f, 1.f);
+					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 5 - i)), Height / static_cast<uint32>(pow(2, 5 - i)));
 					RHI->SetPipelineState(SFrameRes.RR_BloomUp[i].get());
 
 					vector<shared_ptr<FHandle>> Handles;
@@ -227,8 +221,8 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* Frame
 				RHI->ClearRenderTarget(MFrameRes.SunMergeMap->RtvHandle.get());
 				RHI->SetRenderTarget(1, MFrameRes.SunMergeMap->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
 				RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth() / 4), static_cast<float>(RHI->GetHeight() / 4), 0.f, 1.f);
-				RHI->SetScissor(0, 0, RHI->GetWidth() / 4, RHI->GetHeight() / 4);
+				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / 4), static_cast<float>(Height / 4), 0.f, 1.f);
+				RHI->SetScissor(0, 0, Width / 4, Height / 4);
 
 				RHI->SetPipelineState(SFrameRes.RR_SunMerge.get());
 
@@ -251,8 +245,8 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, FFrameResourceManager* Frame
 			RHI->ClearRenderTarget(RHI->GetBackBufferHandle());
 			RHI->SetRenderTarget(1, RHI->GetBackBufferHandle(), MFrameRes.DepthStencilMap->DsvHandle.get());
 			RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
-			RHI->SetViewport(0.0f, 0.0f, static_cast<float>(RHI->GetWidth()), static_cast<float>(RHI->GetHeight()), 0.f, 1.f);
-			RHI->SetScissor(0, 0, RHI->GetWidth(), RHI->GetHeight());
+			RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
+			RHI->SetScissor(0, 0, Width, Height);
 
 			RHI->SetPipelineState(SFrameRes.RR_ToneMapping.get());
 

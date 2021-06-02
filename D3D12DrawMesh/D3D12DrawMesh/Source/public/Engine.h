@@ -27,8 +27,8 @@ public:
 
 	shared_ptr<FScene> CreateScene() { return make_shared<FScene>(); }
 
-	uint32 GetWidth() const { return ResoWidth; }
-	uint32 GetHeight() const { return ResoHeight; }
+	const uint32& GetWidth() const { return ResoWidth; }
+	const uint32& GetHeight() const { return ResoHeight; }
 	const wchar_t* GetTitle() const { return Title.c_str(); }
 	StepTimer& GetTimer() { return Timer; }
 	void CalculateFrameStats();

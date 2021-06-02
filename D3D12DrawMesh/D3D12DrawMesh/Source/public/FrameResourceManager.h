@@ -63,9 +63,9 @@ public:
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
-	void InitCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void InitLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes);
-	void InitCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes);
+	void CreateCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForShadow(FMultiBufferFrameResource& FrameRes);
 	void CreateSamplers();
 	void CreateMapsForScene(FMultiBufferFrameResource& FrameRes);

@@ -27,8 +27,7 @@ namespace RHI
 		// init
 		static void CreateRHI();
 		static void DestroyRHI();
-		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BufferFrameCount, const uint32& ResoWidth,
-			const uint32& ResoHeight) = 0;
+		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount) = 0;
 
 		// Resource Create
 		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) = 0;
@@ -67,8 +66,6 @@ namespace RHI
 		// other
 		virtual uint32 GetBackBufferIndex() = 0;
 		virtual FHandle* GetBackBufferHandle() = 0;
-		inline uint32 GetWidth() { return ResoWidth; }
-		inline uint32 GetHeight() { return ResoHeight; }
 
 		// draw
 		virtual void FrameBegin() = 0;
@@ -76,8 +73,8 @@ namespace RHI
 
 		// sync
 		virtual void CreateFenceAndEvent() = 0;
-		virtual uint32 GetFrameCount() = 0;
-		virtual uint32 GetCurrentFramIndex() = 0;
+		virtual const uint32& GetFrameCount() = 0;
+		virtual const uint32& GetCurrentFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 
@@ -85,8 +82,6 @@ namespace RHI
 		virtual void BeginEvent(const char* EventName) = 0;
 		virtual void EndEvent() = 0;
 
-		uint32 ResoWidth;
-		uint32 ResoHeight;
 	};
 }
 

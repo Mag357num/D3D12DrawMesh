@@ -25,6 +25,7 @@ private:
 	float MoveSpeed = 300.0f;
 	float TurnSpeed = 1.570796327f;
 	float MouseSensibility = 0.005f;
+	//float AngularVelocity;
 
 	bool VDirty = true;
 	FMatrix VMatrix;
@@ -54,7 +55,7 @@ public:
 	const bool& IsVDirty() const { return VDirty; }
 	const bool& IsPDirty() const { return PDirty; }
 
-	void Update(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0, 0, 0), float Distance = 0.f);
+	void Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0, 0, 0), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
 	void UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance);
 	void UpdateCameraParam_Static(const float& ElapsedSeconds);
