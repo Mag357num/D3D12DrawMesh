@@ -56,17 +56,17 @@ private:
 public:
 	FSingleBufferFrameResource& GetSingleFrameRes() { return SFrameRes; }
 	vector<FMultiBufferFrameResource>& GetMultiFrameRes() { return MFrameRes; }
-	void InitFrameResource(TScene* Scene, const uint32& FrameCount);
-	void CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameCount);
-	void UpdateFrameResources(TScene* Scene, const uint32& FrameIndex);
+	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
+	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
+	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 	void UpdatePalette(vector<FMatrix> Palette, const uint32& FrameIndex);
 	//void UpdateTest(int test, const uint32& FrameIndex);
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
-	void InitCameraConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void InitLightConstantBuffer(TScene* Scene, FSingleBufferFrameResource& FrameRes);
-	void InitCharacterPaletteConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void InitCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void InitLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes);
+	void InitCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForShadow(FMultiBufferFrameResource& FrameRes);
 	void CreateSamplers();
 	void CreateMapsForScene(FMultiBufferFrameResource& FrameRes);

@@ -26,9 +26,9 @@ void FAssetManager::DestroyAssetManager()
 	GAssetManager = nullptr;
 }
 
-shared_ptr<TScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName)
+shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName)
 {
-	shared_ptr<TScene> TargetScene = make_shared<TScene>();
+	shared_ptr<FScene> TargetScene = make_shared<FScene>();
 
 	std::ifstream Fin(BinFileName, std::ios::binary);
 

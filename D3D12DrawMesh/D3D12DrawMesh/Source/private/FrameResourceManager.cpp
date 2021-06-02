@@ -6,7 +6,7 @@
 #include "AssetManager.h"
 #include "Engine.h"
 
-void FFrameResourceManager::InitFrameResource(TScene* Scene, const uint32& FrameCount)
+void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	// single buffer frame resource
 	InitLightConstantBuffer( Scene, SFrameRes );
@@ -26,7 +26,7 @@ void FFrameResourceManager::InitFrameResource(TScene* Scene, const uint32& Frame
 	}
 }
 
-void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<TScene> Scene, const uint32& FrameNum)
+void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameNum)
 {
 	// TODO: param hard coding
 	 FFormat SceneMapFormat = GEngine->UsePostProcess() ? FFormat::FORMAT_R16G16B16A16_FLOAT : FFormat::FORMAT_R8G8B8A8_UNORM;
@@ -178,7 +178,7 @@ shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( co
 	return RR;
 }
 
-void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::InitCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
 
@@ -197,7 +197,7 @@ void FFrameResourceManager::InitCameraConstantBuffer(TScene* Scene, FMultiBuffer
 	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraCB));
 }
 
-void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FSingleBufferFrameResource& FrameRes)
+void FFrameResourceManager::InitLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes)
 {
 	FrameRes.StaticSkyLightCB = GDynamicRHI->CreateConstantBuffer(256);
 
@@ -228,7 +228,7 @@ void FFrameResourceManager::InitLightConstantBuffer(TScene* Scene, FSingleBuffer
 	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
 
-void FFrameResourceManager::InitCharacterPaletteConstantBuffer(TScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::InitCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352);
 }
@@ -458,7 +458,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	); // tone mapping need no constant buffer
 }
 
-void FFrameResourceManager::UpdateFrameResources(TScene* Scene, const uint32& FrameIndex)
+void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
 

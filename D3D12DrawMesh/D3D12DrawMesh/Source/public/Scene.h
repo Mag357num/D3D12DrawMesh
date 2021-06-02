@@ -8,7 +8,7 @@
 #include "StaticMesh.h"
 #include "SkeletalMesh.h"
 
-class TScene
+class FScene
 {
 private:
 	shared_ptr<ACharacter> CurrentCharacter; // create by a character manager

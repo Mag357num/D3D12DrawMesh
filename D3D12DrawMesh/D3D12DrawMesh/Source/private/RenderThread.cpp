@@ -70,7 +70,7 @@ FRenderThread* FRenderThread::Get()
 	return GRenderThread;
 }
 
-void FRenderThread::CreateFrameResource(shared_ptr<TScene> Scene)
+void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)
 {
 	RENDER_THREAD([this, Scene]()
 		{
@@ -78,7 +78,7 @@ void FRenderThread::CreateFrameResource(shared_ptr<TScene> Scene)
 		});
 }
 
-void FRenderThread::UpdateFrameRes(TScene* Scene)
+void FRenderThread::UpdateFrameRes(FScene* Scene)
 {
 	RENDER_THREAD([this, Scene]()
 		{
