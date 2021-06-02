@@ -10,24 +10,24 @@ namespace RHI
 	{
 		FCommand(ID3D12CommandQueue* CQ) { CommandQueue = CQ; }
 
-		ComPtr<ID3D12CommandAllocator> Allocator;
+		vector<ComPtr<ID3D12CommandAllocator>> Allocators;
 		ComPtr<ID3D12GraphicsCommandList> CommandList;
 		ID3D12CommandQueue* CommandQueue;
 
-		void Create(ComPtr<ID3D12Device> Device);
+		void FCommand::Create(ComPtr<ID3D12Device> Device, const uint32& FrameCount, const uint32& FrameIndex);
 		void Close();
 		void Execute();
-		void Reset();
+		void Reset(const uint32& FrameIndex);
 	};
 
 	class FDX12DynamicRHI : public FDynamicRHI
 	{
 	public:
 		FDX12DynamicRHI();
-		~FDX12DynamicRHI() = default;
+		~FDX12DynamicRHI();
 
 		// init
-		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount) override;
+		virtual void RHIInit() override;
 
 		// Resource Create
 		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) override;
@@ -64,17 +64,15 @@ namespace RHI
 		virtual void SetRenderTarget(uint32 DescriptorNum, FHandle* RtHandle, FHandle* DsHandle) override;
 
 		// other
-		virtual uint32 GetBackBufferIndex() override { return RHISwapChain->GetCurrentBackBufferIndex(); }
-		virtual FHandle* GetBackBufferHandle() { return BackBuffers[GetBackBufferIndex()]->RtvHandle.get(); }
+		virtual FHandle* GetBackBufferHandle() { return BackBuffers[FrameIndex]->RtvHandle.get(); }
 
 		// draw
 		virtual void FrameBegin() override;
 		virtual void FrameEnd() override;
 
 		// sync
-		virtual void CreateFenceAndEvent() override;
 		virtual const uint32& GetFrameCount() override { return FrameCount; }
-		virtual const uint32& GetCurrentFramIndex() override { return CurrentFrameIndex; }
+		virtual const uint32& GetFramIndex() override { return FrameIndex; }
 		virtual void BegineCreateResource() override;
 		virtual void EndCreateResource() override;
 
@@ -83,7 +81,8 @@ namespace RHI
 		virtual void EndEvent() override;
 
 	private:
-		void WaitForExecuteComplete();
+		void WaitForGPU();
+		void MoveToNextFrame();
 		void CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps);
 		void CreateRtvToHeaps(ID3D12Resource* RtResource, FHandle* Handle);
 		void CreateCbvToHeaps(const D3D12_CONSTANT_BUFFER_VIEW_DESC& CbvDesc, FDX12CB* FDX12CB);
@@ -107,15 +106,14 @@ namespace RHI
 		ComPtr<ID3D12DescriptorHeap> DSVHeap;
 		ComPtr<ID3D12DescriptorHeap> CBVSRVHeap;
 		ComPtr<ID3D12DescriptorHeap> SamplerHeap;
-		uint32 BackFrameIndex;
 		vector<FCommand> CommandLists;
-		//sync
-		HANDLE FenceEvent;
-		int FenceValue;
-		ComPtr<ID3D12Fence> Fence;
 
-		static const uint32 FrameCount = 1; // multi buffering num
-		uint32 CurrentFrameIndex = 0; // TODO: only have one Frame
+		//sync
+		static const uint32 FrameCount = 3;
+		uint32 FrameIndex;
+		HANDLE FenceEvent;
+		uint64 FenceValues[FrameCount];
+		ComPtr<ID3D12Fence> Fence;
 
 		// handles
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleRt;
@@ -125,6 +123,6 @@ namespace RHI
 		CD3DX12_CPU_DESCRIPTOR_HANDLE LastCpuHandleSampler;
 		CD3DX12_GPU_DESCRIPTOR_HANDLE LastGpuHandleSampler;
 
-		shared_ptr<FTexture> BackBuffers[RHI::BACKBUFFER_NUM];
+		shared_ptr<FTexture> BackBuffers[FrameCount];
 	};
 }

@@ -12,7 +12,7 @@ FRenderThread::FRenderThread()
 void FRenderThread::Run()
 {
 	RHI::GDynamicRHI->CreateRHI();
-	RHI::GDynamicRHI->RHIInit(false, RHI::BACKBUFFER_NUM);
+	RHI::GDynamicRHI->RHIInit();
 
 	while (IsRunning)
 	{
@@ -41,9 +41,12 @@ void FRenderThread::Run()
 void FRenderThread::DoRender()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);
-	RenderCV.wait(Lock, [this]() { return FrameTaskNum > 0; });
+	RenderCV.wait(Lock, [this]()
+		{
+			return FrameTaskNum > 0;
+		});
 
-	const uint32 FrameIndex = GDynamicRHI->GetCurrentFramIndex();
+	const uint32& FrameIndex = GDynamicRHI->GetFramIndex();
 	FMultiBufferFrameResource& MFrameRes = FrameResourceManager->GetMultiFrameRes()[FrameIndex];
 	FSingleBufferFrameResource& SFrameRes = FrameResourceManager->GetSingleFrameRes();
 
@@ -86,7 +89,7 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 {
 	RENDER_THREAD([this, Scene]()
 		{
-			FrameResourceManager->UpdateFrameResources(Scene, GDynamicRHI->GetCurrentFramIndex());
+			FrameResourceManager->UpdateFrameResources(Scene, GDynamicRHI->GetFramIndex());
 		});
 }
 
@@ -94,7 +97,7 @@ void FRenderThread::UpdateFrameResCamera(FMatrix VP, FVector Eye)
 {
 	RENDER_THREAD([this, VP, Eye]()
 		{
-			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetCurrentFramIndex());
+			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetFramIndex());
 		});
 }
 
@@ -102,14 +105,17 @@ void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
 {
 	RENDER_THREAD([this, Palette]()
 		{
-			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetCurrentFramIndex());
+			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetFramIndex());
 		});
 }
 
 void FRenderThread::WaitForRenderer()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);
-	RenderCV.wait(Lock, [this]() { return FrameTaskNum < static_cast<int32_t>(RHI::GDynamicRHI->GetFrameCount()); });
+	RenderCV.wait(Lock, [this]()
+		{
+			return FrameTaskNum < static_cast<int32_t>(RHI::GDynamicRHI->GetFrameCount());
+		});
 	++FrameTaskNum;
 	RenderCV.notify_all();
 }

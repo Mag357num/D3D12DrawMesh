@@ -6,9 +6,29 @@
 
 namespace RHI
 {
-	void FDX12DynamicRHI::RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount)
+	void FDX12DynamicRHI::RHIInit()
 	{
+		UINT dxgiFactoryFlags = 0;
+		FrameIndex = 0;
+		memset(&FenceValues, 0, sizeof(FenceValues));
+
+		#if defined(_DEBUG)
+		// Enable the debug layer (requires the Graphics Tools "optional feature").
+		// NOTE: Enabling the debug layer after device creation will invalidate the active device.
+		{
+			ComPtr<ID3D12Debug> debugController;
+			if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+			{
+				debugController->EnableDebugLayer();
+
+				// Enable additional debug layers.
+				dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+			}
+		}
+		#endif
+
 		//create device
+		bool UseWarpDevice = false;
 		if (UseWarpDevice)
 		{
 			ComPtr<IDXGIAdapter> warpAdapter;
@@ -54,7 +74,7 @@ namespace RHI
 
 		// swapchain
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.BufferCount = BackBufferFrameCount;
+		swapChainDesc.BufferCount = FrameCount;
 		swapChainDesc.Width = GEngine->GetWidth();
 		swapChainDesc.Height = GEngine->GetHeight();
 		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -65,11 +85,12 @@ namespace RHI
 		ThrowIfFailed(Factory->CreateSwapChainForHwnd(RHICommandQueue.Get(), Win32Application::GetHwnd(), &swapChainDesc, nullptr, nullptr, &SwapChain));
 		ThrowIfFailed(Factory->MakeWindowAssociation(Win32Application::GetHwnd(), DXGI_MWA_NO_ALT_ENTER));
 		ThrowIfFailed(SwapChain.As(&RHISwapChain)); // convert different version of swapchain type
+		FrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
 
 		// RTV heaps
 		CreateDescriptorHeaps(MAX_HEAP_RENDERTARGETS, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, RTVHeap);
 		LastCpuHandleRt = RTVHeap->GetCPUDescriptorHandleForHeapStart();
-		for (uint32 n = 0; n < RHI::BACKBUFFER_NUM; n++)
+		for (uint32 n = 0; n < FrameCount; n++)
 		{
 			BackBuffers[n] = make_shared<FDX12Texture>();
 			BackBuffers[n]->RtvHandle = make_shared<FDX12CpuHandle>();
@@ -93,11 +114,11 @@ namespace RHI
 
 		// command
 		FCommand DrawCommandList(RHICommandQueue.Get());
-		DrawCommandList.Create(Device);
+		DrawCommandList.Create(Device, FrameCount, FrameIndex);
 		DrawCommandList.Close();
 		CommandLists.push_back(DrawCommandList);
 
-		CreateFenceAndEvent();
+		ThrowIfFailed(Device->CreateFence(FenceValues[FrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(Fence.GetAddressOf())));
 	}
 
 	void FDX12DynamicRHI::SetViewport(float Left, float Right, float Width, float Height, float MinDepth /*= 0.f*/, float MaxDepth /*= 1.f*/)
@@ -181,16 +202,14 @@ namespace RHI
 		CommandLists[0].CommandList->OMSetRenderTargets(DescriptorNum, &RtHandle->As<FDX12CpuHandle>()->Handle, FALSE, &DsHandle->As<FDX12CpuHandle>()->Handle);
 	}
 
-	void FCommand::Reset()
+	void FCommand::Create(ComPtr<ID3D12Device> Device, const uint32& FrameCount, const uint32& FrameIndex)
 	{
-		ThrowIfFailed(Allocator->Reset());
-		ThrowIfFailed(CommandList->Reset(Allocator.Get(), NULL));
-	}
-
-	void FCommand::Create(ComPtr<ID3D12Device> Device)
-	{
-		ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Allocator)));
-		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocator.Get(), nullptr, IID_PPV_ARGS(&CommandList)));
+		Allocators.resize(FrameCount);
+		for (uint32 i = 0; i < FrameCount; i++)
+		{
+			ThrowIfFailed(Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&Allocators[i])));
+		}
+		ThrowIfFailed(Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, Allocators[0].Get(), nullptr, IID_PPV_ARGS(&CommandList)));
 	}
 
 	void FCommand::Close()
@@ -202,6 +221,12 @@ namespace RHI
 	{
 		ID3D12CommandList* ppCommandLists[] = { CommandList.Get() };
 		CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	}
+
+	void FCommand::Reset(const uint32& FrameIndex)
+	{
+		ThrowIfFailed(Allocators[FrameIndex]->Reset());
+		ThrowIfFailed(CommandList->Reset(Allocators[FrameIndex].Get(), NULL));
 	}
 
 	shared_ptr<RHI::FCB> FDX12DynamicRHI::CreateConstantBuffer(const uint32& Size)
@@ -348,6 +373,12 @@ namespace RHI
 		}
 		#endif
 		ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&Factory)));
+	}
+
+	FDX12DynamicRHI::~FDX12DynamicRHI()
+	{
+		WaitForGPU();
+		CloseHandle(FenceEvent);
 	}
 
 	void FDX12DynamicRHI::CreateDescriptorHeaps(const uint32& NumDescriptors, const D3D12_DESCRIPTOR_HEAP_TYPE& Type, const D3D12_DESCRIPTOR_HEAP_FLAGS& Flags, ComPtr<ID3D12DescriptorHeap>& DescriptorHeaps)
@@ -528,16 +559,16 @@ namespace RHI
 	void FDX12DynamicRHI::FrameBegin()
 	{
 		// reset the commandlist
-		CommandLists[0].Reset();
+		CommandLists[0].Reset(FrameIndex);
 
 		// common set
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex]->As<FDX12Texture>()->DX12Texture.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDX12Texture>()->DX12Texture.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[BackFrameIndex]->As<FDX12Texture>()->DX12Texture.Get(),
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDX12Texture>()->DX12Texture.Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		// Execute the command list.
@@ -546,22 +577,24 @@ namespace RHI
 
 		// Present the frame.
 		ThrowIfFailed(RHISwapChain->Present(0, 0));
-		WaitForExecuteComplete();
+		MoveToNextFrame();
 	}
 
-	void FDX12DynamicRHI::WaitForExecuteComplete()
+	void FDX12DynamicRHI::MoveToNextFrame()
 	{
-		const int fence = FenceValue; //m_fenceValue: CPU fence value
-		ThrowIfFailed(RHICommandQueue->Signal(Fence.Get(), fence)); // set a fence in GPU
-		FenceValue++;
+		const UINT64 CurrentFenceValue = FenceValues[FrameIndex];
+		ThrowIfFailed(RHICommandQueue->Signal(Fence.Get(), CurrentFenceValue));
 
-		if (Fence->GetCompletedValue() < fence) // if GPU run after CPU, make CPU wait for GPU
+		FrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
+
+		if (Fence->GetCompletedValue() < FenceValues[FrameIndex])
 		{
-			ThrowIfFailed(Fence->SetEventOnCompletion(fence, FenceEvent)); // define m_fenceEvent as the event that fire when m_fence hit the fence param
-			WaitForSingleObject(FenceEvent, INFINITE); // CPU wait
+			ThrowIfFailed(Fence->SetEventOnCompletion(FenceValues[FrameIndex], FenceEvent));
+			// OutputDebugStringA(fmt::format("{}<{}\n", Fence->GetCompletedValue(), FenceValues[FrameIndex]).c_str());
+			WaitForSingleObjectEx(FenceEvent, INFINITE, FALSE);
 		}
 
-		BackFrameIndex = RHISwapChain->GetCurrentBackBufferIndex();
+		FenceValues[FrameIndex] = CurrentFenceValue + 1;
 	}
 
 	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FStaticMeshComponent& MeshComponent )
@@ -844,29 +877,35 @@ namespace RHI
 		return Sig;
 	}
 
-	void FDX12DynamicRHI::CreateFenceAndEvent()
-	{
-		CreateGPUFence(Fence);
-		FenceValue = 1;
-
-		// Create an event handle to use for frame synchronization.
-		FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		if (FenceEvent == nullptr)
-		{
-			ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-		}
-	}
-
 	void FDX12DynamicRHI::BegineCreateResource()
 	{
-		CommandLists[0].Reset();
+		CommandLists[0].Reset(FrameIndex);
 	}
 
 	void FDX12DynamicRHI::EndCreateResource()
 	{
 		CommandLists[0].Close();
 		CommandLists[0].Execute();
-		WaitForExecuteComplete();
+		{
+			FenceValues[FrameIndex]++;
+
+			// Create an event handle to use for frame synchronization.
+			FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+			if (FenceEvent == nullptr)
+			{
+				ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+			}
+
+			WaitForGPU();
+		}
+	}
+
+	void FDX12DynamicRHI::WaitForGPU()
+	{
+		ThrowIfFailed(RHICommandQueue->Signal(Fence.Get(), FenceValues[FrameIndex]));
+		ThrowIfFailed(Fence->SetEventOnCompletion(FenceValues[FrameIndex], FenceEvent));
+		WaitForSingleObjectEx(FenceEvent, INFINITE, FALSE);
+		FenceValues[FrameIndex]++;
 	}
 
 	void FDX12DynamicRHI::BeginEvent(const char* EventName)

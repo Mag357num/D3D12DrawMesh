@@ -19,8 +19,6 @@ private:
 	string CurrentAnimation = "Idle";
 	float TimePos = 0.0f;
 
-	std::mutex Mutex;
-
 public:
 	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
 	void initAnimation( FSkeletalMeshComponent* SkeCom ) { SkeletalMeshCom = SkeCom; }

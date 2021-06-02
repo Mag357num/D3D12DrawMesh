@@ -8,7 +8,6 @@ namespace RHI
 {
 	class FDynamicRHI;
 	extern FDynamicRHI* GDynamicRHI;
-	extern constexpr uint32 BACKBUFFER_NUM = 2;
 
 	enum
 	{
@@ -27,7 +26,7 @@ namespace RHI
 		// init
 		static void CreateRHI();
 		static void DestroyRHI();
-		virtual void RHIInit(const bool& UseWarpDevice, const uint32& BackBufferFrameCount) = 0;
+		virtual void RHIInit() = 0;
 
 		// Resource Create
 		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) = 0;
@@ -64,7 +63,6 @@ namespace RHI
 		virtual void SetRenderTarget(uint32 DescriptorNum, FHandle* RtHandle, FHandle* DsHandle) = 0;
 
 		// other
-		virtual uint32 GetBackBufferIndex() = 0;
 		virtual FHandle* GetBackBufferHandle() = 0;
 
 		// draw
@@ -72,16 +70,14 @@ namespace RHI
 		virtual void FrameEnd() = 0;
 
 		// sync
-		virtual void CreateFenceAndEvent() = 0;
 		virtual const uint32& GetFrameCount() = 0;
-		virtual const uint32& GetCurrentFramIndex() = 0;
+		virtual const uint32& GetFramIndex() = 0;
 		virtual void BegineCreateResource() = 0;
 		virtual void EndCreateResource() = 0;
 
 		//even
 		virtual void BeginEvent(const char* EventName) = 0;
 		virtual void EndEvent() = 0;
-
 	};
 }
 

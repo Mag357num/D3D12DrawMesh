@@ -180,7 +180,22 @@ shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( co
 
 void FFrameResourceManager::CreateCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
+	// create
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
+
+	// init
+	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
+	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
+	FMatrix CamVP = glm::transpose(CamProj * CamView);
+	const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
+	FVector4 Eye(CamPos.x, CamPos.y, CamPos.z, 1.f);
+	struct CameraConstantBuffer
+	{
+		FMatrix CamVP;
+		FVector4 Eye;
+	} CBInstance = { CamVP, Eye };
+
+	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
 }
 
 void FFrameResourceManager::CreateLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes)
@@ -429,7 +444,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	for (uint32 i = 0; i < 68; i++)
 	{
-		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
+		CBInstance.GBoneTransforms[i] = glm::identity<FMatrix>();
+		//CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
 	}
 	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
