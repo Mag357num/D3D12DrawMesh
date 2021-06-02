@@ -24,7 +24,7 @@ private:
 
 	float MoveSpeed = 300.0f;
 	float TurnSpeed = 1.570796327f;
-	float MouseSensibility = 0.005f;
+	float MouseSensibility = 0.01f;
 	//float AngularVelocity;
 
 	bool VDirty = true;

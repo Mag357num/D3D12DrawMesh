@@ -15,9 +15,12 @@ class FAnimInstance
 private:
 	FSkeletalMeshComponent* SkeletalMeshCom;
 	vector<FMatrix> Palette;
+	vector<FMatrix> Palette2;
 	unordered_map<string, shared_ptr<FAnimSequence>> SequenceMap;
 	string CurrentAnimation = "Idle";
 	float TimePos = 0.0f;
+
+	std::mutex Mutex;
 
 public:
 	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
@@ -26,6 +29,7 @@ public:
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq ) { SequenceMap.insert( Seq ); }
 	vector<FMatrix> TickPalette( float dt );
 	vector<FMatrix>& GetPalette();
+	vector<FMatrix>& GetPalette2();
 
 	FAnimInstance() = default;
 	~FAnimInstance() = default;

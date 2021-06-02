@@ -16,6 +16,10 @@ void FAnimInstance::TickAnimation(const float& ElapsedSeconds)
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
 
 	Palette = TickPalette(fmod(TimePos, SequenceLength));
+	{
+		std::lock_guard<std::mutex> Lock(Mutex);
+		Palette2 = Palette;
+	}
 }
 
 vector<FMatrix> FAnimInstance::TickPalette(float Dt)
@@ -52,4 +56,10 @@ vector<FMatrix> FAnimInstance::TickPalette(float Dt)
 vector<FMatrix>& FAnimInstance::GetPalette()
 {
 	return Palette;
+}
+
+vector<FMatrix>& FAnimInstance::GetPalette2()
+{
+	std::lock_guard<std::mutex> Lock(Mutex);
+	return Palette2;
 }

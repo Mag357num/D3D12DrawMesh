@@ -63,6 +63,10 @@ void FTaskThread::Run()
 
 void FTaskThread::AddTask(TaskLambda&& Lambda)
 {
+
+	OutputDebugStringW(L"Task num: ");
+	OutError(Tasks.size());
+
 	if (IsRunning)
 	{
 		std::lock_guard<std::mutex> Lock(Mutex);

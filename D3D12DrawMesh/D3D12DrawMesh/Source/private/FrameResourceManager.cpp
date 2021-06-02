@@ -444,8 +444,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	
 	for (uint32 i = 0; i < 68; i++)
 	{
-		CBInstance.GBoneTransforms[i] = glm::identity<FMatrix>();
-		//CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette()[i]);
+		//CBInstance.GBoneTransforms[i] = glm::identity<FMatrix>();
+		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette2()[i]);
 	}
 	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 

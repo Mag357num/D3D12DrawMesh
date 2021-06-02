@@ -9,7 +9,7 @@ class ACharacter : public AActor
 private:
 	float MoveSpeed = 300.f;
 	float TurnSpeed = 1.570796327f;
-	float MouseSensibility = 0.005f;
+	float MouseSensibility = 0.01f;
 
 public:
 	void SetCurrentAnim(string Key);
