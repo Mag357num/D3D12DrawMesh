@@ -9,8 +9,6 @@ protected:
 	vector<shared_ptr<FActorComponent>> Components; // entity of actor
 
 public:
-	vector<shared_ptr<FActorComponent>>& GetComs() { return Components; }
-
 	AActor() = default;
 	~AActor() = default;
 };

@@ -10,6 +10,7 @@ private:
 	vector<FJoint> Joints;
 	vector<FPose> BindPoses;
 	unordered_map<string, int> NameToIndexMap;
+	vector<FMatrix> JointOffset;
 
 public:
 	vector<FJoint>& GetJoints() { return Joints; }
