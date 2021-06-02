@@ -8,7 +8,7 @@ private:
 	shared_ptr<class FFrameResourceManager> FrameResourceManager;
 	std::condition_variable RenderCV;
 	std::mutex RenderMutex;
-	std::atomic_int32_t RenderTaskNum = 0;
+	std::atomic_int32_t FrameTaskNum = 0;
 
 	static FRenderThread* GRenderThread;
 
@@ -27,7 +27,7 @@ public:
 	void UpdateFrameResCamera(FMatrix VP, FVector Eye);
 	void UpdateFrameResPalette(vector<FMatrix> Palette);
 
-	void WaitForRenderThread();
+	void WaitForRenderer();
 
 private:
 	void DoRender();

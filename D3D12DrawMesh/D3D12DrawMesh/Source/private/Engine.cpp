@@ -77,7 +77,7 @@ void FEngine::Tick()
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 	FDeviceEventProcessor::Get()->Tick();
 
-	FRenderThread::Get()->WaitForRenderThread();
+	FRenderThread::Get()->WaitForRenderer();
 	FRenderThread::Get()->UpdateFrameRes(CurrentScene.get());
 }
 

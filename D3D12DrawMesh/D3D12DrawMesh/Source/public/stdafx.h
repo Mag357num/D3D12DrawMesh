@@ -21,6 +21,11 @@
 #include <assert.h>
 #include <memory>
 
+#include <thread>
+#include <functional>
+#include <deque>
+#include <mutex>
+
 #include "string.h"
 #include <cstdint>
 

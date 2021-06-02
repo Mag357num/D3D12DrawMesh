@@ -1,8 +1,5 @@
 #pragma once
-#include <thread>
-#include <functional>
-#include <deque>
-#include <mutex>
+#include "stdafx.h"
 
 class FThread
 {

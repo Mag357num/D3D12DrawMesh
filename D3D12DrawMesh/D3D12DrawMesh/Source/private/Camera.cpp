@@ -160,12 +160,6 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	{
 		SetTranslate(TheoryPos);
 	}
-
-	if (bIsMouseDown || ActualPos != TheoryPos)
-	{
-		FRenderThread::Get()->WaitForRenderThread();
-		FRenderThread::Get()->UpdateFrameResCamera(transpose(GetPerspProjMatrix() * GetViewMatrix()), GetTransform().Translation);
-	}
 }
 
 void ACamera::UpdateCameraParam_Static(const float& ElapsedSeconds)
