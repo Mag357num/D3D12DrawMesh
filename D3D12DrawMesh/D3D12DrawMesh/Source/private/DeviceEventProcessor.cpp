@@ -1,17 +1,16 @@
 #include "DeviceEventProcessor.h"
 
-FDeviceEventProcessor* FDeviceEventProcessor::GDEventProcessor = nullptr;
+shared_ptr<FDeviceEventProcessor> FDeviceEventProcessor::GDEventProcessor = nullptr;
 
 void FDeviceEventProcessor::CreateEventProcessor()
 {
 	assert(GDEventProcessor == nullptr);
-	GDEventProcessor = new FDeviceEventProcessor();
+	GDEventProcessor = make_shared<FDeviceEventProcessor>();
 }
 
 void FDeviceEventProcessor::DestroyEventProcessor()
 {
 	assert(GDEventProcessor != nullptr);
-	delete GDEventProcessor;
 	GDEventProcessor = nullptr;
 }
 

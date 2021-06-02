@@ -7,7 +7,7 @@
 class FAssetManager
 {
 private:
-	static FAssetManager* GAssetManager;
+	static shared_ptr<FAssetManager> GAssetManager;
 
 public:
 	static FAssetManager* Get();

@@ -6,23 +6,22 @@
 
 using RHI::GDynamicRHI;
 
-FAssetManager* FAssetManager::GAssetManager = nullptr;
+shared_ptr<FAssetManager> FAssetManager::GAssetManager = nullptr;
 
 FAssetManager* FAssetManager::Get()
 {
-	return GAssetManager;
+	return GAssetManager.get();
 }
 
 void FAssetManager::CreateAssetManager()
 {
 	assert(GAssetManager == nullptr);
-	GAssetManager = new FAssetManager();
+	GAssetManager = make_shared<FAssetManager>();
 }
 
 void FAssetManager::DestroyAssetManager()
 {
 	assert(GAssetManager != nullptr);
-	delete GAssetManager;
 	GAssetManager = nullptr;
 }
 

@@ -45,30 +45,29 @@ void FRenderThread::DoRender()
 	FSingleBufferFrameResource& SFrameRes = FrameResourceManager->GetSingleFrameRes();
 
 	FRenderer Renderer;
-	Renderer.Render(GDynamicRHI, FrameIndex, SFrameRes, MFrameRes);
+	Renderer.Render(GDynamicRHI.get(), FrameIndex, SFrameRes, MFrameRes);
 	--FrameTaskNum;
 	RenderCV.notify_all();
 }
 
-FRenderThread* FRenderThread::GRenderThread = nullptr;
+shared_ptr<FRenderThread> FRenderThread::GRenderThread = nullptr;
 
 void FRenderThread::CreateRenderThread()
 {
 	assert(GRenderThread == nullptr);
-	GRenderThread = new FRenderThread();
+	GRenderThread = make_shared<FRenderThread>();
 }
 
 void FRenderThread::DestroyRenderThread()
 {
 	assert(GRenderThread != nullptr);
 	GRenderThread->Stop();
-	delete GRenderThread;
 	GRenderThread = nullptr;
 }
 
 FRenderThread* FRenderThread::Get()
 {
-	return GRenderThread;
+	return GRenderThread.get();
 }
 
 void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)

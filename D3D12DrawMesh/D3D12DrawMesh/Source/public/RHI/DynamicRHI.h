@@ -7,7 +7,7 @@
 namespace RHI
 {
 	class FDynamicRHI;
-	extern FDynamicRHI* GDynamicRHI;
+	extern shared_ptr<FDynamicRHI> GDynamicRHI;
 
 	enum
 	{

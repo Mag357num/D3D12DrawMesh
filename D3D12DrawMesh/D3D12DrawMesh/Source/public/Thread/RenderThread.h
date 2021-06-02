@@ -10,7 +10,7 @@ private:
 	std::mutex RenderMutex;
 	std::atomic_int32_t FrameTaskNum = 0;
 
-	static FRenderThread* GRenderThread;
+	static shared_ptr<FRenderThread> GRenderThread;
 
 public:
 	FRenderThread();

@@ -5,7 +5,7 @@
 class FDeviceEventProcessor
 {
 private:
-	static FDeviceEventProcessor* GDEventProcessor;
+	static shared_ptr<FDeviceEventProcessor> GDEventProcessor;
 	KeysPressed Keys = {};
 	bool bIsMouseDown = false;
 	FVector2 MouseMove_BottonDown_CurrentPosition = { 0, 0 };
@@ -14,7 +14,7 @@ private:
 public:
 	static void CreateEventProcessor();
 	static void DestroyEventProcessor();
-	static FDeviceEventProcessor* Get() { return GDEventProcessor; }
+	static FDeviceEventProcessor* Get() { return GDEventProcessor.get(); }
 
 	void Tick();
 
