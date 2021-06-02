@@ -71,13 +71,13 @@ void FEngine::Init(void* WindowHandle)
 
 void FEngine::Tick()
 {
-	FRenderThread::Get()->WaitForRenderThread();
 
 	// GAME tick
 	Timer.Tick(NULL);
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 	FDeviceEventProcessor::Get()->Tick();
 
+	FRenderThread::Get()->WaitForRenderThread();
 	FRenderThread::Get()->UpdateFrameRes(CurrentScene.get());
 }
 

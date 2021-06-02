@@ -158,11 +158,12 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	const FVector& ActualPos = GetTransform().Translation;
 	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
-		SetTranslate( TheoryPos );
+		SetTranslate(TheoryPos);
 	}
 
 	if (bIsMouseDown || ActualPos != TheoryPos)
 	{
+		FRenderThread::Get()->WaitForRenderThread();
 		FRenderThread::Get()->UpdateFrameResCamera(transpose(GetPerspProjMatrix() * GetViewMatrix()), GetTransform().Translation);
 	}
 }

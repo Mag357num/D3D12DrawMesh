@@ -3,6 +3,8 @@
 #include "Skeleton.h"
 #include "RenderThread.h"
 
+#include "test.h"
+
 void FAnimInstance::TickAnimation(const float& ElapsedSeconds)
 {
 	if (TimePos > 100.f)
@@ -13,6 +15,8 @@ void FAnimInstance::TickAnimation(const float& ElapsedSeconds)
 	TimePos += ElapsedSeconds;
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
 	Palette = TickPalette(fmod(TimePos, SequenceLength));
+
+	FRenderThread::Get()->WaitForRenderThread();
 	FRenderThread::Get()->UpdateFrameResPalette(Palette);
 }
 

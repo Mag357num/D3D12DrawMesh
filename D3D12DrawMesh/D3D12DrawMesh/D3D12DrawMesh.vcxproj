@@ -47,6 +47,7 @@
     <ClCompile Include="Source\private\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\private\test.cpp" />
     <ClCompile Include="Source\private\Thread.cpp" />
     <ClCompile Include="Source\private\Track.cpp" />
     <ClCompile Include="Source\private\Win32Application.cpp" />
@@ -93,6 +94,7 @@
     <ClInclude Include="Source\public\StaticMesh\StaticVertex.h" />
     <ClInclude Include="Source\public\stdafx.h" />
     <ClInclude Include="Source\public\StepTimer.h" />
+    <ClInclude Include="Source\public\test.h" />
     <ClInclude Include="Source\public\Thread\RenderThread.h" />
     <ClInclude Include="Source\public\Thread\Thread.h" />
     <ClInclude Include="Source\public\Win32Application.h" />
