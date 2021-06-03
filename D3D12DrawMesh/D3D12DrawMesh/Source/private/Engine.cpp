@@ -46,7 +46,7 @@ void FEngine::Init(void* WindowHandle)
 
 	// light
 	shared_ptr<ADirectionLight> Light = make_shared<ADirectionLight>(FVector(450.f, 0.f, 450.f), FVector(-1.f, 0.f, -1.f), FVector(1.f, 1.f, 1.f));
-	Light->SetOrthoParam(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f);
+	Light->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f);
 	CurrentScene->SetDirectionLight(Light);
 
 	// character
@@ -58,7 +58,7 @@ void FEngine::Init(void* WindowHandle)
 			SkeMeshCom->GetSkeletalMesh()->SetSkeleton( FAssetManager::Get()->LoadSkeleton( L"Resource\\SkeletonBinary_.dat" ) );
 			SkeMeshCom->AddSequence( std::pair<string, shared_ptr<FAnimSequence>>( "Run", FAssetManager::Get()->LoadAnimSequence( L"Resource\\SequenceRun_.dat" ) ) );
 			SkeMeshCom->AddSequence( std::pair<string, shared_ptr<FAnimSequence>>( "Idle", FAssetManager::Get()->LoadAnimSequence( L"Resource\\SequenceIdle_.dat" ) ) );
-			SkeMeshCom->SetTransform( { { 1.f, 1.f, 1.f }, FQuat( EulerToQuat( FEuler( 0.f, 0.f, 0.f ) ) ), { 300.f, 200.f, 0.f } } );
+			SkeMeshCom->SetTransform( { { 1.f, 1.f, 1.f }, FQuat( EulerToQuat( FEuler( 0.f, 0.f, 0.f ) ) ), { 0.f, -700.f, 0.f } } );
 		}
 		Cha->SetSkeletalMeshCom( SkeMeshCom );
 	}

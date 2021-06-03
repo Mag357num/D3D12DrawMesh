@@ -31,7 +31,7 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 
 	if (!Fin.is_open())
 	{
-		throw std::exception("ERROR:  open file faild.");
+		throw std::exception("ERROR: open file faild.");
 	}
 
 	uint32 ActorNum;
@@ -53,13 +53,22 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 	Fin.close();
 }
 
+shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFileName)
+{
+	std::ifstream Fin(BinFileName, std::ios::binary);
+
+	shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
+	SM->SetMeshLODs(ReadStaticMeshLODs(Fin));
+	return SM;
+}
+
 vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 {
 	FStaticMeshLOD MeshLOD;
 
 	if (!Fin.is_open())
 	{
-		throw std::exception("ERROR:  open file faild.");
+		throw std::exception("ERROR: open file faild.");
 	}
 
 	uint32 VertexStride;
@@ -173,19 +182,6 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
 
 	return Trans;
-}
-
-
-FStaticMeshComponent FAssetManager::CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform)
-{
-	FStaticMeshComponent Component;
-	vector<FStaticMeshLOD> Lods;
-	Lods.push_back(FStaticMeshLOD(Vertices, Indices));
-	shared_ptr<FStaticMesh> StaticMesh = make_shared<FStaticMesh>();
-	StaticMesh->SetMeshLODs(Lods);
-	Component.SetStaticMesh(StaticMesh);
-	Component.SetTransform(Transform);
-	return Component;
 }
 
 shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)

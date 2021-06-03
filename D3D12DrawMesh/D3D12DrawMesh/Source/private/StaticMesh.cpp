@@ -23,3 +23,12 @@ FStaticMeshComponent* AStaticMeshActor::GetStaticMeshCom()
 		return Components[0].get()->As<FStaticMeshComponent>();
 	}
 }
+
+void AStaticMeshActor::Tick(const float& ElapsedSeconds)
+{
+	const FQuat& Quat = GetStaticMeshCom()->GetTransform().Quat;
+	auto a = ElapsedSeconds * AngularVelocity;
+	GetStaticMeshCom()->SetQuat(glm::rotate(Quat, glm::radians(ElapsedSeconds * AngularVelocity), FVector(0, 0, 1)));
+
+	Dirty = true;
+}

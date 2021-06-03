@@ -36,10 +36,14 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\ShadowMapping_SkeletalMesh.hlsl";
 	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\SceneColor_SkeletalMesh.hlsl";
 
+	const wstring Shader_ScenePass_LightSource = L"Resource\\SceneColor_LightSource.hlsl";
+
 	const uint32 CbSize_ShadowPass_StaticMesh = 256;
 	const uint32 CbSize_ScenePass_StaticMesh = 256;
 	const uint32 CbSize_ShadowPass_SkeletalMesh = 256;
 	const uint32 CbSize_ScenePass_SkeletalMesh = 256;
+
+	const uint32 CbSize_ScenePass_LightSource = 256;
 
 	FVertexInputLayer VIL_StaticMesh;
 	VIL_StaticMesh.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
@@ -489,9 +493,16 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// static mesh
 	for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
 	{
-		if (Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->IsDirty())
+		auto& Actor = Scene->GetStaticMeshActors()[i];
+		if (Actor->IsDirty())
 		{
-			// TODO: static mesh transform may change
+			const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
+			const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshCom()->GetWorldMatrix());
+			FMatrix W = transpose(Actor->GetStaticMeshCom()->GetWorldMatrix());
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
+			Actor->SetDirty(false);
 		}
 	}
 

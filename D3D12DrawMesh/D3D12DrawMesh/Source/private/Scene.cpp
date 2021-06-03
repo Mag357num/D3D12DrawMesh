@@ -3,8 +3,16 @@
 
 void FScene::Tick(StepTimer& Timer)
 {
-	GetCurrentCharacter()->Tick(static_cast<float>(Timer.GetElapsedSeconds()));
-	GetCurrentCamera()->Tick(static_cast<float>(Timer.GetElapsedSeconds()), FCameraMoveMode::AROUNDTARGET, GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransform().Translation, 300.f);
+	const float ElaTime = static_cast<float>(Timer.GetElapsedSeconds());
+
+	GetCurrentCharacter()->Tick(ElaTime);
+	GetStaticMeshActors()[6]->Tick(ElaTime);
+	GetCurrentCamera()->Tick(static_cast<float>(ElaTime), FCameraMoveMode::AROUNDTARGET, GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransform().Translation, 300.f);
+}
+
+void FScene::SetDirectionLight(shared_ptr<ADirectionLight> Light)
+{
+	DirectionLight = Light;
 }
 
 ADirectionLight* FScene::GetDirectionLight()

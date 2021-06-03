@@ -1,5 +1,6 @@
 #include "Light.h"
 #include "StaticMesh.h"
+#include "AssetManager.h"
 
 ADirectionLight::ADirectionLight(const FVector& Pos, const FVector& Direction, const FVector& Color)
 {
@@ -40,7 +41,9 @@ const FMatrix& ADirectionLight::GetOMatrix_RenderThread()
 
 ALight::ALight()
 {
-	Components.push_back(make_shared<FStaticMeshComponent>());
+	shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+	Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Sphere_.dat"));
+	Components.push_back(Com);
 }
 
 void ALight::SetQuat(const FQuat& Quat)

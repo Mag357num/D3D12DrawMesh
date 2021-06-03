@@ -23,7 +23,7 @@ public:
 
 	void SetCurrentCamera( shared_ptr<ACamera> Cam ) { CurrentCamera = Cam; }
 	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.f, const float& FarPlane = 5000.f) { return CurrentCamera->Init(PositionParam, UpDir, LookAt, Fov, Width, Height, NearPlane, FarPlane); }
-	void SetDirectionLight(shared_ptr<ADirectionLight> Light) { DirectionLight = Light; }
+	void SetDirectionLight(shared_ptr<ADirectionLight> Light);
 	void SetCurrentCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
 
 	ACamera* GetCurrentCamera() { return CurrentCamera.get(); }
