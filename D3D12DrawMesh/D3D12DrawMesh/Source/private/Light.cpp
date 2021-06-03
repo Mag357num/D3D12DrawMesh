@@ -22,7 +22,6 @@
 ADirectionLight::ADirectionLight(const FVector& Pos, const FVector& Direction, const FVector& Color)
 {
 	this->Color = Color;
-	this->Direction = Direction;
 
 	VMatrix_GameThread = glm::lookAtLH(Pos, Pos + Direction * 10.0f, FVector(0.f, 0.f, 1.f));
 	VDirty = false;
@@ -115,9 +114,8 @@ void ALight::SetTranslate(const FVector& Trans)
 
 void ALight::SetDirection(const FVector& Dir)
 {
-	Direction = Dir;
 	const FVector& Eye = GetTransform().Translation;
-	const FVector Up(0, 1, 0);
+	const FVector Up(0.f, 0.f, 1.f);
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Dir * 10.0f, Up)));
 }
 
@@ -158,9 +156,11 @@ const FMatrix& ALight::GetWorldMatrix()
 	}
 }
 
-const FVector& ALight::GetDirection()
+const FVector ALight::GetDirection()
 {
-	return Direction;
+	// world matrix only contain rotate in 3x3 zone and directional vector wont translate
+	// view matrix default use z:FVector4(0, 0, 1, 0) axis as look at
+	return GetWorldMatrix() * FVector4(0, 0, 1, 0);
 }
 
 const FMatrix& ALight::GetViewMatrix_GameThread()

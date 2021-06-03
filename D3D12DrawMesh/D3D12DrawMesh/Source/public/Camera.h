@@ -67,7 +67,7 @@ public:
 	const FMatrix& GetWorldMatrix();
 
 	void SetLookAt(const FVector& Look);
-	const FVector& GetLookAt();
+	const FVector GetLookAt();
 
 	const bool& IsVDirty() const { return VDirty; }
 	const bool& IsPDirty() const { return PDirty; }

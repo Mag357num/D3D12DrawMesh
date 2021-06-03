@@ -12,7 +12,7 @@ namespace Test
     }
 
 #define MAXNUMBUFF 10
-#define OutError(Number)    {    \
+#define OutErrorNum(Number)    {    \
         wchar_t NumberChar[MAXNUMBUFF];    \
         ZeroMemory(NumberChar, MAXNUMBUFF * sizeof(wchar_t));    \
         wsprintfW(NumberChar, L"%d\n", Number);    \

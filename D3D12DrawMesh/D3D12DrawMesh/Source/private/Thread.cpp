@@ -65,7 +65,7 @@ void FTaskThread::AddTask(TaskLambda&& Lambda)
 {
 
 	OutputDebugStringW(L"Task num: ");
-	OutError(Tasks.size());
+	OutErrorNum(Tasks.size());
 
 	if (IsRunning)
 	{

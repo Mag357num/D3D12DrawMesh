@@ -276,11 +276,11 @@ void ACamera::SetLookAt(const FVector& Look)
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, Up)));
 }
 
-const FVector& ACamera::GetLookAt()
+const FVector ACamera::GetLookAt()
 {
 	// world matrix only contain rotate in 3x3 zone and directional vector wont translate
 	// view matrix default use z:FVector4(0, 0, 1, 0) axis as look at
-	return GetWorldMatrix() * FVector4(0, 0, 1, 0); 
+	return GetWorldMatrix() * FVector4(0, 0, 1, 0);
 }
 
 void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)

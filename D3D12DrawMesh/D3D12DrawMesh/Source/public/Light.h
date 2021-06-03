@@ -40,7 +40,6 @@ protected:
 	// base param
 	FVector Color = { 1.f, 1.f, 1.f };
 	float Intensity = 1.0f;
-	FVector Direction = { 0.f, 0.f, 1.f }; // LookAt of light cam
 
 	// view matrix depend on position, so define in the alight
 	bool VDirty = true;
@@ -64,11 +63,12 @@ public:
 
 	void SetQuat(const FQuat& Quat);
 	void SetTranslate(const FVector& Trans);
-	void SetDirection(const FVector& Dir);
 	void SetWorldMatrix(const FMatrix& W);
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
-	const FVector& GetDirection();
+
+	void SetDirection(const FVector& Dir);
+	const FVector GetDirection();
 
 	const FMatrix& GetViewMatrix_GameThread();
 	const FMatrix& GetViewMatrix_RenderThread();
