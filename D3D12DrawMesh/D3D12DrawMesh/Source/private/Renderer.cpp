@@ -84,10 +84,6 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionLight.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionLight.get()]->CBs[FrameIndex]->CBHandle);
-			Handles.push_back(MFrameRes.CameraCB->CBHandle);
-			Handles.push_back(SFrameRes.StaticSkyLightCB->CBHandle);
-			Handles.push_back(MFrameRes.ShadowMap->SrvHandle);
-			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawMesh(SFrameRes.DirectionLight.get());
 		}
