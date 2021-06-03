@@ -46,7 +46,7 @@ void FEngine::Init(void* WindowHandle)
 
 	// light
 	shared_ptr<ADirectionLight> Light = make_shared<ADirectionLight>(FVector(450.f, 0.f, 450.f), FVector(-1.f, 0.f, -1.f), FVector(1.f, 1.f, 1.f));
-	Light->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f);
+	Light->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
 	CurrentScene->SetDirectionLight(Light);
 
 	// character

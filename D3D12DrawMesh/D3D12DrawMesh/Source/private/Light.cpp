@@ -164,3 +164,27 @@ const FMatrix& ALight::GetViewMatrix_RenderThread()
 	std::swap(GameThread, VMatrix_RenderThread);
 	return VMatrix_RenderThread;
 }
+
+void ALight::SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com)
+{
+	if (Components.size() == 0)
+	{
+		Components.push_back(Com);
+	}
+	else
+	{
+		Components[0] = Com;
+	}
+}
+
+FStaticMeshComponent* ALight::GetStaticMeshComponent()
+{
+	if (Components.size() == 0)
+	{
+		return nullptr;
+	}
+	else
+	{
+		return Components[0].get()->As<FStaticMeshComponent>();
+	}
+}

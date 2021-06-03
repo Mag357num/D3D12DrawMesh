@@ -49,7 +49,7 @@ private:
 
 public:
 	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
-	FStaticMeshComponent* GetStaticMeshCom();
+	FStaticMeshComponent* GetStaticMeshComponent();
 
 	const float& GetAnglarVel() const { return AngularVelocity; }
 	void SetAnglarVel(const float& Ang) { AngularVelocity = Ang; }

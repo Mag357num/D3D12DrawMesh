@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "Camera.h"
+#include "Actor.h"
 
 enum class FLightMoveMode
 {
@@ -53,6 +53,9 @@ public:
 
 	const FMatrix& GetViewMatrix_GameThread();
 	const FMatrix& GetViewMatrix_RenderThread();
+
+	void SetStaticMeshComponent(shared_ptr<class FStaticMeshComponent> Com);
+	class FStaticMeshComponent* GetStaticMeshComponent();
 };
 
 class ADirectionLight : public ALight

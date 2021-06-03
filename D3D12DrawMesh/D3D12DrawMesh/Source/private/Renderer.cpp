@@ -79,6 +79,19 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
 		RHI->SetScissor(0, 0, Width, Height);
 
+		// draw light source mesh
+		{
+			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionLight.get()].get());
+			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionLight.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(MFrameRes.CameraCB->CBHandle);
+			Handles.push_back(SFrameRes.StaticSkyLightCB->CBHandle);
+			Handles.push_back(MFrameRes.ShadowMap->SrvHandle);
+			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
+			RHI->SetShaderInput(Handles);
+			RHI->DrawMesh(SFrameRes.DirectionLight.get());
+		}
+
 		// draw character
 		{
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()].get());

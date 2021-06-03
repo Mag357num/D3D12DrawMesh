@@ -35,14 +35,12 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	const wstring Shader_ScenePass_StaticMesh = L"Resource\\SceneColor_StaticMesh.hlsl";
 	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\ShadowMapping_SkeletalMesh.hlsl";
 	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\SceneColor_SkeletalMesh.hlsl";
-
-	const wstring Shader_ScenePass_LightSource = L"Resource\\SceneColor_LightSource.hlsl";
+	const wstring Shader_ScenePass_LightSource = L"Resource\\SceneColor_DirectionLightSource.hlsl";
 
 	const uint32 CbSize_ShadowPass_StaticMesh = 256;
 	const uint32 CbSize_ScenePass_StaticMesh = 256;
 	const uint32 CbSize_ShadowPass_SkeletalMesh = 256;
 	const uint32 CbSize_ScenePass_SkeletalMesh = 256;
-
 	const uint32 CbSize_ScenePass_LightSource = 256;
 
 	FVertexInputLayer VIL_StaticMesh;
@@ -87,84 +85,113 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	RHI::GDynamicRHI->BegineCreateResource();
 	InitFrameResource(Scene.get(), FrameNum);
 
-	// character mesh
-	SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry( *Scene->GetCurrentCharacter()->GetSkeletalMeshCom() );
-	// character shadowpass rr
-	auto RR_ShadowPass = CreateRenderResource
-	(
-		Shader_ShadowPass_SkeletalMesh,
-		CbSize_ShadowPass_SkeletalMesh,
-		VIL_SkeletalMesh,
-		SIL_ShadowPass_SkeletalMesh,
-		FFormat::FORMAT_UNKNOWN,
-		0,
-		GDynamicRHI->GetFrameCount()
-	);
-	FMatrix WVO = transpose(O * V * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
-	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+	// direction light source
 	{
-		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
-	}
-	SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
-
-	// character scenepass rr
-	auto RR_ScenePass = CreateRenderResource
-	(
-		Shader_ScenePass_SkeletalMesh,
-		CbSize_ScenePass_SkeletalMesh,
-		VIL_SkeletalMesh,
-		SIL_ScenePass_SkeletalMesh,
-		SceneMapFormat,
-		1,
-		GDynamicRHI->GetFrameCount()
-	);
-	FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
-	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-	{
-		GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
-	}
-	SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
-
-	// create static mesh
-	for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
-	{
-		SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(*Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()));
-		// static mesh shadowpass rr
-		auto RR_ShadowPass = CreateRenderResource
-		(
-			Shader_ShadowPass_StaticMesh,
-			CbSize_ShadowPass_StaticMesh,
-			VIL_StaticMesh,
-			SIL_ShadowPass_StaticMesh,
-			FFormat::FORMAT_UNKNOWN,
-			0,
-			GDynamicRHI->GetFrameCount()
-		);
-		FMatrix WVP = transpose(O * V * Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->GetWorldMatrix());
-		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-		{
-			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
-		}
-		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
-
-		// static mesh scenepass rr
+		// mesh
+		SFrameRes.DirectionLight = GDynamicRHI->CreateGeometry(*Scene->GetDirectionLight()->GetStaticMeshComponent());
+		// need no shadow pass
+		// scenepass rr
 		auto RR_ScenePass = CreateRenderResource
 		(
-			Shader_ScenePass_StaticMesh,
-			CbSize_ScenePass_StaticMesh,
+			Shader_ScenePass_LightSource,
+			CbSize_ScenePass_LightSource,
 			VIL_StaticMesh,
 			SIL_ScenePass_StaticMesh,
 			SceneMapFormat,
 			1,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->GetWorldMatrix());
+		FMatrix Wrold = transpose(Scene->GetDirectionLight()->GetStaticMeshComponent()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
 		}
-		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
+		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionLight.get(), RR_ScenePass });
+	}
 
+	// character
+	{
+		// mesh
+		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(*Scene->GetCurrentCharacter()->GetSkeletalMeshCom());
+		// shadowpass rr
+		auto RR_ShadowPass = CreateRenderResource
+		(
+			Shader_ShadowPass_SkeletalMesh,
+			CbSize_ShadowPass_SkeletalMesh,
+			VIL_SkeletalMesh,
+			SIL_ShadowPass_SkeletalMesh,
+			FFormat::FORMAT_UNKNOWN,
+			0,
+			GDynamicRHI->GetFrameCount()
+		);
+		FMatrix WVO = transpose(O * V * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
+		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+		{
+			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
+		}
+		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
+
+		// scenepass rr
+		auto RR_ScenePass = CreateRenderResource
+		(
+			Shader_ScenePass_SkeletalMesh,
+			CbSize_ScenePass_SkeletalMesh,
+			VIL_SkeletalMesh,
+			SIL_ScenePass_SkeletalMesh,
+			SceneMapFormat,
+			1,
+			GDynamicRHI->GetFrameCount()
+		);
+		FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
+		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+		{
+			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
+		}
+		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
+	}
+
+	// static mesh
+	{
+		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
+		{
+			// mesh
+			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(*Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()));
+			// shadowpass rr
+			auto RR_ShadowPass = CreateRenderResource
+			(
+				Shader_ShadowPass_StaticMesh,
+				CbSize_ShadowPass_StaticMesh,
+				VIL_StaticMesh,
+				SIL_ShadowPass_StaticMesh,
+				FFormat::FORMAT_UNKNOWN,
+				0,
+				GDynamicRHI->GetFrameCount()
+			);
+			FMatrix WVP = transpose(O * V * Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
+			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+			{
+				GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			}
+			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
+
+			// scenepass rr
+			auto RR_ScenePass = CreateRenderResource
+			(
+				Shader_ScenePass_StaticMesh,
+				CbSize_ScenePass_StaticMesh,
+				VIL_StaticMesh,
+				SIL_ScenePass_StaticMesh,
+				SceneMapFormat,
+				1,
+				GDynamicRHI->GetFrameCount()
+			);
+			FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
+			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+			{
+				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
+			}
+			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
+		}
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
@@ -498,8 +525,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		{
 			const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
 			const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
-			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshCom()->GetWorldMatrix());
-			FMatrix W = transpose(Actor->GetStaticMeshCom()->GetWorldMatrix());
+			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshComponent()->GetWorldMatrix());
+			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 			Actor->SetDirty(false);
