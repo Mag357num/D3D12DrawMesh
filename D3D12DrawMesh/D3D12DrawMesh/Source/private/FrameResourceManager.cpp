@@ -124,7 +124,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	// create static mesh
 	for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
 	{
-		SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(*Scene->GetStaticMeshActors()[i].GetStaticMeshCom()));
+		SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(*Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()));
 		// static mesh shadowpass rr
 		auto RR_ShadowPass = CreateRenderResource
 		(
@@ -136,7 +136,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			0,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix WVP = transpose(O * V * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
+		FMatrix WVP = transpose(O * V * Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
@@ -154,7 +154,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			1,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
+		FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
@@ -440,17 +440,21 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 {
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
 	ACamera* CurrentCamera = Scene->GetCurrentCamera();
-
-	struct PaletteCB
-	{
-		array<FMatrix, 68> GBoneTransforms;
-	} CBInstance;
 	
-	for (uint32 i = 0; i < 68; i++)
+	// animation
+	if (true)
 	{
-		CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
+		struct PaletteCB
+		{
+			array<FMatrix, 68> GBoneTransforms;
+		} CBInstance;
+
+		for (uint32 i = 0; i < 68; i++)
+		{
+			CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
+		}
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 	}
-	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 	// camera
 	if (CurrentCamera->IsDirty())
@@ -485,7 +489,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// static mesh
 	for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
 	{
-		if (Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->IsDirty())
+		if (Scene->GetStaticMeshActors()[i]->GetStaticMeshCom()->IsDirty())
 		{
 			// TODO: static mesh transform may change
 		}

@@ -12,12 +12,12 @@ ADirectionLight* FScene::GetDirectionLight()
 	return DirectionLight.get();
 }
 
-vector<AStaticMeshActor>& FScene::GetStaticMeshActors()
+vector<shared_ptr<AStaticMeshActor>>& FScene::GetStaticMeshActors()
 {
 	return StaticMeshActors;
 }
 
-void FScene::AddStaticMeshActor( AStaticMeshActor Actor )
+void FScene::AddStaticMeshActor(shared_ptr<AStaticMeshActor> Actor )
 {
 	StaticMeshActors.push_back(Actor);
 }

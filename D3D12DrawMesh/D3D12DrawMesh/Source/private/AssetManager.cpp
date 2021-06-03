@@ -25,37 +25,7 @@ void FAssetManager::DestroyAssetManager()
 	GAssetManager = nullptr;
 }
 
-shared_ptr<FScene> FAssetManager::LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName)
-{
-	shared_ptr<FScene> TargetScene = make_shared<FScene>();
-
-	std::ifstream Fin(BinFileName, std::ios::binary);
-
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	uint32 ActorNum;
-	Fin.read((char*)&ActorNum, sizeof(uint32));
-
-	for (uint32 i = 0; i < ActorNum; i++)
-	{
-		AStaticMeshActor Actor;
-		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
-		Com->SetTransform(ReadTransform(Fin));
-
-		Actor.SetStaticMeshComponent(Com);
-		TargetScene->AddStaticMeshActor(Actor);
-	}
-
-	Fin.close();
-
-	return TargetScene;
-}
-
-void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<AStaticMeshActor>& Actors)
+void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<shared_ptr<AStaticMeshActor>>& Actors)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -69,14 +39,14 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 
 	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		AStaticMeshActor Actor;
+		shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>();
 		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 		shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
 		Com->SetStaticMesh(SM);
 		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
 
-		Actor.SetStaticMeshComponent(Com);
+		Actor->SetStaticMeshComponent(Com);
 		Actors.push_back(Actor);
 	}
 

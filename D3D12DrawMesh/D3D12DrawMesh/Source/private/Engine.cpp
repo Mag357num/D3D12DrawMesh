@@ -34,7 +34,7 @@ void FEngine::Init(void* WindowHandle)
 	CurrentScene = CreateScene();
 
 	// static mesh actors
-	vector<AStaticMeshActor> StaticMeshActors;
+	vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
 	FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
 	for (auto i : StaticMeshActors)
 	{

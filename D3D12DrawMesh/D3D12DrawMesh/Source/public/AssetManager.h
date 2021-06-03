@@ -15,8 +15,7 @@ public:
 	static void DestroyAssetManager();
 
 	//TODO: regard component as a basic functional unit, so change this func to LoadStaticMeshComponent and CreateScene(StaticMeshActors)
-	shared_ptr<FScene> LoadStaticMeshActorsCreateScene(const std::wstring& BinFileName);
-	void LoadStaticMeshActors(const std::wstring& BinFileName, vector<AStaticMeshActor>& Actors);
+	void LoadStaticMeshActors(const std::wstring& BinFileName, vector<shared_ptr<AStaticMeshActor>>& Actors);
 	FStaticMeshComponent CreateStaticMeshComponent(const vector<FStaticVertex>& Vertices, const vector<uint32>& Indices, const FTransform& Transform);
 	
 	shared_ptr<class FSkeletalMesh> LoadSkeletalMesh(const std::wstring& BinFileName);
