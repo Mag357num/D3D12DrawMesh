@@ -42,6 +42,7 @@ protected:
 	float Intensity = 1.0f;
 
 	// view matrix depend on position, so define in the alight
+	// Secondary data, need to refresh depent on dirty
 	bool VDirty = true;
 	FMatrix VMatrix_GameThread;
 	FMatrix VMatrix_RenderThread;
@@ -51,6 +52,9 @@ protected:
 	float TurnSpeed = 1.570796327f;
 	float MouseSensibility = 0.01f;
 	float AngularVelocity;
+
+	// camera change flag
+	bool LightDirty = true;
 
 public:
 	ALight();
@@ -67,6 +71,9 @@ public:
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
 
+	const bool& IsDirty() const { return LightDirty; }
+	void SetDirty(const bool& Dirty) { LightDirty = Dirty; }
+
 	void SetDirection(const FVector& Dir);
 	const FVector GetDirection();
 
@@ -79,6 +86,7 @@ class ADirectionLight : public ALight
 private:
 
 	// directional light shadowmap is ortho projection
+	// Secondary data, need to refresh depent on dirty
 	bool ODirty = true;
 	FMatrix OMatrix_GameThread;
 	FMatrix OMatrix_RenderThread;
@@ -121,8 +129,10 @@ private:
 	} Attenuation;
 
 	// point light shadowmap is perspective projection
+	// Secondary data, need to refresh depent on dirty
 	bool PDirty = true;
-	FMatrix PMatrix;
+	FMatrix PMatrix_GameThread;
+	FMatrix PMatrix_RenderThread;
 
 	float Fov = 90.f;
 	float AspectRatio = 1.7777777f;

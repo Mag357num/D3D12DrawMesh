@@ -12,7 +12,11 @@ void ACharacter::TickPosition(const float& ElapsedSeconds)
 {
 	const KeysPressed& Keys = FDeviceEventProcessor::Get()->GetKeys();
 	const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
-	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
+
+	if (Keys.IsEmpty() || FDeviceEventProcessor::Get()->IsMouseDown())
+	{
+		PosDirty = true;
+	}
 
 	// Interval between tick 
 	float KeyMoveInterval = MoveSpeed * ElapsedSeconds;

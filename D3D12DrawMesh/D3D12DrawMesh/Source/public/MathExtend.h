@@ -17,6 +17,18 @@ using FQuat = glm::tquat<float>;
 
 using namespace glm;
 
+// projection space to screen space transform
+static FMatrix ProjToScreen(
+	0.5f, 0.0f, 0.0f, 0.0f,
+	0.0f, -0.5f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.5f, 0.5f, 0.0f, 1.0f);
+
+static float Pi = 3.141592654f;
+static float Inv_Pi = 0.31830988618f;
+static float Half_Pi = 1.5707963050f;
+static float Float_Non_Fractional = 8388608.f;
+
 struct FTransform
 {
 	FVector Scale;
@@ -39,7 +51,6 @@ FQuat LookToQuat(const FVector& Look);
 FEuler QuatToEuler(const FQuat& Quat);
 FQuat EulerToQuat(const FEuler& Euler);
 
-
-float Atan2(const float& Y, const float& X);
+//float Atan2(const float& Y, const float& X);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);

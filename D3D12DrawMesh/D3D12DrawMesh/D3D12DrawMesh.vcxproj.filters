@@ -104,6 +104,9 @@
     <ClCompile Include="Source\private\test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Source\private\Key.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\public\Actor.h">

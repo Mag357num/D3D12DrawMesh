@@ -439,6 +439,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
+	ACamera* CurrentCamera = Scene->GetCurrentCamera();
 
 	struct PaletteCB
 	{
@@ -447,17 +448,17 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	
 	for (uint32 i = 0; i < 68; i++)
 	{
-		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
+		CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
 	}
 	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 	// camera
-	//if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
+	if (CurrentCamera->IsDirty())
 	{
-		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix_RenderThread();
-		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix_RenderThread();
+		FMatrix CamView = CurrentCamera->GetViewMatrix_RenderThread();
+		FMatrix CamProj = CurrentCamera->GetPerspProjMatrix_RenderThread();
 		FMatrix CamVP = glm::transpose(CamProj * CamView);
-		const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
+		const FVector& CamPos = CurrentCamera->GetTransform().Translation;
 		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
 		struct CameraConstantBuffer
 		{
@@ -466,10 +467,11 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		} CBInstance = { CamVP, Eye };
 
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
+		CurrentCamera->SetDirty(false);
 	}
 
 	// character position
-	if (CurrentCharacter->GetSkeletalMeshCom()->IsDirty())
+	if (CurrentCharacter->IsPosDirty())
 	{
 		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
 		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
@@ -477,6 +479,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
+		CurrentCharacter->SetPosDirty(false);
 	}
 
 	// static mesh
@@ -488,15 +491,10 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		}
 	}
 
-	if (true) // TODO: change to light dirty
+	if (Scene->GetDirectionLight()->IsDirty())
 	{
 		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
 		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
-		FMatrix LightScr(
-			0.5f, 0.0f, 0.0f, 0.0f,
-			0.0f, -0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
 		struct LightCB
 		{
 			FMatrix VOMatrix;
@@ -509,12 +507,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			} Light;
 		} CBInstance;
 		CBInstance.VOMatrix = glm::transpose(O * V);
-		CBInstance.ScreenMatrix = glm::transpose(LightScr);
+		CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
 		CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight()->GetColor();
 		CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight()->GetIntensity();
 		CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight()->GetDirection());
 
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		Scene->GetDirectionLight()->SetDirty(false);
 	}
 }
 

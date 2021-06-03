@@ -33,6 +33,7 @@
     <ClCompile Include="Source\private\Engine.cpp" />
     <ClCompile Include="Source\private\FrameResourceManager.cpp" />
     <ClCompile Include="Source\private\Joint.cpp" />
+    <ClCompile Include="Source\private\Key.cpp" />
     <ClCompile Include="Source\private\Light.cpp" />
     <ClCompile Include="Source\private\Main.cpp" />
     <ClCompile Include="Source\private\MathExtend.cpp" />

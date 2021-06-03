@@ -132,22 +132,17 @@ void ACamera::UpdateCameraParam_Wander(const float& ElapsedSeconds)
 void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance)
 {
 	// event data
-	const KeysPressed& Keys = FDeviceEventProcessor::Get()->GetKeys();
 	const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
 	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
 	FVector2 MouseRotateInterval = MouseSensibility * MouseMoveDelta; // Interval between tick
 
-	FEuler Euler = QuatToEuler(GetTransform().Quat);
-	float& Yaw = Euler.Yaw;
-	float& Pitch = Euler.Pitch;
-	float& Roll = Euler.Roll;
-
 	// update lookat dir
 	if (bIsMouseDown)
 	{
-		Yaw += MouseRotateInterval.x;
-		Roll += MouseRotateInterval.y;
-		SetQuat(EulerToQuat(FEuler(Roll, Pitch, Yaw)));
+		FEuler Euler = QuatToEuler(GetTransform().Quat);
+		Euler.Yaw += MouseRotateInterval.x;
+		Euler.Roll += MouseRotateInterval.y;
+		SetQuat(EulerToQuat(Euler));
 	}
 
 	// update position
@@ -159,6 +154,11 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
 		SetTranslate(TheoryPos);
+	}
+
+	if (bIsMouseDown || ActualPos != TheoryPos)
+	{
+		CamDirty = true;
 	}
 }
 

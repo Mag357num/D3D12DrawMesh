@@ -38,13 +38,16 @@ private:
 	float MouseSensibility = 0.01f;
 	float AngularVelocity;
 
-	// data
+	// Secondary data, need to refresh depent on dirty
 	bool VDirty = true;
 	FMatrix VMatrix_GameThread;
 	FMatrix VMatrix_RenderThread;
 	bool PDirty = true;
 	FMatrix PMatrix_GameThread;
 	FMatrix PMatrix_RenderThread;
+
+	// camera change flag
+	bool CamDirty = true;
 
 public:
 	ACamera();
@@ -69,8 +72,8 @@ public:
 	void SetLookAt(const FVector& Look);
 	const FVector GetLookAt();
 
-	const bool& IsVDirty() const { return VDirty; }
-	const bool& IsPDirty() const { return PDirty; }
+	const bool& IsDirty() const { return CamDirty; }
+	void SetDirty(const bool& Dirty) { CamDirty = Dirty; }
 
 	void Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
