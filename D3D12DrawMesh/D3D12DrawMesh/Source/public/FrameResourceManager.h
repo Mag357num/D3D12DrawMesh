@@ -1,14 +1,13 @@
 #pragma once
-#include "RHIResource.h"
 #include "Scene.h"
 #include "stdafx.h"
+#include "RHIResource.h"
 
 using namespace RHI;
-
 struct FSingleBufferFrameResource
 {
 	// meshes
-	shared_ptr<FGeometry> DirectionLight;
+	shared_ptr<FGeometry> DirectionalLight;
 	shared_ptr<FGeometry> CharacterMesh;
 	vector<shared_ptr<FGeometry>> StaticMeshes;
 	shared_ptr<FGeometry> PPTriangle; // post process triangle

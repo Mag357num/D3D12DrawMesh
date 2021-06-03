@@ -3,6 +3,10 @@
 #include "DynamicRHI.h"
 #include "RenderThread.h"
 #include "DeviceEventProcessor.h"
+#include "Camera.h"
+#include "Character.h"
+#include "StaticMesh.h"
+#include "SkeletalMesh.h"
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
@@ -45,9 +49,18 @@ void FEngine::Init(void* WindowHandle)
 	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
 
 	// light
-	shared_ptr<ADirectionLight> Light = make_shared<ADirectionLight>(FVector(450.f, 0.f, 450.f), FVector(-1.f, 0.f, -1.f), FVector(1.f, 1.f, 1.f));
-	Light->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
-	CurrentScene->SetDirectionLight(Light);
+	{
+		// directional light
+		shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>( FVector( 1000.f, 0.f, 1000.f ), FVector( -1.f, 0.f, -1.f ), FVector( 1.f, 1.f, 1.f ) );
+		DirectionalLight->SetOrthoParam( -1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f ); // TODO: hard coding
+		CurrentScene->SetDirectionalLight( DirectionalLight );
+
+		// point light
+		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>();
+		shared_ptr<APointLight> PointLight2 = make_shared<APointLight>();
+		CurrentScene->AddPointLight( PointLight1 );
+		CurrentScene->AddPointLight( PointLight2 );
+	}
 
 	// character
 	shared_ptr<ACharacter> Cha = make_shared<ACharacter>();

@@ -34,10 +34,10 @@ public:
 	ALight();
 	~ALight() = default;
 
-	virtual const FVector& GetColor() const = 0;
-	virtual const float& GetIntensity() const = 0;
-	virtual void SetIntensity(const float& Inten) = 0;
-	virtual void SetColor(const FVector& C) = 0;
+	const FVector& GetColor() const { return Color; };
+	const float& GetIntensity() const { return Intensity; }
+	void SetIntensity( const float& Inten ) { Intensity = Inten; }
+	void SetColor( const FVector& C ) { Color = C; }
 
 	void SetQuat(const FQuat& Quat);
 	void SetTranslate(const FVector& Trans);
@@ -58,10 +58,9 @@ public:
 	class FStaticMeshComponent* GetStaticMeshComponent();
 };
 
-class ADirectionLight : public ALight
+class ADirectionalLight : public ALight
 {
 private:
-
 	// directional light shadowmap is ortho projection
 	// Secondary data, need to refresh depent on dirty
 	bool ODirty = true;
@@ -76,14 +75,9 @@ private:
 	float FarPlane;
 
 public:
-	ADirectionLight() = delete;
-	ADirectionLight(const FVector& Pos, const FVector& Direction, const FVector& Color);
-	~ADirectionLight() = default;
-
-	virtual const FVector& GetColor() const override { return Color; };
-	virtual const float& GetIntensity() const override { return Intensity; }
-	virtual void SetIntensity(const float& Inten) override { Intensity = Inten; }
-	virtual void SetColor(const FVector& C) override { Color = C; }
+	ADirectionalLight() = delete;
+	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color);
+	~ADirectionalLight() = default;
 
 	void SetOrthoParam(float L, float R, float B, float T, float N, float F);
 
@@ -117,13 +111,13 @@ private:
 	float FarPlane = 5000.f;
 
 public:
-	virtual const FVector& GetColor() const override { return Color; };
-	virtual const float& GetIntensity() const override { return Intensity; }
-	virtual void SetIntensity(const float& Inten) override { Intensity = Inten; }
-	virtual void SetColor(const FVector& C) override { Color = C; }
+	APointLight() = default;
+	~APointLight() = default;
 
 	void SetPerspParam(float Fov, float AspectRatio, float Near, float Far) { this->Fov = Fov; this->AspectRatio = AspectRatio; NearPlane = Near; FarPlane = Far; PDirty = true; }
 
 	const FMatrix& GetPMatrix_GameThread();
 	const FMatrix& GetPMatrix_RenderThread();
+
+	virtual void Tick( const float& ElapsedSeconds);
 };

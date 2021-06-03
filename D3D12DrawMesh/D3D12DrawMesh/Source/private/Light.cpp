@@ -2,7 +2,7 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
 
-ADirectionLight::ADirectionLight(const FVector& Pos, const FVector& Direction, const FVector& Color)
+ADirectionalLight::ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color)
 {
 	this->Color = Color;
 
@@ -11,7 +11,7 @@ ADirectionLight::ADirectionLight(const FVector& Pos, const FVector& Direction, c
 	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
 }
 
-void ADirectionLight::SetOrthoParam(float L, float R, float B, float T, float N, float F)
+void ADirectionalLight::SetOrthoParam(float L, float R, float B, float T, float N, float F)
 {
 	Left = L;
 	Right = R;
@@ -22,7 +22,7 @@ void ADirectionLight::SetOrthoParam(float L, float R, float B, float T, float N,
 	ODirty = true;
 }
 
-const FMatrix& ADirectionLight::GetOMatrix_GameThread()
+const FMatrix& ADirectionalLight::GetOMatrix_GameThread()
 {
 	if (ODirty)
 	{
@@ -32,7 +32,7 @@ const FMatrix& ADirectionLight::GetOMatrix_GameThread()
 	return OMatrix_GameThread;
 }
 
-const FMatrix& ADirectionLight::GetOMatrix_RenderThread()
+const FMatrix& ADirectionalLight::GetOMatrix_RenderThread()
 {
 	FMatrix GameThread = GetOMatrix_GameThread();
 	std::swap(GameThread, OMatrix_RenderThread);
@@ -59,7 +59,7 @@ void ALight::SetQuat(const FQuat& Quat)
 	}
 }
 
-void ADirectionLight::Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation /*= FVector(0.f, 0.f, 0.f)*/, float Distance /*= 1000.f*/)
+void ADirectionalLight::Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation /*= FVector(0.f, 0.f, 0.f)*/, float Distance /*= 1000.f*/)
 {
 	switch (Mode)
 	{
@@ -74,12 +74,12 @@ void ADirectionLight::Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVe
 	}
 }
 
-void ADirectionLight::Tick_Rotate(const float& ElapsedSeconds, const FVector& Target, const float& Distance)
+void ADirectionalLight::Tick_Rotate(const float& ElapsedSeconds, const FVector& Target, const float& Distance)
 {
 
 }
 
-void ADirectionLight::Tick_Static()
+void ADirectionalLight::Tick_Static()
 {
 
 }
@@ -187,4 +187,26 @@ FStaticMeshComponent* ALight::GetStaticMeshComponent()
 	{
 		return Components[0].get()->As<FStaticMeshComponent>();
 	}
+}
+
+const FMatrix& APointLight::GetPMatrix_GameThread()
+{
+	if (PDirty)
+	{
+		PMatrix_GameThread = glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+		PDirty = false;
+	}
+	return PMatrix_GameThread;
+}
+
+const FMatrix& APointLight::GetPMatrix_RenderThread()
+{
+	FMatrix GameThread = GetPMatrix_GameThread();
+	std::swap( GameThread, PMatrix_RenderThread );
+	return PMatrix_RenderThread;
+}
+
+void APointLight::Tick( const float& ElapsedSeconds )
+{
+
 }

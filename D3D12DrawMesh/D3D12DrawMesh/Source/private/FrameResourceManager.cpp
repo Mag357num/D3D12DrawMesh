@@ -5,6 +5,7 @@
 #include "MathExtend.h"
 #include "AssetManager.h"
 #include "Engine.h"
+#include "Character.h"
 
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
@@ -82,8 +83,8 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
-	const FMatrix& LV = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
-	const FMatrix& LO = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+	const FMatrix& LV = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
+	const FMatrix& LO = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 	const FMatrix& CV = Scene->GetCurrentCamera()->GetViewMatrix_RenderThread();
 	const FMatrix& CP = Scene->GetCurrentCamera()->GetPerspProjMatrix_RenderThread();
 
@@ -93,7 +94,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	// direction light source
 	{
 		// mesh
-		SFrameRes.DirectionLight = GDynamicRHI->CreateGeometry(*Scene->GetDirectionLight()->GetStaticMeshComponent());
+		SFrameRes.DirectionalLight = GDynamicRHI->CreateGeometry(*Scene->GetDirectionalLight()->GetStaticMeshComponent());
 		// need no shadow pass
 		// scenepass rr
 		auto RR_ScenePass = CreateRenderResource
@@ -106,12 +107,12 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			1,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionLight()->GetStaticMeshComponent()->GetWorldMatrix());
+		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
-		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionLight.get(), RR_ScenePass });
+		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLight.get(), RR_ScenePass });
 	}
 
 	// character
@@ -511,15 +512,15 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		CurrentCamera->SetDirty(false);
 
 		// direction light source cb should change when camera change
-		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionLight()->GetStaticMeshComponent()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionLight.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 	}
 
 	// character position
 	if (CurrentCharacter->IsPosDirty())
 	{
-		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
-		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+		const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
@@ -533,8 +534,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		auto& Actor = Scene->GetStaticMeshActors()[i];
 		if (Actor->IsDirty())
 		{
-			const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
-			const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+			const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
+			const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
@@ -543,29 +544,29 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		}
 	}
 
-	if (Scene->GetDirectionLight()->IsDirty())
+	if (Scene->GetDirectionalLight()->IsDirty())
 	{
-		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
-		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+		const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 		struct LightCB
 		{
 			FMatrix VOMatrix;
 			FMatrix ScreenMatrix;
 			struct LightState
 			{
-				FVector DirectionLightColor;
-				float DirectionLightIntensity;
-				FVector DirectionLightDir;
+				FVector DirectionalLightColor;
+				float DirectionalLightIntensity;
+				FVector DirectionalLightDir;
 			} Light;
 		} CBInstance;
 		CBInstance.VOMatrix = glm::transpose(O * V);
 		CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
-		CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight()->GetColor();
-		CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight()->GetIntensity();
-		CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight()->GetDirection());
+		CBInstance.Light.DirectionalLightColor = Scene->GetDirectionalLight()->GetColor();
+		CBInstance.Light.DirectionalLightIntensity = Scene->GetDirectionalLight()->GetIntensity();
+		CBInstance.Light.DirectionalLightDir = glm::normalize(Scene->GetDirectionalLight()->GetDirection());
 
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
-		Scene->GetDirectionLight()->SetDirty(false);
+		Scene->GetDirectionalLight()->SetDirty(false);
 	}
 }
 

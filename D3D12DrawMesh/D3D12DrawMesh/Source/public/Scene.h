@@ -1,34 +1,37 @@
 #pragma once
 #include "stdafx.h"
 #include "RHIResource.h"
-#include "Camera.h"
-#include "Light.h"
-#include "Character.h"
 #include "StepTimer.h"
-#include "StaticMesh.h"
-#include "SkeletalMesh.h"
 
+class ACharacter;
+class ACamera;
+class ADirectionalLight;
+class APointLight;
+class AStaticMeshActor;
+class ASkeletalMeshActor;
 class FScene
 {
 private:
 	shared_ptr<ACharacter> CurrentCharacter;
 	shared_ptr<ACamera> CurrentCamera;
-	vector<shared_ptr<ACamera>> SceneCameras;
-	shared_ptr<ADirectionLight> DirectionLight;
+	vector<shared_ptr<ACamera>> SceneCameras; // swap ptr to change camera
+	shared_ptr<ADirectionalLight> DirectionalLight;
+	vector<shared_ptr<APointLight>> PointLights;
 	vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
 	vector<ASkeletalMeshActor> SkeletalMeshActors;
 
 public:
 	void Tick(StepTimer& Timer);
 
+	void SetCurrentCharacter( shared_ptr<ACharacter> Character ) { CurrentCharacter = Character; };
 	void SetCurrentCamera( shared_ptr<ACamera> Cam ) { CurrentCamera = Cam; }
-	void SetCurrentCamera(const FVector& PositionParam, const FVector& UpDir, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.f, const float& FarPlane = 5000.f) { return CurrentCamera->Init(PositionParam, UpDir, LookAt, Fov, Width, Height, NearPlane, FarPlane); }
-	void SetDirectionLight(shared_ptr<ADirectionLight> Light);
-	void SetCurrentCharacter(shared_ptr<ACharacter> Character) { CurrentCharacter = Character; };
+	void SetDirectionalLight( shared_ptr<ADirectionalLight> Light ) { DirectionalLight = Light; }
+	void AddPointLight( shared_ptr<APointLight> Light ) { PointLights.push_back( Light ); }
+	void AddStaticMeshActor( shared_ptr<AStaticMeshActor> Actor ) { StaticMeshActors.push_back( Actor ); }
 
-	ACamera* GetCurrentCamera() { return CurrentCamera.get(); }
 	ACharacter* GetCurrentCharacter() { return CurrentCharacter.get(); }
-	ADirectionLight* GetDirectionLight();
-	vector<shared_ptr<AStaticMeshActor>>& GetStaticMeshActors();
-	void AddStaticMeshActor(shared_ptr<AStaticMeshActor> Actor );
+	ACamera* GetCurrentCamera() { return CurrentCamera.get(); }
+	ADirectionalLight* GetDirectionalLight() { return DirectionalLight.get(); }
+	vector<shared_ptr<APointLight>> GetPointLights() { return PointLights; }
+	vector<shared_ptr<AStaticMeshActor>>& GetStaticMeshActors() { return StaticMeshActors; }
 };
