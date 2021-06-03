@@ -15,11 +15,8 @@ void FAnimInstance::TickAnimation(const float& ElapsedSeconds)
 	TimePos += ElapsedSeconds;
 	float& SequenceLength = SequenceMap[CurrentAnimation]->GetSequenceLength();
 
-	Palette = TickPalette(fmod(TimePos, SequenceLength));
-	{
-		std::lock_guard<std::mutex> Lock(Mutex);
-		Palette2 = Palette;
-	}
+	Palette_GameThread = TickPalette(fmod(TimePos, SequenceLength));
+	Palette_RenderThread.swap(Palette_GameThread); // swap is a efficient method to switch data
 }
 
 vector<FMatrix> FAnimInstance::TickPalette(float Dt)
@@ -53,13 +50,12 @@ vector<FMatrix> FAnimInstance::TickPalette(float Dt)
 	return Result;
 }
 
-vector<FMatrix>& FAnimInstance::GetPalette()
+vector<FMatrix>& FAnimInstance::GetPalette_GameThread()
 {
-	return Palette;
+	return Palette_GameThread;
 }
 
-vector<FMatrix>& FAnimInstance::GetPalette2()
+vector<FMatrix>& FAnimInstance::GetPalette_RenderThread()
 {
-	std::lock_guard<std::mutex> Lock(Mutex);
-	return Palette2;
+	return Palette_RenderThread;
 }

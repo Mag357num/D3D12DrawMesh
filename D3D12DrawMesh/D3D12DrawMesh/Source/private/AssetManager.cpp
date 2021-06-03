@@ -318,7 +318,7 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 		Fin.read((char*)Seq->GetTracks()[i].ScaleSamples.data(), ScalesNum * 3 * sizeof(float));
 		if (ScalesNum == 0)
 		{
-			Seq->GetTracks()[i].ScaleSamples.push_back(FVector(1, 1, 1));
+			Seq->GetTracks()[i].ScaleSamples.push_back(FVector(1.f, 1.f, 1.f));
 		}
 
 		Fin.read((char*)&QuatsNum, sizeof(int));
@@ -326,7 +326,7 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 		Fin.read((char*)Seq->GetTracks()[i].QuatSamples.data(), QuatsNum * 4 * sizeof(float));
 		if (QuatsNum == 0)
 		{
-			Seq->GetTracks()[i].QuatSamples.push_back(FQuat(0, 0, 0, 1));
+			Seq->GetTracks()[i].QuatSamples.push_back(FQuat(0.f, 0.f, 0.f, 1.f));
 		}
 
 		Fin.read((char*)&TranslationsNum, sizeof(int));
@@ -334,7 +334,7 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 		Fin.read((char*)Seq->GetTracks()[i].TranslationSamples.data(), TranslationsNum * 3 * sizeof(float));
 		if (TranslationsNum == 0)
 		{
-			Seq->GetTracks()[i].TranslationSamples.push_back(FVector(0, 0, 0));
+			Seq->GetTracks()[i].TranslationSamples.push_back(FVector(0.f, 0.f, 0.f));
 		}
 	}
 

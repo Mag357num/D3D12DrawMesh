@@ -42,10 +42,12 @@ void FEngine::Init(void* WindowHandle)
 	}
 
 	// camera
-	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
+	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
 
 	// light
-	CurrentScene->SetDirectionLight(FDirectionLight());
+	shared_ptr<ADirectionLight> Light = make_shared<ADirectionLight>(FVector(450.f, 0.f, 450.f), FVector(-1.f, 0.f, -1.f), FVector(1.f, 1.f, 1.f));
+	Light->SetOrthoParam(-700.f, 700.f, -700.f, 700.f, 1.0f, 3000.0f);
+	CurrentScene->SetDirectionLight(Light);
 
 	// character
 	shared_ptr<ACharacter> Cha = make_shared<ACharacter>();

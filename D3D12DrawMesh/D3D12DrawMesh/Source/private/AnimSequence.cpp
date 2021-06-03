@@ -18,7 +18,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FReta
 		// Interpolate
 		if (Tracks[i].ScaleSamples.size() == 0)
 		{
-			S1 = FVector(1, 1, 1);
+			S1 = FVector(1.f, 1.f, 1.f);
 			S2 = S1;
 		}
 		else if (Tracks[i].ScaleSamples.size() == 1)
@@ -34,7 +34,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FReta
 
 		if (Tracks[i].QuatSamples.size() == 0)
 		{
-			Q1 = FQuat(0, 0, 0, 1);
+			Q1 = FQuat(0.f, 0.f, 0.f, 1.f);
 			Q2 = Q1;
 		}
 		else if (Tracks[i].QuatSamples.size() == 1)
@@ -52,7 +52,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FReta
 		{
 			if (Tracks[i].TranslationSamples.size() == 0)
 			{
-				T1 = FVector(0, 0, 0);
+				T1 = FVector(0.f, 0.f, 0.f);
 				T2 = T1;
 			}
 			else if (Tracks[i].TranslationSamples.size() == 1)

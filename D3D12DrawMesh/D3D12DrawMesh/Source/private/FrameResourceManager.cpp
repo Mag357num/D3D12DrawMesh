@@ -77,6 +77,9 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
+	const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
+	const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+
 	RHI::GDynamicRHI->BegineCreateResource();
 	InitFrameResource(Scene.get(), FrameNum);
 
@@ -93,10 +96,10 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 		0,
 		GDynamicRHI->GetFrameCount()
 	);
-	FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
+	FMatrix WVO = transpose(O * V * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
-		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
 	}
 	SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
 
@@ -133,7 +136,7 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 			0,
 			GDynamicRHI->GetFrameCount()
 		);
-		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
+		FMatrix WVP = transpose(O * V * Scene->GetStaticMeshActors()[i].GetStaticMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
@@ -183,9 +186,9 @@ void FFrameResourceManager::CreateCameraConstantBuffer(FScene* Scene, FMultiBuff
 	// create
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
 
-	// init
-	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
+	// init. if not init, will be blink
+	FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix_RenderThread();
+	FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix_RenderThread();
 	FMatrix CamVP = glm::transpose(CamProj * CamView);
 	const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
 	FVector4 Eye(CamPos.x, CamPos.y, CamPos.z, 1.f);
@@ -267,9 +270,9 @@ void FFrameResourceManager::CreatePPTriangle()
 {
 	// create postprocess mesh and mesh resource
 	FStaticMeshLOD Lod;
-	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, 1.f), FVector4(1, 1, 1, 1)));
-	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1, 1, 1), FVector2(1.f, -1.f), FVector4(1, 1, 1, 1)));
-	Lod.Vertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1, 1, 1), FVector2(-1.f, 1.f), FVector4(1, 1, 1, 1)));
+	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, -1.f, 0.0f), FVector(1.f, 1.f, 1.f), FVector2(1.f, 1.f), FVector4(1.f, 1.f, 1.f, 1.f)));
+	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1.f, 1.f, 1.f), FVector2(1.f, -1.f), FVector4(1.f, 1.f, 1.f, 1.f)));
+	Lod.Vertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1.f, 1.f, 1.f), FVector2(-1.f, 1.f), FVector4(1.f, 1.f, 1.f, 1.f)));
 	Lod.Indice = { 0, 1, 2 };
 	SFrameRes.PPTriangle = GDynamicRHI->CreateGeometry(Lod);
 }
@@ -444,16 +447,15 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	
 	for (uint32 i = 0; i < 68; i++)
 	{
-		//CBInstance.GBoneTransforms[i] = glm::identity<FMatrix>();
-		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette2()[i]);
+		CBInstance.GBoneTransforms[i] = glm::transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
 	}
 	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 	// camera
-	if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
+	//if (Scene->GetCurrentCamera()->IsVDirty() || Scene->GetCurrentCamera()->IsPDirty())
 	{
-		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix();
-		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix();
+		FMatrix CamView = Scene->GetCurrentCamera()->GetViewMatrix_RenderThread();
+		FMatrix CamProj = Scene->GetCurrentCamera()->GetPerspProjMatrix_RenderThread();
 		FMatrix CamVP = glm::transpose(CamProj * CamView);
 		const FVector& CamPos = Scene->GetCurrentCamera()->GetTransform().Translation;
 		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
@@ -469,9 +471,11 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// character position
 	if (CurrentCharacter->GetSkeletalMeshCom()->IsDirty())
 	{
-		FMatrix WVP = transpose(Scene->GetDirectionLight().GetLightVPMatrix() * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
+		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
+		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(FMatrix));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 	}
 
@@ -486,6 +490,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 	if (true) // TODO: change to light dirty
 	{
+		const FMatrix& V = Scene->GetDirectionLight()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionLight()->GetOMatrix_RenderThread();
 		FMatrix LightScr(
 			0.5f, 0.0f, 0.0f, 0.0f,
 			0.0f, -0.5f, 0.0f, 0.0f,
@@ -493,7 +499,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			0.5f, 0.5f, 0.0f, 1.0f); // projection space to screen space transform
 		struct LightCB
 		{
-			FMatrix VPMatrix;
+			FMatrix VOMatrix;
 			FMatrix ScreenMatrix;
 			struct LightState
 			{
@@ -502,11 +508,11 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 				FVector DirectionLightDir;
 			} Light;
 		} CBInstance;
-		CBInstance.VPMatrix = glm::transpose(Scene->GetDirectionLight().GetLightVPMatrix());
+		CBInstance.VOMatrix = glm::transpose(O * V);
 		CBInstance.ScreenMatrix = glm::transpose(LightScr);
-		CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight().Color;
-		CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight().Intensity;
-		CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight().Dir);
+		CBInstance.Light.DirectionLightColor = Scene->GetDirectionLight()->GetColor();
+		CBInstance.Light.DirectionLightIntensity = Scene->GetDirectionLight()->GetIntensity();
+		CBInstance.Light.DirectionLightDir = glm::normalize(Scene->GetDirectionLight()->GetDirection());
 
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 	}

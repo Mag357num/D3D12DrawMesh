@@ -14,13 +14,11 @@ class FAnimInstance
 {
 private:
 	FSkeletalMeshComponent* SkeletalMeshCom;
-	vector<FMatrix> Palette;
-	vector<FMatrix> Palette2;
+	vector<FMatrix> Palette_GameThread; // create two data obj for two thread, otherwise there will be race
+	vector<FMatrix> Palette_RenderThread;
 	unordered_map<string, shared_ptr<FAnimSequence>> SequenceMap;
 	string CurrentAnimation = "Idle";
 	float TimePos = 0.0f;
-
-	std::mutex Mutex;
 
 public:
 	void SetCurrentAnim(string Key) { CurrentAnimation = Key; }
@@ -28,8 +26,8 @@ public:
 	void TickAnimation(const float& TotalSeconds);
 	void AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq ) { SequenceMap.insert( Seq ); }
 	vector<FMatrix> TickPalette( float dt );
-	vector<FMatrix>& GetPalette();
-	vector<FMatrix>& GetPalette2();
+	vector<FMatrix>& GetPalette_GameThread();
+	vector<FMatrix>& GetPalette_RenderThread();
 
 	FAnimInstance() = default;
 	~FAnimInstance() = default;

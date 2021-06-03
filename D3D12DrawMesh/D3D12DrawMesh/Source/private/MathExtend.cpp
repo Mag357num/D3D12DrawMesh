@@ -14,7 +14,7 @@ FVector QuatToLook(const FQuat& Quat)
 
 FQuat LookToQuat(const FVector& Look)
 {
-	return FQuat(0, 0, 0, 1);
+	return FQuat(0.f, 0.f, 0.f, 1.f);
 }
 
 FEuler QuatToEuler(const FQuat& Quat)

@@ -7,9 +7,9 @@ void FScene::Tick(StepTimer& Timer)
 	GetCurrentCamera()->Tick(static_cast<float>(Timer.GetElapsedSeconds()), FCameraMoveMode::AROUNDTARGET, GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransform().Translation, 300.f);
 }
 
-FDirectionLight& FScene::GetDirectionLight()
+ADirectionLight* FScene::GetDirectionLight()
 {
-	return DirectionLight;
+	return DirectionLight.get();
 }
 
 vector<AStaticMeshActor>& FScene::GetStaticMeshActors()
