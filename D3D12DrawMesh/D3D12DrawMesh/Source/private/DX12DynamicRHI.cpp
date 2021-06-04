@@ -1003,6 +1003,10 @@ namespace RHI
 			break;
 
 		case RHI::FSamplerType::MIRROR_ST:
+			SamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+			SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+			SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+			SamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
 			break;
 		default:
 			break;

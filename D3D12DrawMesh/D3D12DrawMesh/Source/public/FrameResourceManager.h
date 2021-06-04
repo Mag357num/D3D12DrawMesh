@@ -28,17 +28,9 @@ struct FSingleBufferFrameResource
 	// sampler
 	shared_ptr<FSampler> ClampSampler;
 	shared_ptr<FSampler> WarpSampler;
-};
 
-struct FMultiBufferFrameResource
-{
+	// textures
 	const uint32 ShadowMapSize = 8192;
-
-	// constant buffer
-	shared_ptr<FCB> CameraCB;
-	shared_ptr<FCB> CharacterPaletteCB;
-
-	// textures // TODO: move to single buffer frame resource
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
 	shared_ptr<FTexture> SceneColorMap;
@@ -46,7 +38,13 @@ struct FMultiBufferFrameResource
 	shared_ptr<FTexture> SunMergeMap;
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
+};
 
+struct FMultiBufferFrameResource
+{
+	// constant buffer
+	shared_ptr<FCB> CameraCB;
+	shared_ptr<FCB> CharacterPaletteCB;
 };
 
 class FFrameResourceManager
@@ -58,7 +56,7 @@ public:
 	FSingleBufferFrameResource& GetSingleFrameRes() { return SFrameRes; }
 	vector<FMultiBufferFrameResource>& GetMultiFrameRes() { return MFrameRes; }
 	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
-	void CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameCount);
+	void CreateFrameResOfSceneActors(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 	//void UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex);
 	//void UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex);
@@ -68,10 +66,10 @@ public:
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateDirectionalLightCB(FScene* Scene, FSingleBufferFrameResource& FrameRes);
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateMapsForShadow(FMultiBufferFrameResource& FrameRes);
+	void CreateMapsForShadow();
 	void CreateSamplers();
-	void CreateMapsForScene(FMultiBufferFrameResource& FrameRes);
-	void CreateMapsForPostProcess(FMultiBufferFrameResource& FrameRes);
+	void CreateMapsForScene();
+	void CreateMapsForPostProcess();
 	void CreatePPTriangle();
 	void CreatePPTriangleRR();
 };

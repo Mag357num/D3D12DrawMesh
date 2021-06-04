@@ -74,7 +74,7 @@ void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)
 {
 	RENDER_THREAD([this, Scene]()
 		{
-			FrameResourceManager->CreateFrameResourcesFromScene(Scene, GDynamicRHI->GetFrameCount());
+			FrameResourceManager->CreateFrameResOfSceneActors(Scene, GDynamicRHI->GetFrameCount());
 		});
 }
 

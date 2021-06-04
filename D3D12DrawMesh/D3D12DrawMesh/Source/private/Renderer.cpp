@@ -26,11 +26,11 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 	// shadow pass
 	{
 		SCOPED_EVENT("ShadowDepth");
-		RHI->SetTextureState(MFrameRes.ShadowMap.get(), FRESOURCE_STATES::RESOURCE_STATE_DEPTH_WRITE);
-		RHI->ClearDepthStencil(MFrameRes.ShadowMap.get());
-		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(MFrameRes.ShadowMapSize), static_cast<float>(MFrameRes.ShadowMapSize), 0.f, 1.f);
-		RHI->SetScissor(0, 0, MFrameRes.ShadowMapSize, MFrameRes.ShadowMapSize);
-		RHI->SetRenderTarget(0, nullptr, MFrameRes.ShadowMap->DsvHandle.get());
+		RHI->SetTextureState(SFrameRes.ShadowMap.get(), FRESOURCE_STATES::RESOURCE_STATE_DEPTH_WRITE);
+		RHI->ClearDepthStencil(SFrameRes.ShadowMap.get());
+		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(SFrameRes.ShadowMapSize), static_cast<float>(SFrameRes.ShadowMapSize), 0.f, 1.f);
+		RHI->SetScissor(0, 0, SFrameRes.ShadowMapSize, SFrameRes.ShadowMapSize);
+		RHI->SetRenderTarget(0, nullptr, SFrameRes.ShadowMap->DsvHandle.get());
 
 		// draw character
 		{
@@ -59,23 +59,23 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 			RHI->DrawMesh(i.get());
 		}
 
-		RHI->SetTextureState(MFrameRes.ShadowMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		RHI->SetTextureState(SFrameRes.ShadowMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 }
 
 void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
 {
-	FHandle* Rt = GEngine->UsePostProcess() ? MFrameRes.SceneColorMap->RtvHandle.get() : RHI->GetBackBufferHandle();
+	FHandle* Rt = GEngine->UsePostProcess() ? SFrameRes.SceneColorMap->RtvHandle.get() : RHI->GetBackBufferHandle();
 	const uint32& Width = GEngine->GetWidth();
 	const uint32& Height = GEngine->GetHeight();
 
 	// scene color pass
 	{
 		SCOPED_EVENT("SceneColor");
-		RHI->SetTextureState(MFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-		RHI->ClearRenderTarget(MFrameRes.SceneColorMap->RtvHandle.get());
-		RHI->SetRenderTarget(1, Rt, MFrameRes.DepthStencilMap->DsvHandle.get());
-		RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+		RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+		RHI->ClearRenderTarget(SFrameRes.SceneColorMap->RtvHandle.get());
+		RHI->SetRenderTarget(1, Rt, SFrameRes.DepthStencilMap->DsvHandle.get());
+		RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 		RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
 		RHI->SetScissor(0, 0, Width, Height);
 
@@ -106,7 +106,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(SFrameRes.StaticDirectionalLightCB->CBHandle);
 			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
-			Handles.push_back(MFrameRes.ShadowMap->SrvHandle);
+			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawMesh(SFrameRes.CharacterMesh.get());
@@ -123,14 +123,14 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(SFrameRes.StaticDirectionalLightCB->CBHandle);
-			Handles.push_back(MFrameRes.ShadowMap->SrvHandle);
+			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
 			RHI->DrawMesh(i.get());
 		}
-		RHI->SetTextureState(MFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 }
 
@@ -147,10 +147,10 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 			// bloom setup
 			{
 				SCOPED_EVENT("Bloom setup");
-				RHI->SetTextureState(MFrameRes.BloomSetupMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-				RHI->ClearRenderTarget(MFrameRes.BloomSetupMap->RtvHandle.get());
-				RHI->SetRenderTarget(1, MFrameRes.BloomSetupMap->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
-				RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+				RHI->SetTextureState(SFrameRes.BloomSetupMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+				RHI->ClearRenderTarget(SFrameRes.BloomSetupMap->RtvHandle.get());
+				RHI->SetRenderTarget(1, SFrameRes.BloomSetupMap->RtvHandle.get(), SFrameRes.DepthStencilMap->DsvHandle.get());
+				RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / 4), static_cast<float>(Height / 4), 0.f, 1.f);
 				RHI->SetScissor(0, 0, Width / 4, Height / 4);
 
@@ -158,29 +158,29 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 
 				vector<shared_ptr<FHandle>> Handles;
 				Handles.push_back(SFrameRes.RR_BloomSetup->CBs[FrameIndex]->CBHandle);
-				Handles.push_back(MFrameRes.SceneColorMap->SrvHandle);
+				Handles.push_back(SFrameRes.SceneColorMap->SrvHandle);
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
 
 				RHI->DrawMesh(Tri.get());
-				RHI->SetTextureState(MFrameRes.BloomSetupMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				RHI->SetTextureState(SFrameRes.BloomSetupMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 
 			// bloom down
 			{
 				vector<shared_ptr<FHandle>> TexHandles;
-				TexHandles.push_back(MFrameRes.BloomSetupMap->SrvHandle);
-				TexHandles.push_back(MFrameRes.BloomDownMapArray[0]->SrvHandle);
-				TexHandles.push_back(MFrameRes.BloomDownMapArray[1]->SrvHandle);
-				TexHandles.push_back(MFrameRes.BloomDownMapArray[2]->SrvHandle);
+				TexHandles.push_back(SFrameRes.BloomSetupMap->SrvHandle);
+				TexHandles.push_back(SFrameRes.BloomDownMapArray[0]->SrvHandle);
+				TexHandles.push_back(SFrameRes.BloomDownMapArray[1]->SrvHandle);
+				TexHandles.push_back(SFrameRes.BloomDownMapArray[2]->SrvHandle);
 
 				for (uint32 i = 0; i < 4; i++)
 				{
 					SCOPED_EVENT("Bloom down");
-					RHI->SetTextureState(MFrameRes.BloomDownMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-					RHI->ClearRenderTarget(MFrameRes.BloomDownMapArray[i]->RtvHandle.get());
-					RHI->SetRenderTarget(1, MFrameRes.BloomDownMapArray[i]->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
-					RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+					RHI->SetTextureState(SFrameRes.BloomDownMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+					RHI->ClearRenderTarget(SFrameRes.BloomDownMapArray[i]->RtvHandle.get());
+					RHI->SetRenderTarget(1, SFrameRes.BloomDownMapArray[i]->RtvHandle.get(), SFrameRes.DepthStencilMap->DsvHandle.get());
+					RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 3 + i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 3 + i))), 0.f, 1.f);
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 3 + i)), Height / static_cast<uint32>(pow(2, 3 + i)));
 
@@ -193,29 +193,29 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->SetTextureState(MFrameRes.BloomDownMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->SetTextureState(SFrameRes.BloomDownMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 			}
 
 			// bloom up
 			{
 				vector<shared_ptr<FHandle>> TexHandles1;
-				TexHandles1.push_back(MFrameRes.BloomDownMapArray[2]->SrvHandle);
-				TexHandles1.push_back(MFrameRes.BloomDownMapArray[1]->SrvHandle);
-				TexHandles1.push_back(MFrameRes.BloomDownMapArray[0]->SrvHandle);
+				TexHandles1.push_back(SFrameRes.BloomDownMapArray[2]->SrvHandle);
+				TexHandles1.push_back(SFrameRes.BloomDownMapArray[1]->SrvHandle);
+				TexHandles1.push_back(SFrameRes.BloomDownMapArray[0]->SrvHandle);
 
 				vector<shared_ptr<FHandle>> TexHandles2;
-				TexHandles2.push_back(MFrameRes.BloomDownMapArray[3]->SrvHandle);
-				TexHandles2.push_back(MFrameRes.BloomUpMapArray[0]->SrvHandle);
-				TexHandles2.push_back(MFrameRes.BloomUpMapArray[1]->SrvHandle);
+				TexHandles2.push_back(SFrameRes.BloomDownMapArray[3]->SrvHandle);
+				TexHandles2.push_back(SFrameRes.BloomUpMapArray[0]->SrvHandle);
+				TexHandles2.push_back(SFrameRes.BloomUpMapArray[1]->SrvHandle);
 
 				for (uint32 i = 0; i < 3; i++)
 				{
 					SCOPED_EVENT("Bloom up");
-					RHI->SetTextureState(MFrameRes.BloomUpMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-					RHI->ClearRenderTarget(MFrameRes.BloomUpMapArray[i]->RtvHandle.get());
-					RHI->SetRenderTarget(1, MFrameRes.BloomUpMapArray[i]->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
-					RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+					RHI->SetTextureState(SFrameRes.BloomUpMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+					RHI->ClearRenderTarget(SFrameRes.BloomUpMapArray[i]->RtvHandle.get());
+					RHI->SetRenderTarget(1, SFrameRes.BloomUpMapArray[i]->RtvHandle.get(), SFrameRes.DepthStencilMap->DsvHandle.get());
+					RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 5 - i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 5 - i))), 0.f, 1.f);
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 5 - i)), Height / static_cast<uint32>(pow(2, 5 - i)));
 					RHI->SetPipelineState(SFrameRes.RR_BloomUp[i].get());
@@ -229,17 +229,17 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->SetShaderInput(Handles);
 
 					RHI->DrawMesh(Tri.get());
-					RHI->SetTextureState(MFrameRes.BloomUpMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+					RHI->SetTextureState(SFrameRes.BloomUpMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 			}
 
 			// sun merge
 			{
 				SCOPED_EVENT("Sun Merge");
-				RHI->SetTextureState(MFrameRes.SunMergeMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-				RHI->ClearRenderTarget(MFrameRes.SunMergeMap->RtvHandle.get());
-				RHI->SetRenderTarget(1, MFrameRes.SunMergeMap->RtvHandle.get(), MFrameRes.DepthStencilMap->DsvHandle.get());
-				RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+				RHI->SetTextureState(SFrameRes.SunMergeMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+				RHI->ClearRenderTarget(SFrameRes.SunMergeMap->RtvHandle.get());
+				RHI->SetRenderTarget(1, SFrameRes.SunMergeMap->RtvHandle.get(), SFrameRes.DepthStencilMap->DsvHandle.get());
+				RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 				RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / 4), static_cast<float>(Height / 4), 0.f, 1.f);
 				RHI->SetScissor(0, 0, Width / 4, Height / 4);
 
@@ -247,14 +247,14 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 
 				vector<shared_ptr<FHandle>> Handles;
 				Handles.push_back(SFrameRes.RR_SunMerge->CBs[FrameIndex]->CBHandle);
-				Handles.push_back(MFrameRes.BloomSetupMap->SrvHandle);
-				Handles.push_back(MFrameRes.BloomUpMapArray[2]->SrvHandle);
+				Handles.push_back(SFrameRes.BloomSetupMap->SrvHandle);
+				Handles.push_back(SFrameRes.BloomUpMapArray[2]->SrvHandle);
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				Handles.push_back(SFrameRes.WarpSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
 
 				RHI->DrawMesh(Tri.get());
-				RHI->SetTextureState(MFrameRes.SunMergeMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				RHI->SetTextureState(SFrameRes.SunMergeMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 		}
 
@@ -262,16 +262,16 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 		{
 			SCOPED_EVENT("Tonemapping");
 			RHI->ClearRenderTarget(RHI->GetBackBufferHandle());
-			RHI->SetRenderTarget(1, RHI->GetBackBufferHandle(), MFrameRes.DepthStencilMap->DsvHandle.get());
-			RHI->ClearDepthStencil(MFrameRes.DepthStencilMap.get());
+			RHI->SetRenderTarget(1, RHI->GetBackBufferHandle(), SFrameRes.DepthStencilMap->DsvHandle.get());
+			RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 			RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
 			RHI->SetScissor(0, 0, Width, Height);
 
 			RHI->SetPipelineState(SFrameRes.RR_ToneMapping.get());
 
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(MFrameRes.SceneColorMap->SrvHandle);
-			Handles.push_back(MFrameRes.SunMergeMap->SrvHandle);
+			Handles.push_back(SFrameRes.SceneColorMap->SrvHandle);
+			Handles.push_back(SFrameRes.SunMergeMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 

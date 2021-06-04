@@ -14,6 +14,9 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	CreateSamplers();
 	CreatePPTriangle();
 	CreatePPTriangleRR();
+	CreateMapsForShadow();
+	CreateMapsForScene();
+	CreateMapsForPostProcess();
 
 	// multi buffer frame resource
 	MFrameRes.resize( FrameCount );
@@ -21,13 +24,10 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	{
 		CreateCameraCB(Scene, MFrameRes[FrameIndex]);
 		CreateCharacterPaletteCB(Scene, MFrameRes[FrameIndex]);
-		CreateMapsForShadow(MFrameRes[FrameIndex]);
-		CreateMapsForScene(MFrameRes[FrameIndex]);
-		CreateMapsForPostProcess(MFrameRes[FrameIndex]);
 	}
 }
 
-void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScene> Scene, const uint32& FrameNum)
+void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene> Scene, const uint32& FrameNum)
 {
 	// TODO: param hard coding
 	 FFormat SceneMapFormat = GEngine->UsePostProcess() ? FFormat::FORMAT_R16G16B16A16_FLOAT : FFormat::FORMAT_R8G8B8A8_UNORM;
@@ -275,12 +275,12 @@ void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBuffer
 	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352); // TODO: hard coding
 }
 
-void FFrameResourceManager::CreateMapsForShadow(FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForShadow()
 {
 	// create and commit shadow map
-	FrameRes.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, FrameRes.ShadowMapSize, FrameRes.ShadowMapSize);
-	GDynamicRHI->CommitTextureAsView(FrameRes.ShadowMap.get(), FResViewType::DSV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.ShadowMap.get(), FResViewType::SRV_RVT);
+	SFrameRes.ShadowMap = GDynamicRHI->CreateTexture(FTextureType::SHADOW_MAP_TT, SFrameRes.ShadowMapSize, SFrameRes.ShadowMapSize);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.ShadowMap.get(), FResViewType::DSV_RVT);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.ShadowMap.get(), FResViewType::SRV_RVT);
 }
 
 void FFrameResourceManager::CreateSamplers()
@@ -290,47 +290,47 @@ void FFrameResourceManager::CreateSamplers()
 	SFrameRes.WarpSampler = GDynamicRHI->CreateAndCommitSampler(FSamplerType::WARP_ST);
 }
 
-void FFrameResourceManager::CreateMapsForScene(FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForScene()
 {
 	// create and commit Ds map
-	FrameRes.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GEngine->GetWidth(), GEngine->GetHeight());
-	GDynamicRHI->CommitTextureAsView(FrameRes.DepthStencilMap.get(), FResViewType::DSV_RVT);
+	SFrameRes.DepthStencilMap = GDynamicRHI->CreateTexture(FTextureType::DEPTH_STENCIL_MAP_TT, GEngine->GetWidth(), GEngine->GetHeight());
+	GDynamicRHI->CommitTextureAsView(SFrameRes.DepthStencilMap.get(), FResViewType::DSV_RVT);
 
 	// create and commit scene color
-	FrameRes.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GEngine->GetWidth(), GEngine->GetHeight());
-	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::SRV_RVT);
+	SFrameRes.SceneColorMap = GDynamicRHI->CreateTexture(FTextureType::SCENE_COLOR_TT, GEngine->GetWidth(), GEngine->GetHeight());
+	GDynamicRHI->CommitTextureAsView(SFrameRes.SceneColorMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.SceneColorMap.get(), FResViewType::SRV_RVT);
 }
 
-void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& MFrameRes)
+void FFrameResourceManager::CreateMapsForPostProcess()
 {
 	// bloom set up
-	MFrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
-	GDynamicRHI->CommitTextureAsView(MFrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(MFrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
+	SFrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
 
 	// bloom down
 	for (uint32 i = 0; i < 4; i++)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 3 + i));
-		MFrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
+		SFrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(SFrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(SFrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
 	}
 
 	// bloom up
 	for (uint32 i = 0; i < 3; i++)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 5 - i));
-		MFrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomUpMapArray[i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomUpMapArray[i].get(), FResViewType::SRV_RVT);
+		SFrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(SFrameRes.BloomUpMapArray[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(SFrameRes.BloomUpMapArray[i].get(), FResViewType::SRV_RVT);
 	}
 
 	// sun merge
-	MFrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
-	GDynamicRHI->CommitTextureAsView(MFrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(MFrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
+	SFrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(SFrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
 }
 
 void FFrameResourceManager::CreatePPTriangle()
