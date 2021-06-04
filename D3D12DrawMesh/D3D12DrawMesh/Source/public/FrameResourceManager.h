@@ -22,9 +22,6 @@ struct FSingleBufferFrameResource
 	shared_ptr<FRenderResource> RR_SunMerge;
 	shared_ptr<FRenderResource> RR_ToneMapping;
 
-	// static light
-	shared_ptr<FCB> StaticDirectionalLightCB;
-
 	// sampler
 	shared_ptr<FSampler> ClampSampler;
 	shared_ptr<FSampler> WarpSampler;
@@ -42,9 +39,11 @@ struct FSingleBufferFrameResource
 
 struct FMultiBufferFrameResource
 {
-	// constant buffer
+	// changeable constant buffer
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> CharacterPaletteCB;
+	shared_ptr<FCB> StaticDirectionalLightCB;
+
 };
 
 class FFrameResourceManager
@@ -52,19 +51,18 @@ class FFrameResourceManager
 private:
 	FSingleBufferFrameResource SFrameRes;
 	vector<FMultiBufferFrameResource> MFrameRes;
+
 public:
 	FSingleBufferFrameResource& GetSingleFrameRes() { return SFrameRes; }
 	vector<FMultiBufferFrameResource>& GetMultiFrameRes() { return MFrameRes; }
 	void InitFrameResource(FScene* Scene, const uint32& FrameCount);
 	void CreateFrameResOfSceneActors(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
-	//void UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex);
-	//void UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex);
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateDirectionalLightCB(FScene* Scene, FSingleBufferFrameResource& FrameRes);
+	void CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForShadow();
 	void CreateSamplers();

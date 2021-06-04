@@ -10,7 +10,6 @@
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	// single buffer frame resource
-	CreateDirectionalLightCB( Scene, SFrameRes );
 	CreateSamplers();
 	CreatePPTriangle();
 	CreatePPTriangleRR();
@@ -24,6 +23,7 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	{
 		CreateCameraCB(Scene, MFrameRes[FrameIndex]);
 		CreateCharacterPaletteCB(Scene, MFrameRes[FrameIndex]);
+		CreateDirectionalLightCB(Scene, MFrameRes[FrameIndex]);
 	}
 }
 
@@ -265,9 +265,30 @@ void FFrameResourceManager::CreateCameraCB(FScene* Scene, FMultiBufferFrameResou
 	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
 }
 
-void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FSingleBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.StaticDirectionalLightCB = GDynamicRHI->CreateConstantBuffer(256);
+
+	const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
+	const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
+	struct LightCB
+	{
+		FMatrix VOMatrix;
+		FMatrix ScreenMatrix;
+		struct LightState
+		{
+			FVector DirectionalLightColor;
+			float DirectionalLightIntensity;
+			FVector DirectionalLightDir;
+		} Light;
+	} CBInstance;
+	CBInstance.VOMatrix = glm::transpose(O * V);
+	CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
+	CBInstance.Light.DirectionalLightColor = Scene->GetDirectionalLight()->GetColor();
+	CBInstance.Light.DirectionalLightIntensity = Scene->GetDirectionalLight()->GetIntensity();
+	CBInstance.Light.DirectionalLightDir = glm::normalize(Scene->GetDirectionalLight()->GetDirection());
+
+	GDynamicRHI->WriteConstantBuffer(FrameRes.StaticDirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
@@ -609,7 +630,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		CBInstance.Light.DirectionalLightIntensity = Scene->GetDirectionalLight()->GetIntensity();
 		CBInstance.Light.DirectionalLightDir = glm::normalize(Scene->GetDirectionalLight()->GetDirection());
 
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticDirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].StaticDirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 		Scene->GetDirectionalLight()->SetDirty(false);
 	}
 
@@ -624,27 +645,3 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 
 }
-
-//void FFrameResourceManager::UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex)
-//{
-//	struct CameraConstantBuffer
-//	{
-//		FMatrix CamVP;
-//		FVector Eye;
-//	} CBInstance = { VP, Eye };
-//	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
-//}
-//
-//void FFrameResourceManager::UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex)
-//{
-//	struct PaletteCB
-//	{
-//		array<FMatrix, 68> GBoneTransforms;
-//	} CBInstance;
-//
-//	for (uint32 i = 0; i < 68; i++)
-//	{
-//		CBInstance.GBoneTransforms[i] = glm::transpose(Palette[i]);
-//	}
-//	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
-//}

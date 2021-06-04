@@ -104,7 +104,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
-			Handles.push_back(SFrameRes.StaticDirectionalLightCB->CBHandle);
+			Handles.push_back(MFrameRes.StaticDirectionalLightCB->CBHandle);
 			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
@@ -122,7 +122,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
-			Handles.push_back(SFrameRes.StaticDirectionalLightCB->CBHandle);
+			Handles.push_back(MFrameRes.StaticDirectionalLightCB->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
