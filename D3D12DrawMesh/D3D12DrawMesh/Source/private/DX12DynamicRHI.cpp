@@ -597,14 +597,14 @@ namespace RHI
 		FenceValues[FrameIndex] = CurrentFenceValue + 1;
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FStaticMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FStaticMeshComponent* MeshComponent )
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.size());
 
-		const vector<FStaticVertex>& VertexBuffer = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Vertice;
+		const vector<FStaticVertex>& VertexBuffer = MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Vertice;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( FStaticVertex ));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.size() * sizeof( uint32 ));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.size() * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -663,7 +663,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetStaticMesh()->GetMeshLODs()[0].Indice.data();
+		indexData.pData = MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -678,12 +678,12 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FSkeletalMeshComponent& MeshComponent )
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FSkeletalMeshComponent* MeshComponent )
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent->GetSkeletalMesh()->GetMeshLODs()[0].Indice.size());
 
-		vector<FSkeletalVertex>& VertexBuffer = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
+		vector<FSkeletalVertex>& VertexBuffer = MeshComponent->GetSkeletalMesh()->GetMeshLODs()[0].SkeletalVertexArray;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( FSkeletalVertex ));
 		uint32 IndexBufferSize = static_cast<uint32>(Mesh->IndexNum * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
@@ -744,7 +744,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent.GetSkeletalMesh()->GetMeshLODs()[0].Indice.data();
+		indexData.pData = MeshComponent->GetSkeletalMesh()->GetMeshLODs()[0].Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 
@@ -759,14 +759,14 @@ namespace RHI
 		return Mesh;
 	}
 
-	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry(FStaticMeshLOD& Lod)
+	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry(FStaticMeshLOD* Lod)
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
-		Mesh->IndexNum = static_cast<uint32>(Lod.Indice.size());
+		Mesh->IndexNum = static_cast<uint32>(Lod->Indice.size());
 
-		const vector<FStaticVertex>& VertexBuffer = Lod.Vertice;
+		const vector<FStaticVertex>& VertexBuffer = Lod->Vertice;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof(FStaticVertex));
-		uint32 IndexBufferSize = static_cast<uint32>(Lod.Indice.size() * sizeof(uint32));
+		uint32 IndexBufferSize = static_cast<uint32>(Lod->Indice.size() * sizeof(uint32));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -825,7 +825,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = Lod.Indice.data();
+		indexData.pData = Lod->Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 

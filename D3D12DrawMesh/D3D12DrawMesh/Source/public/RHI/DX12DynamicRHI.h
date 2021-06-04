@@ -30,9 +30,9 @@ namespace RHI
 		virtual void RHIInit() override;
 
 		// Resource Create
-		virtual shared_ptr<FGeometry> CreateGeometry( FStaticMeshComponent& MeshComponent ) override;
-		virtual shared_ptr<FGeometry> CreateGeometry( FSkeletalMeshComponent& MeshComponent ) override;
-		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshLOD& Lod) override;
+		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshComponent* MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry(FSkeletalMeshComponent* MeshComponent ) override;
+		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshLOD* Lod) override;
 
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) override;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) override;

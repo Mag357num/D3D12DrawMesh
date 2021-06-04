@@ -95,7 +95,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 	// direction light source
 	{
 		// mesh
-		SFrameRes.DirectionalLight = GDynamicRHI->CreateGeometry(*Scene->GetDirectionalLight()->GetStaticMeshComponent());
+		SFrameRes.DirectionalLight = GDynamicRHI->CreateGeometry(Scene->GetDirectionalLight()->GetStaticMeshComponent());
 		// need no shadow pass
 		// scenepass rr
 		auto RR_ScenePass = CreateRenderResource
@@ -121,7 +121,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetPointLights().size()); ++i)
 		{
 			// mesh
-			SFrameRes.PointLights.push_back(GDynamicRHI->CreateGeometry(*Scene->GetPointLights()[i]->GetStaticMeshComponent()));
+			SFrameRes.PointLights.push_back(GDynamicRHI->CreateGeometry(Scene->GetPointLights()[i]->GetStaticMeshComponent()));
 			// need no shadow pass
 			// scenepass rr
 			auto RR_ScenePass = CreateRenderResource
@@ -146,7 +146,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 	// character
 	{
 		// mesh
-		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(*Scene->GetCurrentCharacter()->GetSkeletalMeshCom());
+		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(Scene->GetCurrentCharacter()->GetSkeletalMeshCom());
 		// shadowpass rr
 		auto RR_ShadowPass = CreateRenderResource
 		(
@@ -189,7 +189,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
 		{
 			// mesh
-			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(*Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()));
+			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()));
 			// shadowpass rr
 			auto RR_ShadowPass = CreateRenderResource
 			(
@@ -361,7 +361,7 @@ void FFrameResourceManager::CreatePPTriangle()
 	Lod.Vertice.push_back(FStaticVertex(FVector(1.f, 3.f, 0.0f), FVector(1.f, 1.f, 1.f), FVector2(1.f, -1.f), FVector4(1.f, 1.f, 1.f, 1.f)));
 	Lod.Vertice.push_back(FStaticVertex(FVector(-3.f, -1.f, 0.0f), FVector(1.f, 1.f, 1.f), FVector2(-1.f, 1.f), FVector4(1.f, 1.f, 1.f, 1.f)));
 	Lod.Indice = { 0, 1, 2 };
-	SFrameRes.PPTriangle = GDynamicRHI->CreateGeometry(Lod);
+	SFrameRes.PPTriangle = GDynamicRHI->CreateGeometry(&Lod);
 }
 
 void FFrameResourceManager::CreatePPTriangleRR()
