@@ -10,7 +10,7 @@
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	// single buffer frame resource
-	CreateLightConstantBuffer( Scene, SFrameRes );
+	CreateDirectionalLightCB( Scene, SFrameRes );
 	CreateSamplers();
 	CreatePPTriangle();
 	CreatePPTriangleRR();
@@ -19,8 +19,8 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	MFrameRes.resize( FrameCount );
 	for (uint32 FrameIndex = 0; FrameIndex < FrameCount; ++FrameIndex)
 	{
-		CreateCameraConstantBuffer(Scene, MFrameRes[FrameIndex]);
-		CreateCharacterPaletteConstantBuffer(Scene, MFrameRes[FrameIndex]);
+		CreateCameraCB(Scene, MFrameRes[FrameIndex]);
+		CreateCharacterPaletteCB(Scene, MFrameRes[FrameIndex]);
 		CreateMapsForShadow(MFrameRes[FrameIndex]);
 		CreateMapsForScene(MFrameRes[FrameIndex]);
 		CreateMapsForPostProcess(MFrameRes[FrameIndex]);
@@ -245,7 +245,7 @@ shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( co
 	return RR;
 }
 
-void FFrameResourceManager::CreateCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	// create
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
@@ -265,12 +265,12 @@ void FFrameResourceManager::CreateCameraConstantBuffer(FScene* Scene, FMultiBuff
 	GDynamicRHI->WriteConstantBuffer(FrameRes.CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
 }
 
-void FFrameResourceManager::CreateLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FSingleBufferFrameResource& FrameRes)
 {
-	FrameRes.StaticSkyLightCB = GDynamicRHI->CreateConstantBuffer(256);
+	FrameRes.StaticDirectionalLightCB = GDynamicRHI->CreateConstantBuffer(256);
 }
 
-void FFrameResourceManager::CreateCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352); // TODO: hard coding
 }
@@ -302,32 +302,35 @@ void FFrameResourceManager::CreateMapsForScene(FMultiBufferFrameResource& FrameR
 	GDynamicRHI->CommitTextureAsView(FrameRes.SceneColorMap.get(), FResViewType::SRV_RVT);
 }
 
-void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateMapsForPostProcess(FMultiBufferFrameResource& MFrameRes)
 {
-	// create and commit bloom down and up texture
-	FrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
-	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
+	// bloom set up
+	MFrameRes.BloomSetupMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(MFrameRes.BloomSetupMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(MFrameRes.BloomSetupMap.get(), FResViewType::SRV_RVT);
 
+	// bloom down
 	for (uint32 i = 0; i < 4; i++)
 	{
 		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 3 + i));
-		FrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
+		MFrameRes.BloomDownMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomDownMapArray[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomDownMapArray[i].get(), FResViewType::SRV_RVT);
 	}
 
-	for (int i = 4; i > 1; i--)
+	// bloom up
+	for (uint32 i = 0; i < 3; i++)
 	{
-		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 1 + i));
-		FrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
-		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::RTV_RVT);
-		GDynamicRHI->CommitTextureAsView(FrameRes.BloomUpMapArray[4 - i].get(), FResViewType::SRV_RVT);
+		uint32 ShrinkTimes = static_cast<uint32>(pow(2, 5 - i));
+		MFrameRes.BloomUpMapArray.push_back(GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / ShrinkTimes, GEngine->GetHeight() / ShrinkTimes));
+		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomUpMapArray[i].get(), FResViewType::RTV_RVT);
+		GDynamicRHI->CommitTextureAsView(MFrameRes.BloomUpMapArray[i].get(), FResViewType::SRV_RVT);
 	}
 
-	FrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
-	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
-	GDynamicRHI->CommitTextureAsView(FrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
+	// sun merge
+	MFrameRes.SunMergeMap = GDynamicRHI->CreateTexture(FTextureType::RENDER_TARGET_TEXTURE_TT, GEngine->GetWidth() / 4, GEngine->GetHeight() / 4);
+	GDynamicRHI->CommitTextureAsView(MFrameRes.SunMergeMap.get(), FResViewType::RTV_RVT);
+	GDynamicRHI->CommitTextureAsView(MFrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
 }
 
 void FFrameResourceManager::CreatePPTriangle()
@@ -363,6 +366,32 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SIL_BloomSetup.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_BloomSetup.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	SIL_BloomSetup.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+
+	FShaderInputLayer SIL_BloomDown;
+	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+
+	FShaderInputLayer SIL_BloomUp;
+	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+
+	FShaderInputLayer SIL_SunMerge;
+	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+
+	FShaderInputLayer SIL_ToneMapping;
+	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+
+	// bloom set up rr
 	SFrameRes.RR_BloomSetup = CreateRenderResource
 	(
 		L"Resource\\BloomSetup.hlsl",
@@ -385,11 +414,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomSetup->CBs[i].get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(FBloomSetupCB));
 	}
 
-	// bloom down
-	FShaderInputLayer SIL_BloomDown;
-	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_BloomDown.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	// bloom down rr
 	for (uint32 i = 0; i < 4; i++)
 	{
 		SFrameRes.RR_BloomDown[i] = CreateRenderResource
@@ -407,7 +432,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 			FVector4 BufferSizeAndInvSize;
 			float BloomDownScale;
 		} BloomDwonStruct;
-		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (4.f * static_cast<float>(pow(2, i + 1))));
+		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (static_cast<float>(pow(2, i + 3))));
 		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
 		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
 		{
@@ -415,14 +440,41 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		}
 	}
 
-	// bloom up
-	FShaderInputLayer SIL_BloomUp;
-	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_BloomUp.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	for (int i = 2; i >= 0; i--)
+	//// bloom up rr
+	//for (int i = 2; i >= 0; i--)
+	//{
+	//	SFrameRes.RR_BloomUp[i] = CreateRenderResource
+	//	(
+	//		L"Resource\\BloomUp.hlsl",
+	//		256,
+	//		VIL_PostProcess,
+	//		SIL_BloomUp,
+	//		FFormat::FORMAT_R11G11B10_FLOAT,
+	//		1,
+	//		GDynamicRHI->GetFrameCount()
+	//	);
+	//	struct FBloomUpCB
+	//	{
+	//		FVector4 BufferASizeAndInvSize;
+	//		FVector4 BufferBSizeAndInvSize;
+	//		FVector4 BloomTintA;
+	//		FVector4 BloomTintB;
+	//		FVector2 BloomUpScales;
+	//	} BloomUpStruct;
+	//	BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 3))); // 32 16 8
+	//	BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 4)));
+	//	BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
+	//	BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
+	//	BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
+	//	BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
+	//	for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
+	//	{
+	//		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomUp[i]->CBs[j].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
+	//	}
+	//}
+
+	// bloom up rr
+	for (int i = 0; i < 3; i++)
 	{
 		SFrameRes.RR_BloomUp[i] = CreateRenderResource
 		(
@@ -442,10 +494,10 @@ void FFrameResourceManager::CreatePPTriangleRR()
 			FVector4 BloomTintB;
 			FVector2 BloomUpScales;
 		} BloomUpStruct;
-		BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 3))); // 32 16 8
-		BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 4)));
-		BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
-		BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
+		BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, 5 - i))); // 32 16 8
+		BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, 6 - i)));
+		BloomUpStruct.BloomTintA = BloomTintAs[i] * (1.0f / 8.0f);
+		BloomUpStruct.BloomTintB = BloomTintBs[i] * (1.0f / 8.0f);
 		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
 		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
 		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
@@ -455,12 +507,6 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	}
 
 	// sun merge
-	FShaderInputLayer SIL_SunMerge;
-	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_SunMerge.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	SFrameRes.RR_SunMerge = CreateRenderResource
 	(
 		L"Resource\\SunMerge.hlsl",
@@ -484,10 +530,6 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	}
 
 	// tone mapping
-	FShaderInputLayer SIL_ToneMapping;
-	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
-	SIL_ToneMapping.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 	SFrameRes.RR_ToneMapping = CreateRenderResource
 	(
 		L"Resource\\ToneMapping.hlsl",
@@ -600,7 +642,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		CBInstance.Light.DirectionalLightIntensity = Scene->GetDirectionalLight()->GetIntensity();
 		CBInstance.Light.DirectionalLightDir = glm::normalize(Scene->GetDirectionalLight()->GetDirection());
 
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticDirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 		Scene->GetDirectionalLight()->SetDirty(false);
 	}
 

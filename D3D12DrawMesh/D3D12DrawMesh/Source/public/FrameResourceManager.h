@@ -23,7 +23,7 @@ struct FSingleBufferFrameResource
 	shared_ptr<FRenderResource> RR_ToneMapping;
 
 	// static light
-	shared_ptr<FCB> StaticSkyLightCB;
+	shared_ptr<FCB> StaticDirectionalLightCB;
 
 	// sampler
 	shared_ptr<FSampler> ClampSampler;
@@ -65,9 +65,9 @@ public:
 
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
-	void CreateCameraConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateLightConstantBuffer(FScene* Scene, FSingleBufferFrameResource& FrameRes);
-	void CreateCharacterPaletteConstantBuffer(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLightCB(FScene* Scene, FSingleBufferFrameResource& FrameRes);
+	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForShadow(FMultiBufferFrameResource& FrameRes);
 	void CreateSamplers();
 	void CreateMapsForScene(FMultiBufferFrameResource& FrameRes);
