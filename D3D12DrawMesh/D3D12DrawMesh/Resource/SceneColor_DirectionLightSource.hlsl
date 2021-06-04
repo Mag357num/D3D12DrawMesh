@@ -21,7 +21,7 @@ PSInput VSMain(VSInput input)
 {
 	PSInput result;
 	result.position = mul(float4(input.position, 1.0f), WVP);
-	result.color = float4(1.f, 1.f, 1.f, 1.f);
+	result.color = float4(200.f, 200.f, 200.f, 1.f);
 	return result;
 }
 
