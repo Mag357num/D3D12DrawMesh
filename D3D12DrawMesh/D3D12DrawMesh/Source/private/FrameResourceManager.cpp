@@ -566,7 +566,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		} CBInstance = { CamVP, Eye };
 
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
-		CurrentCamera->SetDirty(false);
 
 		// direction light source cb should change when camera change
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
@@ -578,6 +577,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLights[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
+
+		CurrentCamera->DecreaseDirty();
 	}
 
 	// character position
@@ -589,7 +590,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(W));
-		CurrentCharacter->SetPosDirty(false);
+		
+		CurrentCharacter->DecreaPosDirty();
 	}
 
 	// static mesh
@@ -604,6 +606,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
+			
 			Actor->SetDirty(false);
 		}
 	}
@@ -629,8 +632,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		CBInstance.Light.DirectionalLightColor = Scene->GetDirectionalLight()->GetColor();
 		CBInstance.Light.DirectionalLightIntensity = Scene->GetDirectionalLight()->GetIntensity();
 		CBInstance.Light.DirectionalLightDir = glm::normalize(Scene->GetDirectionalLight()->GetDirection());
-
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].StaticDirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		
 		Scene->GetDirectionalLight()->SetDirty(false);
 	}
 

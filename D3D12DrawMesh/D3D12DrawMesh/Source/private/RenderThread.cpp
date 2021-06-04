@@ -11,9 +11,6 @@ FRenderThread::FRenderThread()
 
 void FRenderThread::Run()
 {
-	RHI::GDynamicRHI->CreateRHI();
-	RHI::GDynamicRHI->RHIInit();
-
 	while (IsRunning)
 	{
 		FThreadTask* Task = nullptr;

@@ -143,7 +143,7 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 		Euler.Yaw += MouseRotateInterval.x;
 		Euler.Roll += MouseRotateInterval.y;
 		SetQuat(EulerToQuat(Euler));
-		CamDirty = true;
+		CamDirtyCount = 3;
 	}
 
 	// update position
@@ -155,7 +155,7 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
 		SetTranslate(TheoryPos);
-		CamDirty = true;
+		CamDirtyCount = 3;
 	}
 }
 

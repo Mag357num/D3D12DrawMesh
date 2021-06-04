@@ -31,6 +31,10 @@ void FEngine::Init(void* WindowHandle)
 {
 	HWindow = WindowHandle;
 
+	// RHI
+	RHI::GDynamicRHI->CreateRHI();
+	RHI::GDynamicRHI->RHIInit();
+
 	// asset manager
 	FAssetManager::CreateAssetManager();
 	FDeviceEventProcessor::CreateEventProcessor();
