@@ -48,7 +48,7 @@ namespace RHI
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) = 0;
 		virtual void ClearDepthStencil(FTexture* Tex) = 0;
 		virtual void ClearRenderTarget(FHandle* Handle) = 0;
-		virtual void DrawMesh(FGeometry* Mesh) = 0;
+		virtual void DrawGeometry(FGeometry* Mesh) = 0;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;

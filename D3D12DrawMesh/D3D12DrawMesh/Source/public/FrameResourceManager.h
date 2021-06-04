@@ -45,7 +45,7 @@ struct FMultiBufferFrameResource
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> CharacterPaletteCB;
 	shared_ptr<FCB> DirectionalLightCB;
-	vector<shared_ptr<FCB>> PointLightsCB;
+	shared_ptr<FCB> PointLightsCB;
 };
 
 class FFrameResourceManager

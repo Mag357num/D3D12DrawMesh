@@ -49,7 +49,7 @@ namespace RHI
 		virtual void CommitTextureAsView(FTexture* Tex, FResViewType Type) override;
 		virtual void ClearRenderTarget(FHandle* Handle) override;
 		virtual void ClearDepthStencil(FTexture* Tex) override;
-		virtual void DrawMesh(FGeometry* Mesh) override;
+		virtual void DrawGeometry(FGeometry* Mesh) override;
 
 		// Transform, Shader
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) override;

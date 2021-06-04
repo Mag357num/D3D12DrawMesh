@@ -259,10 +259,7 @@ void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FMultiBuffer
 
 void FFrameResourceManager::CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
-	{
-		FrameRes.PointLightsCB.push_back(GDynamicRHI->CreateConstantBuffer(256));
-	}
+	FrameRes.PointLightsCB = GDynamicRHI->CreateConstantBuffer(5280); // TODO: hard coding
 }
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
@@ -617,29 +614,37 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 	{
 		auto& Actor = Scene->GetPointLights()[i];
+
+		struct LightCB
+		{
+			array<FMatrix, 6> VPMatrix;
+			FMatrix ScreenMatrix;
+			struct DirectionalLightState
+			{
+				FVector4 Position;
+				FVector4 Ambient;
+				FVector4 Diffuse;
+				FVector4 Specular;
+				FVector4 Attenuation;
+			} Light;
+		};
+		array<LightCB, 10> PointsCB;
+
 		if (Actor->IsDirty())
 		{
-			struct LightCB
-			{
-				struct DirectionalLightState
-				{
-					FVector4 Position;
-					FVector4 Ambient;
-					FVector4 Diffuse;
-					FVector4 Specular;
-					FVector4 Attenuation;
-				} Light;
-			} CBInstance;
+			struct LightCB CBInstance;
 			CBInstance.Light.Position = PaddingToVec4(Actor->GetTransform().Translation);
 			CBInstance.Light.Ambient = PaddingToVec4(Actor->GetAmbient());
 			CBInstance.Light.Diffuse = PaddingToVec4(Actor->GetDiffuse());
 			CBInstance.Light.Specular = PaddingToVec4(Actor->GetSpecular());
 			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetAttenuation());
-
-			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLightsCB[i].get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+			PointsCB[i] = CBInstance;
 
 			Actor->DecreaseDirty();
 		}
+		// TODO: not to re-write whole cb
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLightsCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+
 	}
 
 }

@@ -348,7 +348,7 @@ namespace RHI
 		CommandLists[0].CommandList->ClearDepthStencilView(Tex->As<FDX12Texture>()->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
-	void FDX12DynamicRHI::DrawMesh(FGeometry* Mesh)
+	void FDX12DynamicRHI::DrawGeometry(FGeometry* Mesh)
 	{
 		CommandLists[0].CommandList->IASetIndexBuffer(&Mesh->As<FDx12Geometry>()->IndexBufferView);
 		CommandLists[0].CommandList->IASetVertexBuffers(0, 1, &Mesh->As<FDx12Geometry>()->VertexBufferView);

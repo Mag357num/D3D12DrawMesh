@@ -41,7 +41,7 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
 			RHI->SetShaderInput(Handles);
 
-			RHI->DrawMesh(SFrameRes.CharacterMesh.get());
+			RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
 		}
 
 		// draw static mesh
@@ -56,7 +56,7 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
-			RHI->DrawMesh(i.get());
+			RHI->DrawGeometry(i.get());
 		}
 
 		RHI->SetTextureState(SFrameRes.ShadowMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -85,7 +85,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()]->CBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
-			RHI->DrawMesh(SFrameRes.DirectionalLight.get());
+			RHI->DrawGeometry(SFrameRes.DirectionalLight.get());
 		}
 
 		// draw light source mesh
@@ -95,7 +95,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
-			RHI->DrawMesh(i.get());
+			RHI->DrawGeometry(i.get());
 		}
 
 		// draw character
@@ -109,7 +109,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
-			RHI->DrawMesh(SFrameRes.CharacterMesh.get());
+			RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
 		}
 
 		// draw static mesh
@@ -128,7 +128,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
-			RHI->DrawMesh(i.get());
+			RHI->DrawGeometry(i.get());
 		}
 		RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
@@ -162,7 +162,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
 
-				RHI->DrawMesh(Tri.get());
+				RHI->DrawGeometry(Tri.get());
 				RHI->SetTextureState(SFrameRes.BloomSetupMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 
@@ -192,7 +192,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
-					RHI->DrawMesh(Tri.get());
+					RHI->DrawGeometry(Tri.get());
 					RHI->SetTextureState(SFrameRes.BloomDownMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 			}
@@ -228,7 +228,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 					RHI->SetShaderInput(Handles);
 
-					RHI->DrawMesh(Tri.get());
+					RHI->DrawGeometry(Tri.get());
 					RHI->SetTextureState(SFrameRes.BloomUpMapArray[i].get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				}
 			}
@@ -253,7 +253,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
 
-				RHI->DrawMesh(Tri.get());
+				RHI->DrawGeometry(Tri.get());
 				RHI->SetTextureState(SFrameRes.SunMergeMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 		}
@@ -275,7 +275,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
 
-			RHI->DrawMesh(Tri.get());
+			RHI->DrawGeometry(Tri.get());
 		}
 	}
 }
