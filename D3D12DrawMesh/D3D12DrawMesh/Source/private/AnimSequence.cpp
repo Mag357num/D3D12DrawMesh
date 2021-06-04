@@ -34,7 +34,7 @@ vector<FMatrix> FAnimSequence::Interpolate(float t, FSkeleton* Ske, vector<FReta
 
 		if (Tracks[i].QuatSamples.size() == 0)
 		{
-			Q1 = FQuat(0.f, 0.f, 0.f, 1.f);
+			Q1 = FQuat(1.f, 0.f, 0.f, 0.f); // w x y z
 			Q2 = Q1;
 		}
 		else if (Tracks[i].QuatSamples.size() == 1)

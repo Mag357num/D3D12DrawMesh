@@ -292,7 +292,7 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 		Fin.read((char*)Seq->GetTracks()[i].QuatSamples.data(), QuatsNum * 4 * sizeof(float));
 		if (QuatsNum == 0)
 		{
-			Seq->GetTracks()[i].QuatSamples.push_back(FQuat(0.f, 0.f, 0.f, 1.f));
+			Seq->GetTracks()[i].QuatSamples.push_back(FQuat(1.f, 0.f, 0.f, 0.f)); // w x y z
 		}
 
 		Fin.read((char*)&TranslationsNum, sizeof(int));

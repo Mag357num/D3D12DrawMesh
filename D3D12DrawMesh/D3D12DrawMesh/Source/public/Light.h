@@ -71,7 +71,7 @@ private:
 
 public:
 	ADirectionalLight() = delete;
-	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color);
+	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color = FVector(1, 1, 1));
 	~ADirectionalLight() = default;
 
 	void SetDirection(const FVector& Dir);
@@ -115,8 +115,8 @@ private:
 	float FarPlane = 5000.f;
 
 public:
-	APointLight() = default;
-	APointLight(const FVector& Pos, const FVector& Color);
+	APointLight() = delete;
+	APointLight(const FVector& Pos, const FVector& Color = FVector(1, 1, 1));
 	~APointLight() = default;
 
 	const array<FMatrix, 6>& GetViewMatrixs_GameThread();

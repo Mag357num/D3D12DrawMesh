@@ -32,6 +32,6 @@ public:
 	ACharacter* GetCurrentCharacter() { return CurrentCharacter.get(); }
 	ACamera* GetCurrentCamera() { return CurrentCamera.get(); }
 	ADirectionalLight* GetDirectionalLight() { return DirectionalLight.get(); }
-	vector<shared_ptr<APointLight>> GetPointLights() { return PointLights; }
+	vector<shared_ptr<APointLight>>& GetPointLights() { return PointLights; }
 	vector<shared_ptr<AStaticMeshActor>>& GetStaticMeshActors() { return StaticMeshActors; }
 };

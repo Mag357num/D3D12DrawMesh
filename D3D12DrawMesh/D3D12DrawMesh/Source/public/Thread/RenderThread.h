@@ -24,8 +24,8 @@ public:
 	void CreateFrameResource(shared_ptr<class FScene> Scene);
 
 	void UpdateFrameRes(FScene* Scene);
-	void UpdateFrameResCamera(FMatrix VP, FVector Eye);
-	void UpdateFrameResPalette(vector<FMatrix> Palette);
+	//void UpdateFrameResCamera(FMatrix VP, FVector Eye);
+	//void UpdateFrameResPalette(vector<FMatrix> Palette);
 
 	void WaitForRenderer();
 

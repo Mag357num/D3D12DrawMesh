@@ -88,6 +88,16 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			RHI->DrawMesh(SFrameRes.DirectionalLight.get());
 		}
 
+		// draw light source mesh
+		for (auto i : SFrameRes.PointLights)
+		{
+			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[i.get()].get());
+			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
+			RHI->SetShaderInput(Handles);
+			RHI->DrawMesh(i.get());
+		}
+
 		// draw character
 		{
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()].get());

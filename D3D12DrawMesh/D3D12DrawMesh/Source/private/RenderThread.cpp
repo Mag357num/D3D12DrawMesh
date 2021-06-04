@@ -86,21 +86,21 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 		});
 }
 
-void FRenderThread::UpdateFrameResCamera(FMatrix VP, FVector Eye)
-{
-	RENDER_THREAD([this, VP, Eye]()
-		{
-			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetFramIndex());
-		});
-}
-
-void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
-{
-	RENDER_THREAD([this, Palette]()
-		{
-			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetFramIndex());
-		});
-}
+//void FRenderThread::UpdateFrameResCamera(FMatrix VP, FVector Eye)
+//{
+//	RENDER_THREAD([this, VP, Eye]()
+//		{
+//			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetFramIndex());
+//		});
+//}
+//
+//void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
+//{
+//	RENDER_THREAD([this, Palette]()
+//		{
+//			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetFramIndex());
+//		});
+//}
 
 void FRenderThread::WaitForRenderer()
 {

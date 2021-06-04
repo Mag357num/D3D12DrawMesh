@@ -1,16 +1,16 @@
 #include "MathExtend.h"
 
-FVector QuatToLook(const FQuat& Quat)
-{
-	FMatrix MQ = glm::toMat4(Quat);
-	FVector4 Look4 = FVector4(0, 1, 0, 1) * MQ; // regard (0, 1, 0) as the init look dir because model face (0, 1, 0) when there are no rotate
-	return FVector(Look4.x, Look4.y, Look4.z);
-}
+//FVector QuatToLook(const FQuat& Quat)
+//{
+//	FMatrix MQ = glm::toMat4(Quat);
+//	FVector4 Look4 = FVector4(0, 1, 0, 1) * MQ; // regard (0, 1, 0) as the init look dir because model face (0, 1, 0) when there are no rotate
+//	return FVector(Look4.x, Look4.y, Look4.z);
+//}
 
-FQuat LookToQuat(const FVector& Look)
-{
-	return FQuat(0.f, 0.f, 0.f, 1.f);
-}
+//FQuat LookToQuat(const FVector& Look)
+//{
+//	return FQuat(0.f, 0.f, 0.f, 1.f);
+//}
 
 FEuler QuatToEuler(const FQuat& Quat)
 {

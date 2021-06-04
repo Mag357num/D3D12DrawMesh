@@ -115,6 +115,33 @@ void FFrameResourceManager::CreateFrameResourcesFromScene(const shared_ptr<FScen
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLight.get(), RR_ScenePass });
 	}
 
+	// point light source
+	{
+		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetPointLights().size()); ++i)
+		{
+			// mesh
+			SFrameRes.PointLights.push_back(GDynamicRHI->CreateGeometry(*Scene->GetPointLights()[i]->GetStaticMeshComponent()));
+			// need no shadow pass
+			// scenepass rr
+			auto RR_ScenePass = CreateRenderResource
+			(
+				Shader_ScenePass_LightSource,
+				CbSize_ScenePass_LightSource,
+				VIL_StaticMesh,
+				SIL_ScenePass_LightSource,
+				SceneMapFormat,
+				1,
+				GDynamicRHI->GetFrameCount()
+			);
+			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
+			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
+			{
+				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			}
+			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.PointLights[i].get(), RR_ScenePass });
+		}
+	}
+
 	// character
 	{
 		// mesh
@@ -514,6 +541,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		// direction light source cb should change when camera change
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+
+		// point light source cb should change when camera change
+		for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
+		{
+			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLights[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		}
 	}
 
 	// character position
@@ -544,6 +578,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		}
 	}
 
+	// directional light
 	if (Scene->GetDirectionalLight()->IsDirty())
 	{
 		const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
@@ -568,28 +603,39 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.StaticSkyLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 		Scene->GetDirectionalLight()->SetDirty(false);
 	}
-}
 
-void FFrameResourceManager::UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex)
-{
-	struct CameraConstantBuffer
+	// point light
+	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 	{
-		FMatrix CamVP;
-		FVector Eye;
-	} CBInstance = { VP, Eye };
-	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
-}
-
-void FFrameResourceManager::UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex)
-{
-	struct PaletteCB
-	{
-		array<FMatrix, 68> GBoneTransforms;
-	} CBInstance;
-
-	for (uint32 i = 0; i < 68; i++)
-	{
-		CBInstance.GBoneTransforms[i] = glm::transpose(Palette[i]);
+		auto& Actor = Scene->GetPointLights()[i];
+		if (Actor->IsDirty())
+		{
+			// point light is static now
+		}
 	}
-	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+
 }
+
+//void FFrameResourceManager::UpdateFrameResCamera(FMatrix VP, FVector Eye, const uint32& FrameIndex)
+//{
+//	struct CameraConstantBuffer
+//	{
+//		FMatrix CamVP;
+//		FVector Eye;
+//	} CBInstance = { VP, Eye };
+//	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+//}
+//
+//void FFrameResourceManager::UpdateFrameResPalette(vector<FMatrix> Palette, const uint32& FrameIndex)
+//{
+//	struct PaletteCB
+//	{
+//		array<FMatrix, 68> GBoneTransforms;
+//	} CBInstance;
+//
+//	for (uint32 i = 0; i < 68; i++)
+//	{
+//		CBInstance.GBoneTransforms[i] = glm::transpose(Palette[i]);
+//	}
+//	GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+//}

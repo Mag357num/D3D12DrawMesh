@@ -34,6 +34,20 @@ struct FTransform
 	FVector Scale;
 	FQuat Quat;
 	FVector Translation;
+
+	FTransform()
+	{
+		Scale = FVector(1, 1, 1);
+		Quat = FQuat(1, 0, 0, 0); // w, x, y, z
+		Translation = FVector(0, 0, 0);
+	}
+	FTransform(const FVector& S, const FQuat& Q, const FVector& T)
+	{
+		Scale = S;
+		Quat = Q;
+		Translation = T;
+	}
+	~FTransform() = default;
 };
 
 struct FEuler
@@ -46,8 +60,8 @@ struct FEuler
 	float Yaw;
 };
 
-FVector QuatToLook(const FQuat& Quat);
-FQuat LookToQuat(const FVector& Look);
+//FVector QuatToLook(const FQuat& Quat);
+//FQuat LookToQuat(const FVector& Look);
 FEuler QuatToEuler(const FQuat& Quat);
 FQuat EulerToQuat(const FEuler& Euler);
 
