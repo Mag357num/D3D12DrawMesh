@@ -3,7 +3,6 @@ SamplerState sampleClamp : register(s0);
 
 struct DirectionalLightState
 {
-	float3 Color;
 	float3 Dir;
 	float3 Ambient;
 	float3 Diffuse;
@@ -93,12 +92,12 @@ float4 PSMain(PSInput input) : SV_TARGET
 
 	float shine = 10.f;
 	float4 specularColor;
-	specularColor = float4(DirectionalLight.Specular, 1.5f) * float4(DirectionalLight.Color, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
+	specularColor = float4(DirectionalLight.Specular, 1.5f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 	specularColor *= dot(input.normal, dir);
 
-	float4 difuseColor = float4(DirectionalLight.Diffuse, 0.3f) * float4(DirectionalLight.Color, 1.f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f);
+	float4 difuseColor = float4(DirectionalLight.Diffuse, 0.3f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f);
 
-	float4 ambientColor = float4(DirectionalLight.Ambient, 0.02f) * float4(DirectionalLight.Color, 1.f);
+	float4 ambientColor = float4(DirectionalLight.Ambient, 0.02f);
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);

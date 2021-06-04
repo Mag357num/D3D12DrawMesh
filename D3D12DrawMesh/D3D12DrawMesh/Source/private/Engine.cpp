@@ -56,12 +56,12 @@ void FEngine::Init(void* WindowHandle)
 	// light
 	{
 		// directional light
-		shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>( FVector( 1000.f, 0.f, 1000.f ), FVector( -1.f, 0.f, -1.f ), FVector( 1.f, 1.f, 1.f ) );
+		shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>( FVector( 1000.f, 0.f, 1000.f ), FVector( -1.f, 0.f, -1.f ));
 		DirectionalLight->SetOrthoParam( -1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f ); // TODO: hard coding
 		CurrentScene->SetDirectionalLight( DirectionalLight );
 
 		// point light
-		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160), FVector(1, 1, 1));
+		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
 		CurrentScene->AddPointLight( PointLight1 );
 	}
 

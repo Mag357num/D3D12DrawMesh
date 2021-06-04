@@ -30,5 +30,5 @@ void AStaticMeshActor::Tick(const float& ElapsedSeconds)
 	auto a = ElapsedSeconds * AngularVelocity;
 	GetStaticMeshComponent()->SetQuat(glm::rotate(Quat, glm::radians(ElapsedSeconds * AngularVelocity), FVector(0, 0, 1)));
 
-	Dirty = true;
+	DirtyCount = true;
 }

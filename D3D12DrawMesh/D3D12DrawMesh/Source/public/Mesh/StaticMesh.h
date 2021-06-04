@@ -44,17 +44,12 @@ class AStaticMeshActor : public AActor
 private:
 	float AngularVelocity = 50.f;
 
-	bool Dirty = true;
-
 public:
 	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
 	FStaticMeshComponent* GetStaticMeshComponent();
 
 	const float& GetAnglarVel() const { return AngularVelocity; }
 	void SetAnglarVel(const float& Ang) { AngularVelocity = Ang; }
-
-	const bool& IsDirty() const { return Dirty; }
-	void SetDirty(const bool& Dirty) { this->Dirty = Dirty; }
 
 	void Tick(const float& ElapsedSeconds);
 };

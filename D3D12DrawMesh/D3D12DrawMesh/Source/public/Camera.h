@@ -47,9 +47,6 @@ private:
 	FMatrix PMatrix_GameThread;
 	FMatrix PMatrix_RenderThread;
 
-	// how many frame of camera cb that need to re-write
-	uint32 CamDirtyCount = RHI::GDynamicRHI->GetFrameCount();
-
 public:
 	ACamera();
 	~ACamera() = default;
@@ -72,9 +69,6 @@ public:
 
 	void SetLookAt(const FVector& Look);
 	const FVector GetLookAt();
-
-	const bool IsDirty() const { return CamDirtyCount != 0; }
-	void DecreaseDirty() { CamDirtyCount--; }
 
 	void Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);

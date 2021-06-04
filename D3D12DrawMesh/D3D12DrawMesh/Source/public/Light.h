@@ -12,7 +12,6 @@ class ALight : public AActor
 {
 protected:
 	// base param
-	FVector Color = { 1.f, 1.f, 1.f };
 	FVector Ambient = { 0.02f, 0.02f, 0.02f };
 	FVector Diffuse = { 0.3f , 0.3f , 0.3f };
 	FVector Specular = { 1.5f, 1.5f, 1.5f };
@@ -26,18 +25,13 @@ protected:
 	// view matrix depend on the position of light, so define in ALight
 	bool VDirty = true;
 
-	// camera change flag
-	uint32 LightDirtyCount = 3;
-
 public:
 	ALight();
 	~ALight() = default;
 
-	void SetColor(const FVector& C) { Color = C; }
 	void SetAmbient(const FVector& A) { Ambient = A; }
 	void SetDiffuse(const FVector& D) { Diffuse = D; }
 	void SetSpecular(const FVector& S) { Specular = S; }
-	const FVector& GetColor() const { return Color; };
 	const FVector& GetAmbient() { return Ambient; }
 	const FVector& GetDiffuse() { return Diffuse; }
 	const FVector& GetSpecular() { return Specular; }
@@ -48,9 +42,6 @@ public:
 
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
-
-	const bool IsDirty() const { return LightDirtyCount != 0; }
-	void DecreaseDirty() { LightDirtyCount--; }
 
 	void SetStaticMeshComponent(shared_ptr<class FStaticMeshComponent> Com);
 	class FStaticMeshComponent* GetStaticMeshComponent();
@@ -77,7 +68,7 @@ private:
 
 public:
 	ADirectionalLight() = delete;
-	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color = FVector(1, 1, 1));
+	ADirectionalLight(const FVector& Pos, const FVector& Direction);
 	~ADirectionalLight() = default;
 
 	void SetDirection(const FVector& Dir);
@@ -99,9 +90,7 @@ public:
 class APointLight : public ALight
 {
 private:
-	float Constant;
-	float Linear;
-	float Quadratic;
+	FVector Attenuation = FVector(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
 
 	// Secondary data, need to refresh depent on dirty
 	array<FMatrix, 6> VMatrixs_GameThread; // 6 vmatrix and 1 pmatrix for cube map
@@ -119,8 +108,11 @@ private:
 
 public:
 	APointLight() = delete;
-	APointLight(const FVector& Pos, const FVector& Color = FVector(1, 1, 1));
+	APointLight(const FVector& Pos);
 	~APointLight() = default;
+
+	void SetAttenuation(const FVector& A) { Attenuation = A; }
+	const FVector& GetAttenuation() { return Attenuation; }
 
 	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
 	const array<FMatrix, 6>& GetViewMatrixs_RenderThread();

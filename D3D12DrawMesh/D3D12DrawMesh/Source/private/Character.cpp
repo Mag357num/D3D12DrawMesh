@@ -15,7 +15,7 @@ void ACharacter::TickPosition(const float& ElapsedSeconds)
 
 	if (Keys.IsEmpty() || FDeviceEventProcessor::Get()->IsMouseDown())
 	{
-		PosDirtyCount = 3;
+		MarkDirty();
 	}
 
 	// Interval between tick 

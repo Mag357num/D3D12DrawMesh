@@ -2,10 +2,8 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
 
-ADirectionalLight::ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color)
+ADirectionalLight::ADirectionalLight(const FVector& Pos, const FVector& Direction)
 {
-	this->Color = Color;
-
 	VMatrix_GameThread = glm::lookAtLH(Pos, Pos + Direction * 10.0f, FVector(0.f, 0.f, 1.f));
 	VDirty = false;
 	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
@@ -196,10 +194,8 @@ FStaticMeshComponent* ALight::GetStaticMeshComponent()
 	}
 }
 
-APointLight::APointLight(const FVector& Pos, const FVector& Color)
+APointLight::APointLight(const FVector& Pos)
 {
-	this->Color = Color;
-
 	VMatrixs_GameThread[0] = glm::lookAtLH(Pos, Pos + FVector( 1.f,  0.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
 	VMatrixs_GameThread[1] = glm::lookAtLH(Pos, Pos + FVector(-1.f,  0.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
 	VMatrixs_GameThread[2] = glm::lookAtLH(Pos, Pos + FVector( 0.f,  1.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));

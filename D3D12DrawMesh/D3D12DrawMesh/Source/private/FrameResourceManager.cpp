@@ -25,6 +25,7 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 		CreateCameraCB(Scene, MFrameRes[FrameIndex]);
 		CreateCharacterPaletteCB(Scene, MFrameRes[FrameIndex]);
 		CreateDirectionalLightCB(Scene, MFrameRes[FrameIndex]);
+		CreatePointLightsCB(Scene, MFrameRes[FrameIndex]);
 	}
 }
 
@@ -254,40 +255,14 @@ void FFrameResourceManager::CreateCameraCB(FScene* Scene, FMultiBufferFrameResou
 void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	FrameRes.DirectionalLightCB = GDynamicRHI->CreateConstantBuffer(256);
-
-	//const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
-	//const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
-	//struct LightCB
-	//{
-	//	FMatrix VOMatrix;
-	//	FMatrix ScreenMatrix;
-	//	struct DirectionalLightState
-	//	{
-	//		FVector4 Color;
-	//		FVector4 Dir;
-	//		FVector4 Ambient;
-	//		FVector4 Diffuse;
-	//		FVector4 Specular;
-	//	} Light;
-	//} CBInstance;
-	//CBInstance.VOMatrix = glm::transpose(O * V);
-	//CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
-	//CBInstance.Light.Color = PaddingToVec4(Scene->GetDirectionalLight()->GetColor());
-	//CBInstance.Light.Dir = PaddingToVec4(glm::normalize(Scene->GetDirectionalLight()->GetDirection()));
-	//CBInstance.Light.Ambient = PaddingToVec4(Scene->GetDirectionalLight()->GetAmbient());
-	//CBInstance.Light.Diffuse = PaddingToVec4(Scene->GetDirectionalLight()->GetDiffuse());
-	//CBInstance.Light.Specular = PaddingToVec4(Scene->GetDirectionalLight()->GetSpecular());
-
-	//GDynamicRHI->WriteConstantBuffer(FrameRes.DirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 }
 
 void FFrameResourceManager::CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 	{
-		FrameRes.PointLightsCB[i] = GDynamicRHI->CreateConstantBuffer(256);
+		FrameRes.PointLightsCB.push_back(GDynamicRHI->CreateConstantBuffer(256));
 	}
-
 }
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
@@ -581,7 +556,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 
 	// character position
-	if (CurrentCharacter->IsPosDirty())
+	if (CurrentCharacter->IsDirty())
 	{
 		const FMatrix& V = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
 		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
@@ -590,7 +565,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
 		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(W));
 		
-		CurrentCharacter->DecreaPosDirty();
+		CurrentCharacter->DecreaseDirty();
 	}
 
 	// static mesh
@@ -606,7 +581,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
 			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 			
-			Actor->SetDirty(false);
+			Actor->DecreaseDirty();
 		}
 	}
 
@@ -621,7 +596,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			FMatrix ScreenMatrix;
 			struct DirectionalLightState
 			{
-				FVector4 Color;
 				FVector4 Dir;
 				FVector4 Ambient;
 				FVector4 Diffuse;
@@ -630,7 +604,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		} CBInstance;
 		CBInstance.VOMatrix = glm::transpose(O * V);
 		CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
-		CBInstance.Light.Color = PaddingToVec4(Scene->GetDirectionalLight()->GetColor());
 		CBInstance.Light.Dir = PaddingToVec4(glm::normalize(Scene->GetDirectionalLight()->GetDirection()));
 		CBInstance.Light.Ambient = PaddingToVec4(Scene->GetDirectionalLight()->GetAmbient());
 		CBInstance.Light.Diffuse = PaddingToVec4(Scene->GetDirectionalLight()->GetDiffuse());
@@ -646,7 +619,26 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		auto& Actor = Scene->GetPointLights()[i];
 		if (Actor->IsDirty())
 		{
-			// point light is static now
+			struct LightCB
+			{
+				struct DirectionalLightState
+				{
+					FVector4 Position;
+					FVector4 Ambient;
+					FVector4 Diffuse;
+					FVector4 Specular;
+					FVector4 Attenuation;
+				} Light;
+			} CBInstance;
+			CBInstance.Light.Position = PaddingToVec4(Actor->GetTransform().Translation);
+			CBInstance.Light.Ambient = PaddingToVec4(Actor->GetAmbient());
+			CBInstance.Light.Diffuse = PaddingToVec4(Actor->GetDiffuse());
+			CBInstance.Light.Specular = PaddingToVec4(Actor->GetSpecular());
+			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetAttenuation());
+
+			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLightsCB[i].get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+
+			Actor->DecreaseDirty();
 		}
 	}
 
