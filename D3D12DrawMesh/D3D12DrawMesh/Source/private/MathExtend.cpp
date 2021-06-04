@@ -80,3 +80,8 @@ FVector4 GetBufferSizeAndInvSize(FVector2 Param)
 {
 	return FVector4(std::ceil(Param.x), std::ceil(Param.y), 1.f / std::ceil(Param.x), 1.f / std::ceil(Param.y));
 }
+
+FVector4 PaddingToVec4(FVector V)
+{
+	return FVector4(V.x, V.y, V.z, 1.f);
+}

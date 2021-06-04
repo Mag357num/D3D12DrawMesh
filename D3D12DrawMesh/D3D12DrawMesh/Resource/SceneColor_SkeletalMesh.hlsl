@@ -1,11 +1,13 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
-struct LightState
+struct DirectionalLightState
 {
-	float3 DirectionLightColor;
-	float DirectionLightIntensity;
-	float3 DirectionLightDir;
+	float3 Color;
+	float3 Dir;
+	float3 Ambient;
+	float3 Diffuse;
+	float3 Specular;
 };
 
 cbuffer StaticMeshConstantBuffer : register(b0)
@@ -19,14 +21,14 @@ cbuffer CameraConstantBuffer : register(b1)
 	float3 CamEye;
 };
 
-cbuffer LightConstantBuffer : register(b2)
+cbuffer DLightConstantBuffer : register(b2)
 {
 	float4x4 VPMatrix;
 	float4x4 ScreenMatrix;
-	LightState Light;
+	DirectionalLightState DirectionalLight;
 };
 
-cbuffer LightConstantBuffer : register(b3)
+cbuffer DLightConstantBuffer : register(b3)
 {
 	float4x4 GBoneTransforms[68];
 };
@@ -109,25 +111,22 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	input.normal = normalize(input.normal);
+	input.normal = input.normal;
 	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
 	viewDir = normalize(viewDir);
-	float3 dir = normalize(Light.DirectionLightDir * -1.f);
+	float3 dir = normalize(DirectionalLight.Dir * -1.f);
 	float3 halfWay = normalize(viewDir + dir);
 
-	float ks = 1.5f;
 	float shine = 10.f;
 	float4 specularColor;
-	specularColor = ks *  float4(Light.DirectionLightColor, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
+	specularColor = float4(DirectionalLight.Specular, 1.5f) * float4(DirectionalLight.Color, 1.f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
 	specularColor *= dot(input.normal, dir);
 
-	float kd = 0.3f;
-	float4 difuseColor = kd * float4(Light.DirectionLightColor, 1.f) * max(dot(input.normal, Light.DirectionLightDir.xyz * -1.f), 0.f);
+	float4 difuseColor = float4(DirectionalLight.Diffuse, 0.3f) * float4(DirectionalLight.Color, 1.f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f);
 
-	float ambientFactor = 0.02f;
-	float4 ambientColor = ambientFactor * float4(Light.DirectionLightColor, 1.f);
+	float4 ambientColor = float4(DirectionalLight.Ambient, 0.02f) * float4(DirectionalLight.Color, 1.f);
 
-	float bias = max(0.005f * (1.0f - abs(dot(input.normal, Light.DirectionLightDir))), 0.00005f);
+	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
 	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
 

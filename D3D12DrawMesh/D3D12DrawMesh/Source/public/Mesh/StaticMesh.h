@@ -1,6 +1,5 @@
 #pragma once
 #include "stdafx.h"
-#include "ActorComponent.h"
 #include "Actor.h"
 #include "StaticVertex.h"
 

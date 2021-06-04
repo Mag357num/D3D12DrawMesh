@@ -3,7 +3,7 @@ cbuffer StaticMeshConstantBuffer : register(b0)
 	float4x4 WVP;
 };
 
-cbuffer LightConstantBuffer : register(b1)
+cbuffer DLightConstantBuffer : register(b1)
 {
 	float4x4 GBoneTransforms[68];
 };

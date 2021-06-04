@@ -13,6 +13,8 @@ struct FSingleBufferFrameResource
 	vector<shared_ptr<FGeometry>> StaticMeshes;
 	shared_ptr<FGeometry> PPTriangle; // post process triangle
 
+	// static actor's constant buffer
+	
 	// render resources
 	unordered_map<FGeometry*, shared_ptr<FRenderResource>> RRMap_ShadowPass;
 	unordered_map<FGeometry*, shared_ptr<FRenderResource>> RRMap_ScenePass;
@@ -42,8 +44,8 @@ struct FMultiBufferFrameResource
 	// changeable constant buffer
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> CharacterPaletteCB;
-	shared_ptr<FCB> StaticDirectionalLightCB;
-
+	shared_ptr<FCB> DirectionalLightCB;
+	vector<shared_ptr<FCB>> PointLightsCB;
 };
 
 class FFrameResourceManager
@@ -62,8 +64,9 @@ public:
 	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateMapsForShadow();
 	void CreateSamplers();
 	void CreateMapsForScene();

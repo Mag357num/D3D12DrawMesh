@@ -69,6 +69,7 @@ FQuat EulerToQuat(const FEuler& Euler);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);
 
+FVector4 PaddingToVec4(FVector V);
 
 //FQuat CalFQuat(FVector dir)
 //{
