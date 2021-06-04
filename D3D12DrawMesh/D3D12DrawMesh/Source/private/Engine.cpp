@@ -56,10 +56,8 @@ void FEngine::Init(void* WindowHandle)
 		CurrentScene->SetDirectionalLight( DirectionalLight );
 
 		// point light
-		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(300, 300, 0), FVector(1, 1, 1));
-		shared_ptr<APointLight> PointLight2 = make_shared<APointLight>(FVector(500, 500, 0), FVector(1, 1, 1));
+		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160), FVector(1, 1, 1));
 		CurrentScene->AddPointLight( PointLight1 );
-		CurrentScene->AddPointLight( PointLight2 );
 	}
 
 	// character

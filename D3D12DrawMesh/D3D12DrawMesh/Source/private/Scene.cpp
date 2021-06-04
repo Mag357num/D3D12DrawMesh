@@ -7,6 +7,6 @@ void FScene::Tick(StepTimer& Timer)
 	const float ElaTime = static_cast<float>(Timer.GetElapsedSeconds());
 
 	GetCurrentCharacter()->Tick(ElaTime);
-	GetStaticMeshActors()[6]->Tick(ElaTime);
+	GetStaticMeshActors()[5]->Tick(ElaTime);
 	GetCurrentCamera()->Tick(static_cast<float>(ElaTime), FCameraMoveMode::AROUNDTARGET, GetCurrentCharacter()->GetSkeletalMeshCom()->GetTransform().Translation, 300.f);
 }

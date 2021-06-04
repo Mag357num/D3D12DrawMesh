@@ -440,39 +440,6 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		}
 	}
 
-	//// bloom up rr
-	//for (int i = 2; i >= 0; i--)
-	//{
-	//	SFrameRes.RR_BloomUp[i] = CreateRenderResource
-	//	(
-	//		L"Resource\\BloomUp.hlsl",
-	//		256,
-	//		VIL_PostProcess,
-	//		SIL_BloomUp,
-	//		FFormat::FORMAT_R11G11B10_FLOAT,
-	//		1,
-	//		GDynamicRHI->GetFrameCount()
-	//	);
-	//	struct FBloomUpCB
-	//	{
-	//		FVector4 BufferASizeAndInvSize;
-	//		FVector4 BufferBSizeAndInvSize;
-	//		FVector4 BloomTintA;
-	//		FVector4 BloomTintB;
-	//		FVector2 BloomUpScales;
-	//	} BloomUpStruct;
-	//	BloomUpStruct.BufferASizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 3))); // 32 16 8
-	//	BloomUpStruct.BufferBSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / static_cast<float>(pow(2, i + 4)));
-	//	BloomUpStruct.BloomTintA = BloomTintAs[2 - i] * (1.0f / 8.0f);
-	//	BloomUpStruct.BloomTintB = BloomTintBs[2 - i] * (1.0f / 8.0f);
-	//	BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
-	//	BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
-	//	for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
-	//	{
-	//		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomUp[i]->CBs[j].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
-	//	}
-	//}
-
 	// bloom up rr
 	for (int i = 0; i < 3; i++)
 	{
