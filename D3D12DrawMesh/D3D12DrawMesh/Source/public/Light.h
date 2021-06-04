@@ -13,7 +13,9 @@ class ALight : public AActor
 protected:
 	// base param
 	FVector Color = { 1.f, 1.f, 1.f };
-	float Intensity = 1.0f;
+	FVector Ambient = { 0.02f, 0.02f, 0.02f };
+	FVector Diffuse = { 0.3f , 0.3f , 0.3f };
+	FVector Specular = { 1.5f, 1.5f, 1.5f };
 
 	// movement parameter
 	float MoveSpeed = 300.0f;
@@ -25,16 +27,20 @@ protected:
 	bool VDirty = true;
 
 	// camera change flag
-	bool LightDirty = true;
+	uint32 LightDirtyCount = 3;
 
 public:
 	ALight();
 	~ALight() = default;
 
+	void SetColor(const FVector& C) { Color = C; }
+	void SetAmbient(const FVector& A) { Ambient = A; }
+	void SetDiffuse(const FVector& D) { Diffuse = D; }
+	void SetSpecular(const FVector& S) { Specular = S; }
 	const FVector& GetColor() const { return Color; };
-	const float& GetIntensity() const { return Intensity; }
-	void SetIntensity( const float& Inten ) { Intensity = Inten; }
-	void SetColor( const FVector& C ) { Color = C; }
+	const FVector& GetAmbient() { return Ambient; }
+	const FVector& GetDiffuse() { return Diffuse; }
+	const FVector& GetSpecular() { return Specular; }
 
 	void SetQuat(const FQuat& Quat);
 	void SetTranslate(const FVector& Trans);
@@ -43,8 +49,8 @@ public:
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
 
-	const bool& IsDirty() const { return LightDirty; }
-	void SetDirty(const bool& Dirty) { LightDirty = Dirty; }
+	const bool IsDirty() const { return LightDirtyCount != 0; }
+	void DecreaseDirty() { LightDirtyCount--; }
 
 	void SetStaticMeshComponent(shared_ptr<class FStaticMeshComponent> Com);
 	class FStaticMeshComponent* GetStaticMeshComponent();
@@ -93,12 +99,9 @@ public:
 class APointLight : public ALight
 {
 private:
-	struct
-	{
-		float Constant;
-		float Linear;
-		float Exp;
-	} Attenuation;
+	float Constant;
+	float Linear;
+	float Quadratic;
 
 	// Secondary data, need to refresh depent on dirty
 	array<FMatrix, 6> VMatrixs_GameThread; // 6 vmatrix and 1 pmatrix for cube map
