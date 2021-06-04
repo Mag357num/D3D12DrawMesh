@@ -6,6 +6,7 @@
 #include "AssetManager.h"
 #include "Engine.h"
 #include "Character.h"
+#include "Light.h"
 
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {

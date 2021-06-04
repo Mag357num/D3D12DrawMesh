@@ -7,6 +7,7 @@
 #include "Character.h"
 #include "StaticMesh.h"
 #include "SkeletalMesh.h"
+#include "Light.h"
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;

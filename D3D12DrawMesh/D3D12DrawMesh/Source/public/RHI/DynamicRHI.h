@@ -29,9 +29,9 @@ namespace RHI
 		virtual void RHIInit() = 0;
 
 		// Resource Create
-		virtual shared_ptr<FGeometry> CreateGeometry(class FStaticMeshComponent& MeshComponent ) = 0;
-		virtual shared_ptr<FGeometry> CreateGeometry(class FSkeletalMeshComponent& MeshComponent) = 0;
-		virtual shared_ptr<FGeometry> CreateGeometry(struct FStaticMeshLOD& Lod) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshComponent& MeshComponent ) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry(FSkeletalMeshComponent& MeshComponent) = 0;
+		virtual shared_ptr<FGeometry> CreateGeometry(FStaticMeshLOD& Lod) = 0;
 
 		virtual shared_ptr<FShader> CreateVertexShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
