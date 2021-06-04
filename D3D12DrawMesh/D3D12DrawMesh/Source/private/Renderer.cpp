@@ -250,7 +250,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				Handles.push_back(SFrameRes.BloomSetupMap->SrvHandle);
 				Handles.push_back(SFrameRes.BloomUpMapArray[2]->SrvHandle);
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
-				Handles.push_back(SFrameRes.WarpSampler->SamplerHandle);
+				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
 
 				RHI->DrawMesh(Tri.get());
