@@ -46,7 +46,7 @@ ALight::ALight()
 	Components.push_back(Com);
 }
 
-void ALight::SetQuat(const FQuat& Quat)
+void ADirectionalLight::SetQuat(const FQuat& Quat)
 {
 	if (Components.size() == 0)
 	{
@@ -84,7 +84,7 @@ void ADirectionalLight::Tick_Static()
 
 }
 
-void ALight::SetTranslate(const FVector& Trans)
+void ADirectionalLight::SetTranslate(const FVector& Trans)
 {
 	if (Components.size() == 0)
 	{
@@ -97,14 +97,16 @@ void ALight::SetTranslate(const FVector& Trans)
 	}
 }
 
-void ALight::SetDirection(const FVector& Dir)
+void ADirectionalLight::SetDirection(const FVector& Dir)
 {
+	// TODO: low efficiency
+	// optimization: https://blog.csdn.net/qq_36537774/article/details/86534009
 	const FVector& Eye = GetTransform().Translation;
 	const FVector Up(0.f, 0.f, 1.f);
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Dir * 10.0f, Up)));
 }
 
-void ALight::SetWorldMatrix(const FMatrix& W)
+void ADirectionalLight::SetWorldMatrix(const FMatrix& W)
 {
 	if (Components.size() == 0)
 	{
@@ -141,24 +143,29 @@ const FMatrix& ALight::GetWorldMatrix()
 	}
 }
 
-const FVector ALight::GetDirection()
+const FVector ADirectionalLight::GetDirection()
 {
 	// world matrix only contain rotate in 3x3 zone and directional vector wont translate
 	// view matrix default use z:FVector4(0, 0, 1, 0) axis as look at
 	return GetWorldMatrix() * FVector4(0, 0, 1, 0);
 }
 
-const FMatrix& ALight::GetViewMatrix_GameThread()
+const FMatrix& ADirectionalLight::GetViewMatrix_GameThread()
 {
 	if (VDirty)
 	{
+		// TODO: compare with use sqt calculate vmatrix
+		// t-> eye
+		// s-> identity
+		// q-> look = quat * (0, 0, 1)
+		// vmatrix = lookatLH(eye, look + eye, up)
 		VMatrix_GameThread = inverse(Components[0]->GetWorldMatrix());
 		VDirty = false;
 	}
 	return VMatrix_GameThread;
 }
 
-const FMatrix& ALight::GetViewMatrix_RenderThread()
+const FMatrix& ADirectionalLight::GetViewMatrix_RenderThread()
 {
 	FMatrix GameThread = GetViewMatrix_GameThread();
 	std::swap(GameThread, VMatrix_RenderThread);
@@ -187,6 +194,30 @@ FStaticMeshComponent* ALight::GetStaticMeshComponent()
 	{
 		return Components[0].get()->As<FStaticMeshComponent>();
 	}
+}
+
+APointLight::APointLight(const FVector& Pos, const FVector& Color)
+{
+	// this->Color = Color;
+
+	// VMatrix_GameThread = glm::lookAtLH(Pos, Pos + Direction * 10.0f, FVector(0.f, 0.f, 1.f));
+	// VDirty = false;
+	// SetWorldMatrix(glm::inverse(VMatrix_GameThread));
+}
+
+void APointLight::SetQuat(const FQuat& Quat)
+{
+
+}
+
+void APointLight::SetTranslate(const FVector& Trans)
+{
+
+}
+
+void APointLight::SetWorldMatrix(const FMatrix& W)
+{
+
 }
 
 const FMatrix& APointLight::GetPMatrix_GameThread()

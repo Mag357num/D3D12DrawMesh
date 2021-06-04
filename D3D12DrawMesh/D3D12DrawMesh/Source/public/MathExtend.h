@@ -54,3 +54,42 @@ FQuat EulerToQuat(const FEuler& Euler);
 //float Atan2(const float& Y, const float& X);
 
 FVector4 GetBufferSizeAndInvSize(FVector2 Param);
+
+
+//FQuat CalFQuat(FVector dir)
+//{
+//	FQuat cal = new FQuat();
+//	FVector euler = FQuat.LookRotation(dir).eulerAngles;
+//
+//	//euler Y: cosY = z/sqrt(x^2+z^2)
+//	float CosY = dir.z / Mathf.Sqrt(dir.x * dir.x + dir.z * dir.z);
+//	float CosYDiv2 = Mathf.Sqrt((CosY + 1) / 2);
+//	if (dir.x < 0) CosYDiv2 = -CosYDiv2;
+//
+//	float SinYDiv2 = Mathf.Sqrt((1 - CosY) / 2);
+//
+//	//euler X: cosX = sqrt((x^2+z^2)/(x^2+y^2+z^2)
+//	float CosX = Mathf.Sqrt((dir.x * dir.x + dir.z * dir.z) / (dir.x * dir.x + dir.y * dir.y + dir.z * dir.z));
+//	if (dir.z < 0) CosX = -CosX;
+//	float CosXDiv2 = Mathf.Sqrt((CosX + 1) / 2);
+//	if (dir.y > 0) CosXDiv2 = -CosXDiv2;
+//	float SinXDiv2 = Mathf.Sqrt((1 - CosX) / 2);
+//
+//	//quat w = cos(x/2)cos(y/2)
+//	cal.w = CosXDiv2 * CosYDiv2;
+//	//quat x = sin(x/2)cos(y/2)
+//	cal.x = SinXDiv2 * CosYDiv2;
+//	//quat y = cos(x/2)sin(y/2)
+//	cal.y = CosXDiv2 * SinYDiv2;
+//	//quat z = sin(x/2)sin(y/2)
+//	cal.z = -SinXDiv2 * SinYDiv2;
+//
+//
+//	CalCosX = CosX;
+//	CalCosY = CosY;
+//	RightCosX = Mathf.Cos(Mathf.Deg2Rad * (FQuat.LookRotation(dir).eulerAngles.x));
+//	RightCosY = Mathf.Cos(Mathf.Deg2Rad * (FQuat.LookRotation(dir).eulerAngles.y));
+//	RightEulers = FQuat.LookRotation(dir).eulerAngles;
+//
+//	return cal;
+//}

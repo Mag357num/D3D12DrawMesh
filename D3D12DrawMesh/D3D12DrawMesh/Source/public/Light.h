@@ -15,12 +15,6 @@ protected:
 	FVector Color = { 1.f, 1.f, 1.f };
 	float Intensity = 1.0f;
 
-	// view matrix depend on position, so define in the alight
-	// Secondary data, need to refresh depent on dirty
-	bool VDirty = true;
-	FMatrix VMatrix_GameThread;
-	FMatrix VMatrix_RenderThread;
-
 	// movement parameter
 	float MoveSpeed = 300.0f;
 	float TurnSpeed = 1.570796327f;
@@ -39,20 +33,15 @@ public:
 	void SetIntensity( const float& Inten ) { Intensity = Inten; }
 	void SetColor( const FVector& C ) { Color = C; }
 
-	void SetQuat(const FQuat& Quat);
-	void SetTranslate(const FVector& Trans);
-	void SetWorldMatrix(const FMatrix& W);
+	virtual void SetQuat(const FQuat& Quat) = 0;
+	virtual void SetTranslate(const FVector& Trans) = 0;
+	virtual void SetWorldMatrix(const FMatrix& W) = 0;
+
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
 
 	const bool& IsDirty() const { return LightDirty; }
 	void SetDirty(const bool& Dirty) { LightDirty = Dirty; }
-
-	void SetDirection(const FVector& Dir);
-	const FVector GetDirection();
-
-	const FMatrix& GetViewMatrix_GameThread();
-	const FMatrix& GetViewMatrix_RenderThread();
 
 	void SetStaticMeshComponent(shared_ptr<class FStaticMeshComponent> Com);
 	class FStaticMeshComponent* GetStaticMeshComponent();
@@ -61,8 +50,12 @@ public:
 class ADirectionalLight : public ALight
 {
 private:
-	// directional light shadowmap is ortho projection
-	// Secondary data, need to refresh depent on dirty
+	// view matrix depend on the position of light, Secondary data, need to refresh depent on dirty
+	bool VDirty = true;
+	FMatrix VMatrix_GameThread;
+	FMatrix VMatrix_RenderThread;
+
+	// directional light shadowmap is ortho projection, Secondary data, need to refresh depent on dirty
 	bool ODirty = true;
 	FMatrix OMatrix_GameThread;
 	FMatrix OMatrix_RenderThread;
@@ -78,6 +71,16 @@ public:
 	ADirectionalLight() = delete;
 	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color);
 	~ADirectionalLight() = default;
+
+	virtual void SetQuat(const FQuat& Quat) override;
+	virtual void SetTranslate(const FVector& Trans) override;
+	virtual void SetWorldMatrix(const FMatrix& W) override;
+
+	void SetDirection(const FVector& Dir);
+	const FVector GetDirection();
+
+	const FMatrix& GetViewMatrix_GameThread();
+	const FMatrix& GetViewMatrix_RenderThread();
 
 	void SetOrthoParam(float L, float R, float B, float T, float N, float F);
 
@@ -99,8 +102,12 @@ private:
 		float Exp;
 	} Attenuation;
 
-	// point light shadowmap is perspective projection
-	// Secondary data, need to refresh depent on dirty
+	// view matrix depend on the position of light, Secondary data, need to refresh depent on dirty
+	bool VDirty = true;
+	array<FMatrix, 6> VMatrixs_GameThread; // 6 vmatrix and 1 pmatrix for cube map
+	array<FMatrix, 6> VMatrixs_RenderThread;
+
+	// point light shadowmap is perspective projection, Secondary data, need to refresh depent on dirty
 	bool PDirty = true;
 	FMatrix PMatrix_GameThread;
 	FMatrix PMatrix_RenderThread;
@@ -112,7 +119,15 @@ private:
 
 public:
 	APointLight() = default;
+	APointLight(const FVector& Pos, const FVector& Color);
 	~APointLight() = default;
+
+	virtual void SetQuat(const FQuat& Quat) override;
+	virtual void SetTranslate(const FVector& Trans) override;
+	virtual void SetWorldMatrix(const FMatrix& W) override;
+
+	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
+	const array<FMatrix, 6>& GetViewMatrixs_RenderThread();
 
 	void SetPerspParam(float Fov, float AspectRatio, float Near, float Far) { this->Fov = Fov; this->AspectRatio = AspectRatio; NearPlane = Near; FarPlane = Far; PDirty = true; }
 

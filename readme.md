@@ -20,7 +20,13 @@
 5. tripple buffering
    在FrameResourceManager中有三个buffer可以存放三组渲染数据, 因此可以接受主线程提交三组命令
 
-
+# 参考目录
+1. rastertek.com
+   http://www.rastertek.com/
+2. 龙书demo
+3. dx12官方demo
+4. learnopengl
+   https://learnopengl-cn.readthedocs.io/zh/latest/
 
 <!-- ### 相机操作方式
 1. ↑↓←→或WASD控制相机位置
