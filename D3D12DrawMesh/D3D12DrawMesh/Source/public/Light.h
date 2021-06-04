@@ -21,6 +21,9 @@ protected:
 	float MouseSensibility = 0.01f;
 	float AngularVelocity;
 
+	// view matrix depend on the position of light, so define in ALight
+	bool VDirty = true;
+
 	// camera change flag
 	bool LightDirty = true;
 
@@ -33,9 +36,9 @@ public:
 	void SetIntensity( const float& Inten ) { Intensity = Inten; }
 	void SetColor( const FVector& C ) { Color = C; }
 
-	virtual void SetQuat(const FQuat& Quat) = 0;
-	virtual void SetTranslate(const FVector& Trans) = 0;
-	virtual void SetWorldMatrix(const FMatrix& W) = 0;
+	void SetQuat(const FQuat& Quat);
+	void SetTranslate(const FVector& Trans);
+	void SetWorldMatrix(const FMatrix& W);
 
 	const FTransform& GetTransform();
 	const FMatrix& GetWorldMatrix();
@@ -50,8 +53,7 @@ public:
 class ADirectionalLight : public ALight
 {
 private:
-	// view matrix depend on the position of light, Secondary data, need to refresh depent on dirty
-	bool VDirty = true;
+	// Secondary data, need to refresh depent on dirty
 	FMatrix VMatrix_GameThread;
 	FMatrix VMatrix_RenderThread;
 
@@ -71,10 +73,6 @@ public:
 	ADirectionalLight() = delete;
 	ADirectionalLight(const FVector& Pos, const FVector& Direction, const FVector& Color);
 	~ADirectionalLight() = default;
-
-	virtual void SetQuat(const FQuat& Quat) override;
-	virtual void SetTranslate(const FVector& Trans) override;
-	virtual void SetWorldMatrix(const FMatrix& W) override;
 
 	void SetDirection(const FVector& Dir);
 	const FVector GetDirection();
@@ -102,8 +100,7 @@ private:
 		float Exp;
 	} Attenuation;
 
-	// view matrix depend on the position of light, Secondary data, need to refresh depent on dirty
-	bool VDirty = true;
+	// Secondary data, need to refresh depent on dirty
 	array<FMatrix, 6> VMatrixs_GameThread; // 6 vmatrix and 1 pmatrix for cube map
 	array<FMatrix, 6> VMatrixs_RenderThread;
 
@@ -121,10 +118,6 @@ public:
 	APointLight() = default;
 	APointLight(const FVector& Pos, const FVector& Color);
 	~APointLight() = default;
-
-	virtual void SetQuat(const FQuat& Quat) override;
-	virtual void SetTranslate(const FVector& Trans) override;
-	virtual void SetWorldMatrix(const FMatrix& W) override;
 
 	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
 	const array<FMatrix, 6>& GetViewMatrixs_RenderThread();

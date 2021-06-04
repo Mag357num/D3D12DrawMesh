@@ -46,7 +46,7 @@ ALight::ALight()
 	Components.push_back(Com);
 }
 
-void ADirectionalLight::SetQuat(const FQuat& Quat)
+void ALight::SetQuat(const FQuat& Quat)
 {
 	if (Components.size() == 0)
 	{
@@ -84,7 +84,7 @@ void ADirectionalLight::Tick_Static()
 
 }
 
-void ADirectionalLight::SetTranslate(const FVector& Trans)
+void ALight::SetTranslate(const FVector& Trans)
 {
 	if (Components.size() == 0)
 	{
@@ -106,7 +106,7 @@ void ADirectionalLight::SetDirection(const FVector& Dir)
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Dir * 10.0f, Up)));
 }
 
-void ADirectionalLight::SetWorldMatrix(const FMatrix& W)
+void ALight::SetWorldMatrix(const FMatrix& W)
 {
 	if (Components.size() == 0)
 	{
@@ -198,26 +198,42 @@ FStaticMeshComponent* ALight::GetStaticMeshComponent()
 
 APointLight::APointLight(const FVector& Pos, const FVector& Color)
 {
-	// this->Color = Color;
+	this->Color = Color;
 
-	// VMatrix_GameThread = glm::lookAtLH(Pos, Pos + Direction * 10.0f, FVector(0.f, 0.f, 1.f));
-	// VDirty = false;
-	// SetWorldMatrix(glm::inverse(VMatrix_GameThread));
+	VMatrixs_GameThread[0] = glm::lookAtLH(Pos, Pos + FVector( 1.f,  0.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+	VMatrixs_GameThread[1] = glm::lookAtLH(Pos, Pos + FVector(-1.f,  0.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+	VMatrixs_GameThread[2] = glm::lookAtLH(Pos, Pos + FVector( 0.f,  1.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+	VMatrixs_GameThread[3] = glm::lookAtLH(Pos, Pos + FVector( 0.f, -1.f,  0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+	VMatrixs_GameThread[4] = glm::lookAtLH(Pos, Pos + FVector( 0.f,  0.f,  1.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+	VMatrixs_GameThread[5] = glm::lookAtLH(Pos, Pos + FVector( 0.f,  0.f, -1.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+
+	VDirty = false;
+	SetTranslate(Pos);
 }
 
-void APointLight::SetQuat(const FQuat& Quat)
+const array<FMatrix, 6>& APointLight::GetViewMatrixs_GameThread()
 {
+	if (VDirty)
+	{
+		FVector Pos = GetTransform().Translation;
 
+		VMatrixs_GameThread[0] = glm::lookAtLH(Pos, Pos + FVector(1.f, 0.f, 0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+		VMatrixs_GameThread[1] = glm::lookAtLH(Pos, Pos + FVector(-1.f, 0.f, 0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+		VMatrixs_GameThread[2] = glm::lookAtLH(Pos, Pos + FVector(0.f, 1.f, 0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+		VMatrixs_GameThread[3] = glm::lookAtLH(Pos, Pos + FVector(0.f, -1.f, 0.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+		VMatrixs_GameThread[4] = glm::lookAtLH(Pos, Pos + FVector(0.f, 0.f, 1.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+		VMatrixs_GameThread[5] = glm::lookAtLH(Pos, Pos + FVector(0.f, 0.f, -1.f) * 10.0f, FVector(0.f, 0.f, 1.f));
+
+		VDirty = false;
+	}
+	return VMatrixs_GameThread;
 }
 
-void APointLight::SetTranslate(const FVector& Trans)
+const array<FMatrix, 6>& APointLight::GetViewMatrixs_RenderThread()
 {
-
-}
-
-void APointLight::SetWorldMatrix(const FMatrix& W)
-{
-
+	array<FMatrix, 6> GameThread = GetViewMatrixs_GameThread();
+	std::swap(GameThread, VMatrixs_RenderThread);
+	return VMatrixs_RenderThread;
 }
 
 const FMatrix& APointLight::GetPMatrix_GameThread()
