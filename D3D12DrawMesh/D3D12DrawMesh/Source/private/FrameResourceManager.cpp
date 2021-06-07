@@ -640,7 +640,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			CBInstance.Light.Diffuse = PaddingToVec4(Actor->GetDiffuse());
 			CBInstance.Light.Specular = PaddingToVec4(Actor->GetSpecular());
 			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetAttenuation());
-			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLightsCB.get(), i * sizeof(LightCB), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+			// each point light use 3 * 256 bytes
+			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLightsCB.get(), i * 3 * 256, reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 			Actor->DecreaseDirty();
 		}
