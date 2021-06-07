@@ -33,4 +33,4 @@ private:
 	void DoRender();
 };
 
-#define RENDER_THREAD(...) FRenderThread::Get()->AddTask(__VA_ARGS__)
+#define ENQUEUE_RENDER_COMMAND(...) FRenderThread::Get()->AddTask(__VA_ARGS__)
