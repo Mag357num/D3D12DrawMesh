@@ -24,6 +24,12 @@ struct PointLightState
 	float3 Attenuation;
 };
 
+struct PointLightData
+{
+	float4x4 VPMatrix[6];
+	PointLightState State;
+};
+
 cbuffer StaticMeshConstantBuffer : register(b0)
 {
 	float4x4 World;
@@ -43,8 +49,7 @@ cbuffer DLightConstantBuffer : register(b2)
 
 cbuffer PLightConstantBuffer : register(b3)
 {
-	float4x4 VPMatrix[6];
-	PointLightState PointLight;
+	PointLightData PointLight[10]; // TODO: hard code as 10
 };
 
 cbuffer PaletteConstantBuffer : register(b4)
@@ -141,19 +146,24 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// directional light
 	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
 	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
-
-	SpecularColor.xyz += (float4(DirectionalLight.Specular, 1.f) * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * smoothstep(0, 0.12, dot(input.normal, DL_Dir))).xyz;
-	DiffuseColor.xyz += (float4(DirectionalLight.Diffuse, 1.f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f)).xyz;
 	AmbientColor.xyz += DirectionalLight.Ambient;
+	DiffuseColor.xyz += DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
+	SpecularColor.xyz += DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 
 	// point light
-	// for()
-
+	for(int i = 0; i < 10; i++)
+	{
+		float3 PL_Dir = normalize( PointLight[i].State.Position - input.worldpos.xyz );
+		float3 PL_HalfWay = normalize(ViewDir + PL_Dir);
+		AmbientColor.xyz += PointLight[i].State.Ambient;
+		DiffuseColor.xyz += PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
+		SpecularColor.xyz += PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	}
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
 
-	float4 FrameBuffer = (AmbientColor + 0.5f * ShadowFactor * (DiffuseColor + SpecularColor)) * input.color ;
+	float4 FrameBuffer = (AmbientColor + 0.5f * ShadowFactor * (DiffuseColor + SpecularColor)) * input.color;
 
 	return FrameBuffer;
 }
