@@ -1,12 +1,27 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
+static const float4x4 ScreenMatrix = float4x4(
+	0.5f, 0.0f, 0.0f, 0.0f,
+	0.0f, -0.5f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.5f, 0.5f, 0.0f, 1.0f);
+
 struct DirectionalLightState
 {
 	float3 Dir;
 	float3 Ambient;
 	float3 Diffuse;
 	float3 Specular;
+};
+
+struct PointLightState
+{
+	float3 Position;
+	float3 Ambient;
+	float3 Diffuse;
+	float3 Specular;
+	float3 Attenuation;
 };
 
 cbuffer StaticMeshConstantBuffer : register(b0)
@@ -22,12 +37,17 @@ cbuffer CameraConstantBuffer : register(b1)
 
 cbuffer DLightConstantBuffer : register(b2)
 {
-	float4x4 VPMatrix;
-	float4x4 ScreenMatrix;
+	float4x4 VOMatrix;
 	DirectionalLightState DirectionalLight;
 };
 
-cbuffer DLightConstantBuffer : register(b3)
+cbuffer PLightConstantBuffer : register(b3)
+{
+	float4x4 VPMatrix[6];
+	PointLightState PointLight;
+};
+
+cbuffer PaletteConstantBuffer : register(b4)
 {
 	float4x4 GBoneTransforms[68];
 };
@@ -103,31 +123,37 @@ PSInput VSMain(VSInput input)
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
-	result.shadowScreenPos = mul(result.worldpos, mul(VPMatrix, ScreenMatrix));
+	result.shadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
 
 	return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	input.normal = input.normal;
-	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
-	viewDir = normalize(viewDir);
-	float3 dir = normalize(DirectionalLight.Dir * -1.f);
-	float3 halfWay = normalize(viewDir + dir);
-
 	float shine = 10.f;
-	float4 specularColor;
-	specularColor = float4(DirectionalLight.Specular, 1.5f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
-	specularColor *= dot(input.normal, dir);
+	float4 SpecularColor = float4(0.f, 0.f, 0.f, 1.f);
+	float4 DiffuseColor = float4(0.f, 0.f, 0.f, 1.f);
+	float4 AmbientColor = float4(0.f, 0.f, 0.f, 1.f);
 
-	float4 difuseColor = float4(DirectionalLight.Diffuse, 0.3f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f);
+	float3 ViewDir = CamEye.xyz - input.worldpos.xyz;
+	ViewDir = normalize(ViewDir);
 
-	float4 ambientColor = float4(DirectionalLight.Ambient, 0.02f);
+	// directional light
+	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
+	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
+
+	SpecularColor.xyz += (float4(DirectionalLight.Specular, 1.f) * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * smoothstep(0, 0.12, dot(input.normal, DL_Dir))).xyz;
+	DiffuseColor.xyz += (float4(DirectionalLight.Diffuse, 1.f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f)).xyz;
+	AmbientColor.xyz += DirectionalLight.Ambient;
+
+	// point light
+	// for()
+
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
-	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
+
+	float4 FrameBuffer = (AmbientColor + 0.5f * ShadowFactor * (DiffuseColor + SpecularColor)) * input.color ;
 
 	return FrameBuffer;
 }

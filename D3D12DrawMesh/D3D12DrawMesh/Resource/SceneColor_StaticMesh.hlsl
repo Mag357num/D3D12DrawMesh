@@ -1,12 +1,33 @@
 Texture2D shadowMap : register(t0);
 SamplerState sampleClamp : register(s0);
 
+static const float4x4 ScreenMatrix = float4x4(
+	0.5f, 0.0f, 0.0f, 0.0f,
+	0.0f, -0.5f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.5f, 0.5f, 0.0f, 1.0f);
+
 struct DirectionalLightState
 {
 	float3 Dir;
 	float3 Ambient;
 	float3 Diffuse;
 	float3 Specular;
+};
+
+struct PointLightState
+{
+	float3 Position;
+	float3 Ambient;
+	float3 Diffuse;
+	float3 Specular;
+	float3 Attenuation;
+};
+
+struct PointLightData
+{
+	float4x4 VPMatrix[6];
+	PointLightState State;
 };
 
 cbuffer StaticMeshConstantBuffer : register(b0)
@@ -22,9 +43,13 @@ cbuffer CameraConstantBuffer : register(b1)
 
 cbuffer DLightConstantBuffer : register(b2)
 {
-	float4x4 VPMatrix;
-	float4x4 ScreenMatrix;
+	float4x4 VOMatrix;
 	DirectionalLightState DirectionalLight;
+};
+
+cbuffer PLightConstantBuffer : register(b3)
+{
+	PointLightData PointLight[10]; // TODO: hard code as 10
 };
 
 float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
@@ -77,31 +102,42 @@ PSInput VSMain(VSInput input)
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
-	result.shadowScreenPos = mul(result.worldpos, mul(VPMatrix, ScreenMatrix));
+	result.shadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
 
 	return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	input.normal = input.normal;
-	float3 viewDir = CamEye.xyz - input.worldpos.xyz;
-	viewDir = normalize(viewDir);
-	float3 dir = normalize(DirectionalLight.Dir * -1.f);
-	float3 halfWay = normalize(viewDir + dir);
-
 	float shine = 10.f;
-	float4 specularColor;
-	specularColor = float4(DirectionalLight.Specular, 1.5f) * pow(max(dot(input.normal, halfWay), 0.f), shine);
-	specularColor *= dot(input.normal, dir);
+	float4 SpecularColor = float4(0.f, 0.f, 0.f, 1.f);
+	float4 DiffuseColor = float4(0.f, 0.f, 0.f, 1.f);
+	float4 AmbientColor = float4(0.f, 0.f, 0.f, 1.f);
 
-	float4 difuseColor = float4(DirectionalLight.Diffuse, 0.3f) * max(dot(input.normal, DirectionalLight.Dir.xyz * -1.f), 0.f);
+	float3 ViewDir = CamEye.xyz - input.worldpos.xyz;
+	ViewDir = normalize(ViewDir);
 
-	float4 ambientColor = float4(DirectionalLight.Ambient, 0.02f);
+	// directional light
+	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
+	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
+	AmbientColor.xyz += DirectionalLight.Ambient;
+	DiffuseColor.xyz += DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
+	SpecularColor.xyz += DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+
+	// // point light
+	// for(int i = 0; i < 10; i++)
+	// {
+	// 	float3 PL_Dir = normalize( PointLight[i].State.Position - input.worldpos.xyz );
+	// 	float3 PL_HalfWay = normalize(ViewDir + PL_Dir);
+	// 	AmbientColor.xyz += PointLight[i].State.Ambient;
+	// 	DiffuseColor.xyz += PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
+	// 	SpecularColor.xyz += PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	// }
 
 	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
-	float4 FrameBuffer = (ambientColor + 0.5f * ShadowFactor * (difuseColor + specularColor)) * input.color ;
+
+	float4 FrameBuffer = (AmbientColor + 0.5f * ShadowFactor * (DiffuseColor + SpecularColor)) * input.color;
 
 	return FrameBuffer;
 }

@@ -90,6 +90,7 @@ void FEngine::Tick()
 {
 	// GAME tick
 	Timer.Tick(NULL);
+	// DynamicActorAdding(); // TODO: add a func to support dynamic adding actor when app is running
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 	FDeviceEventProcessor::Get()->Tick();
 

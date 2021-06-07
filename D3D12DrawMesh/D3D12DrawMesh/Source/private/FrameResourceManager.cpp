@@ -29,7 +29,7 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	}
 }
 
-void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene> Scene, const uint32& FrameNum)
+void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene, const uint32& FrameNum)
 {
 	// TODO: param hard coding
 	 FFormat SceneMapFormat = GEngine->UsePostProcess() ? FFormat::FORMAT_R16G16B16A16_FLOAT : FFormat::FORMAT_R8G8B8A8_UNORM;
@@ -69,7 +69,8 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 	FShaderInputLayer SIL_ScenePass_StaticMesh;
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
-	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
@@ -81,7 +82,8 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL } );
-	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_SkeletalMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_ScenePass_SkeletalMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 4, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
@@ -96,7 +98,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 	// direction light source
 	{
 		// mesh
-		SFrameRes.DirectionalLight = GDynamicRHI->CreateGeometry(Scene->GetDirectionalLight()->GetStaticMeshComponent());
+		SFrameRes.DirectionalLightMesh = GDynamicRHI->CreateGeometry(Scene->GetDirectionalLight()->GetStaticMeshComponent());
 		// need no shadow pass
 		// scenepass rr
 		auto RR_ScenePass = CreateRenderResource
@@ -114,7 +116,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 		{
 			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
-		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLight.get(), RR_ScenePass });
+		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLightMesh.get(), RR_ScenePass });
 	}
 
 	// point light source
@@ -122,7 +124,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetPointLights().size()); ++i)
 		{
 			// mesh
-			SFrameRes.PointLights.push_back(GDynamicRHI->CreateGeometry(Scene->GetPointLights()[i]->GetStaticMeshComponent()));
+			SFrameRes.PointLightMeshes.push_back(GDynamicRHI->CreateGeometry(Scene->GetPointLights()[i]->GetStaticMeshComponent()));
 			// need no shadow pass
 			// scenepass rr
 			auto RR_ScenePass = CreateRenderResource
@@ -140,7 +142,7 @@ void FFrameResourceManager::CreateFrameResOfSceneActors(const shared_ptr<FScene>
 			{
 				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 			}
-			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.PointLights[i].get(), RR_ScenePass });
+			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.PointLightMeshes[i].get(), RR_ScenePass });
 		}
 	}
 
@@ -259,12 +261,14 @@ void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FMultiBuffer
 
 void FFrameResourceManager::CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.PointLightsCB = GDynamicRHI->CreateConstantBuffer(5280); // TODO: hard coding
+	// each point light need 3 * 256 byte in current code structure design
+	FrameRes.PointLightsCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(256 * 3 * Scene->GetPointLights().size()));
 }
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(4352); // TODO: hard coding
+	uint32 CbSize = static_cast<uint32>(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetSkeletalMesh()->GetSkeleton()->GetJoints().size() * 64);
+	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(std::ceill(CbSize / 256) * 256));
 }
 
 void FFrameResourceManager::CreateMapsForShadow()
@@ -501,6 +505,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	); // tone mapping need no constant buffer
 }
 
+// as the game thread tick, the parameter for render should update to the tick result
 void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& FrameIndex)
 {
 	ACharacter* CurrentCharacter = Scene->GetCurrentCharacter();
@@ -535,18 +540,19 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			FMatrix CamVP;
 			FVector4 Eye;
 		} CBInstance = { CamVP, Eye };
-
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CameraCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CameraConstantBuffer));
 
-		// direction light source cb should change when camera change
+		// light source cb should change, when camera change
+		// because the shader of lights directly use wvp matrix, in which vp is determine by camera
+		// 1. directional light
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 
-		// point light source cb should change when camera change
+		// 2. point light
 		for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 		{
 			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLights[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
 		CurrentCamera->DecreaseDirty();
@@ -589,8 +595,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 		struct LightCB
 		{
-			FMatrix VOMatrix;
-			FMatrix ScreenMatrix;
+			FMatrix VOMatrix; // for shadow calculate
 			struct DirectionalLightState
 			{
 				FVector4 Dir;
@@ -600,7 +605,6 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			} Light;
 		} CBInstance;
 		CBInstance.VOMatrix = glm::transpose(O * V);
-		CBInstance.ScreenMatrix = glm::transpose(ProjToScreen);
 		CBInstance.Light.Dir = PaddingToVec4(glm::normalize(Scene->GetDirectionalLight()->GetDirection()));
 		CBInstance.Light.Ambient = PaddingToVec4(Scene->GetDirectionalLight()->GetAmbient());
 		CBInstance.Light.Diffuse = PaddingToVec4(Scene->GetDirectionalLight()->GetDiffuse());
@@ -613,12 +617,9 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// point light
 	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 	{
-		auto& Actor = Scene->GetPointLights()[i];
-
 		struct LightCB
 		{
 			array<FMatrix, 6> VPMatrix;
-			FMatrix ScreenMatrix;
 			struct DirectionalLightState
 			{
 				FVector4 Position;
@@ -628,22 +629,21 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 				FVector4 Attenuation;
 			} Light;
 		};
-		array<LightCB, 10> PointsCB;
 
+		auto& Actor = Scene->GetPointLights()[i];
 		if (Actor->IsDirty())
 		{
 			struct LightCB CBInstance;
+			CBInstance.VPMatrix; // TODO: didnt have point shadow for now
 			CBInstance.Light.Position = PaddingToVec4(Actor->GetTransform().Translation);
 			CBInstance.Light.Ambient = PaddingToVec4(Actor->GetAmbient());
 			CBInstance.Light.Diffuse = PaddingToVec4(Actor->GetDiffuse());
 			CBInstance.Light.Specular = PaddingToVec4(Actor->GetSpecular());
 			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetAttenuation());
-			PointsCB[i] = CBInstance;
+			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLightsCB.get(), i * sizeof(LightCB), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 			Actor->DecreaseDirty();
 		}
-		// TODO: not to re-write whole cb
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLightsCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 	}
 

@@ -269,6 +269,13 @@ namespace RHI
 		memcpy(CB->As<FDX12CB>()->UploadBufferVirtualAddress, Src, Size);
 	}
 
+	void FDX12DynamicRHI::WriteConstantBufferWithOffset(FCB* CB, uint32 Offset, void* Src, size_t Size)
+	{
+		void* Address = CB->As<FDX12CB>()->UploadBufferVirtualAddress;
+		Address = static_cast<char*>(Address) + Offset;
+		memcpy(Address, Src, Size);
+	}
+
 	void FDX12DynamicRHI::SetTextureState(FTexture* Tex, FRESOURCE_STATES State)
 	{
 		if (Tex->TexState == State)

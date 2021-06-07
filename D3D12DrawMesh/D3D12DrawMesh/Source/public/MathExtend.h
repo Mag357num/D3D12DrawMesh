@@ -17,13 +17,6 @@ using FQuat = glm::tquat<float>;
 
 using namespace glm;
 
-// projection space to screen space transform
-static FMatrix ProjToScreen(
-	0.5f, 0.0f, 0.0f, 0.0f,
-	0.0f, -0.5f, 0.0f, 0.0f,
-	0.0f, 0.0f, 1.0f, 0.0f,
-	0.5f, 0.5f, 0.0f, 1.0f);
-
 static float Pi = 3.141592654f;
 static float Inv_Pi = 0.31830988618f;
 static float Half_Pi = 1.5707963050f;

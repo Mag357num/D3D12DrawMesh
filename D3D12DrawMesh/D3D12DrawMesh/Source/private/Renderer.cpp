@@ -81,15 +81,15 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 		// draw light source mesh
 		{
-			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()].get());
+			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLight.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->CBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
-			RHI->DrawGeometry(SFrameRes.DirectionalLight.get());
+			RHI->DrawGeometry(SFrameRes.DirectionalLightMesh.get());
 		}
 
 		// draw light source mesh
-		for (auto i : SFrameRes.PointLights)
+		for (auto i : SFrameRes.PointLightMeshes)
 		{
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[i.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
@@ -105,6 +105,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLightCB->CBHandle);
+			Handles.push_back(MFrameRes.PointLightsCB->CBHandle);
 			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
@@ -123,6 +124,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLightCB->CBHandle);
+			Handles.push_back(MFrameRes.PointLightsCB->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);
