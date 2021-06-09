@@ -1,7 +1,7 @@
 ### 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
 ### 效果节点(倒序)
-1. PointLight
+1. PointLight(no shadow)
 ![img](README_img/PointLight.png)
 2. SkeletalMesh
 ![img](README_img/SkeletalMesh2.png)
