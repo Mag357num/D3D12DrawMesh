@@ -36,6 +36,7 @@
     <ClCompile Include="Source\private\Key.cpp" />
     <ClCompile Include="Source\private\Light.cpp" />
     <ClCompile Include="Source\private\Main.cpp" />
+    <ClCompile Include="Source\private\Material.cpp" />
     <ClCompile Include="Source\private\MathExtend.cpp" />
     <ClCompile Include="Source\private\Renderer.cpp" />
     <ClCompile Include="Source\private\RenderThread.cpp" />
@@ -72,6 +73,7 @@
     <ClInclude Include="Source\public\FrameResourceManager.h" />
     <ClInclude Include="Source\public\Key.h" />
     <ClInclude Include="Source\public\Light.h" />
+    <ClInclude Include="Source\public\Material.h" />
     <ClInclude Include="Source\public\MathExtend.h" />
     <ClInclude Include="Source\public\Mesh\SkeletalMesh.h" />
     <ClInclude Include="Source\public\Mesh\SkinnedWeightVertex.h" />
