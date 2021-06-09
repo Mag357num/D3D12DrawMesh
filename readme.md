@@ -1,11 +1,13 @@
 ### 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
-### 效果节点
-1. SkeletalMesh
+### 效果节点(倒序)
+1. PointLight
+![img](README_img/PointLight.png)
+2. SkeletalMesh
 ![img](README_img/SkeletalMesh2.png)
-1. Bloom
+2. Bloom
 ![img](README_img/Bloom.png)
-2. Shadow Map
+3. Shadow Map
 ![img](README_img/ShadowMap2.png)
 
 ### 工程结构
