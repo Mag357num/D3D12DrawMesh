@@ -3,6 +3,7 @@
 #include "Character.h"
 #include "SkeletalMesh.h"
 #include "Skeleton.h"
+#include "Material.h"
 
 using RHI::GDynamicRHI;
 
@@ -312,4 +313,9 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 	Fin.close();
 	
 	return Seq;
+}
+
+shared_ptr<FMaterial> FAssetManager::LoadMaterial(const std::wstring& MaterialParamBin, const std::wstring& ShaderFileName)
+{
+	return make_shared<FMaterial>();
 }

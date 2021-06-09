@@ -14,13 +14,14 @@ public:
 	static void CreateAssetManager();
 	static void DestroyAssetManager();
 
-	//TODO: regard component as a basic functional unit, so change this func to LoadStaticMeshComponent and CreateScene(StaticMeshActors)
 	void LoadStaticMeshActors(const std::wstring& BinFileName, vector<shared_ptr<AStaticMeshActor>>& Actors);
 	shared_ptr<FStaticMesh> LoadStaticMesh(const std::wstring& BinFileName);
 
 	shared_ptr<class FSkeletalMesh> LoadSkeletalMesh(const std::wstring& BinFileName);
 	shared_ptr<class FSkeleton> LoadSkeleton(const std::wstring& BinFileName);
 	shared_ptr<class FAnimSequence> LoadAnimSequence(const std::wstring& BinFileName);
+
+	shared_ptr<class FMaterial> LoadMaterial(const std::wstring& MaterialParamBin, const std::wstring& ShaderFileName);
 
 private:
 	vector<FStaticMeshLOD> ReadStaticMeshLODs(std::ifstream& Fin);
