@@ -52,10 +52,10 @@ cbuffer PLightConstantBuffer : register(b3)
 	PointLightData PointLight[10]; // TODO: hard code as 10
 };
 
-float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
+float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float ShadowBias)
 {
 	float2 TexCoord = ScreenSpacePos.xy;
-	float ActualDepth = ScreenSpacePos.z - bias;
+	float ActualDepth = ScreenSpacePos.z - ShadowBias;
 
 	uint width, height, numMips;
 	shadowMap.GetDimensions(0, width, height, numMips);
@@ -89,7 +89,7 @@ struct PSInput
 {
 	float4 position : SV_POSITION;
 	float4 worldpos : POSITION;
-	float4 shadowScreenPos :POSITION1;
+	float4 ShadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
 	float4 color : COLOR;
 };
@@ -102,7 +102,7 @@ PSInput VSMain(VSInput input)
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.color = float4(1.f, 1.f, 1.f, 1.f);
-	result.shadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
+	result.ShadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
 
 	return result;
 }
@@ -110,9 +110,6 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	float shine = 10.f;
-	float4 SpecularColor = float4(0.f, 0.f, 0.f, 1.f);
-	float4 DiffuseColor = float4(0.f, 0.f, 0.f, 1.f);
-	float4 AmbientColor = float4(0.f, 0.f, 0.f, 1.f);
 
 	float3 ViewDir = CamEye.xyz - input.worldpos.xyz;
 	ViewDir = normalize(ViewDir);
@@ -120,24 +117,26 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// directional light
 	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
 	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
-	AmbientColor.xyz += DirectionalLight.Ambient;
-	DiffuseColor.xyz += DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
-	SpecularColor.xyz += DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	float3 DL_AmbientColor = DirectionalLight.Ambient;
+	float3 DL_DiffuseColor = DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
+	float3 DL_SpecularColor = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+
+	// directional light shadow
+	float ShadowBias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
+	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.ShadowScreenPos, ShadowBias);
+
+	float4 FrameBuffer = float4((DL_AmbientColor + 0.5f * ShadowFactor * (DL_DiffuseColor + DL_SpecularColor)), 1.f) * input.color;
 
 	// point light
 	for(int i = 0; i < 10; i++)
 	{
 		float3 PL_Dir = normalize( PointLight[i].State.Position - input.worldpos.xyz );
 		float3 PL_HalfWay = normalize(ViewDir + PL_Dir);
-		AmbientColor.xyz += PointLight[i].State.Ambient;
-		DiffuseColor.xyz += PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
-		SpecularColor.xyz += PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+		float3 PL_AmbientColor = PointLight[i].State.Ambient;
+		float3 PL_DiffuseColor = PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
+		float3 PL_SpecularColor = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+		FrameBuffer += float4((PL_AmbientColor + 0.5f * (PL_DiffuseColor + PL_SpecularColor)), 1.f) * input.color;
 	}
-
-	float bias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
-	float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.shadowScreenPos, bias);
-
-	float4 FrameBuffer = (AmbientColor + 0.5f * ShadowFactor * (DiffuseColor + SpecularColor)) * input.color;
 
 	return FrameBuffer;
 }
