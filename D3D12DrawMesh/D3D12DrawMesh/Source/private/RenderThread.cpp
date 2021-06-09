@@ -69,7 +69,7 @@ FRenderThread* FRenderThread::Get()
 
 void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)
 {
-	RENDER_THREAD([this, Scene]()
+	ENQUEUE_RENDER_COMMAND([this, Scene]()
 		{
 			FrameResourceManager->CreateActorsFrameRes(Scene, GDynamicRHI->GetFrameCount());
 		});
@@ -77,7 +77,7 @@ void FRenderThread::CreateFrameResource(shared_ptr<FScene> Scene)
 
 void FRenderThread::UpdateFrameRes(FScene* Scene)
 {
-	RENDER_THREAD([this, Scene]()
+	ENQUEUE_RENDER_COMMAND([this, Scene]()
 		{
 			FrameResourceManager->UpdateFrameResources(Scene, GDynamicRHI->GetFramIndex());
 		});
@@ -85,7 +85,7 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 
 //void FRenderThread::UpdateFrameResCamera(FMatrix VP, FVector Eye)
 //{
-//	RENDER_THREAD([this, VP, Eye]()
+//	ENQUEUE_RENDER_COMMAND([this, VP, Eye]()
 //		{
 //			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetFramIndex());
 //		});
@@ -93,7 +93,7 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 //
 //void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
 //{
-//	RENDER_THREAD([this, Palette]()
+//	ENQUEUE_RENDER_COMMAND([this, Palette]()
 //		{
 //			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetFramIndex());
 //		});
