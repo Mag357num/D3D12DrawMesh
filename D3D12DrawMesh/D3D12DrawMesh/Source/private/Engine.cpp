@@ -8,6 +8,7 @@
 #include "StaticMesh.h"
 #include "SkeletalMesh.h"
 #include "Light.h"
+#include "Material.h"
 
 using namespace Microsoft::WRL;
 using RHI::GDynamicRHI;
@@ -40,45 +41,62 @@ void FEngine::Init(void* WindowHandle)
 	FAssetManager::CreateAssetManager();
 	FDeviceEventProcessor::CreateEventProcessor();
 
+	// create scene
 	CurrentScene = CreateScene();
 
-	// static mesh actors
-	vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
-	FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
-	for (auto i : StaticMeshActors)
+	// create or init scene actors
 	{
-		CurrentScene->AddStaticMeshActor(i);
-	}
-
-	// camera
-	CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f) , FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
-
-	// light
-	{
-		// directional light
-		shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>( FVector( 1000.f, 0.f, 1000.f ), FVector( -1.f, 0.f, -1.f ));
-		DirectionalLight->SetOrthoParam( -1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f ); // TODO: hard coding
-		CurrentScene->SetDirectionalLight( DirectionalLight );
-
-		// point light
-		shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
-		CurrentScene->AddPointLight( PointLight1 );
-	}
-
-	// character
-	shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
-	{
-		shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
+		// create materials for actor component
+		shared_ptr<FMaterial> Empty = make_shared<FMaterial>();
+		shared_ptr<FMaterial> Translucent = make_shared<FMaterial>();
 		{
-			SkeMeshCom->SetSkeletalMesh( FAssetManager::Get()->LoadSkeletalMesh( L"Resource\\SkeletalMeshBinary_.dat" ) );
-			SkeMeshCom->GetSkeletalMesh()->SetSkeleton( FAssetManager::Get()->LoadSkeleton( L"Resource\\SkeletonBinary_.dat" ) );
-			SkeMeshCom->AddSequence( std::pair<string, shared_ptr<FAnimSequence>>( "Run", FAssetManager::Get()->LoadAnimSequence( L"Resource\\SequenceRun_.dat" ) ) );
-			SkeMeshCom->AddSequence( std::pair<string, shared_ptr<FAnimSequence>>( "Idle", FAssetManager::Get()->LoadAnimSequence( L"Resource\\SequenceIdle_.dat" ) ) );
-			SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
+			Empty->SetBlendMode(FBlendMode::OPAQUE_BM);
+			Empty->SetShader(L"XXX.hlsl");
+
+			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+			Translucent->SetShader(L"XXX.hlsl");
+			Translucent->AddFloatParam(0.5f); // opacity
 		}
-		Cha->SetSkeletalMeshCom( SkeMeshCom );
+
+		// static mesh actors
+		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
+		FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
+		for (auto i : StaticMeshActors)
+		{
+			i->GetStaticMeshComponent()->SetMaterial(Empty);
+			CurrentScene->AddStaticMeshActor(i);
+		}
+
+		// camera
+		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
+
+		// light
+		{
+			// directional light
+			shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>(FVector(1000.f, 0.f, 1000.f), FVector(-1.f, 0.f, -1.f));
+			DirectionalLight->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
+			CurrentScene->SetDirectionalLight(DirectionalLight);
+
+			// point light
+			shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
+			CurrentScene->AddPointLight(PointLight1);
+		}
+
+		// character
+		shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
+		{
+			shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
+			{
+				SkeMeshCom->SetSkeletalMesh(FAssetManager::Get()->LoadSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat"));
+				SkeMeshCom->GetSkeletalMesh()->SetSkeleton(FAssetManager::Get()->LoadSkeleton(L"Resource\\SkeletonBinary_.dat"));
+				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", FAssetManager::Get()->LoadAnimSequence(L"Resource\\SequenceRun_.dat")));
+				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\SequenceIdle_.dat")));
+				SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
+			}
+			Cha->SetSkeletalMeshCom(SkeMeshCom);
+		}
+		CurrentScene->SetCurrentCharacter(Cha);
 	}
-	CurrentScene->SetCurrentCharacter(Cha);
 
 	// thread
 	FRenderThread::CreateRenderThread();
@@ -90,7 +108,6 @@ void FEngine::Tick()
 {
 	// GAME tick
 	Timer.Tick(NULL);
-	// DynamicActorAdding(); // TODO: add a func to support dynamic adding actor when app is running
 	CurrentScene->Tick(Timer); // all actors store in FScene for now
 	FDeviceEventProcessor::Get()->Tick();
 

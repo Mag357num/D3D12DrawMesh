@@ -107,6 +107,27 @@ namespace RHI
 		vector<FShaderInputElement> Elements;
 	};
 
+	enum class FBlendMode
+	{
+		OPAQUE_BM = 0,
+		MASKED_BM = 1,
+		TRANSLUCENT_BM = 2,
+		ADDITIVE_BM = 3,
+		MODULATE_BM = 4,
+		ALPHACOMPOSITE_BM = 5,
+		ALPHAHOLDOUT_BM = 6
+	};
+
+	enum class FShadingMode
+	{
+		// add code when the material need
+	};
+
+	enum class FMaterialDomain
+	{
+		// add code when the material need
+	};
+
 	enum class FRangeType
 	{
 		DESCRIPTOR_RANGE_TYPE_SRV = 0,

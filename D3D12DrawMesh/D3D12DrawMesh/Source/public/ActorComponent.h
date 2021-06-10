@@ -1,19 +1,24 @@
 #pragma once
 #include "stdafx.h"
 
+class FMaterialInterface;
 class FActorComponent
 {
 protected:
 	bool Dirty = true;
 	FTransform Transform;
 	FMatrix WorldMatrix;
+	shared_ptr<FMaterialInterface> Material;
+
 public:
 	void SetScale(const FVector& Scale) { Transform.Scale = Scale; Dirty = true; }
 	void SetQuat(const FQuat& Quat) { Transform.Quat = Quat; Dirty = true; }
 	void SetTranslate(const FVector& Translate) { Transform.Translation = Translate; Dirty = true; }
 	void SetTransform(const FTransform& Trans) { Transform = Trans; Dirty = true; }
 	void SetWorldMatrix(const FMatrix& Matrix);
+	void SetMaterial(shared_ptr<FMaterialInterface> Mat) { Material = Mat; }
 	const FTransform& GetTransform() const { return Transform; }
+	FMaterialInterface* GetMaterial() const { return Material.get(); }
 	const FMatrix& GetWorldMatrix()
 	{
 		if (Dirty)

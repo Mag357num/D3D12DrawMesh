@@ -12,21 +12,21 @@
 
 # 工程结构
 1. Actor-ActorComponent
-   Entity-Component-System, 逻辑在Actor中, 数据在Component中
+   1. Entity-Component-System, 逻辑在Actor中, 数据在Component中
 2. Material
    1. 
 3. Scene
-   所有Actor目前存放在Scene中
+   1. 所有Actor目前存放在Scene中
 4. RHI
-   dynamic render hardware interface
+   1. dynamic render hardware interface
 5. multithreading
-   分为主线程(game逻辑)和Render线程
+   1. 分为主线程(game逻辑)和Render线程
 6. FrameResource
    1. 渲染需要使用的数据都在FrameResource中，与game线程数据分离
 7. tripple buffering
-   在FrameResourceManager中有三个buffer可以存放三组渲染数据, 因此可以接受主线程提交三组命令
+   1. 在FrameResourceManager中有三个buffer可以存放三组渲染数据, 因此可以接受主线程提交三组命令
 8. RenderResource
-   Actor渲染需要使用的信息都在RR中
+   1. Actor渲染需要使用的信息都在RR中
 
 # 参考目录
 1. rastertek.com

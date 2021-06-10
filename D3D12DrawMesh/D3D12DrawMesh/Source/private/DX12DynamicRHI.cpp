@@ -153,9 +153,22 @@ namespace RHI
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
 
+		D3D12_RENDER_TARGET_BLEND_DESC BlendDesc;
+		BlendDesc.BlendEnable = false;
+		BlendDesc.LogicOpEnable = false;
+		BlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		BlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		BlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+		BlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+		BlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+		BlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		BlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+		BlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
 		PsoDesc.InputLayout = { InputElementDescs, static_cast<uint32>(Layer.Elements.size()) };
 		PsoDesc.RasterizerState = rasterizerStateDesc;
 		PsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		PsoDesc.BlendState.RenderTarget[0] = BlendDesc;
 		PsoDesc.DepthStencilState = depthStencilDesc;
 		PsoDesc.SampleMask = UINT_MAX;
 		PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;

@@ -7,6 +7,38 @@ static const float4x4 ScreenMatrix = float4x4(
 	0.0f, 0.0f, 1.0f, 0.0f,
 	0.5f, 0.5f, 0.0f, 1.0f);
 
+struct MaterialParamInstance
+{
+	// parameter in this constantbuffer depends on what parameter material need
+};
+
+struct PixelMaterialInputs
+{
+	float4 EmissiveColor;
+	float Opacity;
+	float OpacityMask;
+	float4 BaseColor;
+	float Metallic;
+	float Specular;
+	float Roughness;
+	float Anisotropy;
+	float3 Tangent;
+	float Subsurface;
+	float AmbientOcclusion;
+	float2 Refraction;
+	float PixelDepthOffset;
+	float ShadingModel;
+};
+
+PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param)
+{
+	PixelMaterialInputs Inputs;
+
+	// code here depend on the node graph in ue4 material editor
+
+	return Inputs;
+}
+
 struct DirectionalLightState
 {
 	float3 Dir;
@@ -57,10 +89,15 @@ cbuffer PaletteConstantBuffer : register(b4)
 	float4x4 GBoneTransforms[68];
 };
 
-float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float bias)
+cbuffer MaterialParameter : register(b5)
+{
+	MaterialParamInstance MaterialParams;
+};
+
+float CalcUnshadowedAmountPCF2x2(float4 ScreenSpacePos, float ShadowBias)
 {
 	float2 TexCoord = ScreenSpacePos.xy;
-	float ActualDepth = ScreenSpacePos.z - bias;
+	float ActualDepth = ScreenSpacePos.z - ShadowBias;
 
 	uint width, height, numMips;
 	shadowMap.GetDimensions(0, width, height, numMips);
@@ -135,7 +172,13 @@ PSInput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
+	// material inputs
+	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams);
+
+	// temporary static parameter
 	float Shine = 10.f;
+
+	// common parameter
 	float ShadowBias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float3 ViewDir = normalize(CamEye.xyz - input.worldpos.xyz);
 	float4 FrameBuffer = float4(0.f, 0.f, 0.f, 1.f);
@@ -143,14 +186,14 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// directional light
 	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
 	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
-	float3 DL_AmbientColor = DirectionalLight.Ambient;
-	float3 DL_DiffuseColor = DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
-	float3 DL_SpecularColor = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), Shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	float3 DL_Ambient = DirectionalLight.Ambient;
+	float3 DL_Diffuse = DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
+	float3 DL_Specular = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), Shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 
 	// directional light shadow
 	{
 		float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.ShadowScreenPos, ShadowBias);
-		FrameBuffer += float4(DL_AmbientColor + 0.5f * ShadowFactor * (DL_DiffuseColor + DL_SpecularColor), 0.f) * input.color;
+		FrameBuffer += float4(DL_Ambient + 0.5f * ShadowFactor * (DL_Diffuse + DL_Specular), 0.f) * input.color;
 	}
 
 	// point light
@@ -158,13 +201,13 @@ float4 PSMain(PSInput input) : SV_TARGET
 	{
 		float3 PL_Dir = normalize( PointLight[i].State.Position - input.worldpos.xyz );
 		float3 PL_HalfWay = normalize(ViewDir + PL_Dir);
-		float3 PL_AmbientColor = PointLight[i].State.Ambient;
-		float3 PL_DiffuseColor = PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
-		float3 PL_SpecularColor = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), Shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+		float3 PL_Ambient = PointLight[i].State.Ambient;
+		float3 PL_Diffuse = PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
+		float3 PL_Specular = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), Shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 		
 		// point light shadow
 		float ShadowFactor = 1.f;
-		FrameBuffer += float4(PL_AmbientColor + 0.5f * ShadowFactor * (PL_DiffuseColor + PL_SpecularColor), 0.f) * input.color;
+		FrameBuffer += float4(PL_Ambient + 0.5f * ShadowFactor * (PL_Diffuse + PL_Specular), 0.f) * input.color;
 	}
 
 	return FrameBuffer;
