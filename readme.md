@@ -79,8 +79,8 @@
         1.  D3D12 ERROR: ID3D12Resource2::<final-release>: CORRUPTION: An ID3D12Resource object (0x0000024FD9DD20C0:'ConstantBuffer') is referenced by GPU operations in-flight on Command Queue (0x0000024FD88D1B90:'Unnamed ID3D12CommandQueue Object').  It is not safe to final-release objects that may have GPU operations pending.  This can result in application instability. [ EXECUTION ERROR #921: OBJECT_DELETED_WHILE_STILL_IN_USE] D3D12: **BREAK** enabled for the previous message, which was: [ ERROR EXECUTION #921: OBJECT_DELETED_WHILE_STILL_IN_USE ] Exception thrown at 0x00007FFE1C254B89 (KernelBase.dll) in D3D12DrawMesh.exe: 0x0000087A (parameters: 0x0000000000000001, 0x0000007FF793A2A0, 0x0000007FF793C070). The thread 0x5170 has exited with code 0 (0x0). Unhandled exception at 0x00007FFE1C254B89 (KernelBase.dll) in D3D12DrawMesh.exe: 0x0000087A (parameters: 0x0000000000000001, 0x0000007FF793A2A0, 0x0000007FF793C070).
     3.  RenderDoc显示有疑问
     4.  多一个相同sampler的问题
-
-renderTaskNum有问题，看一下，研究下会不会影响帧率
+    5.  ThreadTaskNum有问题，看一下，研究下会不会影响帧率
+        1.  打log看Tasks的长度和ThreadTaskNum数
 
 <!-- ### 相机操作方式
 1. ↑↓←→或WASD控制相机位置
