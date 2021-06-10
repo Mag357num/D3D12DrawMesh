@@ -1,6 +1,6 @@
-### 操控方式
+## 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
-### 效果节点(倒序)
+## 效果节点(倒序)
 1. PointLight(no shadow)
 ![img](README_img/PointLight.png)
 2. SkeletalMesh
@@ -10,7 +10,7 @@
 3. Shadow Map
 ![img](README_img/ShadowMap2.png)
 
-### 工程结构
+# 工程结构
 1. Actor-ActorComponent
    Entity-Component-System, 逻辑在Actor中, 数据在Component中
 2. Scene
@@ -91,7 +91,7 @@
     5.  ThreadTaskNum有问题，看一下，研究下会不会影响帧率
         1.  打log看Tasks的长度和ThreadTaskNum数
 
-#技术内容分析记录
+# 技术内容分析记录
 1. 延迟渲染架构
       1. 延迟渲染是为了避免光照计算的overdraw
          1. 疑问: 深度剔除为什么一定要在ps之后?深度值不是vs+光栅化之后就产生了吗
@@ -110,6 +110,7 @@
             3. 对透明渲染支持不好, deferred pass不能直接把透明物体信息也放到Gbuffer上, 需要做完延迟渲染之后再渲染透明物体
             4. 带宽问题
                1. 1920 * 1080 * 4RGBA* 4MRT * 60FPS = 1.8GB
+               2. 疑问: 后处理的时候不也要一直读写texture吗
 
 
 <!-- ### 相机操作方式
