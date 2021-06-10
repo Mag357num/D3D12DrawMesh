@@ -45,11 +45,9 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 		}
 
 		// draw static mesh
+		RHI->SetPipelineState(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
 		for (auto i : SFrameRes.StaticMeshes)
 		{
-			// use shadow pso
-			RHI->SetPipelineState(SFrameRes.RRMap_ShadowPass[i.get()].get());
-
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ShadowPass[i.get()]->CBs[FrameIndex]->CBHandle);
@@ -89,9 +87,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		}
 
 		// draw light source mesh
+		RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
 		for (auto i : SFrameRes.PointLightMeshes)
 		{
-			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[i.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
@@ -114,11 +112,9 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		}
 
 		// draw static mesh
+		RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
 		for (auto i : SFrameRes.StaticMeshes)
 		{
-			// pso
-			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[i.get()].get());
-
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
 			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
@@ -176,6 +172,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				TexHandles.push_back(SFrameRes.BloomDownMapArray[1]->SrvHandle);
 				TexHandles.push_back(SFrameRes.BloomDownMapArray[2]->SrvHandle);
 
+				RHI->SetPipelineState(SFrameRes.RR_BloomDown[0].get()); // for loop use same pso, set ahead avoid extra cost
 				for (uint32 i = 0; i < 4; i++)
 				{
 					SCOPED_EVENT("Bloom down");
@@ -185,8 +182,6 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 3 + i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 3 + i))), 0.f, 1.f);
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 3 + i)), Height / static_cast<uint32>(pow(2, 3 + i)));
-
-					RHI->SetPipelineState(SFrameRes.RR_BloomDown[i].get());
 
 					vector<shared_ptr<FHandle>> Handles;
 					Handles.push_back(SFrameRes.RR_BloomDown[i]->CBs[FrameIndex]->CBHandle);
@@ -211,6 +206,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				TexHandles2.push_back(SFrameRes.BloomUpMapArray[0]->SrvHandle);
 				TexHandles2.push_back(SFrameRes.BloomUpMapArray[1]->SrvHandle);
 
+				RHI->SetPipelineState(SFrameRes.RR_BloomUp[0].get()); // for loop use same pso, set ahead avoid extra cost
 				for (uint32 i = 0; i < 3; i++)
 				{
 					SCOPED_EVENT("Bloom up");
@@ -220,7 +216,6 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
 					RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width / static_cast<uint32>(pow(2, 5 - i))), static_cast<float>(Height / static_cast<uint32>(pow(2, 5 - i))), 0.f, 1.f);
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 5 - i)), Height / static_cast<uint32>(pow(2, 5 - i)));
-					RHI->SetPipelineState(SFrameRes.RR_BloomUp[i].get());
 
 					vector<shared_ptr<FHandle>> Handles;
 					Handles.push_back(SFrameRes.RR_BloomUp[i]->CBs[FrameIndex]->CBHandle);
