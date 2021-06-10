@@ -112,7 +112,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float Shine = 10.f;
 	float ShadowBias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
 	float3 ViewDir = normalize(CamEye.xyz - input.worldpos.xyz);
-	float4 FrameBuffer = 0.f;
+	float4 FrameBuffer = float4(0.f, 0.f, 0.f, 1.f);
 
 	// directional light
 	float3 DL_Dir = normalize(DirectionalLight.Dir * -1.f);
@@ -124,7 +124,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// directional light shadow
 	{
 		float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.ShadowScreenPos, ShadowBias);
-		FrameBuffer += float4((DL_AmbientColor + 0.5f * ShadowFactor * (DL_DiffuseColor + DL_SpecularColor)), 1.f) * input.color;
+		FrameBuffer += float4(DL_AmbientColor + 0.5f * ShadowFactor * (DL_DiffuseColor + DL_SpecularColor), 0.f) * input.color;
 	}
 
 	// point light
@@ -138,7 +138,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 		
 		// point light shadow
 		float ShadowFactor = 1.f;
-		FrameBuffer += float4((PL_AmbientColor + 0.5f * ShadowFactor * (PL_DiffuseColor + PL_SpecularColor)), 1.f) * input.color;
+		FrameBuffer += float4(PL_AmbientColor + 0.5f * ShadowFactor * (PL_DiffuseColor + PL_SpecularColor), 0.f) * input.color;
 	}
 
 	return FrameBuffer;
