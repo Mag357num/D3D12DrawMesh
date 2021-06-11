@@ -1,15 +1,15 @@
 ## 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
 ## 效果节点(倒序)
-1. Translucent(Order dependent)
-   ![img](README_img/Translucent.png)
-2. PointLight(no shadow)
+1. Translucent(Order dependent)  
+![img](README_img/Translucent.png)
+2. PointLight(no shadow)  
 ![img](README_img/PointLight.png)
-2. SkeletalMesh
+2. SkeletalMesh  
 ![img](README_img/SkeletalMesh2.png)
-2. Bloom
+2. Bloom  
 ![img](README_img/Bloom.png)
-3. Shadow Map
+3. Shadow Map  
 ![img](README_img/ShadowMap2.png)
 
 # 工程结构
@@ -53,7 +53,10 @@
     7.  只需要3x4矩阵
     8.  可以处理成多线程的东西写成多线程
 3. 新功能
-   1. 材质系统设计
+   1. 多点光源, 点光源实时阴影投射
+      1. TODO光照算法没改
+      2. TODO没有阴影投射
+   2. 材质系统设计
       1. 多材质扩展性
          1. ue4材质节点图生成的hlsl代码拷过来，复制代码到本地shader代码的自定义区，即可出ue4导过来的新材质
       2. 引擎需要知道blendmode，shading model，material domain
@@ -63,45 +66,48 @@
       3. 材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
          1. 在constant buffer中新增一组buffer专门设置开关变量
             1. 比如IsSkeletalMesh, 如果是骨骼模型, 就在VS中加处理权重的shader code
-   2. 透明物体渲染(顺序有关)
+   3. 透明物体渲染(顺序有关)
       1. 透明物体pso设置
          1. 打开混合
          2. 打开深度测试
          3. 关闭深度写入
-         4. 阴影
-            1. 实时阴影
-               1. 本身投射不投射阴影可以设置开关控制, 默认不投射
-               2. 本身接收阴影
-            2. 静态阴影(烘培)
-               1. 本身不投射阴影
-               2. 疑问: 本身接不接受阴影, 如何接收一个贴图阴影
-   3. 延迟渲染
-   4. AABB视锥剔除等(延后, 显示性能跟不上再做)
-   5. 加diffuse,specular,ambient贴图
-   6. 加法线贴图
-   7. 加cube map
-   8. 加天空盒
-   9.  加入点光源的点阴影映射
-   10. 加抗锯齿
-   11. 加描边
-   12. 加环境映射
-   13. 加AO-参考龙书
-   14. 把龙书的特性demo都加上来
-4.  新特性
+      2. 顺序有关
+         1. 不透明物体必须要在透明物体之前渲染, 不然后于透明物体渲染的会完全覆盖透明物体, 不会混合  
+![img](README_img/Translucent_wrongRenderOrder.png)
+      1. 光照
+         1. 接受光照
+      2. 阴影
+        1. 本身投射不投射阴影可以设置开关控制, 与ue4一样默认不投射
+           1. TODO目前投射
+        2. 本身不接收阴影
+
+   1. 延迟渲染
+   2. AABB视锥剔除等(延后, 显示性能跟不上再做)
+   3. 加diffuse,specular,ambient贴图
+   4. 加法线贴图
+   5. 加cube map
+   6.  加天空盒
+   7.  加入点光源的点阴影映射
+   8.  加抗锯齿
+   9.  加描边
+   10. 加环境映射
+   11. 加AO-参考龙书
+   12. 把龙书的特性demo都加上来
+1.  新特性
     1.  让灯光可以选择旋转
     2.  导出模型文件里面加上包围盒大小，用于计算平行光的位置
     3.  写一个真正的third person 的相机tick，现在的只是绕定点环绕，不会跟character朝向保持一致
     4.  可以在update时根据逻辑生成和销毁actor，比如子弹射击
-5.  代码管理
+2.  代码管理
     1.  fmt第三方库用一下
     2.  vs的format
-6.  疑问
+3.  疑问
     1.  场景中有任意多个光源，被光照的模型怎么写shader，光源数量可以动态传入吗？还是hardcode一个很大的值做长度
     2.  为什么说DX12对多线程有很好的支持认识还不够深入
         1.  与DX11的差异如何导致他在多线程上优于DX11？
     3.  文件引用关系怎么管理
         1.  下图怎么把这两个include去掉(RHI.h里面)![img](README_img/WrongInclude.png)
-7.  BUG
+4.  BUG
     1.  找到人物胸前有小片的原因，修复
     2.  退出报错
         1.  D3D12 ERROR: ID3D12Resource2::<final-release>: CORRUPTION: An ID3D12Resource object (0x0000024FD9DD20C0:'ConstantBuffer') is referenced by GPU operations in-flight on Command Queue (0x0000024FD88D1B90:'Unnamed ID3D12CommandQueue Object').  It is not safe to final-release objects that may have GPU operations pending.  This can result in application instability. [ EXECUTION ERROR #921: OBJECT_DELETED_WHILE_STILL_IN_USE] D3D12: **BREAK** enabled for the previous message, which was: [ ERROR EXECUTION #921: OBJECT_DELETED_WHILE_STILL_IN_USE ] Exception thrown at 0x00007FFE1C254B89 (KernelBase.dll) in D3D12DrawMesh.exe: 0x0000087A (parameters: 0x0000000000000001, 0x0000007FF793A2A0, 0x0000007FF793C070). The thread 0x5170 has exited with code 0 (0x0). Unhandled exception at 0x00007FFE1C254B89 (KernelBase.dll) in D3D12DrawMesh.exe: 0x0000087A (parameters: 0x0000000000000001, 0x0000007FF793A2A0, 0x0000007FF793C070).
