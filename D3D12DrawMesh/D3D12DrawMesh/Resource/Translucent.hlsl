@@ -7,11 +7,6 @@ static const float4x4 ScreenMatrix = float4x4(
 	0.0f, 0.0f, 1.0f, 0.0f,
 	0.5f, 0.5f, 0.0f, 1.0f);
 
-struct MaterialParamInstance
-{
-	// parameter in this constantbuffer depends on what parameter material need
-};
-
 struct PixelMaterialInputs
 {
 	float4 EmissiveColor;
@@ -30,11 +25,21 @@ struct PixelMaterialInputs
 	float ShadingModel;
 };
 
+struct MaterialParamInstance
+{
+	// parameter in this constantbuffer depends on what parameter material need
+	float Opacity;
+};
+
 PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param)
 {
 	PixelMaterialInputs Inputs;
 
 	// code here depend on the node graph in ue4 material editor
+	{
+		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f); // default value
+		Inputs.Opacity = Param.Opacity;
+	}
 
 	return Inputs;
 }
@@ -128,7 +133,7 @@ struct PSInput
 	float4 worldpos : POSITION;
 	float4 ShadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
-	float4 color : COLOR;
+	// float4 color : COLOR;
 };
 
 PSInput VSMain(VSInput input)
@@ -138,7 +143,7 @@ PSInput VSMain(VSInput input)
 	result.worldpos = result.position;
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
-	result.color = float4(1.f, 1.f, 1.f, 1.f);
+	// result.color = float4(1.f, 1.f, 1.f, 1.f);
 	result.ShadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
 
 	return result;
@@ -163,12 +168,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float3 DL_Ambient = DirectionalLight.Ambient;
 	float3 DL_Diffuse = DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
 	float3 DL_Specular = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), Shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	FrameBuffer += float4(DL_Ambient + 0.5f * (DL_Diffuse + DL_Specular), 0.f) * MaterialInputs.BaseColor; // no shadow for translucent actor
 
-	// directional light shadow
-	{
-		float ShadowFactor = CalcUnshadowedAmountPCF2x2(input.ShadowScreenPos, ShadowBias);
-		FrameBuffer += float4(DL_Ambient + 0.5f * ShadowFactor * (DL_Diffuse + DL_Specular), 0.f) * input.color;
-	}
 
 	// point light
 	for(int i = 0; i < 10; i++)
@@ -179,13 +180,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 		float3 PL_Diffuse = PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
 		float3 PL_Specular = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), Shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 		
-		// point light shadow
-		float ShadowFactor = 1.f;
-		FrameBuffer += float4(PL_Ambient + 0.5f * ShadowFactor * (PL_Diffuse + PL_Specular), 0.f) * input.color;
+		FrameBuffer += float4(PL_Ambient + 0.5f * (PL_Diffuse + PL_Specular), 0.f) * MaterialInputs.BaseColor; // no shadow for translucent actor
 	}
 
-	float opacity = 0.5f;
-	FrameBuffer.w *= opacity;
+	FrameBuffer.w *= MaterialInputs.Opacity;
 
 	return FrameBuffer;
 }

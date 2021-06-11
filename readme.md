@@ -1,7 +1,7 @@
 ## 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
 ## 效果节点(倒序)
-1. Translucent
+1. Translucent(Order dependent)
    ![img](README_img/Translucent.png)
 2. PointLight(no shadow)
 ![img](README_img/PointLight.png)
@@ -63,18 +63,30 @@
       3. 材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
          1. 在constant buffer中新增一组buffer专门设置开关变量
             1. 比如IsSkeletalMesh, 如果是骨骼模型, 就在VS中加处理权重的shader code
-   2. 延迟渲染
-   3. AABB视锥剔除等(延后, 显示性能跟不上再做)
-   4. 加diffuse,specular,ambient贴图
-   5. 加法线贴图
-   6. 加cube map
-   7. 加天空盒
-   8. 加入点光源的点阴影映射
-   9. 加抗锯齿
-   10. 加描边
-   11. 加环境映射
-   12. 加AO-参考龙书
-   13. 把龙书的特性demo都加上来
+   2. 透明物体渲染(顺序有关)
+      1. 透明物体pso设置
+         1. 打开混合
+         2. 打开深度测试
+         3. 关闭深度写入
+         4. 阴影
+            1. 实时阴影
+               1. 本身投射不投射阴影可以设置开关控制, 默认不投射
+               2. 本身接收阴影
+            2. 静态阴影(烘培)
+               1. 本身不投射阴影
+               2. 疑问: 本身接不接受阴影, 如何接收一个贴图阴影
+   3. 延迟渲染
+   4. AABB视锥剔除等(延后, 显示性能跟不上再做)
+   5. 加diffuse,specular,ambient贴图
+   6. 加法线贴图
+   7. 加cube map
+   8. 加天空盒
+   9.  加入点光源的点阴影映射
+   10. 加抗锯齿
+   11. 加描边
+   12. 加环境映射
+   13. 加AO-参考龙书
+   14. 把龙书的特性demo都加上来
 4.  新特性
     1.  让灯光可以选择旋转
     2.  导出模型文件里面加上包围盒大小，用于计算平行光的位置
