@@ -64,9 +64,7 @@ namespace RHI
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
 
-		// cb, is a vector beacuse multi buffering
-		vector<shared_ptr<FCB>> FlexibleCBs; // multi usage cb
-		vector<shared_ptr<FCB>> MaterialCBs; // for matertial param
+		vector<shared_ptr<FHandle>> Handles;
 	};
 
 	struct FGeometry : public FRHIResource

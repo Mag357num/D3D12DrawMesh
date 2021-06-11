@@ -7,16 +7,18 @@
 #include "Engine.h"
 #include "Character.h"
 #include "Light.h"
+#include "Material.h"
 
 void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& FrameCount)
 {
 	// single buffer frame resource
 	CreateSamplers();
+	CreateMapsForPostProcess();
+	CreatePostProcessCB();
 	CreatePPTriangle();
 	CreatePPTriangleRR();
 	CreateMapsForShadow();
 	CreateMapsForScene();
-	CreateMapsForPostProcess();
 
 	// multi buffer frame resource
 	MFrameRes.resize( FrameCount );
@@ -24,8 +26,13 @@ void FFrameResourceManager::InitFrameResource(FScene* Scene, const uint32& Frame
 	{
 		CreateCameraCB(Scene, MFrameRes[FrameIndex]);
 		CreateCharacterPaletteCB(Scene, MFrameRes[FrameIndex]);
-		CreateDirectionalLightCB(Scene, MFrameRes[FrameIndex]);
-		CreatePointLightsCB(Scene, MFrameRes[FrameIndex]);
+		CreateDirectionalLights_LightingInfoCB(Scene, MFrameRes[FrameIndex]); // for actor be lighted
+		CreatePointLights_LightingInfoCB(Scene, MFrameRes[FrameIndex]); // for actor be lighted
+
+		CreateDirectionalLight_LocatingCB(Scene, MFrameRes[FrameIndex]); // for draw light actor itself
+		CreatePointLight_LocatingCBs(Scene, MFrameRes[FrameIndex]); // for draw light actor itself
+		CreateCharacter_LocatingCB(Scene, MFrameRes[FrameIndex]);
+		CreateStaticMesh_LocatingCB(Scene, MFrameRes[FrameIndex]);
 	}
 }
 
@@ -39,12 +46,6 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\ShadowMapping_SkeletalMesh.hlsl";
 	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\SceneColor_SkeletalMesh.hlsl";
 	const wstring Shader_ScenePass_LightSource = L"Resource\\SceneColor_DirectionLightSource.hlsl";
-
-	const uint32 CbSize_ShadowPass_StaticMesh = 256;
-	const uint32 CbSize_ScenePass_StaticMesh = 256;
-	const uint32 CbSize_ShadowPass_SkeletalMesh = 256;
-	const uint32 CbSize_ScenePass_SkeletalMesh = 256;
-	const uint32 CbSize_ScenePass_LightSource = 256;
 
 	FVertexInputLayer VIL_StaticMesh;
 	VIL_StaticMesh.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
@@ -71,6 +72,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	//SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 4, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
@@ -87,11 +89,6 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
-	const FMatrix& LV = Scene->GetDirectionalLight()->GetViewMatrix_RenderThread();
-	const FMatrix& LO = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
-	const FMatrix& CV = Scene->GetCurrentCamera()->GetViewMatrix_RenderThread();
-	const FMatrix& CP = Scene->GetCurrentCamera()->GetPerspProjMatrix_RenderThread();
-
 	RHI::GDynamicRHI->BegineCreateResource();
 	InitFrameResource(Scene.get(), FrameNum);
 
@@ -104,18 +101,12 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		auto RR_ScenePass = CreateRenderResource
 		(
 			Shader_ScenePass_LightSource,
-			CbSize_ScenePass_LightSource,
+			FBlendMode::OPAQUE_BM,
 			VIL_StaticMesh,
 			SIL_ScenePass_LightSource,
 			SceneMapFormat,
 			1,
-			GDynamicRHI->GetFrameCount()
-		);
-		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
-		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-		{
-			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
-		}
+			GDynamicRHI->GetFrameCount());
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLightMesh.get(), RR_ScenePass });
 	}
 
@@ -130,18 +121,12 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			auto RR_ScenePass = CreateRenderResource
 			(
 				Shader_ScenePass_LightSource,
-				CbSize_ScenePass_LightSource,
+				FBlendMode::OPAQUE_BM,
 				VIL_StaticMesh,
 				SIL_ScenePass_LightSource,
 				SceneMapFormat,
 				1,
-				GDynamicRHI->GetFrameCount()
-			);
-			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-			{
-				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
-			}
+				GDynamicRHI->GetFrameCount());
 			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.PointLightMeshes[i].get(), RR_ScenePass });
 		}
 	}
@@ -154,36 +139,24 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		auto RR_ShadowPass = CreateRenderResource
 		(
 			Shader_ShadowPass_SkeletalMesh,
-			CbSize_ShadowPass_SkeletalMesh,
+			FBlendMode::OPAQUE_BM,
 			VIL_SkeletalMesh,
 			SIL_ShadowPass_SkeletalMesh,
 			FFormat::FORMAT_UNKNOWN,
 			0,
-			GDynamicRHI->GetFrameCount()
-		);
-		FMatrix WVO = transpose(LO * LV * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
-		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-		{
-			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
-		}
+			GDynamicRHI->GetFrameCount());
 		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
 
 		// scenepass rr
 		auto RR_ScenePass = CreateRenderResource
 		(
 			Shader_ScenePass_SkeletalMesh,
-			CbSize_ScenePass_SkeletalMesh,
+			FBlendMode::OPAQUE_BM,
 			VIL_SkeletalMesh,
 			SIL_ScenePass_SkeletalMesh,
 			SceneMapFormat,
 			1,
-			GDynamicRHI->GetFrameCount()
-		);
-		FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
-		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-		{
-			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
-		}
+			GDynamicRHI->GetFrameCount());
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
 	}
 
@@ -197,36 +170,29 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			auto RR_ShadowPass = CreateRenderResource
 			(
 				Shader_ShadowPass_StaticMesh,
-				CbSize_ShadowPass_StaticMesh,
+				FBlendMode::OPAQUE_BM,
 				VIL_StaticMesh,
 				SIL_ShadowPass_StaticMesh,
 				FFormat::FORMAT_UNKNOWN,
 				0,
-				GDynamicRHI->GetFrameCount()
-			);
-			FMatrix WVP = transpose(LO * LV * Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-			{
-				GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
-			}
+				GDynamicRHI->GetFrameCount());
 			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
 			// scenepass rr
+			FMaterialInterface* Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
 			auto RR_ScenePass = CreateRenderResource
 			(
-				Shader_ScenePass_StaticMesh,
-				CbSize_ScenePass_StaticMesh,
+				Material->GetShader(),
+				Material->GetBlendMode(),
 				VIL_StaticMesh,
 				SIL_ScenePass_StaticMesh,
 				SceneMapFormat,
 				1,
-				GDynamicRHI->GetFrameCount()
-			);
-			FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-			{
-				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
-			}
+				GDynamicRHI->GetFrameCount());
+			uint32 Size = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f));
+			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(Size);
+			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), &Material->GetNumericParams(), sizeof(Material->GetNumericParams()));
+			SFrameRes.MaterialCBs.insert({ Material, MaterialCB });
 			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
 		}
 	}
@@ -234,18 +200,13 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount )
+shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount )
 {
 	shared_ptr<FRenderResource> RR = make_shared<FRenderResource>();
 	RR->VS = GDynamicRHI->CreateVertexShader( Shader );
 	RR->PS = GDynamicRHI->CreatePixelShader( Shader );
 	RR->Sig = GDynamicRHI->CreateRootSignatrue( SIL );
-	RR->PSO = GDynamicRHI->CreatePso( RtFormat, VIL, RtNum, RR->VS.get(), RR->PS.get(), RR->Sig.get() );
-	for (uint32 i = 0; i < FrameCount; i++)
-	{
-		RR->FlexibleCBs.push_back(GDynamicRHI->CreateConstantBuffer(Size)); // TODO: not all rr need 3 cb, for example bloomsetup
-	}
-
+	RR->PSO = GDynamicRHI->CreatePso( RtFormat, BlendMode, VIL, RtNum, RR->VS.get(), RR->PS.get() , RR->Sig.get() );
 	return RR;
 }
 
@@ -254,15 +215,43 @@ void FFrameResourceManager::CreateCameraCB(FScene* Scene, FMultiBufferFrameResou
 	FrameRes.CameraCB = GDynamicRHI->CreateConstantBuffer(256);
 }
 
-void FFrameResourceManager::CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreateDirectionalLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	FrameRes.DirectionalLightCB = GDynamicRHI->CreateConstantBuffer(256);
+	FrameRes.DirectionalLight_LightingInfoCB = GDynamicRHI->CreateConstantBuffer(256);
 }
 
-void FFrameResourceManager::CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+void FFrameResourceManager::CreatePointLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	// each point light need 3 * 256 byte in current code structure design
-	FrameRes.PointLightsCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(256 * 3 * Scene->GetPointLights().size()));
+	FrameRes.PointLights_LightingInfoCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(256 * 3 * Scene->GetPointLights().size()));
+}
+
+void FFrameResourceManager::CreateDirectionalLight_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+{
+	FrameRes.DirectionalLight_LocatingCB = GDynamicRHI->CreateConstantBuffer(256);
+}
+
+void FFrameResourceManager::CreatePointLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+{
+	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
+	{
+		FrameRes.PointLight_LocatingCBs.push_back(GDynamicRHI->CreateConstantBuffer(256));
+	}
+}
+
+void FFrameResourceManager::CreateStaticMesh_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+{
+	for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
+	{
+		FrameRes.StaticMesh_ShadowPass_LocatingCBs.push_back(GDynamicRHI->CreateConstantBuffer(256));
+		FrameRes.StaticMesh_ScenePass_LocatingCBs.push_back(GDynamicRHI->CreateConstantBuffer(256));
+	}
+}
+
+void FFrameResourceManager::CreateCharacter_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
+{
+	FrameRes.Character_ShadowPass_LocatingCB = GDynamicRHI->CreateConstantBuffer(256);
+	FrameRes.Character_ScenePass_LocatingCB = GDynamicRHI->CreateConstantBuffer(256);
 }
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
@@ -329,6 +318,20 @@ void FFrameResourceManager::CreateMapsForPostProcess()
 	GDynamicRHI->CommitTextureAsView(SFrameRes.SunMergeMap.get(), FResViewType::SRV_RVT);
 }
 
+void FFrameResourceManager::CreatePostProcessCB()
+{
+	SFrameRes.BloomSetupCB = GDynamicRHI->CreateConstantBuffer(256);
+	for (uint32 i = 0; i < SFrameRes.BloomDownCBs.size(); i++)
+	{
+		SFrameRes.BloomDownCBs[i] = GDynamicRHI->CreateConstantBuffer(256);
+	}
+	for (uint32 i = 0; i < SFrameRes.BloomUpCBs.size(); i++)
+	{
+		SFrameRes.BloomUpCBs[i] = GDynamicRHI->CreateConstantBuffer(256);
+	}
+	SFrameRes.SunMergeCB = GDynamicRHI->CreateConstantBuffer(256);
+}
+
 void FFrameResourceManager::CreatePPTriangle()
 {
 	// create postprocess mesh and mesh resource
@@ -391,13 +394,12 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SFrameRes.RR_BloomSetup = CreateRenderResource
 	(
 		L"Resource\\BloomSetup.hlsl",
-		256,
+		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_BloomSetup,
 		FFormat::FORMAT_R11G11B10_FLOAT,
 		1,
-		GDynamicRHI->GetFrameCount()
-	);
+		GDynamicRHI->GetFrameCount());
 	struct FBloomSetupCB
 	{
 		FVector4 BufferSizeAndInvSize;
@@ -405,10 +407,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	} BloomSetupStruct;
 	BloomSetupStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 4.f);
 	BloomSetupStruct.BloomThreshold = 1.0f;
-	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-	{
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomSetup->FlexibleCBs[i].get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(FBloomSetupCB));
-	}
+	GDynamicRHI->WriteConstantBuffer(SFrameRes.BloomSetupCB.get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(FBloomSetupCB));
 
 	// bloom down rr
 	for (uint32 i = 0; i < 4; i++)
@@ -416,13 +415,12 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		SFrameRes.RR_BloomDown[i] = CreateRenderResource
 		(
 			L"Resource\\BloomDown.hlsl",
-			256,
+			FBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomDown,
 			FFormat::FORMAT_R11G11B10_FLOAT,
 			1,
-			GDynamicRHI->GetFrameCount()
-		);
+			GDynamicRHI->GetFrameCount());
 		struct FBloomDownCB
 		{
 			FVector4 BufferSizeAndInvSize;
@@ -430,10 +428,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		} BloomDwonStruct;
 		BloomDwonStruct.BufferSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / (static_cast<float>(pow(2, i + 3))));
 		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
-		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
-		{
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomDown[i]->FlexibleCBs[j].get(), reinterpret_cast<void*>(&BloomDwonStruct), sizeof(BloomDwonStruct));
-		}
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.BloomDownCBs[i].get(), reinterpret_cast<void*>(&BloomDwonStruct), sizeof(BloomDwonStruct));
 	}
 
 	// bloom up rr
@@ -442,13 +437,12 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		SFrameRes.RR_BloomUp[i] = CreateRenderResource
 		(
 			L"Resource\\BloomUp.hlsl",
-			256,
+			FBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomUp,
 			FFormat::FORMAT_R11G11B10_FLOAT,
 			1,
-			GDynamicRHI->GetFrameCount()
-		);
+			GDynamicRHI->GetFrameCount());
 		struct FBloomUpCB
 		{
 			FVector4 BufferASizeAndInvSize;
@@ -463,23 +457,19 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		BloomUpStruct.BloomTintB = BloomTintBs[i] * (1.0f / 8.0f);
 		BloomUpStruct.BloomUpScales.x = 0.66f * 2.0f;
 		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
-		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
-		{
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomUp[i]->FlexibleCBs[j].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
-		}
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.BloomUpCBs[i].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
 	}
 
 	// sun merge
 	SFrameRes.RR_SunMerge = CreateRenderResource
 	(
 		L"Resource\\SunMerge.hlsl",
-		256,
+		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_SunMerge,
 		FFormat::FORMAT_R11G11B10_FLOAT,
 		1,
-		GDynamicRHI->GetFrameCount()
-	);
+		GDynamicRHI->GetFrameCount());
 	struct FSunMergeCB
 	{
 		FVector4 BloomUpSizeAndInvSize;
@@ -487,22 +477,18 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	} SunMergeStruct;
 	SunMergeStruct.BloomUpSizeAndInvSize = GetBufferSizeAndInvSize(WidthAndHeight / 8.f);
 	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
-	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
-	{
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_SunMerge->FlexibleCBs[i].get(), reinterpret_cast<void*>(&SunMergeStruct), sizeof(SunMergeStruct));
-	}
+	GDynamicRHI->WriteConstantBuffer(SFrameRes.SunMergeCB.get(), reinterpret_cast<void*>(&SunMergeStruct), sizeof(SunMergeStruct));
 
 	// tone mapping
 	SFrameRes.RR_ToneMapping = CreateRenderResource
 	(
 		L"Resource\\ToneMapping.hlsl",
-		256,
+		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_ToneMapping,
 		FFormat::FORMAT_R8G8B8A8_UNORM,
 		1,
-		GDynamicRHI->GetFrameCount()
-	); // tone mapping need no constant buffer
+		GDynamicRHI->GetFrameCount()); // tone mapping need no constant buffer
 }
 
 // as the game thread tick, the parameter for render should update to the tick result
@@ -546,13 +532,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		// because the shader of lights directly use wvp matrix, in which vp is determine by camera
 		// 1. directional light
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].DirectionalLight_LocatingCB.get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 
 		// 2. point light
 		for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 		{
 			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLight_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
 		CurrentCamera->DecreaseDirty();
@@ -565,8 +551,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(W));
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ShadowPass_LocatingCB.get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ScenePass_LocatingCB.get(), reinterpret_cast<void*>(&W), sizeof(W));
 		
 		CurrentCharacter->DecreaseDirty();
 	}
@@ -581,8 +567,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].StaticMesh_ShadowPass_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].StaticMesh_ScenePass_LocatingCBs[i].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 			
 			Actor->DecreaseDirty();
 		}
@@ -609,7 +595,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		CBInstance.Light.Ambient = PaddingToVec4(Scene->GetDirectionalLight()->GetAmbient());
 		CBInstance.Light.Diffuse = PaddingToVec4(Scene->GetDirectionalLight()->GetDiffuse());
 		CBInstance.Light.Specular = PaddingToVec4(Scene->GetDirectionalLight()->GetSpecular());
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].DirectionalLightCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].DirectionalLight_LightingInfoCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 		
 		Scene->GetDirectionalLight()->DecreaseDirty();
 	}
@@ -641,7 +627,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			CBInstance.Light.Specular = PaddingToVec4(Actor->GetSpecular());
 			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetAttenuation());
 			// each point light use 3 * 256 bytes
-			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLightsCB.get(), i * 3 * 256, reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLights_LightingInfoCB.get(), i * 3 * 256, reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 
 			Actor->DecreaseDirty();
 		}

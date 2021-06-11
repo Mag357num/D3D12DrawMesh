@@ -51,10 +51,10 @@ void FEngine::Init(void* WindowHandle)
 		shared_ptr<FMaterial> Translucent = make_shared<FMaterial>();
 		{
 			Empty->SetBlendMode(FBlendMode::OPAQUE_BM);
-			Empty->SetShader(L"SceneColor_StaticMesh.hlsl");
+			Empty->SetShader(L"Resource\\SceneColor_StaticMesh.hlsl");
 
 			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-			Translucent->SetShader(L"SceneColor_StaticMesh.hlsl");
+			Translucent->SetShader(L"Resource\\Translucent.hlsl");
 			Translucent->AddFloatParam(0.5f); // opacity
 		}
 
@@ -66,6 +66,7 @@ void FEngine::Init(void* WindowHandle)
 			i->GetStaticMeshComponent()->SetMaterial(Empty);
 			CurrentScene->AddStaticMeshActor(i);
 		}
+		CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(Translucent);
 
 		// camera
 		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));

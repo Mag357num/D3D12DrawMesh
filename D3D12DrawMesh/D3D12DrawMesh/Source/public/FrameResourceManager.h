@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "stdafx.h"
 #include "RHIResource.h"
+#include "Material.h"
 
 using namespace RHI;
 struct FSingleBufferFrameResource
@@ -39,6 +40,13 @@ struct FSingleBufferFrameResource
 	shared_ptr<FTexture> SunMergeMap;
 	vector<shared_ptr<FTexture>> BloomDownMapArray;
 	vector<shared_ptr<FTexture>> BloomUpMapArray;
+
+	// constant buffer that dont change
+	shared_ptr<FCB> BloomSetupCB;
+	array<shared_ptr<FCB>, 4> BloomDownCBs;
+	array<shared_ptr<FCB>, 3> BloomUpCBs;
+	shared_ptr<FCB> SunMergeCB;
+	unordered_map<FMaterialInterface*, shared_ptr<FCB>> MaterialCBs;
 };
 
 struct FMultiBufferFrameResource
@@ -46,8 +54,14 @@ struct FMultiBufferFrameResource
 	// changeable constant buffer
 	shared_ptr<FCB> CameraCB;
 	shared_ptr<FCB> CharacterPaletteCB;
-	shared_ptr<FCB> DirectionalLightCB;
-	shared_ptr<FCB> PointLightsCB;
+	shared_ptr<FCB> DirectionalLight_LightingInfoCB;
+	shared_ptr<FCB> PointLights_LightingInfoCB;
+	shared_ptr<FCB> DirectionalLight_LocatingCB;
+	vector<shared_ptr<FCB>> PointLight_LocatingCBs;
+	shared_ptr<FCB> Character_ShadowPass_LocatingCB;
+	shared_ptr<FCB> Character_ScenePass_LocatingCB;
+	vector<shared_ptr<FCB>> StaticMesh_ShadowPass_LocatingCBs;
+	vector<shared_ptr<FCB>> StaticMesh_ScenePass_LocatingCBs;
 };
 
 class FFrameResourceManager
@@ -64,19 +78,24 @@ public:
 	void CreateActorsFrameRes(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 
-	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, const uint32& Size, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
+	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
 	// create common shared cb
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateDirectionalLightCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreatePointLightsCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreatePointLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLight_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreatePointLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateStaticMesh_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateCharacter_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 
 	// create common shared texture
 	void CreateMapsForShadow();
 	void CreateSamplers();
 	void CreateMapsForScene();
 	void CreateMapsForPostProcess();
+	void CreatePostProcessCB();
 
 	// post process triangle
 	void CreatePPTriangle();

@@ -15,7 +15,7 @@
    Entity-Component-System, 逻辑在Actor中, 数据在Component中
 2. Material  
 3. Scene  
-   所有Actor目前存放在Scene中
+   所有Actor目前存放在Scene中, 所有game数据分散在actor中
 4. RHI  
    dynamic render hardware interface
 5. multithreading  
@@ -40,8 +40,17 @@
     1.  FrameResource里面存的都是渲染要用的东西，包括Geometry和RenderResource，Sampler和texture，后两者可以放到rr里面吗？有必要吗？
         1.  暂时认为:静态的资源，因为不会产生gpu读和cpu写的竞争所以放在哪都可以
     2.  把light和camera变成lightcomponent，不再是staticcomponent
-    3.  RR里面存CB的handle, cb的储存全都放在frameResource
-2. 新功能
+    3.  RR里面存CB的handle, renderer调用的时候直接遍历RR里面的handle, cb的储存全都放在frameResource
+2.  性能优化
+    1.  相同的PSO不要重复set
+    2.  做性能profile
+    3.  给点光源做一个最大光照范围，超出范围的物体不需要渲染点光源光照
+    4.  在game线程加一个机制：如果物体在视锥体之外，就不提交绘制它的drawcall
+    5.  相同的pso不用反复提交
+    6.  push_back改成emplace_back
+    7.  只需要3x4矩阵
+    8.  可以处理成多线程的东西写成多线程
+3. 新功能
    1. 材质系统设计
       1. 多材质扩展性
          1. ue4材质节点图生成的hlsl代码拷过来，复制代码到本地shader代码的自定义区，即可出ue4导过来的新材质
@@ -64,19 +73,11 @@
    11. 加环境映射
    12. 加AO-参考龙书
    13. 把龙书的特性demo都加上来
-3.  新特性
+4.  新特性
     1.  让灯光可以选择旋转
     2.  导出模型文件里面加上包围盒大小，用于计算平行光的位置
     3.  写一个真正的third person 的相机tick，现在的只是绕定点环绕，不会跟character朝向保持一致
     4.  可以在update时根据逻辑生成和销毁actor，比如子弹射击
-4.  性能优化
-    1.  做性能profile
-    2.  给点光源做一个最大光照范围，超出范围的物体不需要渲染点光源光照
-    3.  在game线程加一个机制：如果物体在视锥体之外，就不提交绘制它的drawcall
-    4.  相同的pso不用反复提交
-    5.  push_back改成emplace_back
-    6.  只需要3x4矩阵
-    7.  可以处理成多线程的东西写成多线程
 5.  代码管理
     1.  fmt第三方库用一下
     2.  vs的format

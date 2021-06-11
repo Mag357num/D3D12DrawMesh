@@ -21,8 +21,6 @@ public:
 	shared_ptr<class FSkeleton> LoadSkeleton(const std::wstring& BinFileName);
 	shared_ptr<class FAnimSequence> LoadAnimSequence(const std::wstring& BinFileName);
 
-	shared_ptr<class FMaterial> LoadMaterial(const std::wstring& MaterialParamBin, const std::wstring& ShaderFileName);
-
 private:
 	vector<FStaticMeshLOD> ReadStaticMeshLODs(std::ifstream& Fin);
 	vector<FSkeletalMeshLOD> ReadSkeletalMeshLods(std::ifstream& Fin);
