@@ -63,7 +63,10 @@ namespace RHI
 		shared_ptr<FRootSignatrue> Sig;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
-		vector<shared_ptr<FCB>> CBs; // is a vector beacuse multi buffering
+
+		// cb, is a vector beacuse multi buffering
+		vector<shared_ptr<FCB>> FlexibleCBs; // multi usage cb
+		vector<shared_ptr<FCB>> MaterialCBs; // for matertial param
 	};
 
 	struct FGeometry : public FRHIResource

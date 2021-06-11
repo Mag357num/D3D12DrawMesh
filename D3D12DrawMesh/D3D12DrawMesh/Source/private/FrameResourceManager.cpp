@@ -114,7 +114,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
-			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.DirectionalLightMesh.get(), RR_ScenePass });
 	}
@@ -140,7 +140,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
 			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 			{
-				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 			}
 			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.PointLightMeshes[i].get(), RR_ScenePass });
 		}
@@ -164,7 +164,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		FMatrix WVO = transpose(LO * LV * Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
-			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
+			GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
 		}
 		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
 
@@ -182,7 +182,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		FMatrix Wrold = transpose(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetWorldMatrix());
 		for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 		{
-			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
+			GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
 		}
 		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
 	}
@@ -207,7 +207,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			FMatrix WVP = transpose(LO * LV * Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
 			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 			{
-				GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->CBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+				GDynamicRHI->WriteConstantBuffer(RR_ShadowPass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 			}
 			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
@@ -225,7 +225,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			FMatrix Wrold = transpose(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetWorldMatrix());
 			for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 			{
-				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->CBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
+				GDynamicRHI->WriteConstantBuffer(RR_ScenePass->FlexibleCBs[i].get(), reinterpret_cast<void*>(&Wrold), sizeof(Wrold));
 			}
 			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
 		}
@@ -243,7 +243,7 @@ shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( co
 	RR->PSO = GDynamicRHI->CreatePso( RtFormat, VIL, RtNum, RR->VS.get(), RR->PS.get(), RR->Sig.get() );
 	for (uint32 i = 0; i < FrameCount; i++)
 	{
-		RR->CBs.push_back(GDynamicRHI->CreateConstantBuffer(Size)); // TODO: not all rr need 3 cb, for example bloomsetup
+		RR->FlexibleCBs.push_back(GDynamicRHI->CreateConstantBuffer(Size)); // TODO: not all rr need 3 cb, for example bloomsetup
 	}
 
 	return RR;
@@ -407,7 +407,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	BloomSetupStruct.BloomThreshold = 1.0f;
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomSetup->CBs[i].get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(FBloomSetupCB));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomSetup->FlexibleCBs[i].get(), reinterpret_cast<void*>(&BloomSetupStruct), sizeof(FBloomSetupCB));
 	}
 
 	// bloom down rr
@@ -432,7 +432,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		BloomDwonStruct.BloomDownScale = 0.66f * 4.0f;
 		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
 		{
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomDown[i]->CBs[j].get(), reinterpret_cast<void*>(&BloomDwonStruct), sizeof(BloomDwonStruct));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomDown[i]->FlexibleCBs[j].get(), reinterpret_cast<void*>(&BloomDwonStruct), sizeof(BloomDwonStruct));
 		}
 	}
 
@@ -465,7 +465,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		BloomUpStruct.BloomUpScales.y = 0.66f * 2.0f;
 		for (uint32 j = 0; j < GDynamicRHI->GetFrameCount(); j++)
 		{
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomUp[i]->CBs[j].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_BloomUp[i]->FlexibleCBs[j].get(), reinterpret_cast<void*>(&BloomUpStruct), sizeof(BloomUpStruct));
 		}
 	}
 
@@ -489,7 +489,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SunMergeStruct.BloomColor = FVector(BloomTint1) * BloomIntensity * 0.5f;
 	for (uint32 i = 0; i < GDynamicRHI->GetFrameCount(); i++)
 	{
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_SunMerge->CBs[i].get(), reinterpret_cast<void*>(&SunMergeStruct), sizeof(SunMergeStruct));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RR_SunMerge->FlexibleCBs[i].get(), reinterpret_cast<void*>(&SunMergeStruct), sizeof(SunMergeStruct));
 	}
 
 	// tone mapping
@@ -546,13 +546,13 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		// because the shader of lights directly use wvp matrix, in which vp is determine by camera
 		// 1. directional light
 		FMatrix WVP = transpose(CP * CV * Scene->GetDirectionalLight()->GetStaticMeshComponent()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 
 		// 2. point light
 		for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 		{
 			FMatrix WVP = transpose(CP * CV * Scene->GetPointLights()[i]->GetStaticMeshComponent()->GetWorldMatrix());
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
 		CurrentCamera->DecreaseDirty();
@@ -565,8 +565,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
 		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
-		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(W));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
+		GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(W));
 		
 		CurrentCharacter->DecreaseDirty();
 	}
@@ -581,8 +581,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			const FMatrix& O = Scene->GetDirectionalLight()->GetOMatrix_RenderThread();
 			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
-			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->CBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ShadowPass[SFrameRes.StaticMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
+			GDynamicRHI->WriteConstantBuffer(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->FlexibleCBs[FrameIndex].get(), reinterpret_cast<void*>(&W), sizeof(FMatrix));
 			
 			Actor->DecreaseDirty();
 		}

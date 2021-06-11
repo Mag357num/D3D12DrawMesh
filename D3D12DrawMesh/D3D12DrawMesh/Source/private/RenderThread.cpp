@@ -83,22 +83,6 @@ void FRenderThread::UpdateFrameRes(FScene* Scene)
 		});
 }
 
-//void FRenderThread::UpdateFrameResCamera(FMatrix VP, FVector Eye)
-//{
-//	ENQUEUE_RENDER_COMMAND([this, VP, Eye]()
-//		{
-//			FrameResourceManager->UpdateFrameResCamera(VP, Eye, GDynamicRHI->GetFramIndex());
-//		});
-//}
-//
-//void FRenderThread::UpdateFrameResPalette(vector<FMatrix> Palette)
-//{
-//	ENQUEUE_RENDER_COMMAND([this, Palette]()
-//		{
-//			FrameResourceManager->UpdateFrameResPalette(Palette, GDynamicRHI->GetFramIndex());
-//		});
-//}
-
 void FRenderThread::WaitForRenderer()
 {
 	std::unique_lock<std::mutex> Lock(Mutex);

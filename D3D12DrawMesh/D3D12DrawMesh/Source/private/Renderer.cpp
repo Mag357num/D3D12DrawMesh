@@ -37,7 +37,7 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 			RHI->SetPipelineState(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()].get());
 
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
 			RHI->SetShaderInput(Handles);
 
@@ -50,7 +50,7 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 		{
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ShadowPass[i.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ShadowPass[i.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
@@ -81,7 +81,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		{
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawGeometry(SFrameRes.DirectionalLightMesh.get());
 		}
@@ -91,7 +91,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		for (auto i : SFrameRes.PointLightMeshes)
 		{
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			RHI->SetShaderInput(Handles);
 			RHI->DrawGeometry(i.get());
 		}
@@ -100,7 +100,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		{
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()].get());
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLightCB->CBHandle);
 			Handles.push_back(MFrameRes.PointLightsCB->CBHandle);
@@ -117,7 +117,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		{
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->CBs[FrameIndex]->CBHandle);
+			Handles.push_back(SFrameRes.RRMap_ScenePass[i.get()]->FlexibleCBs[FrameIndex]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLightCB->CBHandle);
 			Handles.push_back(MFrameRes.PointLightsCB->CBHandle);
@@ -155,7 +155,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				RHI->SetPipelineState(SFrameRes.RR_BloomSetup.get());
 
 				vector<shared_ptr<FHandle>> Handles;
-				Handles.push_back(SFrameRes.RR_BloomSetup->CBs[FrameIndex]->CBHandle);
+				Handles.push_back(SFrameRes.RR_BloomSetup->FlexibleCBs[FrameIndex]->CBHandle);
 				Handles.push_back(SFrameRes.SceneColorMap->SrvHandle);
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 				RHI->SetShaderInput(Handles);
@@ -184,7 +184,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 3 + i)), Height / static_cast<uint32>(pow(2, 3 + i)));
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(SFrameRes.RR_BloomDown[i]->CBs[FrameIndex]->CBHandle);
+					Handles.push_back(SFrameRes.RR_BloomDown[i]->FlexibleCBs[FrameIndex]->CBHandle);
 					Handles.push_back(TexHandles[i]);
 					Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 					RHI->SetShaderInput(Handles);
@@ -218,7 +218,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 					RHI->SetScissor(0, 0, Width / static_cast<uint32>(pow(2, 5 - i)), Height / static_cast<uint32>(pow(2, 5 - i)));
 
 					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(SFrameRes.RR_BloomUp[i]->CBs[FrameIndex]->CBHandle);
+					Handles.push_back(SFrameRes.RR_BloomUp[i]->FlexibleCBs[FrameIndex]->CBHandle);
 					Handles.push_back(TexHandles1[i]);
 					Handles.push_back(TexHandles2[i]);
 					Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
@@ -243,7 +243,7 @@ void FRenderer::RenderPostProcess(FDynamicRHI* RHI, const uint32& FrameIndex, FS
 				RHI->SetPipelineState(SFrameRes.RR_SunMerge.get());
 
 				vector<shared_ptr<FHandle>> Handles;
-				Handles.push_back(SFrameRes.RR_SunMerge->CBs[FrameIndex]->CBHandle);
+				Handles.push_back(SFrameRes.RR_SunMerge->FlexibleCBs[FrameIndex]->CBHandle);
 				Handles.push_back(SFrameRes.BloomSetupMap->SrvHandle);
 				Handles.push_back(SFrameRes.BloomUpMapArray[2]->SrvHandle);
 				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);

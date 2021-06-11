@@ -51,10 +51,10 @@ void FEngine::Init(void* WindowHandle)
 		shared_ptr<FMaterial> Translucent = make_shared<FMaterial>();
 		{
 			Empty->SetBlendMode(FBlendMode::OPAQUE_BM);
-			Empty->SetShader(L"XXX.hlsl");
+			Empty->SetShader(L"SceneColor_StaticMesh.hlsl");
 
 			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-			Translucent->SetShader(L"XXX.hlsl");
+			Translucent->SetShader(L"SceneColor_StaticMesh.hlsl");
 			Translucent->AddFloatParam(0.5f); // opacity
 		}
 
