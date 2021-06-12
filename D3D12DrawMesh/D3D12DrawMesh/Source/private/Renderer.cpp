@@ -123,6 +123,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLight_LightingInfoCB->CBHandle);
 			Handles.push_back(MFrameRes.PointLights_LightingInfoCB->CBHandle);
+			Handles.push_back(SFrameRes.MaterialCBs[SFrameRes.StaticMeshes[i].get()]->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
 			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			RHI->SetShaderInput(Handles);

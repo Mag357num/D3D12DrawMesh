@@ -43,7 +43,7 @@ namespace RHI
 
 		// Resource process
 		virtual void WriteConstantBuffer(FCB* CB, void* Src, size_t Size) override;
-		virtual void WriteConstantBufferWithOffset(FCB* CB, uint32 Offset, void* Src, size_t Size) override;
+		virtual void WriteConstantBufferWithOffset(FCB* CB, size_t Offset, void* Src, size_t Size) override;
 		virtual void SetTextureState(FTexture* Tex, FRESOURCE_STATES State) override;
 		virtual void SwitchTextureState(FTexture* Tex, FRESOURCE_STATES S1, FRESOURCE_STATES S2) override;
 		virtual void TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To) override;

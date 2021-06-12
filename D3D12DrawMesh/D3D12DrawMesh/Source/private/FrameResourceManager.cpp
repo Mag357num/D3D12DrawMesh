@@ -72,7 +72,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	//SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 4, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 4, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
 
@@ -189,10 +189,14 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				SceneMapFormat,
 				1,
 				GDynamicRHI->GetFrameCount());
-			uint32 Size = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f));
-			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(Size);
-			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), &Material->GetNumericParams(), sizeof(Material->GetNumericParams()));
-			SFrameRes.MaterialCBs.insert({ Material, MaterialCB });
+
+			// TODO: empty material should not have param cb
+			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f));
+			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(ParamCbSize);
+
+			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size());
+			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
+			SFrameRes.MaterialCBs.insert({ SFrameRes.StaticMeshes[i].get(), MaterialCB });
 			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
 		}
 	}
@@ -601,7 +605,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	}
 
 	// point light
-	for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
+	for (size_t i = 0; i < Scene->GetPointLights().size(); i++)
 	{
 		struct LightCB
 		{

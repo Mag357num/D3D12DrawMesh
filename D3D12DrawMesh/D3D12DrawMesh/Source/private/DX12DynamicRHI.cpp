@@ -152,10 +152,11 @@ namespace RHI
 
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
+		depthStencilDesc.DepthWriteMask = BlendMode == FBlendMode::TRANSLUCENT_BM ? D3D12_DEPTH_WRITE_MASK_ZERO : D3D12_DEPTH_WRITE_MASK_ALL;
 
 		D3D12_RENDER_TARGET_BLEND_DESC BlendDesc;
-		BlendDesc.BlendEnable = true;
-		BlendDesc.LogicOpEnable = false;
+		BlendDesc.BlendEnable = BlendMode == FBlendMode::TRANSLUCENT_BM ? TRUE : FALSE;
+		BlendDesc.LogicOpEnable = FALSE;
 		BlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		BlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		BlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
@@ -168,10 +169,7 @@ namespace RHI
 		PsoDesc.InputLayout = { InputElementDescs, static_cast<uint32>(Layer.Elements.size()) };
 		PsoDesc.RasterizerState = rasterizerStateDesc;
 		PsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		if (BlendMode == FBlendMode::TRANSLUCENT_BM)
-		{
-			PsoDesc.BlendState.RenderTarget[0] = BlendDesc;
-		}
+		PsoDesc.BlendState.RenderTarget[0] = BlendDesc;
 		PsoDesc.DepthStencilState = depthStencilDesc;
 		PsoDesc.SampleMask = UINT_MAX;
 		PsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -285,7 +283,7 @@ namespace RHI
 		memcpy(CB->As<FDX12CB>()->UploadBufferVirtualAddress, Src, Size);
 	}
 
-	void FDX12DynamicRHI::WriteConstantBufferWithOffset(FCB* CB, uint32 Offset, void* Src, size_t Size)
+	void FDX12DynamicRHI::WriteConstantBufferWithOffset(FCB* CB, size_t Offset, void* Src, size_t Size)
 	{
 		void* Address = CB->As<FDX12CB>()->UploadBufferVirtualAddress;
 		Address = static_cast<char*>(Address) + Offset;

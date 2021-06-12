@@ -46,7 +46,7 @@ struct FSingleBufferFrameResource
 	array<shared_ptr<FCB>, 4> BloomDownCBs;
 	array<shared_ptr<FCB>, 3> BloomUpCBs;
 	shared_ptr<FCB> SunMergeCB;
-	unordered_map<FMaterialInterface*, shared_ptr<FCB>> MaterialCBs;
+	unordered_map<FGeometry*, shared_ptr<FCB>> MaterialCBs;
 };
 
 struct FMultiBufferFrameResource

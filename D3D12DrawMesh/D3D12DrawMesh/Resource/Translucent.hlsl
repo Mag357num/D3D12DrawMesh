@@ -133,7 +133,6 @@ struct PSInput
 	float4 worldpos : POSITION;
 	float4 ShadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
-	// float4 color : COLOR;
 };
 
 PSInput VSMain(VSInput input)
@@ -143,7 +142,6 @@ PSInput VSMain(VSInput input)
 	result.worldpos = result.position;
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
-	// result.color = float4(1.f, 1.f, 1.f, 1.f);
 	result.ShadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
 
 	return result;
