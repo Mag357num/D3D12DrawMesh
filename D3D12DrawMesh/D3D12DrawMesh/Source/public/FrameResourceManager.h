@@ -13,6 +13,7 @@ struct FSingleBufferFrameResource
 	vector<shared_ptr<FGeometry>> PointLightMeshes;
 	vector<shared_ptr<FGeometry>> StaticMeshes_Translucent;
 	vector<shared_ptr<FGeometry>> StaticMeshes;
+	map<float, uint32> TranslucentActorIndice; // ordered by distance
 	shared_ptr<FGeometry> PPTriangle; // post process triangle
 
 	// static actor's constant buffer

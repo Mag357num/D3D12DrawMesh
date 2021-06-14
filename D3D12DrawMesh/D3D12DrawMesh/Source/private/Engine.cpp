@@ -55,11 +55,11 @@ void FEngine::Init(void* WindowHandle)
 
 			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
 			Translucent->SetShader(L"Resource\\Translucent.hlsl");
-			Translucent->AddFloatParam(0.5f); // opacity
+			Translucent->AddFloatParam(0.3f); // opacity
 		}
 		shared_ptr<FMaterialInstance> TranslucentInstance = Translucent->CreateInstance();
-		auto NumericParams = TranslucentInstance->GetNumericParams();
-		NumericParams.FloatParams[0] = 0.9f;
+		FMaterialParam& NumericParams = TranslucentInstance->GetNumericParams();
+		NumericParams.FloatParams[0] = 0.7f;
 
 		// static mesh actors
 		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
@@ -70,7 +70,7 @@ void FEngine::Init(void* WindowHandle)
 			CurrentScene->AddStaticMeshActor(i);
 		}
 		CurrentScene->GetStaticMeshActors()[4]->GetStaticMeshComponent()->SetMaterial(Translucent);
-		//CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(TranslucentInstance);
+		CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(TranslucentInstance);
 
 		// camera
 		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));

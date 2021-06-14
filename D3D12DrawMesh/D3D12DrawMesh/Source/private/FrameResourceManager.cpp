@@ -164,10 +164,11 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	{
 		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
 		{
-			// mat 
-			FMaterialInterface* Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
+			// mat
+			FStaticMeshComponent* Component = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent();
+			FMaterialInterface* Material = Component->GetMaterial();
 			// mesh
-			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()));
+			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Component));
 			// shadowpass rr
 			auto RR_ShadowPass = CreateRenderResource
 			(
@@ -180,6 +181,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				GDynamicRHI->GetFrameCount());
 			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
+			// scenepass rr
 			auto RR_ScenePass = CreateRenderResource
 			(
 				Material->GetShader(),
@@ -191,12 +193,21 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				GDynamicRHI->GetFrameCount() );
 			SFrameRes.RRMap_ScenePass.insert( { SFrameRes.StaticMeshes[i].get(), RR_ScenePass } );
 
-			// scenepass rr
+			// write material cb
 			uint32 ParamCbSize = sizeof( Material->GetNumericParams() ) == 0 ? 256 : 256 * static_cast<uint32>(ceil( static_cast<float>(sizeof( Material->GetNumericParams() )) / 256.f )); // TODO: empty material should not have param cb
 			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer( ParamCbSize );
 			GDynamicRHI->WriteConstantBuffer( MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size() );
 			GDynamicRHI->WriteConstantBufferWithOffset( MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size() );
 			SFrameRes.MaterialCBs.insert( { SFrameRes.StaticMeshes[i].get(), MaterialCB } );
+
+			// order the distance to camera
+			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
+			{
+				FVector ActorPos = Component->GetTransform().Translation;
+				FVector CameraPos = Scene->GetCurrentCamera()->GetTransform().Translation;
+				float Distance = glm::length( ActorPos - CameraPos );
+				SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
+			}
 		}
 	}
 

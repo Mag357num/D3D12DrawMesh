@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <map>
 #include <unordered_map>
 #include <wrl.h>
 #include <shellapi.h>
@@ -46,4 +47,5 @@ using std::vector;
 using std::array;
 using std::string;
 using std::wstring;
+using std::map;
 using std::unordered_map;

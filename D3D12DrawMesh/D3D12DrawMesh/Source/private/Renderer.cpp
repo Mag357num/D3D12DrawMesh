@@ -115,12 +115,10 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		}
 
 		// draw static mesh
-		vector<uint32> TranslucentSmIndice;
 		for (uint32 i = 0; i < SFrameRes.StaticMeshes.size(); i++)
 		{
 			if (SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->BlendMode == FBlendMode::TRANSLUCENT_BM)
 			{
-				TranslucentSmIndice.push_back( i );
 				continue;
 			}
 
@@ -141,8 +139,12 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 			// set mesh
 			RHI->DrawGeometry(SFrameRes.StaticMeshes[i].get());
 		}
-		for (auto i : TranslucentSmIndice) // make sure the opaque actor render before translucent actor
+
+		auto Map = SFrameRes.TranslucentActorIndice;
+		for (map<float, uint32>::reverse_iterator Iter = Map.rbegin(); Iter != Map.rend(); Iter++) // make sure the opaque actor render before translucent actor
 		{
+			uint32 i = Iter->second;
+
 			//pso
 			RHI->SetPipelineState( SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()].get() ); // for loop use same pso, set ahead avoid extra cost
 
