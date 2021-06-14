@@ -63,7 +63,7 @@
          1. 因为不同材质不仅影响到shader代码的不同，还与创建RR时管线设置，renderer中渲染顺序有关
          2. blendmode与UE4的靠齐
          3. shading model，material domain暂时不考虑
-      3. 材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
+      3. TODO材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
          1. 在constant buffer中新增一组buffer专门设置开关变量
             1. 比如IsSkeletalMesh, 如果是骨骼模型, 就在VS中加处理权重的shader code
       4. 材质参数
