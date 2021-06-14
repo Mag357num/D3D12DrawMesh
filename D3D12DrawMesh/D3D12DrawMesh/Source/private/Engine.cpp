@@ -70,7 +70,7 @@ void FEngine::Init(void* WindowHandle)
 			CurrentScene->AddStaticMeshActor(i);
 		}
 		CurrentScene->GetStaticMeshActors()[4]->GetStaticMeshComponent()->SetMaterial(Translucent);
-		CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(TranslucentInstance);
+		//CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(TranslucentInstance);
 
 		// camera
 		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
@@ -106,7 +106,7 @@ void FEngine::Init(void* WindowHandle)
 	// thread
 	FRenderThread::CreateRenderThread();
 	FRenderThread::Get()->Start();
-	FRenderThread::Get()->CreateFrameResource(CurrentScene);
+	FRenderThread::Get()->CreateFrameResource(CurrentScene); // translate logic thread data to render thread data
 }
 
 void FEngine::Tick()

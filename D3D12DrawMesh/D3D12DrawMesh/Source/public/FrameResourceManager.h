@@ -11,6 +11,7 @@ struct FSingleBufferFrameResource
 	shared_ptr<FGeometry> CharacterMesh;
 	shared_ptr<FGeometry> DirectionalLightMesh;
 	vector<shared_ptr<FGeometry>> PointLightMeshes;
+	vector<shared_ptr<FGeometry>> StaticMeshes_Translucent;
 	vector<shared_ptr<FGeometry>> StaticMeshes;
 	shared_ptr<FGeometry> PPTriangle; // post process triangle
 

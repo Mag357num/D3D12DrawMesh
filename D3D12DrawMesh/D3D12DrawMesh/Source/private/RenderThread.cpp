@@ -38,11 +38,9 @@ void FRenderThread::Run()
 void FRenderThread::DoRender()
 {
 	const uint32& FrameIndex = GDynamicRHI->GetFramIndex();
-	FMultiBufferFrameResource& MFrameRes = FrameResourceManager->GetMultiFrameRes()[FrameIndex];
-	FSingleBufferFrameResource& SFrameRes = FrameResourceManager->GetSingleFrameRes();
 
 	FRenderer Renderer;
-	Renderer.Render(GDynamicRHI.get(), FrameIndex, SFrameRes, MFrameRes);
+	Renderer.Render(GDynamicRHI.get(), FrameIndex, FrameResourceManager.get());
 	--FrameTaskNum;
 	RenderCV.notify_all();
 }

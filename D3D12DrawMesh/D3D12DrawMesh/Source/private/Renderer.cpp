@@ -1,8 +1,11 @@
 #include "Renderer.h"
 #include "Engine.h"
 
-void FRenderer::Render(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleBufferFrameResource& SFrameRes, FMultiBufferFrameResource& MFrameRes)
+void FRenderer::Render(FDynamicRHI* RHI, const uint32& FrameIndex, FFrameResourceManager* FRManager)
 {
+	FMultiBufferFrameResource& MFrameRes = FRManager->GetMultiFrameRes()[FrameIndex];
+	FSingleBufferFrameResource& SFrameRes = FRManager->GetSingleFrameRes();
+
 	RHI->FrameBegin();
 	
 	if (GEngine->UseShadow())
@@ -112,8 +115,15 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		}
 
 		// draw static mesh
+		vector<uint32> TranslucentSmIndice;
 		for (uint32 i = 0; i < SFrameRes.StaticMeshes.size(); i++)
 		{
+			if (SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->BlendMode == FBlendMode::TRANSLUCENT_BM)
+			{
+				TranslucentSmIndice.push_back( i );
+				continue;
+			}
+
 			//pso
 			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()].get()); // for loop use same pso, set ahead avoid extra cost
 
@@ -130,6 +140,25 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 			// set mesh
 			RHI->DrawGeometry(SFrameRes.StaticMeshes[i].get());
+		}
+		for (auto i : TranslucentSmIndice) // make sure the opaque actor render before translucent actor
+		{
+			//pso
+			RHI->SetPipelineState( SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()].get() ); // for loop use same pso, set ahead avoid extra cost
+
+			// root signature
+			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back( MFrameRes.StaticMesh_ScenePass_LocatingCBs[i]->CBHandle );
+			Handles.push_back( MFrameRes.CameraCB->CBHandle );
+			Handles.push_back( MFrameRes.DirectionalLight_LightingInfoCB->CBHandle );
+			Handles.push_back( MFrameRes.PointLights_LightingInfoCB->CBHandle );
+			Handles.push_back( SFrameRes.MaterialCBs[SFrameRes.StaticMeshes[i].get()]->CBHandle );
+			Handles.push_back( SFrameRes.ShadowMap->SrvHandle );
+			Handles.push_back( SFrameRes.ClampSampler->SamplerHandle );
+			RHI->SetShaderInput( Handles );
+
+			// set mesh
+			RHI->DrawGeometry( SFrameRes.StaticMeshes[i].get() );
 		}
 		RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}

@@ -66,6 +66,10 @@
       3. 材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
          1. 在constant buffer中新增一组buffer专门设置开关变量
             1. 比如IsSkeletalMesh, 如果是骨骼模型, 就在VS中加处理权重的shader code
+      4. 材质参数
+         1. float数组
+         2. vector数组
+         3. TODOtexture数组
    3. 透明物体渲染(顺序有关)
       1. 透明物体pso设置
          1. 打开混合
@@ -73,8 +77,8 @@
          3. 关闭深度写入
       2. 顺序有关
          1. 不透明物体必须要在透明物体之前渲染, 不然后于透明物体渲染的不透明物体会完全覆盖透明物体, 不会有混合效果  
-         2. 透明物体需要按照从远到近的方式依次渲染
 ![img](README_img/Translucent_wrongRenderOrder.png)
+         2. 该工程透明物体需要按照从远到近的方式依次渲染  
       1. 光照
          1. 接受光照
       2. 阴影

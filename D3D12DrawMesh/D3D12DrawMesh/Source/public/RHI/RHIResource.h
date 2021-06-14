@@ -57,14 +57,14 @@ namespace RHI
 
 	struct FRootSignatrue : public FRHIResource {};
 
+	enum class FBlendMode;
 	struct FRenderResource
 	{
 		shared_ptr<FPipelineState> PSO;
 		shared_ptr<FRootSignatrue> Sig;
 		shared_ptr<FShader> VS;
 		shared_ptr<FShader> PS;
-
-		vector<shared_ptr<FHandle>> Handles;
+		FBlendMode BlendMode;
 	};
 
 	struct FGeometry : public FRHIResource

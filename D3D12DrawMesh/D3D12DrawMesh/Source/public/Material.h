@@ -58,7 +58,7 @@ private:
 	FMaterialParam NumericParams;
 	vector<shared_ptr<RHI::FTexture>> TextureParams;
 public:
-	FMaterialInstance() = default; // TODO: make FMaterialInstance cant be create public, only be create by material
+	FMaterialInstance( FMaterial* Mat ) { }; // FMaterialInstance should be constructed without a FMaterial(as a template)
 	~FMaterialInstance() = default;
 
 	void SetNumericParam(FMaterialParam P) { NumericParams = P; }

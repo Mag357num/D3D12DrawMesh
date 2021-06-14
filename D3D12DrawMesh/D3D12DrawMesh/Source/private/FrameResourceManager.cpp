@@ -164,6 +164,8 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	{
 		for (uint32 i = 0; i < static_cast<uint32>(Scene->GetStaticMeshActors().size()); ++i)
 		{
+			// mat 
+			FMaterialInterface* Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
 			// mesh
 			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()));
 			// shadowpass rr
@@ -178,8 +180,6 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				GDynamicRHI->GetFrameCount());
 			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
-			// scenepass rr
-			FMaterialInterface* Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
 			auto RR_ScenePass = CreateRenderResource
 			(
 				Material->GetShader(),
@@ -188,16 +188,15 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				SIL_ScenePass_StaticMesh,
 				SceneMapFormat,
 				1,
-				GDynamicRHI->GetFrameCount());
+				GDynamicRHI->GetFrameCount() );
+			SFrameRes.RRMap_ScenePass.insert( { SFrameRes.StaticMeshes[i].get(), RR_ScenePass } );
 
-			// TODO: empty material should not have param cb
-			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f));
-			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(ParamCbSize);
-
-			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size());
-			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
-			SFrameRes.MaterialCBs.insert({ SFrameRes.StaticMeshes[i].get(), MaterialCB });
-			SFrameRes.RRMap_ScenePass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ScenePass });
+			// scenepass rr
+			uint32 ParamCbSize = sizeof( Material->GetNumericParams() ) == 0 ? 256 : 256 * static_cast<uint32>(ceil( static_cast<float>(sizeof( Material->GetNumericParams() )) / 256.f )); // TODO: empty material should not have param cb
+			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer( ParamCbSize );
+			GDynamicRHI->WriteConstantBuffer( MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size() );
+			GDynamicRHI->WriteConstantBufferWithOffset( MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size() );
+			SFrameRes.MaterialCBs.insert( { SFrameRes.StaticMeshes[i].get(), MaterialCB } );
 		}
 	}
 
@@ -207,6 +206,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount )
 {
 	shared_ptr<FRenderResource> RR = make_shared<FRenderResource>();
+	RR->BlendMode = BlendMode;
 	RR->VS = GDynamicRHI->CreateVertexShader( Shader );
 	RR->PS = GDynamicRHI->CreatePixelShader( Shader );
 	RR->Sig = GDynamicRHI->CreateRootSignatrue( SIL );
