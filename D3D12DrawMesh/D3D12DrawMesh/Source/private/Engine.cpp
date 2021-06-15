@@ -59,6 +59,7 @@ void FEngine::Init(void* WindowHandle)
 			Translucent->AddTextureParam(L"Resource\\ice.dds");
 		}
 		shared_ptr<FMaterialInstance> TranslucentInstance = Translucent->CreateInstance();
+		TranslucentInstance->ChangeFloatParams({ 0, 0.8f });
 
 		// static mesh actors
 		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;

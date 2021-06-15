@@ -61,6 +61,10 @@ public:
 	FMaterialInstance(FMaterial* Mat) { }; // FMaterialInstance should be constructed without a FMaterial(as a template)
 	~FMaterialInstance() = default;
 
+	void ChangeFloatParams(std::pair<uint32, float> pair) { InstanceFloatParams.insert(pair); }
+	void ChangeVectorParams(std::pair<uint32, FVector4> pair) { InstanceVectorParams.insert(pair); }
+	void ChangeTextureParams(std::pair<uint32, wstring> pair) { InstanceTexParams.insert(pair); }
+
 	void SetOriginMaterial(FMaterial* Mat) { OriginMaterial = Mat; };
 	virtual const wstring& GetShader() const override { return OriginMaterial->GetShader(); }
 	virtual FMaterialParam GetNumericParams() override;
