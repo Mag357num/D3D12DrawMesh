@@ -171,7 +171,6 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float3 DL_Specular = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), Shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 	FrameBuffer += float4(DL_Ambient + 0.5f * (DL_Diffuse + DL_Specular), 0.f) * MaterialInputs.BaseColor; // no shadow for translucent actor
 
-
 	// point light
 	for(int i = 0; i < 10; i++)
 	{

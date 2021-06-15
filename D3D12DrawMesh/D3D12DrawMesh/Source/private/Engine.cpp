@@ -55,7 +55,7 @@ void FEngine::Init(void* WindowHandle)
 
 			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
 			Translucent->SetShader(L"Resource\\Translucent.hlsl");
-			Translucent->AddFloatParam(0.5f); // opacity
+			Translucent->AddFloatParam(0.3f); // opacity
 			Translucent->AddTextureParam(L"Resource\\ice.dds");
 		}
 		shared_ptr<FMaterialInstance> TranslucentInstance = Translucent->CreateInstance();
