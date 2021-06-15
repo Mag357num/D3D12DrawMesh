@@ -566,6 +566,20 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLight_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
+		// 3.static mesh
+		SFrameRes.TranslucentActorIndice.clear();
+		for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
+		{
+			auto Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
+			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
+			{
+				FVector ActorPos = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetTransform().Translation;
+				FVector CameraPos = Scene->GetCurrentCamera()->GetTransform().Translation;
+				float Distance = glm::length( ActorPos - CameraPos );
+				SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
+			}
+		}
+
 		CurrentCamera->DecreaseDirty();
 	}
 
