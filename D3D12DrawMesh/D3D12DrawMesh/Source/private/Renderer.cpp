@@ -127,13 +127,17 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
+			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
 			Handles.push_back(MFrameRes.StaticMesh_ScenePass_LocatingCBs[i]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLight_LightingInfoCB->CBHandle);
 			Handles.push_back(MFrameRes.PointLights_LightingInfoCB->CBHandle);
 			Handles.push_back(SFrameRes.MaterialCBs[SFrameRes.StaticMeshes[i].get()]->CBHandle);
 			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
-			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
+			for (auto j : SFrameRes.MaterialTexs[SFrameRes.StaticMeshes[i].get()])
+			{
+				Handles.push_back(j->SrvHandle);
+			}
 			RHI->SetShaderInput(Handles);
 
 			// set mesh
@@ -150,13 +154,17 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back( MFrameRes.StaticMesh_ScenePass_LocatingCBs[i]->CBHandle );
+			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
+			Handles.push_back(MFrameRes.StaticMesh_ScenePass_LocatingCBs[i]->CBHandle);
 			Handles.push_back( MFrameRes.CameraCB->CBHandle );
 			Handles.push_back( MFrameRes.DirectionalLight_LightingInfoCB->CBHandle );
 			Handles.push_back( MFrameRes.PointLights_LightingInfoCB->CBHandle );
 			Handles.push_back( SFrameRes.MaterialCBs[SFrameRes.StaticMeshes[i].get()]->CBHandle );
-			Handles.push_back( SFrameRes.ShadowMap->SrvHandle );
-			Handles.push_back( SFrameRes.ClampSampler->SamplerHandle );
+			Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
+			for (auto j : SFrameRes.MaterialTexs[SFrameRes.StaticMeshes[i].get()])
+			{
+				Handles.push_back(j->SrvHandle);
+			}
 			RHI->SetShaderInput( Handles );
 
 			// set mesh

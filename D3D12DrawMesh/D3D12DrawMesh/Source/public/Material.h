@@ -21,9 +21,8 @@ public:
 	virtual ~FMaterialInterface() = default;
 
 	virtual const wstring& GetShader() const = 0;
-	virtual FMaterialParam& GetNumericParams() = 0;
-	virtual vector<shared_ptr<FTexture>>& GetTextureParams() = 0;
-
+	virtual FMaterialParam GetNumericParams() = 0;
+	virtual vector<wstring> GetTextureParams() = 0;
 
 	void SetBlendMode(const FBlendMode& BM) { BlendMode = BM; }
 	const FBlendMode& GetBlendMode() const { return BlendMode; }
@@ -33,7 +32,7 @@ class FMaterial : public FMaterialInterface
 {
 private:
 	FMaterialParam NumericParams;
-	vector<shared_ptr<FTexture>> TextureParams;
+	vector<wstring> TextureParams;
 
 	wstring ShaderFile; // i'd like to write vs, ps, other shader in one shader file
 
@@ -45,9 +44,9 @@ public:
 
 	void AddFloatParam(const float& F) { NumericParams.FloatParams.push_back(F); }
 	void AddVectorParam(const FVector& F) { NumericParams.VectorParams.push_back(PaddingToVec4(F)); }
-	void AddTexture(shared_ptr<FTexture> T) { TextureParams.push_back(T); }
-	virtual FMaterialParam& GetNumericParams() override { return NumericParams; }
-	virtual vector<shared_ptr<FTexture>>& GetTextureParams() override { return TextureParams; }
+	void AddTextureParam(wstring T) { TextureParams.push_back(T); }
+	virtual FMaterialParam GetNumericParams() override { return NumericParams; }
+	virtual vector<wstring> GetTextureParams() override { return TextureParams; }
 };
 
 class FMaterialInstance : public FMaterialInterface
@@ -55,15 +54,15 @@ class FMaterialInstance : public FMaterialInterface
 private:
 	FMaterial* OriginMaterial;
 
-	FMaterialParam NumericParams;
-	vector<shared_ptr<RHI::FTexture>> TextureParams;
+	unordered_map<uint32, float> InstanceFloatParams;
+	unordered_map<uint32, FVector4> InstanceVectorParams;
+	unordered_map<uint32, wstring> InstanceTexParams;
 public:
-	FMaterialInstance( FMaterial* Mat ) { }; // FMaterialInstance should be constructed without a FMaterial(as a template)
+	FMaterialInstance(FMaterial* Mat) { }; // FMaterialInstance should be constructed without a FMaterial(as a template)
 	~FMaterialInstance() = default;
 
-	void SetNumericParam(FMaterialParam P) { NumericParams = P; }
 	void SetOriginMaterial(FMaterial* Mat) { OriginMaterial = Mat; };
-	virtual const wstring& GetShader() const override;
-	virtual FMaterialParam& GetNumericParams() override { return NumericParams; }
-	virtual vector<shared_ptr<FTexture>>& GetTextureParams() override { return TextureParams; }
+	virtual const wstring& GetShader() const override { return OriginMaterial->GetShader(); }
+	virtual FMaterialParam GetNumericParams() override;
+	virtual vector<wstring> GetTextureParams() override;
 };

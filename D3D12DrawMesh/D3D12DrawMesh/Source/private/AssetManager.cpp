@@ -315,3 +315,10 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 	
 	return Seq;
 }
+
+shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(wstring TexFileName)
+{
+	shared_ptr<FTexture> Tex = GDynamicRHI->CreateTexture(TexFileName);
+	GDynamicRHI->CommitTextureAsView(Tex.get(), FResViewType::SRV_RVT);
+	return Tex;
+}

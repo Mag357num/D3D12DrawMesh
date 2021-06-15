@@ -68,13 +68,13 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	SIL_ShadowPass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
 
 	FShaderInputLayer SIL_ScenePass_StaticMesh;
-	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
-	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL });
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 1, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 2, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 3, FShaderVisibility::SHADER_VISIBILITY_ALL });
 	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 4, FShaderVisibility::SHADER_VISIBILITY_ALL });
-	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
-	SIL_ScenePass_StaticMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL } );
+	SIL_ScenePass_StaticMesh.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 
 	FShaderInputLayer SIL_ShadowPass_SkeletalMesh;
 	SIL_ShadowPass_SkeletalMesh.Elements.push_back( { FRangeType::DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, FShaderVisibility::SHADER_VISIBILITY_ALL } );
@@ -181,24 +181,34 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				GDynamicRHI->GetFrameCount());
 			SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.StaticMeshes[i].get(), RR_ShadowPass });
 
+			// commit material texs and edit SIL
+			vector<shared_ptr<FTexture>> Texs;
+			FShaderInputLayer SIL = SIL_ScenePass_StaticMesh;
+			for (uint32 j = 0; j < Material->GetTextureParams().size(); j++)
+			{
+				Texs.push_back(FAssetManager::Get()->LoadTexture(Material->GetTextureParams()[j]));
+				SIL.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1+j, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+			}
+			SFrameRes.MaterialTexs.insert({ SFrameRes.StaticMeshes[i].get(), Texs });
+
+			// write material cb
+			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f)); // TODO: empty material should not have param cb
+			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(ParamCbSize);
+			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size());
+			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
+			SFrameRes.MaterialCBs.insert({ SFrameRes.StaticMeshes[i].get(), MaterialCB });
+
 			// scenepass rr
 			auto RR_ScenePass = CreateRenderResource
 			(
 				Material->GetShader(),
 				Material->GetBlendMode(),
 				VIL_StaticMesh,
-				SIL_ScenePass_StaticMesh,
+				SIL,
 				SceneMapFormat,
 				1,
 				GDynamicRHI->GetFrameCount() );
 			SFrameRes.RRMap_ScenePass.insert( { SFrameRes.StaticMeshes[i].get(), RR_ScenePass } );
-
-			// write material cb
-			uint32 ParamCbSize = sizeof( Material->GetNumericParams() ) == 0 ? 256 : 256 * static_cast<uint32>(ceil( static_cast<float>(sizeof( Material->GetNumericParams() )) / 256.f )); // TODO: empty material should not have param cb
-			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer( ParamCbSize );
-			GDynamicRHI->WriteConstantBuffer( MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size() );
-			GDynamicRHI->WriteConstantBufferWithOffset( MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size() );
-			SFrameRes.MaterialCBs.insert( { SFrameRes.StaticMeshes[i].get(), MaterialCB } );
 
 			// order the distance to camera
 			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)

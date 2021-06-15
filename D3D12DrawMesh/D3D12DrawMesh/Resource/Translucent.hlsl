@@ -1,4 +1,5 @@
 Texture2D shadowMap : register(t0);
+Texture2D BaseColorMap : register(t1);
 SamplerState sampleClamp : register(s0);
 
 static const float4x4 ScreenMatrix = float4x4(
@@ -31,13 +32,13 @@ struct MaterialParamInstance
 	float Opacity;
 };
 
-PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param)
+PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 uv)
 {
 	PixelMaterialInputs Inputs;
 
 	// code here depend on the node graph in ue4 material editor
 	{
-		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f); // default value
+		Inputs.BaseColor = BaseColorMap.Sample(sampleClamp, uv);
 		Inputs.Opacity = Param.Opacity;
 	}
 
@@ -133,6 +134,7 @@ struct PSInput
 	float4 worldpos : POSITION;
 	float4 ShadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
+	float2 uv0        : TEXCOORD0;
 };
 
 PSInput VSMain(VSInput input)
@@ -143,6 +145,7 @@ PSInput VSMain(VSInput input)
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.ShadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
+	result.uv0 = input.uv0;
 
 	return result;
 }
@@ -150,7 +153,7 @@ PSInput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	// material inputs
-	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams);
+	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams, input.uv0);
 
 	// temporary static parameter
 	float Shine = 10.f;

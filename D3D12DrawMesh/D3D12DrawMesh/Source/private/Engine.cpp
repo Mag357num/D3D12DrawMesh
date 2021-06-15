@@ -55,11 +55,10 @@ void FEngine::Init(void* WindowHandle)
 
 			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
 			Translucent->SetShader(L"Resource\\Translucent.hlsl");
-			Translucent->AddFloatParam(0.3f); // opacity
+			Translucent->AddFloatParam(1.f); // opacity
+			Translucent->AddTextureParam(L"Resource\\ice.dds");
 		}
 		shared_ptr<FMaterialInstance> TranslucentInstance = Translucent->CreateInstance();
-		FMaterialParam& NumericParams = TranslucentInstance->GetNumericParams();
-		NumericParams.FloatParams[0] = 0.7f;
 
 		// static mesh actors
 		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;

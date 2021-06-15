@@ -3,6 +3,7 @@
 #include "dxgidebug.h"
 #include "Win32Application.h"
 #include "FrameResourceManager.h"
+#include "DDSTextureLoader.h"
 
 namespace RHI
 {
@@ -92,10 +93,10 @@ namespace RHI
 		LastCpuHandleRt = RTVHeap->GetCPUDescriptorHandleForHeapStart();
 		for (uint32 n = 0; n < FrameCount; n++)
 		{
-			BackBuffers[n] = make_shared<FDX12Texture>();
+			BackBuffers[n] = make_shared<FDx12Resource>();
 			BackBuffers[n]->RtvHandle = make_shared<FDX12CpuHandle>();
-			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n]->As<FDX12Texture>()->DX12Texture)));
-			CreateRtvToHeaps(BackBuffers[n]->As<FDX12Texture>()->DX12Texture.Get(), BackBuffers[n]->RtvHandle.get());
+			ThrowIfFailed(RHISwapChain->GetBuffer(n, IID_PPV_ARGS(&BackBuffers[n]->As<FDx12Resource>()->Resource)));
+			CreateRtvToHeaps(BackBuffers[n]->As<FDx12Resource>()->Resource.Get(), BackBuffers[n]->RtvHandle.get());
 		}
 
 		// SRV CBV heaps
@@ -321,7 +322,7 @@ namespace RHI
 	void FDX12DynamicRHI::TransitTextureState(FTexture* Tex, FRESOURCE_STATES From, FRESOURCE_STATES To)
 	{
 		Tex->TexState = To;
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Tex->As<FDX12Texture>()->DX12Texture.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Tex->As<FDx12Resource>()->Resource.Get(), static_cast<D3D12_RESOURCE_STATES>(From), static_cast<D3D12_RESOURCE_STATES>(To)));
 	}
 
 	void FDX12DynamicRHI::CommitTextureAsView(FTexture* Tex, FResViewType Type)
@@ -331,24 +332,26 @@ namespace RHI
 		case RHI::FResViewType::DSV_RVT:
 		{
 			D3D12_DEPTH_STENCIL_VIEW_DESC Desc = {};
-			Desc.Format = Tex->As<FDX12Texture>()->DsvFormat;
+			Desc.Format = Tex->As<FDx12Resource>()->DsvFormat;
 			Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-			CreateDsvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Desc, Tex->DsvHandle.get());
+			CreateDsvToHeaps(Tex->As<FDx12Resource>()->Resource.Get(), Desc, Tex->DsvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::SRV_RVT:
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC Desc = {};
-			Desc.Format = Tex->As<FDX12Texture>()->SrvFormat;
+			Desc.Format = Tex->As<FDx12Resource>()->SrvFormat;
 			Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			Desc.Texture2D.MipLevels = 1;
+			Desc.Texture2D.MostDetailedMip = 0;
+			Desc.Texture2D.MipLevels = Tex->As<FDx12Resource>()->Resource->GetDesc().MipLevels;
+			Desc.Texture2D.ResourceMinLODClamp = 0.0f;
 			Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			CreateSrvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Desc, Tex->SrvHandle.get());
+			CreateSrvToHeaps(Tex->As<FDx12Resource>()->Resource.Get(), Desc, Tex->SrvHandle.get());
 		}
 			break;
 		case RHI::FResViewType::RTV_RVT:
 		{
-			CreateRtvToHeaps(Tex->As<FDX12Texture>()->DX12Texture.Get(), Tex->RtvHandle.get());
+			CreateRtvToHeaps(Tex->As<FDx12Resource>()->Resource.Get(), Tex->RtvHandle.get());
 		}
 			break;
 		default:
@@ -366,7 +369,7 @@ namespace RHI
 
 	void FDX12DynamicRHI::ClearDepthStencil(FTexture* Tex)
 	{
-		CommandLists[0].CommandList->ClearDepthStencilView(Tex->As<FDX12Texture>()->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		CommandLists[0].CommandList->ClearDepthStencilView(Tex->As<FDx12Resource>()->DsvHandle->As<FDX12CpuHandle>()->Handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 
 	void FDX12DynamicRHI::DrawGeometry(FGeometry* Mesh)
@@ -584,12 +587,12 @@ namespace RHI
 
 		// common set
 		CommandLists[0].CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDX12Texture>()->DX12Texture.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDx12Resource>()->Resource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	}
 
 	void FDX12DynamicRHI::FrameEnd()
 	{
-		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDX12Texture>()->DX12Texture.Get(),
+		CommandLists[0].CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BackBuffers[FrameIndex]->As<FDx12Resource>()->Resource.Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
 		// Execute the command list.
@@ -941,7 +944,7 @@ namespace RHI
 
 	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(FTextureType Type, uint32 Width, uint32 Height)
 	{
-		shared_ptr<FDX12Texture> Texture = make_shared<FDX12Texture>();
+		shared_ptr<FDx12Resource> Texture = make_shared<FDx12Resource>();
 		Texture->DsvHandle = make_shared<FDX12CpuHandle>();
 		Texture->RtvHandle = make_shared<FDX12CpuHandle>();
 		Texture->SrvHandle = make_shared<FDX12GpuHandle>();
@@ -953,32 +956,32 @@ namespace RHI
 		switch (Type)
 		{
 		case RHI::FTextureType::SHADOW_MAP_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, Width, Height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			*ClearValue = { DXGI_FORMAT_D32_FLOAT, 1.0f, 0.f }; // TODO: test if this will crash when change to R32
 			ResState = D3D12_RESOURCE_STATE_DEPTH_WRITE; // ClearValue use DXGI_FORMAT_D32_FLOAT becuz ready to use as ds
 			Texture->SrvFormat = DXGI_FORMAT_R32_FLOAT; // red 32
 			Texture->DsvFormat = DXGI_FORMAT_D32_FLOAT; // depth 32
 			break;
 		case RHI::FTextureType::DEPTH_STENCIL_MAP_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, Width, Height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			*ClearValue = { DXGI_FORMAT_D32_FLOAT, 1.0f, 0.f };
 			ResState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 			Texture->DsvFormat = DXGI_FORMAT_D32_FLOAT;
 			break;
 		case RHI::FTextureType::SCENE_COLOR_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, Width, Height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			*ClearValue = { DXGI_FORMAT_R16G16B16A16_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			Texture->SrvFormat = DXGI_FORMAT_R16G16B16A16_FLOAT; //HDR
 			break;
 		case RHI::FTextureType::RENDER_TARGET_TEXTURE_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			*ClearValue = { DXGI_FORMAT_R11G11B10_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
+			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR // TODO: why use DXGI_FORMAT_R11G11B10_FLOAT, why not DXGI_FORMAT_R16G16B16A16_FLOAT
 			break;
 		case RHI::FTextureType::ORDINARY_SHADER_RESOURCE_TT:
-			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			Desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R11G11B10_FLOAT, Width, Height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			*ClearValue = { DXGI_FORMAT_R11G11B10_FLOAT, { 0.0f, 0.2f, 0.4f, 1.0f } };
 			ResState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			Texture->SrvFormat = DXGI_FORMAT_R11G11B10_FLOAT; //HDR
@@ -993,9 +996,23 @@ namespace RHI
 			&Desc,
 			ResState,
 			ClearValue.get(),
-			IID_PPV_ARGS(&Texture->DX12Texture)));
+			IID_PPV_ARGS(&Texture->Resource)));
 
 		Texture->TexState = static_cast<FRESOURCE_STATES>(ResState);
+		return Texture;
+	}
+
+	shared_ptr<RHI::FTexture> FDX12DynamicRHI::CreateTexture(wstring TexFileName)
+	{
+		shared_ptr<FDx12Resource> Texture = make_shared<FDx12Resource>();
+		Texture->DsvHandle = make_shared<FDX12CpuHandle>();
+		Texture->RtvHandle = make_shared<FDX12CpuHandle>();
+		Texture->SrvHandle = make_shared<FDX12GpuHandle>();
+
+		ThrowIfFailed(CreateDDSTextureFromFile12(Device.Get(),
+			CommandLists[0].CommandList.Get(), TexFileName.c_str(),
+			Texture->Resource, Texture->UploadHeap));
+
 		return Texture;
 	}
 

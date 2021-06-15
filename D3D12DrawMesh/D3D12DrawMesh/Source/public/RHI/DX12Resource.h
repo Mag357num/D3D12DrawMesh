@@ -27,11 +27,12 @@ namespace RHI
 		CD3DX12_GPU_DESCRIPTOR_HANDLE Handle;
 	};
 
-	struct FDX12Texture : public FTexture
+	struct FDx12Resource : public FTexture
 	{
 		DXGI_FORMAT SrvFormat;
 		DXGI_FORMAT DsvFormat;
-		ComPtr<ID3D12Resource> DX12Texture;
+		ComPtr<ID3D12Resource> Resource;
+		ComPtr<ID3D12Resource> UploadHeap;
 	};
 
 	struct FDX12Sampler : public FSampler

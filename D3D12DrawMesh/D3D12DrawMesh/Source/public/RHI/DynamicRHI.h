@@ -37,6 +37,7 @@ namespace RHI
 		virtual shared_ptr<FShader> CreatePixelShader(const wstring& FileName) = 0;
 		virtual shared_ptr<FCB> CreateConstantBuffer(const uint32& Size) = 0;
 		virtual shared_ptr<FTexture> CreateTexture(FTextureType Type, uint32 Width, uint32 Height) = 0;
+		virtual shared_ptr<FTexture> CreateTexture(wstring TexFileName) = 0;
 		virtual shared_ptr<FSampler> CreateAndCommitSampler(FSamplerType Type) = 0;
 		virtual shared_ptr<FRootSignatrue> CreateRootSignatrue(FShaderInputLayer InputLayer) = 0;
 

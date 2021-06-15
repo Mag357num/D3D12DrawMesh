@@ -33,7 +33,7 @@ struct FSingleBufferFrameResource
 	shared_ptr<FSampler> ClampSampler;
 	shared_ptr<FSampler> WarpSampler;
 
-	// common shared textures
+	// post process texture
 	const uint32 ShadowMapSize = 8192;
 	shared_ptr<FTexture> ShadowMap;
 	shared_ptr<FTexture> DepthStencilMap;
@@ -48,7 +48,10 @@ struct FSingleBufferFrameResource
 	array<shared_ptr<FCB>, 4> BloomDownCBs;
 	array<shared_ptr<FCB>, 3> BloomUpCBs;
 	shared_ptr<FCB> SunMergeCB;
-	unordered_map<FGeometry*, shared_ptr<FCB>> MaterialCBs;
+	unordered_map<FGeometry*, shared_ptr<FCB>> MaterialCBs; // one geo one cb
+
+	// material texture
+	unordered_map<FGeometry*, vector<shared_ptr<FTexture>>> MaterialTexs; // one geo many tex
 };
 
 struct FMultiBufferFrameResource
