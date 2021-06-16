@@ -21,10 +21,15 @@ public:
 	shared_ptr<class FSkeleton> LoadSkeleton(const std::wstring& BinFileName);
 	shared_ptr<class FAnimSequence> LoadAnimSequence(const std::wstring& BinFileName);
 
-	shared_ptr<RHI::FTexture> LoadTexture(wstring TexFileName);
+	shared_ptr<RHI::FTexture> LoadTexture(const wstring& TexFileName);
+
+	void InitMaterialShaderMap();
 
 private:
+	unordered_map<string, shared_ptr<class FMaterial>> BaseMaterialMap;
+
 	vector<FStaticMeshLOD> ReadStaticMeshLODs(std::ifstream& Fin);
 	vector<FSkeletalMeshLOD> ReadSkeletalMeshLods(std::ifstream& Fin);
 	FTransform ReadTransform(std::ifstream& Fin);
+	vector<shared_ptr<class FMaterialInterface>> ReadMaterials(std::ifstream& Fin);
 };

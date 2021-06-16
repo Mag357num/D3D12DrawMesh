@@ -47,30 +47,15 @@ void FEngine::Init(void* WindowHandle)
 	// create or init scene actors
 	{
 		// create materials for actor component
-		shared_ptr<FMaterial> Empty = make_shared<FMaterial>();
-		shared_ptr<FMaterial> Translucent = make_shared<FMaterial>();
-		{
-			Empty->SetBlendMode(FBlendMode::OPAQUE_BM);
-			Empty->SetShader(L"Resource\\Empty.hlsl");
-
-			Translucent->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-			Translucent->SetShader(L"Resource\\Translucent.hlsl");
-			Translucent->AddFloatParam(0.3f); // opacity
-			Translucent->AddTextureParam(L"Resource\\ice.dds");
-		}
-		shared_ptr<FMaterialInstance> TranslucentInstance = Translucent->CreateInstance();
-		TranslucentInstance->ChangeFloatParams({ 0, 0.8f });
+		FAssetManager::Get()->InitMaterialShaderMap();
 
 		// static mesh actors
 		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
 		FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
 		for (auto i : StaticMeshActors)
 		{
-			i->GetStaticMeshComponent()->SetMaterial(Empty);
 			CurrentScene->AddStaticMeshActor(i);
 		}
-		CurrentScene->GetStaticMeshActors()[4]->GetStaticMeshComponent()->SetMaterial(Translucent);
-		CurrentScene->GetStaticMeshActors()[5]->GetStaticMeshComponent()->SetMaterial(TranslucentInstance);
 
 		// camera
 		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
@@ -83,8 +68,8 @@ void FEngine::Init(void* WindowHandle)
 			CurrentScene->SetDirectionalLight(DirectionalLight);
 
 			// point light
-			shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
-			CurrentScene->AddPointLight(PointLight1);
+			//shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
+			//CurrentScene->AddPointLight(PointLight1);
 		}
 
 		// character

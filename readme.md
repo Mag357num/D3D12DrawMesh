@@ -66,10 +66,10 @@
       3. TODO材质对象需要兼容各种component, 不需要为不同的component创建各自的材质
          1. 在constant buffer中新增一组buffer专门设置开关变量
             1. 比如IsSkeletalMesh, 如果是骨骼模型, 就在VS中加处理权重的shader code
+         2. 一个component可能同时有透明和不透明的材质用于不同的submesh, 因此绘制需要以submesh作为单位, 排列绘制顺序时也需要以submesh为单位
       4. 材质参数
-         1. float数组
-         2. vector数组
-         3. TODOtexture数组
+         1. 按照: vector数组, float数组, texture数组的方式传入shader
+         2. 可以用代码直接设置, 也可以读取ue4导出的二进制文件
    3. 透明物体渲染(顺序有关)
       1. 透明物体pso设置
          1. 打开混合

@@ -29,8 +29,6 @@ struct PixelMaterialInputs
 struct MaterialParamInstance
 {
 	// parameter in this constantbuffer depends on what parameter material need
-	float4 BaseColor;
-	float Roughness;
 };
 
 PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 uv)
@@ -39,9 +37,7 @@ PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 
 
 	// code here depend on the node graph in ue4 material editor
 	{
-		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f);
-		// Inputs.BaseColor = Param.BaseColor;
-		Inputs.Roughness = Param.Roughness;
+		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f); // default value
 		Inputs.Opacity = 1.f;
 	}
 

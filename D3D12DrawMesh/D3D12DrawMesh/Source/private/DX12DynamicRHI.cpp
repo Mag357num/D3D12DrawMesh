@@ -1009,8 +1009,10 @@ namespace RHI
 		Texture->RtvHandle = make_shared<FDX12CpuHandle>();
 		Texture->SrvHandle = make_shared<FDX12GpuHandle>();
 
+		wstring FullName = L"Resource\\" + TexFileName + L".dds";
+
 		ThrowIfFailed(CreateDDSTextureFromFile12(Device.Get(),
-			CommandLists[0].CommandList.Get(), TexFileName.c_str(),
+			CommandLists[0].CommandList.Get(), FullName.c_str(),
 			Texture->Resource, Texture->UploadHeap));
 
 		return Texture;

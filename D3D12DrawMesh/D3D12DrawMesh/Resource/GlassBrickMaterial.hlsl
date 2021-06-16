@@ -1,4 +1,5 @@
 Texture2D shadowMap : register(t0);
+Texture2D BaseColorMap : register(t1);
 SamplerState sampleClamp : register(s0);
 
 static const float4x4 ScreenMatrix = float4x4(
@@ -29,8 +30,7 @@ struct PixelMaterialInputs
 struct MaterialParamInstance
 {
 	// parameter in this constantbuffer depends on what parameter material need
-	float4 BaseColor;
-	float Roughness;
+	float Opacity;
 };
 
 PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 uv)
@@ -39,10 +39,8 @@ PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 
 
 	// code here depend on the node graph in ue4 material editor
 	{
-		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f);
-		// Inputs.BaseColor = Param.BaseColor;
-		Inputs.Roughness = Param.Roughness;
-		Inputs.Opacity = 1.f;
+		Inputs.BaseColor = BaseColorMap.Sample(sampleClamp, uv);
+		Inputs.Opacity = Param.Opacity;
 	}
 
 	return Inputs;

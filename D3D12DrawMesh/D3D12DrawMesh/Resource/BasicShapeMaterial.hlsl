@@ -39,8 +39,7 @@ PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 
 
 	// code here depend on the node graph in ue4 material editor
 	{
-		Inputs.BaseColor = float4(1.f, 1.f, 1.f, 1.f);
-		// Inputs.BaseColor = Param.BaseColor;
+		Inputs.BaseColor = Param.BaseColor;
 		Inputs.Roughness = Param.Roughness;
 		Inputs.Opacity = 1.f;
 	}

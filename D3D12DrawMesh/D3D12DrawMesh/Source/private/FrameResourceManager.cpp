@@ -166,7 +166,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		{
 			// mat
 			FStaticMeshComponent* Component = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent();
-			FMaterialInterface* Material = Component->GetMaterial();
+			FMaterialInterface* Material = Component->GetMaterial(0); // TODO: need change
 			// mesh
 			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Component));
 			// shadowpass rr
@@ -194,8 +194,10 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			// write material cb
 			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f)); // TODO: empty material should not have param cb
 			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(ParamCbSize);
-			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().FloatParams.data(), 4 * Material->GetNumericParams().FloatParams.size());
-			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 4 * Material->GetNumericParams().FloatParams.size(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
+			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
+			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 16 * Material->GetNumericParams().VectorParams.size(), Material->GetNumericParams().ScalarParams.data(), 4 * Material->GetNumericParams().ScalarParams.size());
+
+			
 			SFrameRes.MaterialCBs.insert({ SFrameRes.StaticMeshes[i].get(), MaterialCB });
 
 			// scenepass rr
@@ -248,6 +250,11 @@ void FFrameResourceManager::CreateDirectionalLights_LightingInfoCB(FScene* Scene
 void FFrameResourceManager::CreatePointLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
 	// each point light need 3 * 256 byte in current code structure design
+	if (Scene->GetPointLights().size() == 0)
+	{
+		FrameRes.PointLights_LightingInfoCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(256));
+		return;
+	}
 	FrameRes.PointLights_LightingInfoCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(256 * 3 * Scene->GetPointLights().size()));
 }
 
@@ -570,7 +577,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		SFrameRes.TranslucentActorIndice.clear();
 		for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
 		{
-			auto Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial();
+			auto Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial(0); // TODO: need change
 			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
 			{
 				FVector ActorPos = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetTransform().Translation;

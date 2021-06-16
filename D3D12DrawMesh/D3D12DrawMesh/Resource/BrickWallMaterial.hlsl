@@ -31,8 +31,8 @@ struct PixelMaterialInputs
 struct MaterialParamInstance
 {
 	// parameter in this constantbuffer depends on what parameter material need
-	float Specular;
 	float Roughness;
+	float Specular;
 };
 
 PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 uv)
@@ -161,6 +161,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams, input.uv0);
 
 	// temporary static parameter
+	float Shine = 1.f;
 
 	// common parameter
 	float ShadowBias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);
@@ -172,7 +173,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float3 DL_HalfWay = normalize(ViewDir + DL_Dir);
 	float3 DL_Ambient = DirectionalLight.Ambient;
 	float3 DL_Diffuse = DirectionalLight.Diffuse * max(dot(input.normal, DL_Dir), 0.f);
-	float3 DL_Specular = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), MaterialInputs.Specular) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+	float3 DL_Specular = DirectionalLight.Specular * pow(max(dot(input.normal, DL_HalfWay), 0.f), Shine) * max(dot(input.normal, DL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 
 	// directional light shadow
 	{
@@ -187,7 +188,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 		float3 PL_HalfWay = normalize(ViewDir + PL_Dir);
 		float3 PL_Ambient = PointLight[i].State.Ambient;
 		float3 PL_Diffuse = PointLight[i].State.Diffuse * max(dot(input.normal, PL_Dir), 0.f);
-		float3 PL_Specular = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), MaterialInputs.Specular) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
+		float3 PL_Specular = PointLight[i].State.Specular * pow(max(dot(input.normal, PL_HalfWay), 0.f), Shine) * max(dot(input.normal, PL_Dir), 0.f); // multiple the dot(N, L) to avoid specular leak
 		
 		// point light shadow
 		float ShadowFactor = 1.f;

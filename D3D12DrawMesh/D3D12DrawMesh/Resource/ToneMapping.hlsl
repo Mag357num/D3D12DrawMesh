@@ -43,7 +43,7 @@ float4 PSMain(PSInput input) : SV_TARGET
     float4 color;
     float4 SceneColor = SceneColorTexture.Sample(SceneColorSampler, input.uv);
     half3 LinearColor =  SceneColor.rgb;
-    float3 CombinedBloom = BloomTexture.Sample(SceneColorSampler, input.uv);
+    float4 CombinedBloom = BloomTexture.Sample(SceneColorSampler, input.uv);
     LinearColor = LinearColor.rgb + CombinedBloom.rgb;
     color.rgb = ACESToneMapping(LinearColor, 1.0f);
     color.a = SceneColor.a;

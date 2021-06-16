@@ -5,6 +5,7 @@
 #include "Skeleton.h"
 #include "Material.h"
 #include "FrameResourceManager.h"
+#include "RHIResource.h"
 
 using RHI::GDynamicRHI;
 
@@ -47,6 +48,7 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 		Com->SetStaticMesh(SM);
 		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
 		Com->SetTransform(ReadTransform(Fin));
+		Com->SetMaterials(ReadMaterials(Fin));
 
 		Actor->SetStaticMeshComponent(Com);
 		Actors.push_back(Actor);
@@ -186,7 +188,80 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 	return Trans;
 }
 
-shared_ptr<FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
+vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstream& Fin)
+{
+	vector<shared_ptr<FMaterialInterface>> Mats;
+
+	int MatNum;
+	Fin.read((char*)&MatNum, sizeof(int));
+	for (uint32 i = 0; i < MatNum; i++)
+	{
+		shared_ptr<FMaterialInterface> Mat;
+		bool IsMaterialInstance;
+		Fin.read((char*)&IsMaterialInstance, sizeof(bool));
+		char padding[3];
+		Fin.read((char*)&padding, 3 * sizeof(char));
+
+		// read FString
+		int CharNum;
+		Fin.read((char*)&CharNum, sizeof(int));
+		string BaseMaterialName;
+		BaseMaterialName.resize(CharNum);
+		Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
+		BaseMaterialName = BaseMaterialName.c_str();
+
+		if (IsMaterialInstance)
+		{
+			Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
+		}
+		else
+		{
+			Mat = BaseMaterialMap[BaseMaterialName]; // base materials create in assetmanager when engine init.
+		}
+
+		if (Mat.get() == nullptr)
+		{
+			throw std::exception("ERROR: there is no such Material!");
+		}
+
+		int ScalarNum;
+		Fin.read((char*)&ScalarNum, sizeof(int));
+		for (uint32 i = 0; i < ScalarNum; i++)
+		{
+			float Scalar;
+			Fin.read((char*)&Scalar, sizeof(float));
+			Mat->ChangeScalarParams(i, Scalar);
+		}
+
+		int VectorNum;
+		Fin.read((char*)&VectorNum, sizeof(int));
+		for (uint32 i = 0; i < VectorNum; i++)
+		{
+			FVector4 Vector;
+			Fin.read((char*)&Vector, 4 * sizeof(float));
+			Mat->ChangeVectorParams(i, Vector);
+		}
+
+		int TextureNum;
+		Fin.read((char*)&TextureNum, sizeof(int));
+		for (uint32 i = 0; i < TextureNum; i++)
+		{
+			int CharNum;
+			Fin.read((char*)&CharNum, sizeof(int));
+			string Texture;
+			Texture.resize(CharNum);
+			Fin.read((char*)Texture.data(), CharNum * sizeof(char));
+			Texture = Texture.c_str();
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+			Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
+		}
+		Mats.push_back(Mat);
+	}
+
+	return Mats;
+}
+
+shared_ptr<class FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstring& BinFileName)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -316,9 +391,47 @@ shared_ptr<FAnimSequence> FAssetManager::LoadAnimSequence(const std::wstring& Bi
 	return Seq;
 }
 
-shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(wstring TexFileName)
+shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(const wstring& TexFileName)
 {
 	shared_ptr<FTexture> Tex = GDynamicRHI->CreateTexture(TexFileName);
 	GDynamicRHI->CommitTextureAsView(Tex.get(), FResViewType::SRV_RVT);
 	return Tex;
+}
+
+void FAssetManager::InitMaterialShaderMap()
+{
+	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
+	BasicShapeMaterial->SetShader(L"Resource\\BasicShapeMaterial.hlsl");
+	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
+
+	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
+	BrickWallMaterial->SetShader(L"Resource\\BrickWallMaterial.hlsl");
+	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
+
+	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
+	BloomMaterial->SetShader(L"Resource\\BloomMaterial.hlsl");
+	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
+
+	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
+	GlassBrickMaterial->SetShader(L"Resource\\GlassBrickMaterial.hlsl");
+	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
+
+	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
+	GlassMaterial->SetShader(L"Resource\\GlassMaterial.hlsl");
+	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
+
+	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
+	M_MaterialSphere->SetShader(L"Resource\\M_MaterialSphere.hlsl");
+	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
+
+	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
+	M_MaterialSphere_Plain->SetShader(L"Resource\\M_MaterialSphere_Plain.hlsl");
+	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
 }

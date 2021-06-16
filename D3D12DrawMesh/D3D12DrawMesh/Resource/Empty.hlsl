@@ -17,6 +17,7 @@ struct PixelMaterialInputs
 	float Specular;
 	float Roughness;
 	float Anisotropy;
+	float3 Normal;
 	float3 Tangent;
 	float Subsurface;
 	float AmbientOcclusion;
@@ -30,7 +31,7 @@ struct MaterialParamInstance
 	// parameter in this constantbuffer depends on what parameter material need
 };
 
-PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param)
+PixelMaterialInputs CalcPixelMaterialInputs(MaterialParamInstance Param, float2 uv)
 {
 	PixelMaterialInputs Inputs;
 
@@ -132,6 +133,7 @@ struct PSInput
 	float4 worldpos : POSITION;
 	float4 ShadowScreenPos :POSITION1;
 	float3 normal : NORMAL;
+	float2 uv0        : TEXCOORD0;
 };
 
 PSInput VSMain(VSInput input)
@@ -142,17 +144,17 @@ PSInput VSMain(VSInput input)
 	result.position = mul(result.worldpos, CameraVP);
 	result.normal = normalize(mul(float4(input.normal, 0.0f), World).xyz);
 	result.ShadowScreenPos = mul(result.worldpos, mul(VOMatrix, ScreenMatrix));
-
+	result.uv0 = input.uv0;
 	return result;
 }
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	// material inputs
-	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams);
+	PixelMaterialInputs MaterialInputs = CalcPixelMaterialInputs(MaterialParams, input.uv0);
 
 	// temporary static parameter
-	float Shine = 10.f;
+	float Shine = 1.f;
 
 	// common parameter
 	float ShadowBias = max(0.005f * (1.0f - abs(dot(input.normal, DirectionalLight.Dir))), 0.00005f);

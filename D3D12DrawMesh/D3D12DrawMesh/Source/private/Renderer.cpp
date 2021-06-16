@@ -90,13 +90,16 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		}
 
 		// draw light source mesh
-		RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
-		for (uint32 i = 0; i < SFrameRes.PointLightMeshes.size(); i++)
+		if (SFrameRes.PointLightMeshes.size() != 0)
 		{
-			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(MFrameRes.PointLight_LocatingCBs[i]->CBHandle);
-			RHI->SetShaderInput(Handles);
-			RHI->DrawGeometry(SFrameRes.PointLightMeshes[i].get());
+			RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
+			for (uint32 i = 0; i < SFrameRes.PointLightMeshes.size(); i++)
+			{
+				vector<shared_ptr<FHandle>> Handles;
+				Handles.push_back(MFrameRes.PointLight_LocatingCBs[i]->CBHandle);
+				RHI->SetShaderInput(Handles);
+				RHI->DrawGeometry(SFrameRes.PointLightMeshes[i].get());
+			}
 		}
 
 		// draw character
@@ -127,7 +130,7 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 			// root signature
 			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
+			Handles.push_back(SFrameRes.WarpSampler->SamplerHandle);
 			Handles.push_back(MFrameRes.StaticMesh_ScenePass_LocatingCBs[i]->CBHandle);
 			Handles.push_back(MFrameRes.CameraCB->CBHandle);
 			Handles.push_back(MFrameRes.DirectionalLight_LightingInfoCB->CBHandle);

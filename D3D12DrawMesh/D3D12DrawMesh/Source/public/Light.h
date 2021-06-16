@@ -12,7 +12,7 @@ class ALight : public AActor
 {
 protected:
 	// base param
-	FVector Ambient = { 0.02f, 0.02f, 0.02f };
+	FVector Ambient = { 0.05f, 0.05f, 0.05f };
 	FVector Diffuse = { 0.3f , 0.3f , 0.3f };
 	FVector Specular = { 1.5f, 1.5f, 1.5f };
 

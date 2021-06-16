@@ -8,7 +8,7 @@ protected:
 	bool Dirty = true;
 	FTransform Transform;
 	FMatrix WorldMatrix;
-	shared_ptr<FMaterialInterface> Material;
+	vector<shared_ptr<FMaterialInterface>> Materials;
 
 public:
 	void SetScale(const FVector& Scale) { Transform.Scale = Scale; Dirty = true; }
@@ -16,9 +16,10 @@ public:
 	void SetTranslate(const FVector& Translate) { Transform.Translation = Translate; Dirty = true; }
 	void SetTransform(const FTransform& Trans) { Transform = Trans; Dirty = true; }
 	void SetWorldMatrix(const FMatrix& Matrix);
-	void SetMaterial(shared_ptr<FMaterialInterface> Mat) { Material = Mat; }
+	void SetMaterials(vector<shared_ptr<FMaterialInterface>> Mats) { Materials = Mats; }
+	void SetMaterial(shared_ptr<FMaterialInterface> Mat, uint32 index);
 	const FTransform& GetTransform() const { return Transform; }
-	FMaterialInterface* GetMaterial() const { return Material.get(); }
+	FMaterialInterface* GetMaterial(uint32 index) const { return Materials[index].get(); }
 	const FMatrix& GetWorldMatrix()
 	{
 		if (Dirty)
