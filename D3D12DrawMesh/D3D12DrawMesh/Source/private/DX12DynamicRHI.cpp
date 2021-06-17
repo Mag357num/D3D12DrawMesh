@@ -195,7 +195,7 @@ namespace RHI
 		CommandLists[0].CommandList->SetGraphicsRootSignature(RR->Sig->As<FDX12RootSignatrue>()->RootSignature.Get());
 	}
 
-	void FDX12DynamicRHI::SetShaderInput(vector<shared_ptr<FHandle>> Handles)
+	void FDX12DynamicRHI::SetShaderInput(vector<shared_ptr<FHandle>>& Handles)
 	{
 		ID3D12DescriptorHeap* ppHeaps[] = { CBVSRVHeap.Get(), SamplerHeap.Get() };
 		CommandLists[0].CommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
@@ -1009,7 +1009,7 @@ namespace RHI
 		Texture->RtvHandle = make_shared<FDX12CpuHandle>();
 		Texture->SrvHandle = make_shared<FDX12GpuHandle>();
 
-		wstring FullName = L"Resource\\" + TexFileName + L".dds";
+		wstring FullName = L"Resource\\Texture\\" + TexFileName + L".dds";
 
 		ThrowIfFailed(CreateDDSTextureFromFile12(Device.Get(),
 			CommandLists[0].CommandList.Get(), FullName.c_str(),

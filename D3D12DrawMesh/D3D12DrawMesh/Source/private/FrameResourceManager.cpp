@@ -41,11 +41,11 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	// TODO: param hard coding
 	 FFormat SceneMapFormat = GEngine->UsePostProcess() ? FFormat::FORMAT_R16G16B16A16_FLOAT : FFormat::FORMAT_R8G8B8A8_UNORM;
 
-	const wstring Shader_ShadowPass_StaticMesh = L"Resource\\ShadowMapping_StaticMesh.hlsl";
-	const wstring Shader_ScenePass_StaticMesh = L"Resource\\SceneColor_StaticMesh.hlsl";
-	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\ShadowMapping_SkeletalMesh.hlsl";
-	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\SceneColor_SkeletalMesh.hlsl";
-	const wstring Shader_ScenePass_LightSource = L"Resource\\SceneColor_DirectionLightSource.hlsl";
+	const wstring Shader_ShadowPass_StaticMesh = L"Resource\\Shader\\ShadowMapping_StaticMesh.hlsl";
+	const wstring Shader_ScenePass_StaticMesh = L"Resource\\Shader\\SceneColor_StaticMesh.hlsl";
+	const wstring Shader_ShadowPass_SkeletalMesh = L"Resource\\Shader\\ShadowMapping_SkeletalMesh.hlsl";
+	const wstring Shader_ScenePass_SkeletalMesh = L"Resource\\Shader\\SceneColor_SkeletalMesh.hlsl";
+	const wstring Shader_ScenePass_LightSource = L"Resource\\Shader\\SceneColor_DirectionLightSource.hlsl";
 
 	FVertexInputLayer VIL_StaticMesh;
 	VIL_StaticMesh.Elements.push_back( { "POSITION", 0, FFormat::FORMAT_R32G32B32_FLOAT, 0, 0, 0, 0 } );
@@ -425,7 +425,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	// bloom set up rr
 	SFrameRes.RR_BloomSetup = CreateRenderResource
 	(
-		L"Resource\\BloomSetup.hlsl",
+		L"Resource\\Shader\\BloomSetup.hlsl",
 		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_BloomSetup,
@@ -446,7 +446,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	{
 		SFrameRes.RR_BloomDown[i] = CreateRenderResource
 		(
-			L"Resource\\BloomDown.hlsl",
+			L"Resource\\Shader\\BloomDown.hlsl",
 			FBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomDown,
@@ -468,7 +468,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	{
 		SFrameRes.RR_BloomUp[i] = CreateRenderResource
 		(
-			L"Resource\\BloomUp.hlsl",
+			L"Resource\\Shader\\BloomUp.hlsl",
 			FBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomUp,
@@ -495,7 +495,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	// sun merge
 	SFrameRes.RR_SunMerge = CreateRenderResource
 	(
-		L"Resource\\SunMerge.hlsl",
+		L"Resource\\Shader\\SunMerge.hlsl",
 		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_SunMerge,
@@ -514,7 +514,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	// tone mapping
 	SFrameRes.RR_ToneMapping = CreateRenderResource
 	(
-		L"Resource\\ToneMapping.hlsl",
+		L"Resource\\Shader\\ToneMapping.hlsl",
 		FBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_ToneMapping,

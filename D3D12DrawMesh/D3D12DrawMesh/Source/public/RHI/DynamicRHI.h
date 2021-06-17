@@ -58,7 +58,7 @@ namespace RHI
 		// Pipeline
 		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, FBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
 		virtual void SetPipelineState(FRenderResource* RR) = 0;
-		virtual void SetShaderInput(vector<shared_ptr<FHandle>> Handles) = 0;
+		virtual void SetShaderInput(vector<shared_ptr<FHandle>>& Handles) = 0;
 
 		// Output Merger
 		virtual void SetScissor(uint32 Left, uint32 Top, uint32 Right, uint32 Bottom) = 0;

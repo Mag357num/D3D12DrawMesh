@@ -401,37 +401,37 @@ shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(const wstring& TexFileName)
 void FAssetManager::InitMaterialShaderMap()
 {
 	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
-	BasicShapeMaterial->SetShader(L"Resource\\BasicShapeMaterial.hlsl");
+	BasicShapeMaterial->SetShader(L"Resource\\Shader\\BasicShapeMaterial.hlsl");
 	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
 	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
 
 	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
-	BrickWallMaterial->SetShader(L"Resource\\BrickWallMaterial.hlsl");
+	BrickWallMaterial->SetShader(L"Resource\\Shader\\BrickWallMaterial.hlsl");
 	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
 	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
 
 	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
-	BloomMaterial->SetShader(L"Resource\\BloomMaterial.hlsl");
+	BloomMaterial->SetShader(L"Resource\\Shader\\BloomMaterial.hlsl");
 	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
 	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
 
 	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
-	GlassBrickMaterial->SetShader(L"Resource\\GlassBrickMaterial.hlsl");
+	GlassBrickMaterial->SetShader(L"Resource\\Shader\\GlassBrickMaterial.hlsl");
 	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
 	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
 
 	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
-	GlassMaterial->SetShader(L"Resource\\GlassMaterial.hlsl");
+	GlassMaterial->SetShader(L"Resource\\Shader\\GlassMaterial.hlsl");
 	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
 	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
 
 	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
-	M_MaterialSphere->SetShader(L"Resource\\M_MaterialSphere.hlsl");
+	M_MaterialSphere->SetShader(L"Resource\\Shader\\M_MaterialSphere.hlsl");
 	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
 	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
 
 	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
-	M_MaterialSphere_Plain->SetShader(L"Resource\\M_MaterialSphere_Plain.hlsl");
+	M_MaterialSphere_Plain->SetShader(L"Resource\\Shader\\M_MaterialSphere_Plain.hlsl");
 	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
 	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
 }

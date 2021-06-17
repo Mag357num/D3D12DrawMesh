@@ -40,7 +40,7 @@ const FMatrix& ADirectionalLight::GetOMatrix_RenderThread()
 ALight::ALight()
 {
 	shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-	Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Sphere_.dat"));
+	Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Mesh\\Sphere_.dat"));
 	Components.push_back(Com);
 }
 

@@ -51,7 +51,7 @@ void FEngine::Init(void* WindowHandle)
 
 		// static mesh actors
 		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
-		FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Scene_.dat", StaticMeshActors);
+		FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Map\\Scene_.dat", StaticMeshActors);
 		for (auto i : StaticMeshActors)
 		{
 			CurrentScene->AddStaticMeshActor(i);
@@ -77,10 +77,10 @@ void FEngine::Init(void* WindowHandle)
 		{
 			shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
 			{
-				SkeMeshCom->SetSkeletalMesh(FAssetManager::Get()->LoadSkeletalMesh(L"Resource\\SkeletalMeshBinary_.dat"));
-				SkeMeshCom->GetSkeletalMesh()->SetSkeleton(FAssetManager::Get()->LoadSkeleton(L"Resource\\SkeletonBinary_.dat"));
-				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", FAssetManager::Get()->LoadAnimSequence(L"Resource\\SequenceRun_.dat")));
-				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\SequenceIdle_.dat")));
+				SkeMeshCom->SetSkeletalMesh(FAssetManager::Get()->LoadSkeletalMesh(L"Resource\\Mesh\\SkeletalMeshBinary_.dat"));
+				SkeMeshCom->GetSkeletalMesh()->SetSkeleton(FAssetManager::Get()->LoadSkeleton(L"Resource\\Skeleton\\SkeletonBinary_.dat"));
+				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceRun_.dat")));
+				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceIdle_.dat")));
 				SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
 			}
 			Cha->SetSkeletalMeshCom(SkeMeshCom);
