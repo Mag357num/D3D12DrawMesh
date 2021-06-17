@@ -28,8 +28,11 @@ void FAssetManager::DestroyAssetManager()
 	GAssetManager = nullptr;
 }
 
-void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<shared_ptr<AStaticMeshActor>>& Actors)
+shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 {
+	shared_ptr<FScene> Scene = make_shared<FScene>();
+	vector<shared_ptr<AStaticMeshActor>>& Actors = Scene->GetStaticMeshActors();
+
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
 	if (!Fin.is_open())
@@ -37,24 +40,50 @@ void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector
 		throw std::exception("ERROR: open file faild.");
 	}
 
-	uint32 ActorNum;
-	Fin.read((char*)&ActorNum, sizeof(uint32));
+	uint32 SceneActorNum;
+	Fin.read((char*)&SceneActorNum, sizeof(uint32));
 
-	for (uint32 i = 0; i < ActorNum; i++)
+	for (uint32 i = 0; i < SceneActorNum; i++)
 	{
-		shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>();
-		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-		shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
-		Com->SetStaticMesh(SM);
-		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
-		Com->SetTransform(ReadTransform(Fin));
-		Com->SetMaterials(ReadMaterials(Fin));
+		// actor name
+		string ActorName;
+		{
+			int CharNum;
+			Fin.read((char*)&CharNum, sizeof(int));
+			ActorName.resize(CharNum);
+			Fin.read((char*)ActorName.data(), CharNum * sizeof(char));
+			ActorName = ActorName.c_str();
+		}
 
-		Actor->SetStaticMeshComponent(Com);
-		Actors.push_back(Actor);
+		// static mesh components
+		{
+			int Num;
+			Fin.read((char*)&Num, sizeof(int));
+			for (uint32 j = 0; j < Num; j++)
+			{
+				shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+				shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
+				Com->SetStaticMesh(SM);
+				Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
+				Com->SetTransform(ReadComponentTransformInSceneBinary(Fin));
+				Com->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
+			}
+		}
+
+		// camera components
+		{
+			int Num;
+			Fin.read((char*)&Num, sizeof(int));
+			for (uint32 j = 0; j < Num; j++)
+			{
+				//shared_ptr<FCameraComponent> Com = make_shared<FStaticMeshComponent>();
+			}
+		}
+
 	}
 
 	Fin.close();
+	return Scene;
 }
 
 shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFileName)
@@ -62,11 +91,11 @@ shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFil
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
 	shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
-	SM->SetMeshLODs(ReadStaticMeshLODs(Fin));
+	SM->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
 	return SM;
 }
 
-vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
+vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin)
 {
 	FStaticMeshLOD MeshLOD;
 
@@ -173,7 +202,7 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	return MeshLODs;
 }
 
-FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
+FTransform FAssetManager::ReadComponentTransformInSceneBinary(std::ifstream& Fin)
 {
 	FTransform Trans;
 	if (!Fin.is_open())
@@ -188,7 +217,7 @@ FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
 	return Trans;
 }
 
-vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstream& Fin)
+vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBinary(std::ifstream& Fin)
 {
 	vector<shared_ptr<FMaterialInterface>> Mats;
 
@@ -196,66 +225,16 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstrea
 	Fin.read((char*)&MatNum, sizeof(int));
 	for (uint32 i = 0; i < MatNum; i++)
 	{
-		shared_ptr<FMaterialInterface> Mat;
-		bool IsMaterialInstance;
-		Fin.read((char*)&IsMaterialInstance, sizeof(bool));
-		char padding[3];
-		Fin.read((char*)&padding, 3 * sizeof(char));
-
 		// read FString
 		int CharNum;
 		Fin.read((char*)&CharNum, sizeof(int));
-		string BaseMaterialName;
-		BaseMaterialName.resize(CharNum);
-		Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
-		BaseMaterialName = BaseMaterialName.c_str();
+		string MaterialName;
+		MaterialName.resize(CharNum);
+		Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
+		MaterialName = MaterialName.c_str();
+		MaterialName = "Resouce\\Material\\" + MaterialName + ".material";
 
-		if (IsMaterialInstance)
-		{
-			Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
-		}
-		else
-		{
-			Mat = BaseMaterialMap[BaseMaterialName]; // base materials create in assetmanager when engine init.
-		}
-
-		if (Mat.get() == nullptr)
-		{
-			throw std::exception("ERROR: there is no such Material!");
-		}
-
-		int ScalarNum;
-		Fin.read((char*)&ScalarNum, sizeof(int));
-		for (uint32 i = 0; i < ScalarNum; i++)
-		{
-			float Scalar;
-			Fin.read((char*)&Scalar, sizeof(float));
-			Mat->ChangeScalarParams(i, Scalar);
-		}
-
-		int VectorNum;
-		Fin.read((char*)&VectorNum, sizeof(int));
-		for (uint32 i = 0; i < VectorNum; i++)
-		{
-			FVector4 Vector;
-			Fin.read((char*)&Vector, 4 * sizeof(float));
-			Mat->ChangeVectorParams(i, Vector);
-		}
-
-		int TextureNum;
-		Fin.read((char*)&TextureNum, sizeof(int));
-		for (uint32 i = 0; i < TextureNum; i++)
-		{
-			int CharNum;
-			Fin.read((char*)&CharNum, sizeof(int));
-			string Texture;
-			Texture.resize(CharNum);
-			Fin.read((char*)Texture.data(), CharNum * sizeof(char));
-			Texture = Texture.c_str();
-			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-			Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
-		}
-		Mats.push_back(Mat);
+		Mats.push_back(LoadMaterial(MaterialName));
 	}
 
 	return Mats;
@@ -277,6 +256,80 @@ shared_ptr<class FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstri
 	Fin.close();
 
 	return SkeMesh;
+}
+
+shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& MaterialFileName)
+{
+	std::ifstream Fin(MaterialFileName, std::ios::binary);
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR:  open file faild.");
+	}
+
+	shared_ptr<FMaterialInterface> Mat;
+	bool IsMaterialInstance;
+	Fin.read((char*)&IsMaterialInstance, sizeof(bool));
+	char padding[3];
+	Fin.read((char*)&padding, 3 * sizeof(char));
+
+	// read FString
+	int CharNum;
+	Fin.read((char*)&CharNum, sizeof(int));
+	string BaseMaterialName;
+	BaseMaterialName.resize(CharNum);
+	Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
+	BaseMaterialName = BaseMaterialName.c_str();
+
+	bool HasBaseMaterial = BaseMaterialMap.find(BaseMaterialName) != BaseMaterialMap.end();
+	if (IsMaterialInstance)
+	{
+		if (!HasBaseMaterial) // if there isn't base material of this instance
+		{
+			BaseMaterialMap.insert({ BaseMaterialName, dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material")) });
+		}
+		Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
+	}
+	else
+	{
+		if (!HasBaseMaterial)
+		{
+			BaseMaterialMap.insert({ BaseMaterialName, dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material")) });
+		}
+		Mat = BaseMaterialMap[BaseMaterialName]; // base materials create in assetmanager when engine init.
+	}
+
+	int ScalarNum;
+	Fin.read((char*)&ScalarNum, sizeof(int));
+	for (uint32 i = 0; i < ScalarNum; i++)
+	{
+		float Scalar;
+		Fin.read((char*)&Scalar, sizeof(float));
+		Mat->ChangeScalarParams(i, Scalar);
+	}
+
+	int VectorNum;
+	Fin.read((char*)&VectorNum, sizeof(int));
+	for (uint32 i = 0; i < VectorNum; i++)
+	{
+		FVector4 Vector;
+		Fin.read((char*)&Vector, 4 * sizeof(float));
+		Mat->ChangeVectorParams(i, Vector);
+	}
+
+	int TextureNum;
+	Fin.read((char*)&TextureNum, sizeof(int));
+	for (uint32 i = 0; i < TextureNum; i++)
+	{
+		int CharNum;
+		Fin.read((char*)&CharNum, sizeof(int));
+		string Texture;
+		Texture.resize(CharNum);
+		Fin.read((char*)Texture.data(), CharNum * sizeof(char));
+		Texture = Texture.c_str();
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
+	}
 }
 
 shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileName)
@@ -398,40 +451,40 @@ shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(const wstring& TexFileName)
 	return Tex;
 }
 
-void FAssetManager::InitMaterialShaderMap()
-{
-	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
-	BasicShapeMaterial->SetShader(L"Resource\\Shader\\BasicShapeMaterial.hlsl");
-	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
-
-	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
-	BrickWallMaterial->SetShader(L"Resource\\Shader\\BrickWallMaterial.hlsl");
-	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
-
-	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
-	BloomMaterial->SetShader(L"Resource\\Shader\\BloomMaterial.hlsl");
-	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
-
-	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
-	GlassBrickMaterial->SetShader(L"Resource\\Shader\\GlassBrickMaterial.hlsl");
-	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
-
-	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
-	GlassMaterial->SetShader(L"Resource\\Shader\\GlassMaterial.hlsl");
-	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
-
-	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
-	M_MaterialSphere->SetShader(L"Resource\\Shader\\M_MaterialSphere.hlsl");
-	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
-	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
-
-	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
-	M_MaterialSphere_Plain->SetShader(L"Resource\\Shader\\M_MaterialSphere_Plain.hlsl");
-	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
-	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
-}
+//void FAssetManager::InitMaterialShaderMap()
+//{
+//	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
+//	BasicShapeMaterial->SetShader(L"Resource\\Shader\\BasicShapeMaterial.hlsl");
+//	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+//	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
+//
+//	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
+//	BrickWallMaterial->SetShader(L"Resource\\Shader\\BrickWallMaterial.hlsl");
+//	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+//	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
+//
+//	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
+//	BloomMaterial->SetShader(L"Resource\\Shader\\BloomMaterial.hlsl");
+//	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+//	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
+//
+//	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
+//	GlassBrickMaterial->SetShader(L"Resource\\Shader\\GlassBrickMaterial.hlsl");
+//	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+//	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
+//
+//	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
+//	GlassMaterial->SetShader(L"Resource\\Shader\\GlassMaterial.hlsl");
+//	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+//	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
+//
+//	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
+//	M_MaterialSphere->SetShader(L"Resource\\Shader\\M_MaterialSphere.hlsl");
+//	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
+//	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
+//
+//	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
+//	M_MaterialSphere_Plain->SetShader(L"Resource\\Shader\\M_MaterialSphere_Plain.hlsl");
+//	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
+//	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
+//}

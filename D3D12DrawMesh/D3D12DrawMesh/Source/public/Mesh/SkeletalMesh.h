@@ -42,7 +42,7 @@ public:
 	vector<FSkeletalMeshLOD>& GetMeshLODs() { return MeshLODs; }
 };
 
-class FSkeletalMeshComponent : public FActorComponent
+class FSkeletalMeshComponent : public FMeshComponent
 {
 private:
 	shared_ptr<FSkeletalMesh> SkeletalMesh;

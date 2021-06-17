@@ -41,21 +41,10 @@ void FEngine::Init(void* WindowHandle)
 	FAssetManager::CreateAssetManager();
 	FDeviceEventProcessor::CreateEventProcessor();
 
-	// create scene
-	CurrentScene = CreateScene();
-
 	// create or init scene actors
 	{
-		// create materials for actor component
-		FAssetManager::Get()->InitMaterialShaderMap();
-
-		// static mesh actors
-		vector<shared_ptr<AStaticMeshActor>> StaticMeshActors;
-		FAssetManager::Get()->LoadStaticMeshActors(L"Resource\\Map\\Scene_.dat", StaticMeshActors);
-		for (auto i : StaticMeshActors)
-		{
-			CurrentScene->AddStaticMeshActor(i);
-		}
+		// create scene
+		CurrentScene = FAssetManager::Get()->LoadScene(L"Resource\\Scene\\Scene_.scene");
 
 		// camera
 		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
@@ -68,8 +57,8 @@ void FEngine::Init(void* WindowHandle)
 			CurrentScene->SetDirectionalLight(DirectionalLight);
 
 			// point light
-			//shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
-			//CurrentScene->AddPointLight(PointLight1);
+			shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
+			CurrentScene->AddPointLight(PointLight1);
 		}
 
 		// character

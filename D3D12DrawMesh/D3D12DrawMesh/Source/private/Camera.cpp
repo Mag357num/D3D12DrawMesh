@@ -3,18 +3,7 @@
 #include "DeviceEventProcessor.h"
 #include "RenderThread.h"
 
-ACamera::ACamera()
-{
-	Components.push_back(make_shared<FStaticMeshComponent>());
-}
-
-ACamera::ACamera(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
-{
-	Components.push_back(make_shared<FStaticMeshComponent>());
-	Init(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane );
-}
-
-void ACamera::Init(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane, const float& FarPlane)
+FCameraComponent::FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/)
 {
 	InitialPosition = Eye;
 	InitialUpDir = Up;
@@ -22,7 +11,6 @@ void ACamera::Init(const FVector& Eye, const FVector& Up, const FVector& LookAt,
 
 	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
 	VMatrix_GameThread = glm::lookAtLH(Eye, Eye + LookAt * 10.0f, Up);
-	VDirty = false;
 	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
 
 	SetFov(Fov);
@@ -42,7 +30,7 @@ void ACamera::SetTurnSpeed(const float& RadiansPerSecond)
 	TurnSpeed = RadiansPerSecond;
 }
 
-void ACamera::Reset()
+void FCameraComponent::Reset()
 {
 }
 
@@ -135,26 +123,27 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
 	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
 	FVector2 MouseRotateInterval = MouseSensibility * MouseMoveDelta; // Interval between tick
+	FCameraComponent* Component = Components[0];
 
 	// update lookat dir
 	if (bIsMouseDown)
 	{
-		FEuler Euler = QuatToEuler(GetTransform().Quat);
+		FEuler Euler = QuatToEuler(Component->GetTransform().Quat);
 		Euler.Yaw += MouseRotateInterval.x;
 		Euler.Roll += MouseRotateInterval.y;
-		SetQuat(EulerToQuat(Euler));
+		Component->SetQuat(EulerToQuat(Euler));
 		MarkDirty();
 	}
 
 	// update position
 	const FVector TargetPosLift = TargetPos + FVector( 0.f, 0.f, 200.f); // lift the camera for 200
-	const FVector LookDir = GetLookAt();
+	const FVector LookDir = Component->GetLookAt();
 	FVector HorizontalLook = glm::normalize(FVector( LookDir.x, LookDir.y, 0.f)) * Distance;
 	const FVector TheoryPos = TargetPosLift - HorizontalLook;
-	const FVector& ActualPos = GetTransform().Translation;
+	const FVector& ActualPos = Component->GetTransform().Translation;
 	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
-		SetTranslate(TheoryPos);
+		Component->SetTranslate(TheoryPos);
 		MarkDirty();
 	}
 }
@@ -164,24 +153,23 @@ void ACamera::UpdateCameraParam_Static(const float& ElapsedSeconds)
 	// do nothing
 }
 
-const FMatrix& ACamera::GetViewMatrix_GameThread()
+const FMatrix& FCameraComponent::GetViewMatrix_GameThread()
 {
-	if (VDirty)
+	if (WorldMatrixDirty)
 	{
-		VMatrix_GameThread = inverse(Components[0]->GetWorldMatrix());
-		VDirty = false;
+		VMatrix_GameThread = inverse(GetWorldMatrix());
 	}
 	return VMatrix_GameThread;
 }
 
-const FMatrix& ACamera::GetViewMatrix_RenderThread()
+const FMatrix& FCameraComponent::GetViewMatrix_RenderThread()
 {
 	FMatrix GameThread = GetViewMatrix_GameThread();
 	std::swap(GameThread, VMatrix_RenderThread);
 	return VMatrix_RenderThread;
 }
 
-const FMatrix& ACamera::GetPerspProjMatrix_GameThread()
+const FMatrix& FCameraComponent::GetPerspProjMatrix_GameThread()
 {
 	if (PDirty)
 	{
@@ -191,89 +179,26 @@ const FMatrix& ACamera::GetPerspProjMatrix_GameThread()
 	return PMatrix_GameThread;
 }
 
-const FMatrix& ACamera::GetPerspProjMatrix_RenderThread()
+const FMatrix& FCameraComponent::GetPerspProjMatrix_RenderThread()
 {
 	FMatrix GameThread = GetPerspProjMatrix_GameThread();
 	std::swap(GameThread, PMatrix_RenderThread);
 	return PMatrix_RenderThread;
 }
 
-FMatrix ACamera::GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
+FMatrix FCameraComponent::GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
 {
 	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
 }
 
-void ACamera::SetQuat(const FQuat& Quat)
-{
-	if (Components.size() == 0)
-	{
-		throw std::exception("ERROR: Camera dont have component!");
-	}
-	else
-	{
-		Components[0]->SetQuat(Quat);
-		VDirty = true;
-	}
-}
-
-void ACamera::SetTranslate(const FVector& Trans)
-{
-	if (Components.size() == 0)
-	{
-		throw std::exception("ERROR: Camera dont have component!");
-	}
-	else
-	{
-		Components[0]->SetTranslate(Trans);
-		VDirty = true;
-	}
-}
-
-void ACamera::SetWorldMatrix(const FMatrix& W)
-{
-	if (Components.size() == 0)
-	{
-		throw std::exception("ERROR: Camera dont have component!");
-	}
-	else
-	{
-		Components[0]->SetWorldMatrix(W);
-		VDirty = true;
-	}
-}
-
-const FTransform& ACamera::GetTransform()
-{
-	if (Components.size() == 0)
-	{
-		throw std::exception("ERROR: Camera dont have component!");
-	}
-	else
-	{
-		return Components[0]->GetTransform();
-	}
-}
-
-const FMatrix& ACamera::GetWorldMatrix()
-{
-	if (Components.size() == 0)
-	{
-		throw std::exception("ERROR: Camera dont have component!");
-	}
-	else
-	{
-		return Components[0]->GetWorldMatrix();
-	}
-}
-
-void ACamera::SetLookAt(const FVector& Look)
+void FCameraComponent::SetLookAt(const FVector& Look)
 {
 	const FVector& Eye = GetTransform().Translation;
 	const FVector Up(0, 1, 0);
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, Up)));
 }
 
-const FVector ACamera::GetLookAt()
+const FVector FCameraComponent::GetLookAt()
 {
 	// world matrix only contain rotate in 3x3 zone and directional vector wont translate
 	// view matrix default use z:FVector4(0, 0, 1, 0) axis as look at
@@ -299,7 +224,14 @@ void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector Ta
 	default:
 		break;
 	}
+}
 
+ACamera::ACamera()
+{
+	Components.push_back(make_shared<FCameraComponent>());
+}
 
-
+ACamera::ACamera(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
+{
+	Components.push_back(make_shared<FCameraComponent>(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane));
 }

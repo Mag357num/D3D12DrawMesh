@@ -26,7 +26,7 @@ public:
 	const vector<FStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
 };
 
-class FStaticMeshComponent : public FActorComponent
+class FStaticMeshComponent : public FMeshComponent
 {
 private:
 	shared_ptr<FStaticMesh> StaticMesh;
