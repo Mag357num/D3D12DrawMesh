@@ -47,18 +47,18 @@ void FEngine::Init(void* WindowHandle)
 		CurrentScene = FAssetManager::Get()->LoadScene(L"Resource\\Scene\\Scene_.scene");
 
 		// camera
-		CurrentScene->SetCurrentCamera(make_shared<ACamera>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
+		//CurrentScene->AddCamera(make_shared<ACameraActor>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
 
 		// light
 		{
-			// directional light
-			shared_ptr<ADirectionalLight> DirectionalLight = make_shared<ADirectionalLight>(FVector(1000.f, 0.f, 1000.f), FVector(-1.f, 0.f, -1.f));
-			DirectionalLight->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
-			CurrentScene->SetDirectionalLight(DirectionalLight);
+			//// directional light
+			//shared_ptr<FDirectionalLIghtComponent> DirectionalLight = make_shared<FDirectionalLIghtComponent>(FVector(1000.f, 0.f, 1000.f), FVector(-1.f, 0.f, -1.f));
+			//DirectionalLight->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
+			//CurrentScene->SetDirectionalLight(DirectionalLight);
 
-			// point light
-			shared_ptr<APointLight> PointLight1 = make_shared<APointLight>(FVector(120, 380, 160));
-			CurrentScene->AddPointLight(PointLight1);
+			//// point light
+			//shared_ptr<FPointLightComponent> PointLight1 = make_shared<FPointLightComponent>(FVector(120, 380, 160));
+			//CurrentScene->AddPointLight(PointLight1);
 		}
 
 		// character

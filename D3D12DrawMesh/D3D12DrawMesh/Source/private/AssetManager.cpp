@@ -30,9 +30,6 @@ void FAssetManager::DestroyAssetManager()
 
 shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
 {
-	shared_ptr<FScene> Scene = make_shared<FScene>();
-	vector<shared_ptr<AStaticMeshActor>>& Actors = Scene->GetStaticMeshActors();
-
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
 	if (!Fin.is_open())
@@ -40,6 +37,7 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 		throw std::exception("ERROR: open file faild.");
 	}
 
+	shared_ptr<FScene> Scene = make_shared<FScene>();
 	uint32 SceneActorNum;
 	Fin.read((char*)&SceneActorNum, sizeof(uint32));
 
@@ -55,18 +53,48 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 			ActorName = ActorName.c_str();
 		}
 
+		// actor type
+		EActorType ActorType;
+		{
+			Fin.read((char*)&ActorType, sizeof(int));
+		}
+
+		switch (ActorType)
+		{
+		case EActorType::STATICMESH_ACTOR:
+			break;
+		case EActorType::CAMERA_ACTOR:
+			break;
+		case EActorType::DIRECTIONALLIGHT_ACTOR:
+			break;
+		case EActorType::POINTLIGHT_ACTOR:
+			break;
+		default:
+			break;
+		}
+
+
+
+
+
+
 		// static mesh components
 		{
 			int Num;
 			Fin.read((char*)&Num, sizeof(int));
-			for (uint32 j = 0; j < Num; j++)
+			for (int j = 0; j < Num; j++)
 			{
-				shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-				shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
-				Com->SetStaticMesh(SM);
-				Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
-				Com->SetTransform(ReadComponentTransformInSceneBinary(Fin));
-				Com->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
+				shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>();
+				Actor->SetStaticMeshComponent(make_shared<FStaticMeshComponent>());
+				FVector Origin, BoxExtend;
+				Fin.read((char*)&Origin, 3 * sizeof(float));
+				Fin.read((char*)&BoxExtend, 3 * sizeof(float));
+				Actor->GetStaticMeshComponent()->SetBounding(FBoxSphereBounds(Origin, BoxExtend));
+				Actor->GetStaticMeshComponent()->SetStaticMesh(make_shared<FStaticMesh>());
+				Actor->GetStaticMeshComponent()->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
+				Actor->GetStaticMeshComponent()->SetTransform(ReadComponentTransformInSceneBinary(Fin));
+				Actor->GetStaticMeshComponent()->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
+				Scene->GetStaticMeshActors().push_back(Actor);
 			}
 		}
 
@@ -74,7 +102,7 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 		{
 			int Num;
 			Fin.read((char*)&Num, sizeof(int));
-			for (uint32 j = 0; j < Num; j++)
+			for (int j = 0; j < Num; j++)
 			{
 				//shared_ptr<FCameraComponent> Com = make_shared<FStaticMeshComponent>();
 			}
@@ -223,7 +251,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBi
 
 	int MatNum;
 	Fin.read((char*)&MatNum, sizeof(int));
-	for (uint32 i = 0; i < MatNum; i++)
+	for (int i = 0; i < MatNum; i++)
 	{
 		// read FString
 		int CharNum;
@@ -232,7 +260,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBi
 		MaterialName.resize(CharNum);
 		Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
 		MaterialName = MaterialName.c_str();
-		MaterialName = "Resouce\\Material\\" + MaterialName + ".material";
+		MaterialName = "Resource\\Material\\" + MaterialName + ".material";
 
 		Mats.push_back(LoadMaterial(MaterialName));
 	}
@@ -281,27 +309,33 @@ shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& Materia
 	Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
 	BaseMaterialName = BaseMaterialName.c_str();
 
-	bool HasBaseMaterial = BaseMaterialMap.find(BaseMaterialName) != BaseMaterialMap.end();
+	if (BaseMaterialMap.find(BaseMaterialName) == BaseMaterialMap.end())
+	{
+		BaseMaterialMap.insert({ BaseMaterialName, nullptr });
+		BaseMaterialMap[BaseMaterialName] = dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material"));
+	}
+
 	if (IsMaterialInstance)
 	{
-		if (!HasBaseMaterial) // if there isn't base material of this instance
-		{
-			BaseMaterialMap.insert({ BaseMaterialName, dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material")) });
-		}
 		Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
 	}
 	else
 	{
-		if (!HasBaseMaterial)
+		if (BaseMaterialMap[BaseMaterialName].get() != nullptr)
 		{
-			BaseMaterialMap.insert({ BaseMaterialName, dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material")) });
+			Mat = BaseMaterialMap[BaseMaterialName];
+			Fin.close();
+			return Mat;
 		}
-		Mat = BaseMaterialMap[BaseMaterialName]; // base materials create in assetmanager when engine init.
+		else
+		{
+			Mat = make_shared<FMaterial>();
+		}
 	}
 
 	int ScalarNum;
 	Fin.read((char*)&ScalarNum, sizeof(int));
-	for (uint32 i = 0; i < ScalarNum; i++)
+	for (int i = 0; i < ScalarNum; i++)
 	{
 		float Scalar;
 		Fin.read((char*)&Scalar, sizeof(float));
@@ -310,7 +344,7 @@ shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& Materia
 
 	int VectorNum;
 	Fin.read((char*)&VectorNum, sizeof(int));
-	for (uint32 i = 0; i < VectorNum; i++)
+	for (int i = 0; i < VectorNum; i++)
 	{
 		FVector4 Vector;
 		Fin.read((char*)&Vector, 4 * sizeof(float));
@@ -319,7 +353,7 @@ shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& Materia
 
 	int TextureNum;
 	Fin.read((char*)&TextureNum, sizeof(int));
-	for (uint32 i = 0; i < TextureNum; i++)
+	for (int i = 0; i < TextureNum; i++)
 	{
 		int CharNum;
 		Fin.read((char*)&CharNum, sizeof(int));
@@ -330,6 +364,9 @@ shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& Materia
 		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
 	}
+
+	Fin.close();
+	return Mat;
 }
 
 shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileName)

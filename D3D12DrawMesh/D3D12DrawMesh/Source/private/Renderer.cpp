@@ -76,33 +76,36 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 		// opaque
 		{
 			SCOPED_EVENT("Opaque");
-			RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
-			RHI->ClearRenderTarget(SFrameRes.SceneColorMap->RtvHandle.get());
-			RHI->SetRenderTarget(1, Rt, SFrameRes.DepthStencilMap->DsvHandle.get());
-			RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
-			RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
-			RHI->SetScissor(0, 0, Width, Height);
-
-			// draw light source mesh
+			// lights
 			{
-				RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()].get());
-				vector<shared_ptr<FHandle>> Handles;
-				Handles.push_back(MFrameRes.DirectionalLight_LocatingCB->CBHandle);
-				RHI->SetShaderInput(Handles);
-				RHI->DrawGeometry(SFrameRes.DirectionalLightMesh.get());
-			}
+				//RHI->SetTextureState(SFrameRes.SceneColorMap.get(), FRESOURCE_STATES::RESOURCE_STATE_RENDER_TARGET);
+				//RHI->ClearRenderTarget(SFrameRes.SceneColorMap->RtvHandle.get());
+				//RHI->SetRenderTarget(1, Rt, SFrameRes.DepthStencilMap->DsvHandle.get());
+				//RHI->ClearDepthStencil(SFrameRes.DepthStencilMap.get());
+				//RHI->SetViewport(0.0f, 0.0f, static_cast<float>(Width), static_cast<float>(Height), 0.f, 1.f);
+				//RHI->SetScissor(0, 0, Width, Height);
 
-			// draw light source mesh
-			if (SFrameRes.PointLightMeshes.size() != 0)
-			{
-				RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
-				for (uint32 i = 0; i < SFrameRes.PointLightMeshes.size(); i++)
-				{
-					vector<shared_ptr<FHandle>> Handles;
-					Handles.push_back(MFrameRes.PointLight_LocatingCBs[i]->CBHandle);
-					RHI->SetShaderInput(Handles);
-					RHI->DrawGeometry(SFrameRes.PointLightMeshes[i].get());
-				}
+				//// draw light source mesh
+				//{
+				//	RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.DirectionalLightMesh.get()].get());
+				//	vector<shared_ptr<FHandle>> Handles;
+				//	Handles.push_back(MFrameRes.DirectionalLight_LocatingCB->CBHandle);
+				//	RHI->SetShaderInput(Handles);
+				//	RHI->DrawGeometry(SFrameRes.DirectionalLightMesh.get());
+				//}
+
+				//// draw light source mesh
+				//if (SFrameRes.PointLightMeshes.size() != 0)
+				//{
+				//	RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.PointLightMeshes[0].get()].get()); // for loop use same pso, set ahead avoid extra cost
+				//	for (uint32 i = 0; i < SFrameRes.PointLightMeshes.size(); i++)
+				//	{
+				//		vector<shared_ptr<FHandle>> Handles;
+				//		Handles.push_back(MFrameRes.PointLight_LocatingCBs[i]->CBHandle);
+				//		RHI->SetShaderInput(Handles);
+				//		RHI->DrawGeometry(SFrameRes.PointLightMeshes[i].get());
+				//	}
+				//}
 			}
 
 			// draw character

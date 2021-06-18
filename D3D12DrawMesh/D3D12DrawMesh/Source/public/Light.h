@@ -8,49 +8,39 @@ enum class FLightMoveMode
 	STATIC_LIGHT = 1
 };
 
+class FLightComponent : public FActorComponent
+{
+private:
+	FVector Color;
+	float Intensity;
+
+public:
+	void SetColor(const FVector& C) { Color = C; }
+	const FVector& GetColor() { return Color; }
+
+	void SetIntensity(const float& I) { Intensity = I; }
+	const float& GetIntensity() { return Intensity; }
+};
+
 class ALight : public AActor
 {
 protected:
-	// base param
-	FVector Ambient = { 0.05f, 0.05f, 0.05f };
-	FVector Diffuse = { 0.3f , 0.3f , 0.3f };
-	FVector Specular = { 1.5f, 1.5f, 1.5f };
-
 	// movement parameter
 	float MoveSpeed = 300.0f;
 	float TurnSpeed = 1.570796327f;
 	float MouseSensibility = 0.01f;
 	float AngularVelocity;
 
-	// view matrix depend on the position of light, so define in ALight
-	bool VDirty = true;
-
 public:
 	ALight();
 	~ALight() = default;
-
-	void SetAmbient(const FVector& A) { Ambient = A; }
-	void SetDiffuse(const FVector& D) { Diffuse = D; }
-	void SetSpecular(const FVector& S) { Specular = S; }
-	const FVector& GetAmbient() { return Ambient; }
-	const FVector& GetDiffuse() { return Diffuse; }
-	const FVector& GetSpecular() { return Specular; }
-
-	void SetQuat(const FQuat& Quat);
-	void SetTranslate(const FVector& Trans);
-	void SetWorldMatrix(const FMatrix& W);
-
-	const FTransform& GetTransform();
-	const FMatrix& GetWorldMatrix();
-
-	void SetStaticMeshComponent(shared_ptr<class FStaticMeshComponent> Com);
-	class FStaticMeshComponent* GetStaticMeshComponent();
 };
 
-class ADirectionalLight : public ALight
+class FDirectionalLIghtComponent : public FLightComponent
 {
 private:
 	// Secondary data, need to refresh depent on dirty
+	bool VDirty = true;
 	FMatrix VMatrix_GameThread;
 	FMatrix VMatrix_RenderThread;
 
@@ -67,32 +57,48 @@ private:
 	float FarPlane;
 
 public:
-	ADirectionalLight() = delete;
-	ADirectionalLight(const FVector& Pos, const FVector& Direction);
-	~ADirectionalLight() = default;
+	FDirectionalLIghtComponent() = delete;
+	~FDirectionalLIghtComponent() = default;
+	FDirectionalLIghtComponent(const FVector& Pos, const FVector& Direction);
 
 	void SetDirection(const FVector& Dir);
-	const FVector GetDirection();
-
-	const FMatrix& GetViewMatrix_GameThread();
-	const FMatrix& GetViewMatrix_RenderThread();
-
 	void SetOrthoParam(float L, float R, float B, float T, float N, float F);
 
+	const FVector GetDirection();
+	const FMatrix& GetViewMatrix_GameThread();
+	const FMatrix& GetViewMatrix_RenderThread();
 	const FMatrix& GetOMatrix_GameThread();
 	const FMatrix& GetOMatrix_RenderThread();
 
+	void SetScale(const FVector& Scale) { SetScale_Base(Scale); VDirty = true; }
+	void SetQuat(const FQuat& Quat) { SetQuat_Base(Quat); VDirty = true; }
+	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; }
+	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); VDirty = true; }
+	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); VDirty = true; }
+};
+
+class ADirectionalLight : public ALight
+{
+private:
+	FDirectionalLIghtComponent* const DirectionalLightComponent = Components[0]->As<FDirectionalLIghtComponent>();
+
+public:
 	virtual void Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 1000.f);
 	virtual void Tick_Rotate(const float& ElapsedSeconds, const FVector& Target, const float& Distance);
 	virtual void Tick_Static();
+
+	FDirectionalLIghtComponent* GetRootComponent() { return DirectionalLightComponent; }
 };
 
-class APointLight : public ALight
+class FPointLightComponent : public FLightComponent
 {
 private:
-	FVector Attenuation = FVector(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
+	const FVector Attenuation = FVector(1.0f, 0.09f, 0.032f); // constant, linear, quadratic
+	float AttenuationRadius;
+	float SourceRadius;
 
 	// Secondary data, need to refresh depent on dirty
+	bool VDirty = true;
 	array<FMatrix, 6> VMatrixs_GameThread; // 6 vmatrix and 1 pmatrix for cube map
 	array<FMatrix, 6> VMatrixs_RenderThread;
 
@@ -107,20 +113,28 @@ private:
 	float FarPlane = 5000.f;
 
 public:
-	APointLight() = delete;
-	APointLight(const FVector& Pos);
-	~APointLight() = default;
+	FPointLightComponent() = delete;
+	~FPointLightComponent() = default;
+	FPointLightComponent(const FVector& Pos);
 
-	void SetAttenuation(const FVector& A) { Attenuation = A; }
-	const FVector& GetAttenuation() { return Attenuation; }
-
-	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
-	const array<FMatrix, 6>& GetViewMatrixs_RenderThread();
-
+	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; }
+	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); VDirty = true; }
+	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); VDirty = true; }
 	void SetPerspParam(float Fov, float AspectRatio, float Near, float Far) { this->Fov = Fov; this->AspectRatio = AspectRatio; NearPlane = Near; FarPlane = Far; PDirty = true; }
 
+	const FVector& GetAttenuation() { return Attenuation; }
+	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
+	const array<FMatrix, 6>& GetViewMatrixs_RenderThread();
 	const FMatrix& GetPMatrix_GameThread();
 	const FMatrix& GetPMatrix_RenderThread();
+};
 
-	virtual void Tick( const float& ElapsedSeconds);
+class APointLight : public ALight
+{
+private:
+	FPointLightComponent* const PointLightComponent = Components[0]->As<FPointLightComponent>();
+public:
+	virtual void Tick(const float& ElapsedSeconds);
+
+	FPointLightComponent* GetRootComponent() { return PointLightComponent; }
 };

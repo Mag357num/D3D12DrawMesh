@@ -5,8 +5,8 @@
 
 FCameraComponent::FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/)
 {
-	InitialPosition = Eye;
-	InitialUpDir = Up;
+	InitialEye = Eye;
+	InitialUp = Up;
 	InitialLookAt = LookAt;
 
 	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
@@ -20,21 +20,30 @@ FCameraComponent::FCameraComponent(const FVector& Eye, const FVector& Up, const 
 	PDirty = false;
 }
 
-void ACamera::SetMoveSpeed(const float & UnitsPerSecond)
+void ACameraActor::SetMoveSpeed(const float & UnitsPerSecond)
 {
 	MoveSpeed = UnitsPerSecond;
 }
 
-void ACamera::SetTurnSpeed(const float& RadiansPerSecond)
+void ACameraActor::SetTurnSpeed(const float& RadiansPerSecond)
 {
 	TurnSpeed = RadiansPerSecond;
 }
 
 void FCameraComponent::Reset()
 {
+	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
+	VMatrix_GameThread = glm::lookAtLH(InitialEye, InitialEye + InitialLookAt * 10.0f, InitialUp);
+	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
+
+	SetFov(Fov);
+	SetAspectRatio(AspectRatio);
+	SetViewPlane(NearPlane, FarPlane);
+	PMatrix_GameThread = glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
+	PDirty = false;
 }
 
-void ACamera::UpdateCameraParam_Wander(const float& ElapsedSeconds)
+void ACameraActor::UpdateCameraParam_Wander(const float& ElapsedSeconds)
 {
 	//const KeysPressed& Keys = FDeviceEventProcessor::Get()->GetKeys();
 	//const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
@@ -117,13 +126,13 @@ void ACamera::UpdateCameraParam_Wander(const float& ElapsedSeconds)
 	//}
 }
 
-void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance)
+void ACameraActor::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance)
 {
 	// event data
 	const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
 	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
 	FVector2 MouseRotateInterval = MouseSensibility * MouseMoveDelta; // Interval between tick
-	FCameraComponent* Component = Components[0];
+	FCameraComponent* Component = Components[0]->As<FCameraComponent>();
 
 	// update lookat dir
 	if (bIsMouseDown)
@@ -148,16 +157,22 @@ void ACamera::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const 
 	}
 }
 
-void ACamera::UpdateCameraParam_Static(const float& ElapsedSeconds)
+void ACameraActor::UpdateCameraParam_Static(const float& ElapsedSeconds)
 {
 	// do nothing
 }
 
 const FMatrix& FCameraComponent::GetViewMatrix_GameThread()
 {
-	if (WorldMatrixDirty)
+	if (VDirty)
 	{
-		VMatrix_GameThread = inverse(GetWorldMatrix());
+		// TODO: compare with use sqt calculate vmatrix
+		// t-> eye
+		// s-> identity
+		// q-> look = quat * (0, 0, 1)
+		// vmatrix = lookatLH(eye, look + eye, up)
+		VMatrix_GameThread = inverse(WorldMatrix);
+		VDirty = false;
 	}
 	return VMatrix_GameThread;
 }
@@ -186,7 +201,7 @@ const FMatrix& FCameraComponent::GetPerspProjMatrix_RenderThread()
 	return PMatrix_RenderThread;
 }
 
-FMatrix FCameraComponent::GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
+const FMatrix FCameraComponent::GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
 {
 	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
 }
@@ -194,8 +209,7 @@ FMatrix FCameraComponent::GetOrthoProjMatrix_GameThread(const float& Left, const
 void FCameraComponent::SetLookAt(const FVector& Look)
 {
 	const FVector& Eye = GetTransform().Translation;
-	const FVector Up(0, 1, 0);
-	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, Up)));
+	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, FVector(0, 1, 0))));
 }
 
 const FVector FCameraComponent::GetLookAt()
@@ -205,7 +219,7 @@ const FVector FCameraComponent::GetLookAt()
 	return GetWorldMatrix() * FVector4(0, 0, 1, 0);
 }
 
-void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
+void ACameraActor::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation, float Distance)
 {
 	switch (Mode)
 	{
@@ -226,12 +240,12 @@ void ACamera::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector Ta
 	}
 }
 
-ACamera::ACamera()
+ACameraActor::ACameraActor()
 {
 	Components.push_back(make_shared<FCameraComponent>());
 }
 
-ACamera::ACamera(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
+ACameraActor::ACameraActor(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
 {
 	Components.push_back(make_shared<FCameraComponent>(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane));
 }

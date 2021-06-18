@@ -24,9 +24,9 @@ public:
 	virtual FMaterialParam GetNumericParams() = 0;
 	virtual vector<wstring> GetTextureParams() = 0;
 
-	virtual void ChangeScalarParams(uint32 Index, float S) = 0;
-	virtual void ChangeVectorParams(uint32 Index, FVector4 V) = 0;
-	virtual void ChangeTextureParams(uint32 Index, wstring T) = 0;
+	virtual void ChangeScalarParams(const uint32& Index, const float& S) = 0;
+	virtual void ChangeVectorParams(const uint32& Index, const FVector4& V) = 0;
+	virtual void ChangeTextureParams(const uint32& Index, const wstring& T) = 0;
 
 	void SetBlendMode(const FBlendMode& BM) { BlendMode = BM; }
 	const FBlendMode& GetBlendMode() const { return BlendMode; }
@@ -41,7 +41,8 @@ private:
 	wstring ShaderFile; // i'd like to write vs, ps, other shader in one shader file
 
 public:
-	FMaterial(uint32 ScalarNum, uint32 VectorNum, uint32 TextureNum);
+	FMaterial() = default;
+	//FMaterial(uint32 ScalarNum, uint32 VectorNum, uint32 TextureNum);
 	~FMaterial() = default;
 
 	shared_ptr<class FMaterialInstance> CreateInstance();
@@ -49,9 +50,9 @@ public:
 	void SetShader(const wstring& File) { ShaderFile = File; }
 	virtual const wstring& GetShader() const override { return ShaderFile; }
 
-	virtual void ChangeScalarParams(uint32 Index, float S) override;
-	virtual void ChangeVectorParams(uint32 Index, FVector4 V) override;
-	virtual void ChangeTextureParams(uint32 Index, wstring T) override;
+	virtual void ChangeScalarParams(const uint32& Index, const float& S) override;
+	virtual void ChangeVectorParams(const uint32& Index, const FVector4& V) override;
+	virtual void ChangeTextureParams(const uint32& Index, const wstring& T) override;
 
 	virtual FMaterialParam GetNumericParams() override { return NumericParams; }
 	virtual vector<wstring> GetTextureParams() override { return TextureParams; }
@@ -70,12 +71,12 @@ private:
 	unordered_map<uint32, FVector4> InstanceVectorParams;
 	unordered_map<uint32, wstring> InstanceTexParams;
 public:
-	FMaterialInstance(FMaterial* Mat) { }; // FMaterialInstance should be constructed without a FMaterial(as a template)
+	FMaterialInstance(FMaterial* Mat) { OriginMaterial = Mat; }; // FMaterialInstance should be constructed with a FMaterial(as a template)
 	~FMaterialInstance() = default;
 
-	virtual void ChangeScalarParams(uint32 Index, float S) override;
-	virtual void ChangeVectorParams(uint32 Index, FVector4 V) override;
-	virtual void ChangeTextureParams(uint32 Index, wstring T) override;
+	virtual void ChangeScalarParams(const uint32& Index, const float& S) override;
+	virtual void ChangeVectorParams(const uint32& Index, const FVector4& V) override;
+	virtual void ChangeTextureParams(const uint32& Index, const wstring& T) override;
 
 	void SetOriginMaterial(FMaterial* Mat) { OriginMaterial = Mat; };
 	virtual const wstring& GetShader() const override { return OriginMaterial->GetShader(); }

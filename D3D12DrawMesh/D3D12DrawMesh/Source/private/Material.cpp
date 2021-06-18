@@ -1,30 +1,33 @@
 #include "Material.h"
 
-void FMaterialInstance::ChangeScalarParams(uint32 Index, float S)
+void FMaterialInstance::ChangeScalarParams(const uint32& Index, const float& S)
 {
 	if (OriginMaterial->GetNumericParams().ScalarParams.size() < Index + 1)
 	{
 		OriginMaterial->ResizeScalarParams(Index + 1);
 	}
-	std::pair<uint32, float> pair(Index, S); InstanceScalarParams.insert(pair);
+	std::pair<uint32, float> pair(Index, S);
+	InstanceScalarParams.insert(pair);
 }
 
-void FMaterialInstance::ChangeVectorParams(uint32 Index, FVector4 V)
+void FMaterialInstance::ChangeVectorParams(const uint32& Index, const FVector4& V)
 {
 	if (OriginMaterial->GetNumericParams().VectorParams.size() < Index + 1)
 	{
 		OriginMaterial->ResizeVectorParams(Index + 1);
 	}
-	std::pair<uint32, FVector4> pair(Index, V); InstanceVectorParams.insert(pair);
+	std::pair<uint32, FVector4> pair(Index, V);
+	InstanceVectorParams.insert(pair);
 }
 
-void FMaterialInstance::ChangeTextureParams(uint32 Index, wstring T)
+void FMaterialInstance::ChangeTextureParams(const uint32& Index, const wstring& T)
 {
 	if (OriginMaterial->GetTextureParams().size() < Index + 1)
 	{
 		OriginMaterial->ResizeTextureParams(Index + 1);
 	}
-	std::pair<uint32, wstring> pair(Index, T); InstanceTexParams.insert(pair);
+	std::pair<uint32, wstring> pair(Index, T);
+	InstanceTexParams.insert(pair);
 }
 
 FMaterialParam FMaterialInstance::GetNumericParams()
@@ -52,12 +55,12 @@ vector<wstring> FMaterialInstance::GetTextureParams()
 }
 
 
-FMaterial::FMaterial(uint32 ScalarNum, uint32 VectorNum, uint32 TextureNum)
-{
-	NumericParams.ScalarParams.resize(ScalarNum);
-	NumericParams.VectorParams.resize(VectorNum);
-	TextureParams.resize(TextureNum);
-}
+//FMaterial::FMaterial(uint32 ScalarNum, uint32 VectorNum, uint32 TextureNum)
+//{
+//	NumericParams.ScalarParams.resize(ScalarNum);
+//	NumericParams.VectorParams.resize(VectorNum);
+//	TextureParams.resize(TextureNum);
+//}
 
 shared_ptr<FMaterialInstance> FMaterial::CreateInstance()
 {
@@ -67,7 +70,7 @@ shared_ptr<FMaterialInstance> FMaterial::CreateInstance()
 	return Instance;
 }
 
-void FMaterial::ChangeScalarParams(uint32 Index, float S)
+void FMaterial::ChangeScalarParams(const uint32& Index, const float& S)
 {
 	if (NumericParams.ScalarParams.size() < Index + 1)
 	{
@@ -76,7 +79,7 @@ void FMaterial::ChangeScalarParams(uint32 Index, float S)
 	NumericParams.ScalarParams[Index] = S;
 }
 
-void FMaterial::ChangeVectorParams(uint32 Index, FVector4 V)
+void FMaterial::ChangeVectorParams(const uint32& Index, const FVector4& V)
 {
 	if (NumericParams.VectorParams.size() < Index + 1)
 	{
@@ -85,7 +88,7 @@ void FMaterial::ChangeVectorParams(uint32 Index, FVector4 V)
 	NumericParams.VectorParams[Index] = V;
 }
 
-void FMaterial::ChangeTextureParams(uint32 Index, wstring T)
+void FMaterial::ChangeTextureParams(const uint32& Index, const wstring& T)
 {
 	if (TextureParams.size() < Index + 1)
 	{

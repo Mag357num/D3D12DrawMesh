@@ -61,7 +61,7 @@ struct FMultiBufferFrameResource
 	shared_ptr<FCB> CharacterPaletteCB;
 	shared_ptr<FCB> DirectionalLight_LightingInfoCB;
 	shared_ptr<FCB> PointLights_LightingInfoCB;
-	shared_ptr<FCB> DirectionalLight_LocatingCB;
+	vector<shared_ptr<FCB>> DirectionalLight_LocatingCBs;
 	vector<shared_ptr<FCB>> PointLight_LocatingCBs;
 	shared_ptr<FCB> Character_ShadowPass_LocatingCB;
 	shared_ptr<FCB> Character_ScenePass_LocatingCB;
@@ -90,7 +90,7 @@ public:
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateDirectionalLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreatePointLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateDirectionalLight_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreatePointLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateStaticMesh_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacter_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
