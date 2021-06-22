@@ -134,7 +134,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 	// character
 	{
 		// mesh
-		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(Scene->GetCurrentCharacter()->GetSkeletalMeshCom());
+		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(Scene->GetCurrentCharacter()->GetSkeletalMeshComponent());
 		// shadowpass rr
 		auto RR_ShadowPass = CreateRenderResource
 		(
@@ -216,7 +216,7 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
 			{
 				FVector ActorPos = Component->GetTransform().Translation;
-				FVector CameraPos = Scene->GetCurrentCamera()->GetRootComponent()->GetTransform().Translation;
+				FVector CameraPos = Scene->GetCurrentCamera()->GetCameraComponent()->GetTransform().Translation;
 				float Distance = glm::length( ActorPos - CameraPos );
 				SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
 			}
@@ -291,7 +291,7 @@ void FFrameResourceManager::CreateCharacter_LocatingCB(FScene* Scene, FMultiBuff
 
 void FFrameResourceManager::CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes)
 {
-	uint32 CbSize = static_cast<uint32>(Scene->GetCurrentCharacter()->GetSkeletalMeshCom()->GetSkeletalMesh()->GetSkeleton()->GetJoints().size() * 64);
+	uint32 CbSize = static_cast<uint32>(Scene->GetCurrentCharacter()->GetSkeletalMeshComponent()->GetSkeletalMesh()->GetSkeleton()->GetJoints().size() * 64);
 	FrameRes.CharacterPaletteCB = GDynamicRHI->CreateConstantBuffer(static_cast<uint32>(std::ceill(CbSize / 256) * 256));
 }
 
@@ -542,7 +542,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 
 		for (uint32 i = 0; i < 68; i++)
 		{
-			CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshCom()->GetAnimator().GetPalette_RenderThread()[i]);
+			CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetAnimator().GetPalette_RenderThread()[i]);
 		}
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 	}
@@ -551,8 +551,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	if (CurrentCamera->IsDirty())
 	{
 		// camera vp
-		const FMatrix CamVP = glm::transpose(CurrentCamera->GetRootComponent()->GetPerspProjMatrix_RenderThread() * CurrentCamera->GetRootComponent()->GetViewMatrix_RenderThread());
-		const FVector& CamPos = CurrentCamera->GetRootComponent()->GetTransform().Translation;
+		const FMatrix CamVP = glm::transpose(CurrentCamera->GetCameraComponent()->GetPerspProjMatrix_RenderThread() * CurrentCamera->GetCameraComponent()->GetViewMatrix_RenderThread());
+		const FVector& CamPos = CurrentCamera->GetCameraComponent()->GetTransform().Translation;
 		FVector4 Eye( CamPos.x, CamPos.y, CamPos.z, 1.f );
 		struct CameraConstantBuffer
 		{
@@ -566,14 +566,14 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		// 1. directional light
 		for (uint32 i = 0; i < Scene->GetDirectionalLights().size(); i++)
 		{
-			FMatrix WVP = transpose(CamVP * Scene->GetDirectionalLights()[i]->GetRootComponent()->GetWorldMatrix());
+			FMatrix WVP = transpose(CamVP * Scene->GetDirectionalLights()[i]->GetDLightComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].DirectionalLight_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
 		// 2. point light
 		for (uint32 i = 0; i < Scene->GetPointLights().size(); i++)
 		{
-			FMatrix WVP = transpose(CamVP * Scene->GetPointLights()[i]->GetRootComponent()->GetWorldMatrix());
+			FMatrix WVP = transpose(CamVP * Scene->GetPointLights()[i]->GetPLightComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].PointLight_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVP), sizeof(WVP));
 		}
 
@@ -585,7 +585,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
 			{
 				FVector ActorPos = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetTransform().Translation;
-				FVector CameraPos = Scene->GetCurrentCamera()->GetRootComponent()->GetTransform().Translation;
+				FVector CameraPos = Scene->GetCurrentCamera()->GetCameraComponent()->GetTransform().Translation;
 				float Distance = glm::length( ActorPos - CameraPos );
 				SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
 			}
@@ -597,10 +597,10 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// character position
 	if (CurrentCharacter->IsDirty())
 	{
-		const FMatrix& V = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetViewMatrix_RenderThread();
-		const FMatrix& O = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetOMatrix_RenderThread();
-		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
-		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshCom()->GetWorldMatrix());
+		const FMatrix& V = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetOMatrix_RenderThread();
+		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
+		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ShadowPass_LocatingCB.get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ScenePass_LocatingCB.get(), reinterpret_cast<void*>(&W), sizeof(W));
 		
@@ -613,8 +613,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		auto& Actor = Scene->GetStaticMeshActors()[i];
 		if (Actor->IsDirty())
 		{
-			const FMatrix& V = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetViewMatrix_RenderThread();
-			const FMatrix& O = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetOMatrix_RenderThread();
+			const FMatrix& V = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetViewMatrix_RenderThread();
+			const FMatrix& O = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetOMatrix_RenderThread();
 			FMatrix WVO = transpose(O * V * Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			FMatrix W = transpose(Actor->GetStaticMeshComponent()->GetWorldMatrix());
 			GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].StaticMesh_ShadowPass_LocatingCBs[i].get(), reinterpret_cast<void*>(&WVO), sizeof(FMatrix));
@@ -627,8 +627,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// directional light
 	if (Scene->GetDirectionalLights()[0]->IsDirty())
 	{
-		const FMatrix& V = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetViewMatrix_RenderThread();
-		const FMatrix& O = Scene->GetDirectionalLights()[0]->GetRootComponent()->GetOMatrix_RenderThread();
+		const FMatrix& V = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetViewMatrix_RenderThread();
+		const FMatrix& O = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetOMatrix_RenderThread();
 		struct LightCB
 		{
 			FMatrix VOMatrix; // for shadow calculate
@@ -639,8 +639,8 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 			} Light;
 		} CBInstance;
 		CBInstance.VOMatrix = glm::transpose(O * V);
-		CBInstance.Light.Dir = PaddingToVec4(glm::normalize(Scene->GetDirectionalLights()[0]->GetRootComponent()->GetDirection()));
-		CBInstance.Light.Color = PaddingToVec4(Scene->GetDirectionalLights()[0]->GetRootComponent()->GetColor());
+		CBInstance.Light.Dir = PaddingToVec4(glm::normalize(Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetDirection()));
+		CBInstance.Light.Color = PaddingToVec4(Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetColor());
 
 		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].DirectionalLight_LightingInfoCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 		
@@ -666,9 +666,9 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		{
 			struct LightCB CBInstance;
 			CBInstance.VPMatrix; // TODO: didnt have point shadow for now
-			CBInstance.Light.Position = PaddingToVec4(Actor->GetRootComponent()->GetTransform().Translation);
-			CBInstance.Light.Color = PaddingToVec4(Actor->GetRootComponent()->GetColor());
-			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetRootComponent()->GetAttenuation());
+			CBInstance.Light.Position = PaddingToVec4(Actor->GetPLightComponent()->GetTransform().Translation);
+			CBInstance.Light.Color = PaddingToVec4(Actor->GetPLightComponent()->GetColor());
+			CBInstance.Light.Attenuation = PaddingToVec4(Actor->GetPLightComponent()->GetAttenuation());
 			// each point light use 3 * 256 bytes
 			GDynamicRHI->WriteConstantBufferWithOffset(MFrameRes[FrameIndex].PointLights_LightingInfoCB.get(), i * 3 * 256, reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 

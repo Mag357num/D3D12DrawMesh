@@ -51,3 +51,4 @@ using std::string;
 using std::wstring;
 using std::map;
 using std::unordered_map;
+using std::move;

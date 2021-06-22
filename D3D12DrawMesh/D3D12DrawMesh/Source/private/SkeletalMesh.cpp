@@ -1,28 +1,5 @@
 #include "SkeletalMesh.h"
-
-void ASkeletalMeshActor::SetSkeletalMeshComponent( shared_ptr<FSkeletalMeshComponent> Com )
-{
-	if (Components.size() == 0)
-	{
-		Components.push_back( Com );
-	}
-	else
-	{
-		Components[0] = Com;
-	}
-}
-
-FSkeletalMeshComponent* ASkeletalMeshActor::GetSkeletalMeshComponent()
-{
-	if (Components.size() == 0)
-	{
-		return nullptr;
-	}
-	else
-	{
-		return Components[0].get()->As<FSkeletalMeshComponent>();
-	}
-}
+#include "DeviceEventProcessor.h"
 
 void FSkeletalMeshComponent::AddSequence( std::pair<string, shared_ptr<FAnimSequence>> Seq )
 {
@@ -32,4 +9,14 @@ void FSkeletalMeshComponent::AddSequence( std::pair<string, shared_ptr<FAnimSequ
 	}
 	Seq.second->SetSkeleton( SkeletalMesh->GetSkeleton() );
 	Animator.AddSequence(Seq);
+}
+
+void ASkeletalMeshActor::Tick(const float& ElapsedSeconds)
+{
+	GetSkeletalMeshComponent()->TickAnimation(ElapsedSeconds);
+}
+
+void ASkeletalMeshActor::SetCurrentAnim(string Key)
+{
+	GetSkeletalMeshComponent()->GetAnimator().SetCurrentAnim(Key);
 }

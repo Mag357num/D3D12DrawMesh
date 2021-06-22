@@ -132,27 +132,26 @@ void ACameraActor::UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, c
 	const FVector2& MouseMoveDelta = FDeviceEventProcessor::Get()->GetDeltaMouseMove_BottonDown();
 	const bool& bIsMouseDown = FDeviceEventProcessor::Get()->IsMouseDown();
 	FVector2 MouseRotateInterval = MouseSensibility * MouseMoveDelta; // Interval between tick
-	FCameraComponent* Component = Components[0]->As<FCameraComponent>();
 
 	// update lookat dir
 	if (bIsMouseDown)
 	{
-		FEuler Euler = QuatToEuler(Component->GetTransform().Quat);
+		FEuler Euler = QuatToEuler(CameraComponent->GetTransform().Quat);
 		Euler.Yaw += MouseRotateInterval.x;
 		Euler.Roll += MouseRotateInterval.y;
-		Component->SetQuat(EulerToQuat(Euler));
+		CameraComponent->SetQuat(EulerToQuat(Euler));
 		MarkDirty();
 	}
 
 	// update position
 	const FVector TargetPosLift = TargetPos + FVector( 0.f, 0.f, 200.f); // lift the camera for 200
-	const FVector LookDir = Component->GetLookAt();
+	const FVector LookDir = CameraComponent->GetLookAt();
 	FVector HorizontalLook = glm::normalize(FVector( LookDir.x, LookDir.y, 0.f)) * Distance;
 	const FVector TheoryPos = TargetPosLift - HorizontalLook;
-	const FVector& ActualPos = Component->GetTransform().Translation;
+	const FVector& ActualPos = CameraComponent->GetTransform().Translation;
 	if (ActualPos != TheoryPos) // change position or rotate view direction
 	{
-		Component->SetTranslate(TheoryPos);
+		CameraComponent->SetTranslate(TheoryPos);
 		MarkDirty();
 	}
 }
@@ -201,9 +200,22 @@ const FMatrix& FCameraComponent::GetPerspProjMatrix_RenderThread()
 	return PMatrix_RenderThread;
 }
 
-const FMatrix FCameraComponent::GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/) const
+const FMatrix& FCameraComponent::GetOrthoProjMatrix_GameThread()
 {
-	return glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
+	if (ODirty)
+	{
+		float OrthoHeight = OrthoWidth / AspectRatio;
+		OMatrix_GameThread = glm::orthoLH_ZO(-OrthoWidth / 2, OrthoWidth / 2, -OrthoHeight / 2, OrthoHeight / 2, NearPlane, FarPlane);
+		ODirty = false;
+	}
+	return OMatrix_GameThread;
+}
+
+const FMatrix& FCameraComponent::GetOrthoProjMatrix_RenderThread()
+{
+	FMatrix GameThread = GetOrthoProjMatrix_GameThread();
+	std::swap(GameThread, OMatrix_RenderThread);
+	return OMatrix_RenderThread;
 }
 
 void FCameraComponent::SetLookAt(const FVector& Look)
@@ -240,12 +252,8 @@ void ACameraActor::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVect
 	}
 }
 
-ACameraActor::ACameraActor()
-{
-	Components.push_back(make_shared<FCameraComponent>());
-}
-
 ACameraActor::ACameraActor(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
 {
-	Components.push_back(make_shared<FCameraComponent>(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane));
+	RootComponent = make_shared<FCameraComponent>(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane);
+	CameraComponent = RootComponent->As<FCameraComponent>();
 }

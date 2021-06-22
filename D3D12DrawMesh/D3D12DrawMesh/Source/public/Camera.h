@@ -11,7 +11,7 @@ enum class FCameraMoveMode
 	STATIC = 2,
 };
 
-class FCameraComponent : public FActorComponent
+class FCameraComponent : public FSceneComponent
 {
 private:
 	// reset data
@@ -19,15 +19,15 @@ private:
 	FVector InitialUp;
 	FVector InitialLookAt;
 
+	// mode
+	uint32 ProjectionMode; // 0:persp, 1: ortho
+
 	// perspective frustum parameter
 	float Fov = 90.f;
 	float AspectRatio = 1.7777777f;
 
 	// ortho frustum parameter
-	float Left;
-	float Right;
-	float Bottom;
-	float Top;
+	float OrthoWidth = 512.f;
 
 	// common parameter
 	float NearPlane = 1.f;
@@ -40,10 +40,14 @@ private:
 	bool PDirty = true;
 	FMatrix PMatrix_GameThread;
 	FMatrix PMatrix_RenderThread;
+	bool ODirty = true;
+	FMatrix OMatrix_GameThread;
+	FMatrix OMatrix_RenderThread;
 
 	shared_ptr<FStaticMeshComponent> CameraMesh;
 
 public:
+	friend class ACameraActor;
 	FCameraComponent() = default;
 	~FCameraComponent() = default;
 	FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
@@ -55,42 +59,47 @@ public:
 	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetTranslate(Translate); } }
 	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetTransform(Trans); } }
 	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetWorldMatrix(Matrix); } }
+	void SetProjectMode(const uint32& Mode) { ProjectionMode = Mode; }
 	void SetFov(const float& FovParam) { Fov = FovParam; PDirty = true; }
+	void SetOrthoWidth(const float& Width) { OrthoWidth = Width; }
 	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; PDirty = true; }
 	void SetViewPlane(const float& Near, const float& Far) { NearPlane = Near; FarPlane = Far; PDirty = true; }
 	void SetLookAt(const FVector& Look);
 
+	FStaticMeshComponent* GetCameraMesh() { return CameraMesh.get(); }
 	const FVector GetLookAt();
+	const uint32& GetProjectMode() { return ProjectionMode; }
 	const FMatrix& GetViewMatrix_GameThread();
 	const FMatrix& GetViewMatrix_RenderThread();
 	const FMatrix& GetPerspProjMatrix_GameThread();
 	const FMatrix& GetPerspProjMatrix_RenderThread();
-	FMatrix GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f) const;
+	const FMatrix& GetOrthoProjMatrix_GameThread();
+	const FMatrix& GetOrthoProjMatrix_RenderThread();
+
 };
 
 class ACameraActor : public AActor
 {
 private:
-	FCameraComponent* const CameraComponent = Components[0]->As<FCameraComponent>();
-
 	// movement parameter
 	float MoveSpeed = 300.0f;
 	float TurnSpeed = 1.570796327f;
 	float MouseSensibility = 0.01f;
 	float AngularVelocity;
 
+	FCameraComponent* CameraComponent;
+
 public:
-	ACameraActor();
-	ACameraActor(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
-	~ACameraActor() = default;
+	ACameraActor(shared_ptr<FCameraComponent> Cam) { RootComponent = Cam; CameraComponent = Cam.get(); OwnedComponents.push_back(Cam); }
 
 	void SetMoveSpeed(const float& UnitsPerSecond);
 	void SetTurnSpeed(const float& RadiansPerSecond);
+	void SetCameraMesh(const shared_ptr<FStaticMeshComponent> Mesh) { CameraComponent->CameraMesh = Mesh; OwnedComponents.push_back(Mesh); }
+
+	FCameraComponent* GetCameraComponent() { return CameraComponent; }
 
 	void Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
 	void UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance);
 	void UpdateCameraParam_Static(const float& ElapsedSeconds);
-
-	FCameraComponent* GetRootComponent() { return CameraComponent; }
 };

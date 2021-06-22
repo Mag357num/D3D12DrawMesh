@@ -8,18 +8,30 @@ enum class FLightMoveMode
 	STATIC_LIGHT = 1
 };
 
-class FLightComponent : public FActorComponent
+class FLightComponent : public FSceneComponent
 {
-private:
-	FVector Color;
+protected:
+	FVector4 Color;
 	float Intensity;
+	float AspectRatio = 1.7777777f;
+	float NearPlane = 1.f;
+	float FarPlane = 5000.f;
 
 public:
-	void SetColor(const FVector& C) { Color = C; }
-	const FVector& GetColor() { return Color; }
+	FLightComponent() = default;
+	~FLightComponent() = default;
 
+	void SetColor(const FVector4& C) { Color = C; }
 	void SetIntensity(const float& I) { Intensity = I; }
+	virtual void SetClipPlane(const float& InFarPlane, const float& InNear) = 0;
+	virtual void SetAspectRatio(const float& InAspectRatio) = 0;
+
+	const FVector4& GetColor() { return Color; }
 	const float& GetIntensity() { return Intensity; }
+
+protected:
+	void SetClipPlane_Base(const float& InFarPlane, const float& InNear) { FarPlane = InFarPlane; NearPlane = InNear; }
+	void SetAspectRatio_Base(const float& InAspectRatio) { AspectRatio = InAspectRatio; }
 };
 
 class ALight : public AActor
@@ -36,7 +48,7 @@ public:
 	~ALight() = default;
 };
 
-class FDirectionalLIghtComponent : public FLightComponent
+class FDirectionalLightComponent : public FLightComponent
 {
 private:
 	// Secondary data, need to refresh depent on dirty
@@ -49,20 +61,17 @@ private:
 	FMatrix OMatrix_GameThread;
 	FMatrix OMatrix_RenderThread;
 
-	float Left;
-	float Right;
-	float Bottom;
-	float Top;
-	float NearPlane;
-	float FarPlane;
+	float OrthoWidth;
 
 public:
-	FDirectionalLIghtComponent() = delete;
-	~FDirectionalLIghtComponent() = default;
-	FDirectionalLIghtComponent(const FVector& Pos, const FVector& Direction);
+	FDirectionalLightComponent() = default;
+	~FDirectionalLightComponent() = default;
+	FDirectionalLightComponent(const FVector& Pos, const FVector& Direction);
 
 	void SetDirection(const FVector& Dir);
-	void SetOrthoParam(float L, float R, float B, float T, float N, float F);
+	void SetOrthoWidth(const float& Width) { OrthoWidth = Width; ODirty = true; }
+	virtual void SetClipPlane(const float& InFarPlane, const float& InNear) override { SetClipPlane_Base(InFarPlane, InNear); ODirty = true; }
+	virtual void SetAspectRatio(const float& InAspectRatio) override { SetAspectRatio_Base(InAspectRatio); ODirty = true; };
 
 	const FVector GetDirection();
 	const FMatrix& GetViewMatrix_GameThread();
@@ -80,14 +89,16 @@ public:
 class ADirectionalLight : public ALight
 {
 private:
-	FDirectionalLIghtComponent* const DirectionalLightComponent = Components[0]->As<FDirectionalLIghtComponent>();
+	FDirectionalLightComponent* DirectionalLightComponent;
 
 public:
+	ADirectionalLight(shared_ptr<FDirectionalLightComponent> DLight) { RootComponent = DLight; DirectionalLightComponent = DLight.get(); OwnedComponents.push_back(DLight); }
+
 	virtual void Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 1000.f);
 	virtual void Tick_Rotate(const float& ElapsedSeconds, const FVector& Target, const float& Distance);
 	virtual void Tick_Static();
 
-	FDirectionalLIghtComponent* GetRootComponent() { return DirectionalLightComponent; }
+	FDirectionalLightComponent* GetDLightComponent() { return DirectionalLightComponent; }
 };
 
 class FPointLightComponent : public FLightComponent
@@ -108,19 +119,20 @@ private:
 	FMatrix PMatrix_RenderThread;
 
 	float Fov = 90.f;
-	float AspectRatio = 1.7777777f;
-	float NearPlane = 1.f;
-	float FarPlane = 5000.f;
 
 public:
-	FPointLightComponent() = delete;
+	FPointLightComponent() = default;
 	~FPointLightComponent() = default;
 	FPointLightComponent(const FVector& Pos);
 
 	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; }
 	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); VDirty = true; }
 	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); VDirty = true; }
-	void SetPerspParam(float Fov, float AspectRatio, float Near, float Far) { this->Fov = Fov; this->AspectRatio = AspectRatio; NearPlane = Near; FarPlane = Far; PDirty = true; }
+	void SetFov(const float& F) { Fov = F; PDirty = true; }
+	virtual void SetClipPlane(const float& InFarPlane, const float& InNear) override { SetClipPlane_Base(InFarPlane, InNear); PDirty = true; }
+	virtual void SetAspectRatio(const float& InAspectRatio) override { SetAspectRatio_Base(InAspectRatio); PDirty = true; };
+	void SetAttenuationRadius(const float& InAttenuationRadius) { AttenuationRadius = InAttenuationRadius; }
+	void SetSourceRadius(const float& InSourceRadius) { SourceRadius = InSourceRadius; }
 
 	const FVector& GetAttenuation() { return Attenuation; }
 	const array<FMatrix, 6>& GetViewMatrixs_GameThread();
@@ -132,9 +144,12 @@ public:
 class APointLight : public ALight
 {
 private:
-	FPointLightComponent* const PointLightComponent = Components[0]->As<FPointLightComponent>();
+	FPointLightComponent* PointLightComponent;
+
 public:
+	APointLight(shared_ptr<FPointLightComponent> PLight) { RootComponent = PLight; PointLightComponent = PLight.get(); OwnedComponents.push_back(PLight); }
+
 	virtual void Tick(const float& ElapsedSeconds);
 
-	FPointLightComponent* GetRootComponent() { return PointLightComponent; }
+	FPointLightComponent* GetPLightComponent() { return PointLightComponent; }
 };

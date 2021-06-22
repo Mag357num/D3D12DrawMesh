@@ -3,10 +3,9 @@
 FBox AActor::GetComponentsBoundingBox()
 {
 	FBox Box;
-	for (auto i : Components)
+	for (auto i : OwnedComponents)
 	{
-		Box += i->GetBoundingBox();
+		Box += i->GetBounding().GetBox();
 	}
 	return Box;
 }
-

@@ -42,6 +42,9 @@ public:
 	FBoxSphereBounds() = default;
 	FBoxSphereBounds(FVector InOrigin, FVector InBoxExtent) : Origin(InOrigin), BoxExtent(InBoxExtent), SphereRadius(glm::length(BoxExtent)) {}
 
+	void SetOrigin(const FVector& O) { Origin = O; }
+	void SetExtent(const FVector& E) { BoxExtent = E; }
+
 	const FBox GetBox() const;
 
 	void Scale(const FVector& Scale)

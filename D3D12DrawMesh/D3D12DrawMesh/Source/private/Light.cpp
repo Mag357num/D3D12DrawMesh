@@ -2,34 +2,24 @@
 #include "StaticMesh.h"
 #include "AssetManager.h"
 
-FDirectionalLIghtComponent::FDirectionalLIghtComponent(const FVector& Pos, const FVector& Direction)
+FDirectionalLightComponent::FDirectionalLightComponent(const FVector& Pos, const FVector& Direction)
 {
 	VMatrix_GameThread = glm::lookAtLH(Pos, Pos + Direction * 10.0f, FVector(0.f, 0.f, 1.f));
 	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
 }
 
-void FDirectionalLIghtComponent::SetOrthoParam(float L, float R, float B, float T, float N, float F)
-{
-	Left = L;
-	Right = R;
-	Bottom = B;
-	Top = T;
-	NearPlane = N;
-	FarPlane = F;
-	ODirty = true;
-}
-
-const FMatrix& FDirectionalLIghtComponent::GetOMatrix_GameThread()
+const FMatrix& FDirectionalLightComponent::GetOMatrix_GameThread()
 {
 	if (ODirty)
 	{
-		OMatrix_GameThread = glm::orthoLH_ZO(Left, Right, Bottom, Top, NearPlane, FarPlane);
+		float OrthoHeight = OrthoWidth / AspectRatio;
+		OMatrix_GameThread = glm::orthoLH_ZO(-OrthoWidth / 2, OrthoWidth / 2, -OrthoHeight / 2, OrthoHeight / 2, NearPlane, FarPlane);
 		ODirty = false;
 	}
 	return OMatrix_GameThread;
 }
 
-const FMatrix& FDirectionalLIghtComponent::GetOMatrix_RenderThread()
+const FMatrix& FDirectionalLightComponent::GetOMatrix_RenderThread()
 {
 	FMatrix GameThread = GetOMatrix_GameThread();
 	std::swap(GameThread, OMatrix_RenderThread);
@@ -40,7 +30,7 @@ ALight::ALight()
 {
 	shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
 	Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Mesh\\Sphere_.dat"));
-	Components.push_back(Com);
+	OwnedComponents.push_back(Com);
 }
 
 void ADirectionalLight::Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation /*= FVector(0.f, 0.f, 0.f)*/, float Distance /*= 1000.f*/)
@@ -68,7 +58,7 @@ void ADirectionalLight::Tick_Static()
 
 }
 
-void FDirectionalLIghtComponent::SetDirection(const FVector& Dir)
+void FDirectionalLightComponent::SetDirection(const FVector& Dir)
 {
 	// TODO: low efficiency
 	// optimization: https://blog.csdn.net/qq_36537774/article/details/86534009
@@ -76,14 +66,14 @@ void FDirectionalLIghtComponent::SetDirection(const FVector& Dir)
 	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Dir * 10.0f, FVector(0.f, 0.f, 1.f))));
 }
 
-const FVector FDirectionalLIghtComponent::GetDirection()
+const FVector FDirectionalLightComponent::GetDirection()
 {
 	// world matrix only contain rotate in 3x3 zone and directional vector wont translate
 	// view matrix default use z:FVector4(0, 0, 1, 0) axis as look at
 	return GetWorldMatrix() * FVector4(0, 0, 1, 0);
 }
 
-const FMatrix& FDirectionalLIghtComponent::GetViewMatrix_GameThread()
+const FMatrix& FDirectionalLightComponent::GetViewMatrix_GameThread()
 {
 	if (VDirty)
 	{
@@ -98,7 +88,7 @@ const FMatrix& FDirectionalLIghtComponent::GetViewMatrix_GameThread()
 	return VMatrix_GameThread;
 }
 
-const FMatrix& FDirectionalLIghtComponent::GetViewMatrix_RenderThread()
+const FMatrix& FDirectionalLightComponent::GetViewMatrix_RenderThread()
 {
 	FMatrix GameThread = GetViewMatrix_GameThread();
 	std::swap(GameThread, VMatrix_RenderThread);

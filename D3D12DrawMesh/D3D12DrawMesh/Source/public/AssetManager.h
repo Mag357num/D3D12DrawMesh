@@ -38,8 +38,12 @@ public:
 private:
 	unordered_map<string, shared_ptr<class FMaterial>> BaseMaterialMap;
 
-	vector<FStaticMeshLOD> ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin);
+	shared_ptr<class FCameraComponent> ReadCameraComponent(std::ifstream& Fin);
+	shared_ptr<class FDirectionalLightComponent> ReadDLightComponent(std::ifstream& Fin);
+	shared_ptr<class FPointLightComponent> ReadPLightComponent(std::ifstream& Fin);
+	shared_ptr<FStaticMeshComponent> ReadStaticMeshComponent(std::ifstream& Fin);
+
+	vector<shared_ptr<FStaticMeshLOD>> ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin);
 	vector<FSkeletalMeshLOD> ReadSkeletalMeshLods(std::ifstream& Fin);
-	FTransform ReadComponentTransformInSceneBinary(std::ifstream& Fin);
 	vector<shared_ptr<class FMaterialInterface>> ReadMaterialInfosInSceneBinary(std::ifstream& Fin);
 };

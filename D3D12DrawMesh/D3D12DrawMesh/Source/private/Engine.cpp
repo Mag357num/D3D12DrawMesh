@@ -72,7 +72,7 @@ void FEngine::Init(void* WindowHandle)
 				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceIdle_.dat")));
 				SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
 			}
-			Cha->SetSkeletalMeshCom(SkeMeshCom);
+			Cha->SetSkeletalMeshComponent(SkeMeshCom);
 		}
 		CurrentScene->SetCurrentCharacter(Cha);
 	}

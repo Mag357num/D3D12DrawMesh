@@ -4,7 +4,7 @@
 #include "Actor.h"
 #include "Key.h"
 
-class ACharacter : public AActor
+class ACharacter : public ASkeletalMeshActor
 {
 private:
 	float MoveSpeed = 300.f;
@@ -12,14 +12,10 @@ private:
 	float MouseSensibility = 0.01f;
 
 public:
-	void SetCurrentAnim(string Key);
-	void SetSkeletalMeshCom(shared_ptr<FSkeletalMeshComponent> SkeMesh) { Components.push_back(SkeMesh); }
-	void Tick( const float& ElapsedSeconds );
-	void TickPosition(const float& ElapsedSeconds);
-
-	FSkeletalMeshComponent* GetSkeletalMeshCom() { return Components[0]->As<FSkeletalMeshComponent>(); }
-
 	ACharacter() = default;
 	~ACharacter() = default;
+
+	void Tick(const float& ElapsedSeconds);
+	void TickPosition(const float& ElapsedSeconds);
 };
 

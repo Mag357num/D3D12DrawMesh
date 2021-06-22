@@ -6,6 +6,8 @@
 #include "Material.h"
 #include "FrameResourceManager.h"
 #include "RHIResource.h"
+#include "Camera.h"
+#include "Light.h"
 
 using RHI::GDynamicRHI;
 
@@ -61,53 +63,77 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 
 		switch (ActorType)
 		{
-		case EActorType::STATICMESH_ACTOR:
-			break;
-		case EActorType::CAMERA_ACTOR:
-			break;
-		case EActorType::DIRECTIONALLIGHT_ACTOR:
-			break;
-		case EActorType::POINTLIGHT_ACTOR:
-			break;
-		default:
-			break;
-		}
-
-
-
-
-
-
-		// static mesh components
-		{
-			int Num;
-			Fin.read((char*)&Num, sizeof(int));
-			for (int j = 0; j < Num; j++)
+			case EActorType::CAMERA_ACTOR:
 			{
-				shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>();
-				Actor->SetStaticMeshComponent(make_shared<FStaticMeshComponent>());
-				FVector Origin, BoxExtend;
-				Fin.read((char*)&Origin, 3 * sizeof(float));
-				Fin.read((char*)&BoxExtend, 3 * sizeof(float));
-				Actor->GetStaticMeshComponent()->SetBounding(FBoxSphereBounds(Origin, BoxExtend));
-				Actor->GetStaticMeshComponent()->SetStaticMesh(make_shared<FStaticMesh>());
-				Actor->GetStaticMeshComponent()->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
-				Actor->GetStaticMeshComponent()->SetTransform(ReadComponentTransformInSceneBinary(Fin));
-				Actor->GetStaticMeshComponent()->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
-				Scene->GetStaticMeshActors().push_back(Actor);
-			}
-		}
+				int ComponentNumber;
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				shared_ptr<ACameraActor> Actor = make_shared<ACameraActor>(ReadCameraComponent(Fin));
+				Actor->SetName(ActorName);
+				Scene->AddCamera(Actor);
 
-		// camera components
-		{
-			int Num;
-			Fin.read((char*)&Num, sizeof(int));
-			for (int j = 0; j < Num; j++)
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				Actor->SetCameraMesh(ReadStaticMeshComponent(Fin));
+
+				break;
+			}
+
+			case EActorType::DIRECTIONALLIGHT_ACTOR:
 			{
-				//shared_ptr<FCameraComponent> Com = make_shared<FStaticMeshComponent>();
-			}
-		}
+				int ComponentNumber;
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
 
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				shared_ptr<ADirectionalLight> Actor = make_shared<ADirectionalLight>(ReadDLightComponent(Fin));
+				Actor->SetName(ActorName);
+				Scene->AddDirectionalLight(Actor);
+
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+
+				break;
+			}
+
+			case EActorType::POINTLIGHT_ACTOR:
+			{
+				int ComponentNumber;
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				shared_ptr<APointLight> Actor = make_shared<APointLight>(ReadPLightComponent(Fin));
+				Actor->SetName(ActorName);
+				Scene->AddPointLight(Actor);
+
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+
+				break;
+			}
+
+			case EActorType::STATICMESH_ACTOR:
+			{
+				int ComponentNumber;
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				auto PLightComponent = ReadPLightComponent(Fin);
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>(ReadStaticMeshComponent(Fin));
+				Actor->SetName(ActorName);
+				Actor->
+				Scene->AddStaticMeshActor(Actor);
+				break;
+			}
+
+			case EActorType::UNKNOW:
+				assert(0);
+				break;
+			default:
+				break;
+		}
 	}
 
 	Fin.close();
@@ -123,9 +149,149 @@ shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFil
 	return SM;
 }
 
-vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin)
+shared_ptr<FCameraComponent> FAssetManager::ReadCameraComponent(std::ifstream& Fin)
 {
-	FStaticMeshLOD MeshLOD;
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR: open file faild.");
+	}
+
+	shared_ptr<FCameraComponent> CameraComponent = make_shared<FCameraComponent>();
+
+	FVector BoundingOrigin;
+	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
+	CameraComponent->GetBounding().SetOrigin(BoundingOrigin);
+
+	FVector BoundingExtend;
+	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
+	CameraComponent->GetBounding().SetExtent(BoundingExtend);
+
+	FTransform Trans;
+	Fin.read((char*)&Trans, 10 * sizeof(float));
+	CameraComponent->SetTransform(Trans);
+
+	uint32 ProjectMode;
+	Fin.read((char*)&ProjectMode, sizeof(int));
+	CameraComponent->SetProjectMode(ProjectMode);
+
+	float FOV;
+	Fin.read((char*)&FOV, sizeof(float));
+	CameraComponent->SetFov(FOV);
+
+	float Aspect;
+	Fin.read((char*)&Aspect, sizeof(float));
+	CameraComponent->SetAspectRatio(Aspect);
+
+	float OrthoWidth;
+	Fin.read((char*)&OrthoWidth, sizeof(float));
+	CameraComponent->SetOrthoWidth(OrthoWidth);
+
+	return CameraComponent;
+}
+
+shared_ptr<FDirectionalLightComponent> FAssetManager::ReadDLightComponent(std::ifstream& Fin)
+{
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR: open file faild.");
+	}
+
+	shared_ptr<FDirectionalLightComponent> DLightComponent = make_shared<FDirectionalLightComponent>();
+
+	FVector BoundingOrigin;
+	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
+	DLightComponent->GetBounding().SetOrigin(BoundingOrigin);
+
+	FVector BoundingExtend;
+	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
+	DLightComponent->GetBounding().SetExtent(BoundingExtend);
+
+	FTransform Trans;
+	Fin.read((char*)&Trans, 10 * sizeof(float));
+	DLightComponent->SetTransform(Trans);
+
+	FVector4 Color;
+	Fin.read((char*)&Color, 4 * sizeof(float));
+	DLightComponent->SetColor(Color);
+
+	float Intensity;
+	Fin.read((char*)&Intensity, sizeof(float));
+	DLightComponent->SetIntensity(Intensity);
+
+	return DLightComponent;
+}
+
+shared_ptr<FPointLightComponent> FAssetManager::ReadPLightComponent(std::ifstream& Fin)
+{
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR: open file faild.");
+	}
+
+	shared_ptr<FPointLightComponent> PLightComponent = make_shared<FPointLightComponent>();
+
+	FVector BoundingOrigin;
+	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
+	PLightComponent->GetBounding().SetOrigin(BoundingOrigin);
+
+	FVector BoundingExtend;
+	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
+	PLightComponent->GetBounding().SetExtent(BoundingExtend);
+
+	FTransform Trans;
+	Fin.read((char*)&Trans, 10 * sizeof(float));
+	PLightComponent->SetTransform(Trans);
+
+	FVector4 Color;
+	Fin.read((char*)&Color, 4 * sizeof(float));
+	PLightComponent->SetColor(Color);
+
+	float Intensity;
+	Fin.read((char*)&Intensity, sizeof(float));
+	PLightComponent->SetIntensity(Intensity);
+
+	float AttenuationRadius;
+	Fin.read((char*)&AttenuationRadius, sizeof(float));
+	PLightComponent->SetAttenuationRadius(AttenuationRadius);
+
+	float SourceRadius;
+	Fin.read((char*)&SourceRadius, sizeof(float));
+	PLightComponent->SetSourceRadius(SourceRadius);
+
+	return PLightComponent;
+}
+
+shared_ptr<FStaticMeshComponent> FAssetManager::ReadStaticMeshComponent(std::ifstream& Fin)
+{
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR: open file faild.");
+	}
+
+	shared_ptr<FStaticMeshComponent> StaticMeshComponent = make_shared<FStaticMeshComponent>();
+
+	FVector BoundingOrigin;
+	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
+	StaticMeshComponent->GetBounding().SetOrigin(BoundingOrigin);
+
+	FVector BoundingExtend;
+	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
+	StaticMeshComponent->GetBounding().SetExtent(BoundingExtend);
+
+	FTransform Trans;
+	Fin.read((char*)&Trans, 10 * sizeof(float));
+	StaticMeshComponent->SetTransform(Trans);
+
+	StaticMeshComponent->SetStaticMesh(make_shared<FStaticMesh>());
+	StaticMeshComponent->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
+	StaticMeshComponent->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
+
+	return StaticMeshComponent;
+}
+
+vector<shared_ptr<FStaticMeshLOD>> FAssetManager::ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin)
+{
+	shared_ptr<FStaticMeshLOD> MeshLOD = make_shared<FStaticMeshLOD>();
 
 	if (!Fin.is_open())
 	{
@@ -142,16 +308,16 @@ vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODsInSceneBinary(std::ifstr
 
 	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
-	MeshLOD.Vertice.resize(static_cast<int>(BufferByteSize / sizeof(float)));
-	Fin.read((char*)MeshLOD.Vertice.data(), BufferByteSize);
+	MeshLOD->Vertice.resize(static_cast<int>(BufferByteSize / sizeof(float)));
+	Fin.read((char*)MeshLOD->Vertice.data(), BufferByteSize);
 
 	Fin.read((char*)&VertexNum, sizeof(int));
 	BufferByteSize = VertexNum * sizeof(int);
 
-	MeshLOD.Indice.resize(VertexNum);
-	Fin.read((char*)MeshLOD.Indice.data(), BufferByteSize);
+	MeshLOD->Indice.resize(VertexNum);
+	Fin.read((char*)MeshLOD->Indice.data(), BufferByteSize);
 
-	vector<FStaticMeshLOD> MeshLODs;
+	vector<shared_ptr<FStaticMeshLOD>> MeshLODs;
 	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
@@ -230,21 +396,6 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	return MeshLODs;
 }
 
-FTransform FAssetManager::ReadComponentTransformInSceneBinary(std::ifstream& Fin)
-{
-	FTransform Trans;
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR:  open file faild.");
-	}
-
-	Fin.read((char*)&Trans.Translation, 3 * sizeof(float));
-	Fin.read((char*)&Trans.Quat, 4 * sizeof(float));
-	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
-
-	return Trans;
-}
-
 vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBinary(std::ifstream& Fin)
 {
 	vector<shared_ptr<FMaterialInterface>> Mats;
@@ -257,12 +408,15 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBi
 		int CharNum;
 		Fin.read((char*)&CharNum, sizeof(int));
 		string MaterialName;
+		string FileName;
 		MaterialName.resize(CharNum);
 		Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
 		MaterialName = MaterialName.c_str();
-		MaterialName = "Resource\\Material\\" + MaterialName + ".material";
+		FileName = "Resource\\Material\\" + MaterialName + ".material";
 
-		Mats.push_back(LoadMaterial(MaterialName));
+		shared_ptr<FMaterialInterface> Mat = LoadMaterial(FileName);
+		Mat->SetName(MaterialName);
+		Mats.push_back(Mat);
 	}
 
 	return Mats;

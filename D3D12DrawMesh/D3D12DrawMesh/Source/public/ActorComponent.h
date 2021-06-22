@@ -4,6 +4,11 @@
 
 class FActorComponent
 {
+
+};
+
+class FSceneComponent : public FActorComponent
+{
 protected:
 	bool WorldMatrixDirty = true;
 	FTransform Transform;
@@ -11,8 +16,8 @@ protected:
 	FBoxSphereBounds Bounding;
 
 public:
-	FActorComponent() = default;
-	~FActorComponent() = default;
+	FSceneComponent() = default;
+	~FSceneComponent() = default;
 
 	template <typename T>
 	inline T* As() { return static_cast<T*>(this); }
@@ -29,8 +34,7 @@ public:
 
 	const FTransform& GetTransform() const { return GetTransform_Base(); }
 	const FMatrix& GetWorldMatrix() { return GetWorldMatrix_Base(); }
-	const FBoxSphereBounds& GetBounding() const { return GetBounding_Base(); }
-	const FBox GetBoundingBox() const { return GetBoundingBox_Base(); }
+	FBoxSphereBounds& GetBounding() { return GetBounding_Base(); }
 
 protected:
 	void SetScale_Base(const FVector& Scale) { Transform.Scale = Scale; WorldMatrixDirty = true; Bounding.Scale(Scale); }
@@ -39,8 +43,8 @@ protected:
 	void SetTransform_Base(const FTransform& Trans) { Transform = Trans; WorldMatrixDirty = true; Bounding.Transform(Trans); }
 	const FTransform& GetTransform_Base() const { return Transform; }
 	void SetBounding_Base(const FBoxSphereBounds& InBounding) { Bounding = InBounding; }
-	const FBoxSphereBounds& GetBounding_Base() const { return Bounding; }
-	const FBox GetBoundingBox_Base() const { return Bounding.GetBox(); }
+	FBoxSphereBounds& GetBounding_Base() { return Bounding; }
+	//const FBox GetBoundingBox_Base() const { return Bounding.GetBox(); }
 
 	void SetWorldMatrix_Base(const FMatrix& Matrix)
 	{
@@ -66,7 +70,7 @@ protected:
 };
 
 class FMaterialInterface;
-class FMeshComponent : public FActorComponent
+class FMeshComponent : public FSceneComponent
 {
 private:
 	vector<shared_ptr<FMaterialInterface>> Materials;

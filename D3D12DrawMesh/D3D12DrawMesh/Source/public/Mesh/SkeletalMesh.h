@@ -64,6 +64,14 @@ public:
 
 class ASkeletalMeshActor : public AActor
 {
-	void SetSkeletalMeshComponent( shared_ptr<FSkeletalMeshComponent> Com );
-	FSkeletalMeshComponent* GetSkeletalMeshComponent();
+private:
+	FSkeletalMeshComponent* SkeletalMeshComponent;
+
+public:
+	ASkeletalMeshActor(shared_ptr<FSkeletalMeshComponent> Ske) { RootComponent = Ske; SkeletalMeshComponent = Ske.get(); OwnedComponents.push_back(Ske); }
+
+	void SetCurrentAnim(string Key);
+	void Tick(const float& ElapsedSeconds);
+
+	FSkeletalMeshComponent* GetSkeletalMeshComponent() { return SkeletalMeshComponent; }
 };

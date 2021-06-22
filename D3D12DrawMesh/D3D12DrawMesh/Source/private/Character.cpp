@@ -4,7 +4,7 @@
 
 void ACharacter::Tick(const float& ElapsedSeconds)
 {
-	GetSkeletalMeshCom()->TickAnimation(ElapsedSeconds);
+	GetSkeletalMeshComponent()->TickAnimation(ElapsedSeconds);
 	TickPosition(ElapsedSeconds);
 }
 
@@ -41,17 +41,12 @@ void ACharacter::TickPosition(const float& ElapsedSeconds)
 		Move.x += KeyMoveInterval;
 	}
 
-	FEuler Euler = QuatToEuler(GetSkeletalMeshCom()->GetTransform().Quat); // roll pitch yaw
+	FEuler Euler = QuatToEuler(GetSkeletalMeshComponent()->GetTransform().Quat); // roll pitch yaw
 	Euler.Yaw += MouseRotateInterval.x; // yaw
 
-	FTransform Trans = GetSkeletalMeshCom()->GetTransform();
+	FTransform Trans = GetSkeletalMeshComponent()->GetTransform();
 	Trans.Translation.x += Move.x * cos(Euler.Yaw) - Move.y * sin(Euler.Yaw);
 	Trans.Translation.y += Move.x * sin(Euler.Yaw) + Move.y * cos(Euler.Yaw);
 	Trans.Quat = EulerToQuat(Euler);
-	GetSkeletalMeshCom()->SetTransform(Trans);
-}
-
-void ACharacter::SetCurrentAnim(string Key)
-{
-	GetSkeletalMeshCom()->GetAnimator().SetCurrentAnim( Key );
+	GetSkeletalMeshComponent()->SetTransform(Trans);
 }
