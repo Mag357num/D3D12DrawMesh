@@ -14,11 +14,6 @@ enum class FCameraMoveMode
 class FCameraComponent : public FSceneComponent
 {
 private:
-	// reset data
-	FVector InitialEye;
-	FVector InitialUp;
-	FVector InitialLookAt;
-
 	// mode
 	uint32 ProjectionMode; // 0:persp, 1: ortho
 
@@ -48,11 +43,8 @@ private:
 
 public:
 	friend class ACameraActor;
-	FCameraComponent() = default;
-	~FCameraComponent() = default;
+	FCameraComponent() { Type = EComponentType::CAMERA_COMPONENT; }
 	FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
-
-	void Reset();
 	
 	void SetScale(const FVector& Scale) { SetScale_Base(Scale); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetScale(Scale); } }
 	void SetQuat(const FQuat& Quat) { SetQuat_Base(Quat); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetQuat(Quat); } }
@@ -64,10 +56,10 @@ public:
 	void SetOrthoWidth(const float& Width) { OrthoWidth = Width; }
 	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; PDirty = true; }
 	void SetViewPlane(const float& Near, const float& Far) { NearPlane = Near; FarPlane = Far; PDirty = true; }
-	void SetLookAt(const FVector& Look);
+	void SetLookAt(const FVector& Look); // TODO: need test and optimize
 
 	FStaticMeshComponent* GetCameraMesh() { return CameraMesh.get(); }
-	const FVector GetLookAt();
+	const FVector GetLookAt(); // TODO: need test and optimize
 	const uint32& GetProjectMode() { return ProjectionMode; }
 	const FMatrix& GetViewMatrix_GameThread();
 	const FMatrix& GetViewMatrix_RenderThread();
@@ -90,11 +82,11 @@ private:
 	FCameraComponent* CameraComponent;
 
 public:
-	ACameraActor(shared_ptr<FCameraComponent> Cam) { RootComponent = Cam; CameraComponent = Cam.get(); OwnedComponents.push_back(Cam); }
+	ACameraActor(shared_ptr<FCameraComponent> Cam) { RootComponent = Cam; CameraComponent = Cam.get(); AddOwnedComponent(Cam); }
 
 	void SetMoveSpeed(const float& UnitsPerSecond);
 	void SetTurnSpeed(const float& RadiansPerSecond);
-	void SetCameraMesh(const shared_ptr<FStaticMeshComponent> Mesh) { CameraComponent->CameraMesh = Mesh; OwnedComponents.push_back(Mesh); }
+	void SetCameraMesh(const shared_ptr<FStaticMeshComponent> Mesh) { CameraComponent->CameraMesh = Mesh; AddOwnedComponent(Mesh); }
 
 	FCameraComponent* GetCameraComponent() { return CameraComponent; }
 

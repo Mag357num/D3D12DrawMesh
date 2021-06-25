@@ -19,7 +19,6 @@ protected:
 
 public:
 	FLightComponent() = default;
-	~FLightComponent() = default;
 
 	void SetColor(const FVector4& C) { Color = C; }
 	void SetIntensity(const float& I) { Intensity = I; }
@@ -64,8 +63,8 @@ private:
 	float OrthoWidth;
 
 public:
-	FDirectionalLightComponent() = default;
-	~FDirectionalLightComponent() = default;
+	FDirectionalLightComponent() { Type = EComponentType::DIRECTIONALLIGHT_COMPONENT; };
+	virtual ~FDirectionalLightComponent() = default;
 	FDirectionalLightComponent(const FVector& Pos, const FVector& Direction);
 
 	void SetDirection(const FVector& Dir);
@@ -92,7 +91,7 @@ private:
 	FDirectionalLightComponent* DirectionalLightComponent;
 
 public:
-	ADirectionalLight(shared_ptr<FDirectionalLightComponent> DLight) { RootComponent = DLight; DirectionalLightComponent = DLight.get(); OwnedComponents.push_back(DLight); }
+	ADirectionalLight(shared_ptr<FDirectionalLightComponent> DLight) { RootComponent = DLight; DirectionalLightComponent = DLight.get(); AddOwnedComponent(DLight); }
 
 	virtual void Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 1000.f);
 	virtual void Tick_Rotate(const float& ElapsedSeconds, const FVector& Target, const float& Distance);
@@ -121,8 +120,8 @@ private:
 	float Fov = 90.f;
 
 public:
-	FPointLightComponent() = default;
-	~FPointLightComponent() = default;
+	FPointLightComponent() { Type = EComponentType::POINTLIGHT_COMPONENT; };
+	virtual ~FPointLightComponent() = default;
 	FPointLightComponent(const FVector& Pos);
 
 	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; }
@@ -147,7 +146,7 @@ private:
 	FPointLightComponent* PointLightComponent;
 
 public:
-	APointLight(shared_ptr<FPointLightComponent> PLight) { RootComponent = PLight; PointLightComponent = PLight.get(); OwnedComponents.push_back(PLight); }
+	APointLight(shared_ptr<FPointLightComponent> PLight) { RootComponent = PLight; PointLightComponent = PLight.get(); AddOwnedComponent(PLight); }
 
 	virtual void Tick(const float& ElapsedSeconds);
 

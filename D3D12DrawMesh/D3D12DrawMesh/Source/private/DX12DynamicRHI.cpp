@@ -128,7 +128,7 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
 	}
 
-	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, FBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, EBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
 
@@ -153,10 +153,10 @@ namespace RHI
 
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = BlendMode == FBlendMode::TRANSLUCENT_BM ? D3D12_DEPTH_WRITE_MASK_ZERO : D3D12_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthWriteMask = BlendMode == EBlendMode::TRANSLUCENT_BM ? D3D12_DEPTH_WRITE_MASK_ZERO : D3D12_DEPTH_WRITE_MASK_ALL;
 
 		D3D12_RENDER_TARGET_BLEND_DESC BlendDesc;
-		BlendDesc.BlendEnable = BlendMode == FBlendMode::TRANSLUCENT_BM ? TRUE : FALSE;
+		BlendDesc.BlendEnable = BlendMode == EBlendMode::TRANSLUCENT_BM ? TRUE : FALSE;
 		BlendDesc.LogicOpEnable = FALSE;
 		BlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		BlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;

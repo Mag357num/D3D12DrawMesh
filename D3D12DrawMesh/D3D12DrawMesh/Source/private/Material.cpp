@@ -2,9 +2,9 @@
 
 void FMaterialInstance::ChangeScalarParams(const uint32& Index, const float& S)
 {
-	if (OriginMaterial->GetNumericParams().ScalarParams.size() < Index + 1)
+	if (BaseMaterial->GetNumericParams().ScalarParams.size() < Index + 1)
 	{
-		OriginMaterial->ResizeScalarParams(Index + 1);
+		BaseMaterial->ResizeScalarParams(Index + 1);
 	}
 	std::pair<uint32, float> pair(Index, S);
 	InstanceScalarParams.insert(pair);
@@ -12,9 +12,9 @@ void FMaterialInstance::ChangeScalarParams(const uint32& Index, const float& S)
 
 void FMaterialInstance::ChangeVectorParams(const uint32& Index, const FVector4& V)
 {
-	if (OriginMaterial->GetNumericParams().VectorParams.size() < Index + 1)
+	if (BaseMaterial->GetNumericParams().VectorParams.size() < Index + 1)
 	{
-		OriginMaterial->ResizeVectorParams(Index + 1);
+		BaseMaterial->ResizeVectorParams(Index + 1);
 	}
 	std::pair<uint32, FVector4> pair(Index, V);
 	InstanceVectorParams.insert(pair);
@@ -22,9 +22,9 @@ void FMaterialInstance::ChangeVectorParams(const uint32& Index, const FVector4& 
 
 void FMaterialInstance::ChangeTextureParams(const uint32& Index, const wstring& T)
 {
-	if (OriginMaterial->GetTextureParams().size() < Index + 1)
+	if (BaseMaterial->GetTextureParams().size() < Index + 1)
 	{
-		OriginMaterial->ResizeTextureParams(Index + 1);
+		BaseMaterial->ResizeTextureParams(Index + 1);
 	}
 	std::pair<uint32, wstring> pair(Index, T);
 	InstanceTexParams.insert(pair);
@@ -32,7 +32,7 @@ void FMaterialInstance::ChangeTextureParams(const uint32& Index, const wstring& 
 
 FMaterialParam FMaterialInstance::GetNumericParams()
 {
-	FMaterialParam Param = OriginMaterial->GetNumericParams();
+	FMaterialParam Param = BaseMaterial->GetNumericParams();
 	for (unordered_map<uint32, float>::iterator iter = InstanceScalarParams.begin(); iter != InstanceScalarParams.end(); iter++)
 	{
 		Param.ScalarParams[iter->first] = iter->second;
@@ -46,7 +46,7 @@ FMaterialParam FMaterialInstance::GetNumericParams()
 
 vector<wstring> FMaterialInstance::GetTextureParams()
 {
-	vector<wstring> Texs = OriginMaterial->GetTextureParams();
+	vector<wstring> Texs = BaseMaterial->GetTextureParams();
 	for (unordered_map<uint32, wstring>::iterator iter = InstanceTexParams.begin(); iter != InstanceTexParams.end(); iter++)
 	{
 		Texs[iter->first] = iter->second;
@@ -65,7 +65,7 @@ vector<wstring> FMaterialInstance::GetTextureParams()
 shared_ptr<FMaterialInstance> FMaterial::CreateInstance()
 {
 	shared_ptr<FMaterialInstance> Instance = make_shared<FMaterialInstance>(this);
-	Instance->SetOriginMaterial(this);
+	Instance->SetBaseMaterial(this);
 	Instance->SetBlendMode(GetBlendMode());
 	return Instance;
 }

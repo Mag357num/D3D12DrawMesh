@@ -28,9 +28,9 @@ const FMatrix& FDirectionalLightComponent::GetOMatrix_RenderThread()
 
 ALight::ALight()
 {
-	shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
-	Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Mesh\\Sphere_.dat"));
-	OwnedComponents.push_back(Com);
+	//shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+	//Com->SetStaticMesh(FAssetManager::Get()->LoadStaticMesh(L"Resource\\Mesh\\Sphere_.dat"));
+	//OwnedComponents.push_back(Com);
 }
 
 void ADirectionalLight::Tick(const float& ElapsedSeconds, FLightMoveMode Mode, FVector TargetLocation /*= FVector(0.f, 0.f, 0.f)*/, float Distance /*= 1000.f*/)

@@ -83,7 +83,7 @@ public:
 	void CreateActorsFrameRes(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 
-	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
+	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, EBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
 	// create common shared cb
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);

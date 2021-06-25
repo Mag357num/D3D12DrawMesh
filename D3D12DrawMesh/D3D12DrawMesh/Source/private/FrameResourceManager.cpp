@@ -133,31 +133,31 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 
 	// character
 	{
-		// mesh
-		SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(Scene->GetCurrentCharacter()->GetSkeletalMeshComponent());
-		// shadowpass rr
-		auto RR_ShadowPass = CreateRenderResource
-		(
-			Shader_ShadowPass_SkeletalMesh,
-			FBlendMode::OPAQUE_BM,
-			VIL_SkeletalMesh,
-			SIL_ShadowPass_SkeletalMesh,
-			FFormat::FORMAT_UNKNOWN,
-			0,
-			GDynamicRHI->GetFrameCount());
-		SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
+		//// mesh
+		//SFrameRes.CharacterMesh = GDynamicRHI->CreateGeometry(Scene->GetCurrentCharacter()->GetSkeletalMeshComponent());
+		//// shadowpass rr
+		//auto RR_ShadowPass = CreateRenderResource
+		//(
+		//	Shader_ShadowPass_SkeletalMesh,
+		//	EBlendMode::OPAQUE_BM,
+		//	VIL_SkeletalMesh,
+		//	SIL_ShadowPass_SkeletalMesh,
+		//	FFormat::FORMAT_UNKNOWN,
+		//	0,
+		//	GDynamicRHI->GetFrameCount());
+		//SFrameRes.RRMap_ShadowPass.insert({ SFrameRes.CharacterMesh.get(), RR_ShadowPass });
 
-		// scenepass rr
-		auto RR_ScenePass = CreateRenderResource
-		(
-			Shader_ScenePass_SkeletalMesh,
-			FBlendMode::OPAQUE_BM,
-			VIL_SkeletalMesh,
-			SIL_ScenePass_SkeletalMesh,
-			SceneMapFormat,
-			1,
-			GDynamicRHI->GetFrameCount());
-		SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
+		//// scenepass rr
+		//auto RR_ScenePass = CreateRenderResource
+		//(
+		//	Shader_ScenePass_SkeletalMesh,
+		//	EBlendMode::OPAQUE_BM,
+		//	VIL_SkeletalMesh,
+		//	SIL_ScenePass_SkeletalMesh,
+		//	SceneMapFormat,
+		//	1,
+		//	GDynamicRHI->GetFrameCount());
+		//SFrameRes.RRMap_ScenePass.insert({ SFrameRes.CharacterMesh.get(), RR_ScenePass });
 	}
 
 	// static mesh
@@ -166,14 +166,14 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 		{
 			// mat
 			FStaticMeshComponent* Component = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent();
-			FMaterialInterface* Material = Component->GetMaterial(0); // TODO: need change
+			FMaterialInterface* Material = Component->GetMaterial(0); // TODO: need change, some mesh have sub mesh and different material
 			// mesh
 			SFrameRes.StaticMeshes.push_back(GDynamicRHI->CreateGeometry(Component));
 			// shadowpass rr
 			auto RR_ShadowPass = CreateRenderResource
 			(
 				Shader_ShadowPass_StaticMesh,
-				FBlendMode::OPAQUE_BM,
+				EBlendMode::OPAQUE_BM,
 				VIL_StaticMesh,
 				SIL_ShadowPass_StaticMesh,
 				FFormat::FORMAT_UNKNOWN,
@@ -187,17 +187,15 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 			for (uint32 j = 0; j < Material->GetTextureParams().size(); j++)
 			{
 				Texs.push_back(FAssetManager::Get()->LoadTexture(Material->GetTextureParams()[j]));
-				SIL.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1+j, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
+				SIL.Elements.push_back({ FRangeType::DESCRIPTOR_RANGE_TYPE_SRV, 1, 1 + j, FShaderVisibility::SHADER_VISIBILITY_PIXEL });
 			}
 			SFrameRes.MaterialTexs.insert({ SFrameRes.StaticMeshes[i].get(), Texs });
 
 			// write material cb
-			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f)); // TODO: empty material should not have param cb
+			uint32 ParamCbSize = sizeof(Material->GetNumericParams()) == 0 ? 256 : 256 * static_cast<uint32>(ceil(static_cast<float>(sizeof(Material->GetNumericParams())) / 256.f));
 			shared_ptr<FCB> MaterialCB = GDynamicRHI->CreateConstantBuffer(ParamCbSize);
 			GDynamicRHI->WriteConstantBuffer(MaterialCB.get(), Material->GetNumericParams().VectorParams.data(), 16 * Material->GetNumericParams().VectorParams.size());
 			GDynamicRHI->WriteConstantBufferWithOffset(MaterialCB.get(), 16 * Material->GetNumericParams().VectorParams.size(), Material->GetNumericParams().ScalarParams.data(), 4 * Material->GetNumericParams().ScalarParams.size());
-
-			
 			SFrameRes.MaterialCBs.insert({ SFrameRes.StaticMeshes[i].get(), MaterialCB });
 
 			// scenepass rr
@@ -212,21 +210,21 @@ void FFrameResourceManager::CreateActorsFrameRes(const shared_ptr<FScene> Scene,
 				GDynamicRHI->GetFrameCount() );
 			SFrameRes.RRMap_ScenePass.insert( { SFrameRes.StaticMeshes[i].get(), RR_ScenePass } );
 
-			// order the distance to camera
-			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
-			{
-				FVector ActorPos = Component->GetTransform().Translation;
-				FVector CameraPos = Scene->GetCurrentCamera()->GetCameraComponent()->GetTransform().Translation;
-				float Distance = glm::length( ActorPos - CameraPos );
-				SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
-			}
+			//// order the distance to camera
+			//if (Material->GetBlendMode() == EBlendMode::TRANSLUCENT_BM)
+			//{
+			//	FVector ActorPos = Component->GetTransform().Translation;
+			//	FVector CameraPos = Scene->GetCurrentCamera()->GetCameraComponent()->GetTransform().Translation;
+			//	float Distance = glm::length( ActorPos - CameraPos );
+			//	SFrameRes.TranslucentActorIndice.insert( { Distance, i } );
+			//}
 		}
 	}
 
 	RHI::GDynamicRHI->EndCreateResource();
 }
 
-shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount )
+shared_ptr<RHI::FRenderResource> FFrameResourceManager::CreateRenderResource( const wstring& Shader, EBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount )
 {
 	shared_ptr<FRenderResource> RR = make_shared<FRenderResource>();
 	RR->BlendMode = BlendMode;
@@ -429,7 +427,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SFrameRes.RR_BloomSetup = CreateRenderResource
 	(
 		L"Resource\\Shader\\BloomSetup.hlsl",
-		FBlendMode::OPAQUE_BM,
+		EBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_BloomSetup,
 		FFormat::FORMAT_R11G11B10_FLOAT,
@@ -450,7 +448,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		SFrameRes.RR_BloomDown[i] = CreateRenderResource
 		(
 			L"Resource\\Shader\\BloomDown.hlsl",
-			FBlendMode::OPAQUE_BM,
+			EBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomDown,
 			FFormat::FORMAT_R11G11B10_FLOAT,
@@ -472,7 +470,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 		SFrameRes.RR_BloomUp[i] = CreateRenderResource
 		(
 			L"Resource\\Shader\\BloomUp.hlsl",
-			FBlendMode::OPAQUE_BM,
+			EBlendMode::OPAQUE_BM,
 			VIL_PostProcess,
 			SIL_BloomUp,
 			FFormat::FORMAT_R11G11B10_FLOAT,
@@ -499,7 +497,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SFrameRes.RR_SunMerge = CreateRenderResource
 	(
 		L"Resource\\Shader\\SunMerge.hlsl",
-		FBlendMode::OPAQUE_BM,
+		EBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_SunMerge,
 		FFormat::FORMAT_R11G11B10_FLOAT,
@@ -518,7 +516,7 @@ void FFrameResourceManager::CreatePPTriangleRR()
 	SFrameRes.RR_ToneMapping = CreateRenderResource
 	(
 		L"Resource\\Shader\\ToneMapping.hlsl",
-		FBlendMode::OPAQUE_BM,
+		EBlendMode::OPAQUE_BM,
 		VIL_PostProcess,
 		SIL_ToneMapping,
 		FFormat::FORMAT_R8G8B8A8_UNORM,
@@ -535,16 +533,16 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// animation
 	if (true)
 	{
-		struct PaletteCB
-		{
-			array<FMatrix, 68> GBoneTransforms;
-		} CBInstance;
+		//struct PaletteCB
+		//{
+		//	array<FMatrix, 68> GBoneTransforms;
+		//} CBInstance;
 
-		for (uint32 i = 0; i < 68; i++)
-		{
-			CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetAnimator().GetPalette_RenderThread()[i]);
-		}
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
+		//for (uint32 i = 0; i < 68; i++)
+		//{
+		//	CBInstance.GBoneTransforms[i] = glm::transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetAnimator().GetPalette_RenderThread()[i]);
+		//}
+		//GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].CharacterPaletteCB.get(), reinterpret_cast<void*>(&CBInstance), sizeof(CBInstance));
 	}
 
 	// camera
@@ -582,7 +580,7 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 		for (uint32 i = 0; i < Scene->GetStaticMeshActors().size(); i++)
 		{
 			auto Material = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetMaterial(0); // TODO: need change
-			if (Material->GetBlendMode() == FBlendMode::TRANSLUCENT_BM)
+			if (Material->GetBlendMode() == EBlendMode::TRANSLUCENT_BM)
 			{
 				FVector ActorPos = Scene->GetStaticMeshActors()[i]->GetStaticMeshComponent()->GetTransform().Translation;
 				FVector CameraPos = Scene->GetCurrentCamera()->GetCameraComponent()->GetTransform().Translation;
@@ -597,14 +595,14 @@ void FFrameResourceManager::UpdateFrameResources(FScene* Scene, const uint32& Fr
 	// character position
 	if (CurrentCharacter->IsDirty())
 	{
-		const FMatrix& V = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetViewMatrix_RenderThread();
-		const FMatrix& O = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetOMatrix_RenderThread();
-		FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
-		FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ShadowPass_LocatingCB.get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
-		GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ScenePass_LocatingCB.get(), reinterpret_cast<void*>(&W), sizeof(W));
-		
-		CurrentCharacter->DecreaseDirty();
+		//const FMatrix& V = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetViewMatrix_RenderThread();
+		//const FMatrix& O = Scene->GetDirectionalLights()[0]->GetDLightComponent()->GetOMatrix_RenderThread();
+		//FMatrix WVO = transpose(O * V * CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
+		//FMatrix W = transpose(CurrentCharacter->GetSkeletalMeshComponent()->GetWorldMatrix());
+		//GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ShadowPass_LocatingCB.get(), reinterpret_cast<void*>(&WVO), sizeof(WVO));
+		//GDynamicRHI->WriteConstantBuffer(MFrameRes[FrameIndex].Character_ScenePass_LocatingCB.get(), reinterpret_cast<void*>(&W), sizeof(W));
+		//
+		//CurrentCharacter->DecreaseDirty();
 	}
 
 	// static mesh

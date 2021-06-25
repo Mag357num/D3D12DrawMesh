@@ -65,66 +65,174 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 		{
 			case EActorType::CAMERA_ACTOR:
 			{
+				vector<shared_ptr<FSceneComponent>> ComponentsRead;
 				int ComponentNumber;
 				Fin.read((char*)&ComponentNumber, sizeof(int));
 				shared_ptr<ACameraActor> Actor = make_shared<ACameraActor>(ReadCameraComponent(Fin));
 				Actor->SetName(ActorName);
 				Scene->AddCamera(Actor);
+				for (int i = 0; i < ComponentNumber - 1; i++)
+				{
+					auto Camera = ReadCameraComponent(Fin);
+					ComponentsRead.push_back(Camera);
+				}
 
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto DLight = ReadDLightComponent(Fin);
+					ComponentsRead.push_back(DLight);
+				}
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto PLight = ReadPLightComponent(Fin);
+					ComponentsRead.push_back(PLight);
+				}
+
 				Fin.read((char*)&ComponentNumber, sizeof(int));
 				Actor->SetCameraMesh(ReadStaticMeshComponent(Fin));
+				for (int i = 0; i < ComponentNumber - 1; i++)
+				{
+					auto Mesh = ReadStaticMeshComponent(Fin);
+					ComponentsRead.push_back(Mesh);
+				}
+
+				for (auto i : ComponentsRead)
+				{
+					i->AttachToComponent(Actor->GetRootComponent());
+				}
 
 				break;
 			}
 
 			case EActorType::DIRECTIONALLIGHT_ACTOR:
 			{
+				vector<shared_ptr<FSceneComponent>> ComponentsRead;
 				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto Camera = ReadCameraComponent(Fin);
+					ComponentsRead.push_back(Camera);
+				}
 
 				Fin.read((char*)&ComponentNumber, sizeof(int));
 				shared_ptr<ADirectionalLight> Actor = make_shared<ADirectionalLight>(ReadDLightComponent(Fin));
 				Actor->SetName(ActorName);
 				Scene->AddDirectionalLight(Actor);
+				for (int i = 0; i < ComponentNumber - 1; i++)
+				{
+					auto DLight = ReadDLightComponent(Fin);
+					ComponentsRead.push_back(DLight);
+				}
 
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto PLight = ReadPLightComponent(Fin);
+					ComponentsRead.push_back(PLight);
+				}
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto Mesh = ReadStaticMeshComponent(Fin);
+					ComponentsRead.push_back(Mesh);
+				}
+
+				for (auto i : ComponentsRead)
+				{
+					i->AttachToComponent(Actor->GetRootComponent());
+				}
 
 				break;
 			}
 
 			case EActorType::POINTLIGHT_ACTOR:
 			{
+				vector<shared_ptr<FSceneComponent>> ComponentsRead;
 				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for(int i = 0; i < ComponentNumber; i++)
+				{
+					auto Camera = ReadCameraComponent(Fin);
+					ComponentsRead.push_back(Camera);
+				}
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto DLight = ReadDLightComponent(Fin);
+					ComponentsRead.push_back(DLight);
+				}
 
 				Fin.read((char*)&ComponentNumber, sizeof(int));
 				shared_ptr<APointLight> Actor = make_shared<APointLight>(ReadPLightComponent(Fin));
 				Actor->SetName(ActorName);
 				Scene->AddPointLight(Actor);
+				for (int i = 0; i < ComponentNumber - 1; i++)
+				{
+					auto PLight = ReadPLightComponent(Fin);
+					ComponentsRead.push_back(PLight);
+				}
 
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto Mesh = ReadStaticMeshComponent(Fin);
+					ComponentsRead.push_back(Mesh);
+				}
+
+				for (auto i : ComponentsRead)
+				{
+					i->AttachToComponent(Actor->GetRootComponent());
+				}
 
 				break;
 			}
 
 			case EActorType::STATICMESH_ACTOR:
 			{
+				vector<shared_ptr<FSceneComponent>> ComponentsRead;
 				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
-				Fin.read((char*)&ComponentNumber, sizeof(int)); // jump over other 0 size Tarray
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto Camera = ReadCameraComponent(Fin);
+					ComponentsRead.push_back(Camera);
+				}
 
 				Fin.read((char*)&ComponentNumber, sizeof(int));
-				auto PLightComponent = ReadPLightComponent(Fin);
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto DLight = ReadDLightComponent(Fin);
+					ComponentsRead.push_back(DLight);
+				}
+
+				Fin.read((char*)&ComponentNumber, sizeof(int));
+				for (int i = 0; i < ComponentNumber; i++)
+				{
+					auto PLight = ReadPLightComponent(Fin);
+					ComponentsRead.push_back(PLight);
+				}
 
 				Fin.read((char*)&ComponentNumber, sizeof(int));
 				shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>(ReadStaticMeshComponent(Fin));
 				Actor->SetName(ActorName);
-				Actor->
 				Scene->AddStaticMeshActor(Actor);
+				for (int i = 0; i < ComponentNumber - 1; i++)
+				{
+					auto Mesh = ReadStaticMeshComponent(Fin);
+					ComponentsRead.push_back(Mesh);
+				}
+
+				for (auto i : ComponentsRead)
+				{
+					i->AttachToComponent(Actor->GetRootComponent());
+				}
+
 				break;
 			}
 
@@ -408,14 +516,16 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBi
 		int CharNum;
 		Fin.read((char*)&CharNum, sizeof(int));
 		string MaterialName;
-		string FileName;
 		MaterialName.resize(CharNum);
 		Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
 		MaterialName = MaterialName.c_str();
-		FileName = "Resource\\Material\\" + MaterialName + ".material";
 
-		shared_ptr<FMaterialInterface> Mat = LoadMaterial(FileName);
-		Mat->SetName(MaterialName);
+		bool IsMaterialInstance;
+		Fin.read((char*)&IsMaterialInstance, sizeof(bool));
+		char padding[3];
+		Fin.read((char*)&padding, 3 * sizeof(char));
+		string FileName = IsMaterialInstance ? "Resource\\Material\\" + MaterialName + ".matins" : "Resource\\Material\\" + MaterialName + ".material";
+		shared_ptr<FMaterialInterface> Mat = IsMaterialInstance ? LoadMaterialInstance(FileName) : LoadMaterial(FileName);
 		Mats.push_back(Mat);
 	}
 
@@ -428,7 +538,7 @@ shared_ptr<class FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstri
 
 	if (!Fin.is_open())
 	{
-		throw std::exception("ERROR:  open file faild.");
+		throw std::exception("ERROR: open file faild.");
 	}
 
 	shared_ptr<FSkeletalMesh> SkeMesh = make_shared<FSkeletalMesh>();
@@ -449,44 +559,122 @@ shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& Materia
 		throw std::exception("ERROR:  open file faild.");
 	}
 
-	shared_ptr<FMaterialInterface> Mat;
-	bool IsMaterialInstance;
-	Fin.read((char*)&IsMaterialInstance, sizeof(bool));
-	char padding[3];
-	Fin.read((char*)&padding, 3 * sizeof(char));
+	shared_ptr<FMaterial> Mat;
 
-	// read FString
+	// MaterialName
 	int CharNum;
+	Fin.read((char*)&CharNum, sizeof(int));
+	string MaterialName;
+	MaterialName.resize(CharNum);
+	Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
+	MaterialName = MaterialName.c_str();
+
+	if (BaseMaterialMap.find(MaterialName) != BaseMaterialMap.end())
+	{
+		Mat = BaseMaterialMap[MaterialName];
+		assert(Mat != nullptr);
+		Fin.close();
+		return Mat;
+	}
+
+	Mat = make_shared<FMaterial>();
+	Mat->SetName(MaterialName);
+	BaseMaterialMap.insert({ MaterialName, Mat });
+
+	// ShaderFileName
+	Fin.read((char*)&CharNum, sizeof(int));
+	string ShaderFileName;
+	ShaderFileName.resize(CharNum);
+	Fin.read((char*)ShaderFileName.data(), CharNum * sizeof(char));
+	ShaderFileName = ShaderFileName.c_str();
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	Mat->SetShader(converter.from_bytes(ShaderFileName));
+
+	// BlendMode
+	EBlendMode Bm;
+	Fin.read((char*)&Bm, sizeof(int));
+	Mat->SetBlendMode(Bm);
+
+	// param
+	int ScalarNum;
+	Fin.read((char*)&ScalarNum, sizeof(int));
+	for (int i = 0; i < ScalarNum; i++)
+	{
+		float Scalar;
+		Fin.read((char*)&Scalar, sizeof(float));
+		Mat->ChangeScalarParams(i, Scalar);
+	}
+
+	int VectorNum;
+	Fin.read((char*)&VectorNum, sizeof(int));
+	for (int i = 0; i < VectorNum; i++)
+	{
+		FVector4 Vector;
+		Fin.read((char*)&Vector, 4 * sizeof(float));
+		Mat->ChangeVectorParams(i, Vector);
+	}
+
+	int TextureNum;
+	Fin.read((char*)&TextureNum, sizeof(int));
+	for (int i = 0; i < TextureNum; i++)
+	{
+		int CharNum;
+		Fin.read((char*)&CharNum, sizeof(int));
+		string Texture;
+		Texture.resize(CharNum);
+		Fin.read((char*)Texture.data(), CharNum * sizeof(char));
+		Texture = Texture.c_str();
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
+	}
+
+	Fin.close();
+	return Mat;
+}
+
+shared_ptr<FMaterialInterface> FAssetManager::LoadMaterialInstance(const string& MaterialFileName)
+{
+	std::ifstream Fin(MaterialFileName, std::ios::binary);
+
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR: open file faild.");
+	}
+
+	shared_ptr<FMaterialInstance> Mat;
+
+	// MaterialInstanceName
+	int CharNum;
+	Fin.read((char*)&CharNum, sizeof(int));
+	string MaterialInstanceName;
+	MaterialInstanceName.resize(CharNum);
+	Fin.read((char*)MaterialInstanceName.data(), CharNum * sizeof(char));
+	MaterialInstanceName = MaterialInstanceName.c_str();
+
+	if (MaterialInstanceMap.find(MaterialInstanceName) != MaterialInstanceMap.end())
+	{
+		Mat = MaterialInstanceMap[MaterialInstanceName];
+		assert(Mat != nullptr);
+		Fin.close();
+		return Mat;
+	}
+
+	// BaseMaterialName
 	Fin.read((char*)&CharNum, sizeof(int));
 	string BaseMaterialName;
 	BaseMaterialName.resize(CharNum);
 	Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
 	BaseMaterialName = BaseMaterialName.c_str();
 
-	if (BaseMaterialMap.find(BaseMaterialName) == BaseMaterialMap.end())
+	if (BaseMaterialMap.find(BaseMaterialName) == BaseMaterialMap.end() || BaseMaterialMap[BaseMaterialName] == nullptr)
 	{
-		BaseMaterialMap.insert({ BaseMaterialName, nullptr });
-		BaseMaterialMap[BaseMaterialName] = dynamic_pointer_cast<FMaterial>(LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material"));
+		LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material");
 	}
+	Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
+	Mat->SetName(MaterialInstanceName);
+	MaterialInstanceMap.insert({ MaterialInstanceName, Mat });
 
-	if (IsMaterialInstance)
-	{
-		Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
-	}
-	else
-	{
-		if (BaseMaterialMap[BaseMaterialName].get() != nullptr)
-		{
-			Mat = BaseMaterialMap[BaseMaterialName];
-			Fin.close();
-			return Mat;
-		}
-		else
-		{
-			Mat = make_shared<FMaterial>();
-		}
-	}
-
+	// param
 	int ScalarNum;
 	Fin.read((char*)&ScalarNum, sizeof(int));
 	for (int i = 0; i < ScalarNum; i++)

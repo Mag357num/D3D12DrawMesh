@@ -39,10 +39,14 @@
 
 # TODOList引擎持续更新计划
 1. 设计优化
-    1.  FrameResource里面存的都是渲染要用的东西，包括Geometry和RenderResource，Sampler和texture，后两者可以放到rr里面吗？有必要吗？
-        1.  暂时认为:静态的资源，因为不会产生gpu读和cpu写的竞争所以放在哪都可以
-    2.  把light和camera变成lightcomponent，不再是staticcomponent
-    3.  RR里面存CB的handle, renderer调用的时候直接遍历RR里面的handle, cb的储存全都放在frameResource
+    1.  新增
+        1.  结构类似ue4的acharacter
+        2.  movementcomponent
+        3.  arrowcomponent
+        4.  capsulecomponent: empty for now but be parent component to other component in acharacter
+        5.  playercameramanager
+        6.  playercontroller
+    2.  RR里面存CB的handle, renderer调用的时候直接遍历RR里面的handle, cb的储存全都放在frameResource
 2.  性能优化
     1.  相同的PSO不要重复set
     2.  做性能profile
@@ -53,10 +57,12 @@
     7.  只需要3x4矩阵
     8.  可以处理成多线程的东西写成多线程
 3. 新功能
-   1. 多点光源, 点光源实时阴影投射
+   1. 迁移UE4里面的getforwardvector用来转换quat和lookat
+   2. 迁移getrightvector
+   3. 多点光源, 点光源实时阴影投射
       1. TODO光照算法没改
       2. TODO没有阴影投射
-   2. 材质系统设计
+   4. 材质系统设计
       1. 多材质扩展性
          1. ue4材质节点图生成的hlsl代码拷过来，复制代码到本地shader代码的自定义区，即可出ue4导过来的新材质
       2. 引擎需要知道blendmode，shading model，material domain
@@ -70,7 +76,7 @@
       4. 材质参数
          1. 按照: vector数组, float数组, texture数组的方式传入shader
          2. 可以用代码直接设置, 也可以读取ue4导出的二进制文件
-   3. 透明物体渲染(顺序有关)
+   5. 透明物体渲染(顺序有关)
       1. 透明物体pso设置
          1. 打开混合
          2. 打开深度测试

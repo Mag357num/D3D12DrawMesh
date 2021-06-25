@@ -9,7 +9,7 @@ class FSkeleton
 private:
 	vector<FJoint> Joints;
 	vector<FPose> BindPoses;
-	unordered_map<string, int> NameToIndexMap;
+	unordered_map<string, int> NameToIndexMap; // TODO: unused
 	vector<FMatrix> JointOffset;
 
 public:

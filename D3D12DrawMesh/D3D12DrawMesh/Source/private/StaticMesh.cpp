@@ -1,6 +1,6 @@
 #include "StaticMesh.h"
 
-void AStaticMeshActor::Tick(const float& ElapsedSeconds)
+void AStaticMeshActor::Tick_ActorRotate(const float& ElapsedSeconds)
 {
 	const FQuat& Quat = GetStaticMeshComponent()->GetTransform().Quat;
 	auto a = ElapsedSeconds * AngularVelocity;

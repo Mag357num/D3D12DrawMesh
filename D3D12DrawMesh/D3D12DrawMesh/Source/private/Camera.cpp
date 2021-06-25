@@ -5,13 +5,9 @@
 
 FCameraComponent::FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane /*= 1.0f*/, const float& FarPlane /*= 5000.0f*/)
 {
-	InitialEye = Eye;
-	InitialUp = Up;
-	InitialLookAt = LookAt;
-
 	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
 	VMatrix_GameThread = glm::lookAtLH(Eye, Eye + LookAt * 10.0f, Up);
-	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
+	SetWorldMatrix(glm::inverse(VMatrix_GameThread)); // TODO: use lookat calculate quat and use sqt to calculate world matrix
 
 	SetFov(Fov);
 	SetAspectRatio(Width / Height);
@@ -28,19 +24,6 @@ void ACameraActor::SetMoveSpeed(const float & UnitsPerSecond)
 void ACameraActor::SetTurnSpeed(const float& RadiansPerSecond)
 {
 	TurnSpeed = RadiansPerSecond;
-}
-
-void FCameraComponent::Reset()
-{
-	// eye, look, up construct a view matrix and view matrix is inverse matrix of camera entity
-	VMatrix_GameThread = glm::lookAtLH(InitialEye, InitialEye + InitialLookAt * 10.0f, InitialUp);
-	SetWorldMatrix(glm::inverse(VMatrix_GameThread));
-
-	SetFov(Fov);
-	SetAspectRatio(AspectRatio);
-	SetViewPlane(NearPlane, FarPlane);
-	PMatrix_GameThread = glm::perspectiveFovLH_ZO(Fov, AspectRatio, 1.0f, NearPlane, FarPlane);
-	PDirty = false;
 }
 
 void ACameraActor::UpdateCameraParam_Wander(const float& ElapsedSeconds)
@@ -221,7 +204,7 @@ const FMatrix& FCameraComponent::GetOrthoProjMatrix_RenderThread()
 void FCameraComponent::SetLookAt(const FVector& Look)
 {
 	const FVector& Eye = GetTransform().Translation;
-	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, FVector(0, 1, 0))));
+	SetWorldMatrix(inverse(glm::lookAtLH(Eye, Eye + Look * 10.0f, FVector(0, 1, 0)))); // TODO: use look and transform.quat to calculate rotate and rotate the world matrix
 }
 
 const FVector FCameraComponent::GetLookAt()
@@ -250,10 +233,4 @@ void ACameraActor::Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVect
 	default:
 		break;
 	}
-}
-
-ACameraActor::ACameraActor(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane/* = 1.0f*/, const float& FarPlane/* = 5000.0f*/)
-{
-	RootComponent = make_shared<FCameraComponent>(Eye, Up, LookAt, Fov, Width, Height, NearPlane, FarPlane);
-	CameraComponent = RootComponent->As<FCameraComponent>();
 }

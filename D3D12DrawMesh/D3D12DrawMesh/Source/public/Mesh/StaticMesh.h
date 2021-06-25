@@ -32,7 +32,7 @@ private:
 	shared_ptr<FStaticMesh> StaticMesh;
 
 public:
-	FStaticMeshComponent() = default;
+	FStaticMeshComponent() { Type = EComponentType::STATICMESH_COMPONENT; };
 	~FStaticMeshComponent() = default;
 
 	void SetStaticMesh(shared_ptr<FStaticMesh> SM) { StaticMesh = SM; }
@@ -46,12 +46,12 @@ private:
 	FStaticMeshComponent* StaticMeshComponent;
 
 public:
-	AStaticMeshActor(shared_ptr<FStaticMeshComponent> Sta) { RootComponent = Sta; StaticMeshComponent = Sta.get(); OwnedComponents.push_back(Sta); }
+	AStaticMeshActor(shared_ptr<FStaticMeshComponent> Sta) { RootComponent = Sta; StaticMeshComponent = Sta.get(); AddOwnedComponent(Sta); }
 
 	void SetAnglarVel(const float& Ang) { AngularVelocity = Ang; }
 
 	const float& GetAnglarVel() const { return AngularVelocity; }
 	FStaticMeshComponent* GetStaticMeshComponent() { return StaticMeshComponent; }
 
-	void Tick(const float& ElapsedSeconds);
+	void Tick_ActorRotate(const float& ElapsedSeconds);
 };

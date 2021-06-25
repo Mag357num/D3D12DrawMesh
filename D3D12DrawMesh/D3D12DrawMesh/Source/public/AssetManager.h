@@ -23,6 +23,7 @@ public:
 
 	// material
 	shared_ptr<class FMaterialInterface> LoadMaterial(const string& MaterialFileName);
+	shared_ptr<class FMaterialInterface> LoadMaterialInstance(const string& MaterialFileName);
 
 	// skeleton
 	shared_ptr<class FSkeleton> LoadSkeleton(const std::wstring& BinFileName);
@@ -37,6 +38,7 @@ public:
 
 private:
 	unordered_map<string, shared_ptr<class FMaterial>> BaseMaterialMap;
+	unordered_map<string, shared_ptr<class FMaterialInstance>> MaterialInstanceMap;
 
 	shared_ptr<class FCameraComponent> ReadCameraComponent(std::ifstream& Fin);
 	shared_ptr<class FDirectionalLightComponent> ReadDLightComponent(std::ifstream& Fin);

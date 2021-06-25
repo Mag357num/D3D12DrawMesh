@@ -14,20 +14,22 @@ class FMaterialInterface
 {
 private:
 	string MaterialName;
-	FBlendMode BlendMode = FBlendMode::OPAQUE_BM;
-	FShadingMode ShadingMode; // unused
-	FMaterialDomain MaterialDomain; // unused
+	EBlendMode BlendMode = EBlendMode::OPAQUE_BM;
+	//FShadingMode ShadingMode; // unused
+	//FMaterialDomain MaterialDomain; // unused
+
 public:
 	FMaterialInterface() = default;
 	virtual ~FMaterialInterface() = default;
 
-	void SetBlendMode(const FBlendMode& BM) { BlendMode = BM; }
-	void SetName(const string Name) { MaterialName = Name; }
+	void SetBlendMode(const EBlendMode& BM) { BlendMode = BM; }
+	void SetName(const string& Name) { MaterialName = Name; }
 
 	virtual const wstring& GetShader() const = 0;
 	virtual FMaterialParam GetNumericParams() = 0;
 	virtual vector<wstring> GetTextureParams() = 0;
-	const FBlendMode& GetBlendMode() const { return BlendMode; }
+	const EBlendMode& GetBlendMode() const { return BlendMode; }
+	const string& GetName() { return MaterialName; }
 
 	virtual void ChangeScalarParams(const uint32& Index, const float& S) = 0;
 	virtual void ChangeVectorParams(const uint32& Index, const FVector4& V) = 0;
@@ -68,21 +70,23 @@ public:
 class FMaterialInstance : public FMaterialInterface
 {
 private:
-	FMaterial* OriginMaterial;
+	FMaterial* BaseMaterial;
+	string BaseMaterialName;
 
 	unordered_map<uint32, float> InstanceScalarParams;
 	unordered_map<uint32, FVector4> InstanceVectorParams;
 	unordered_map<uint32, wstring> InstanceTexParams;
 public:
-	FMaterialInstance(FMaterial* Mat) { OriginMaterial = Mat; }; // FMaterialInstance should be constructed with a FMaterial(as a template)
+	FMaterialInstance(FMaterial* Mat) { BaseMaterial = Mat; BaseMaterialName = Mat->GetName(); }; // FMaterialInstance should be constructed with a FMaterial(as a template)
 	~FMaterialInstance() = default;
 
 	virtual void ChangeScalarParams(const uint32& Index, const float& S) override;
 	virtual void ChangeVectorParams(const uint32& Index, const FVector4& V) override;
 	virtual void ChangeTextureParams(const uint32& Index, const wstring& T) override;
 
-	void SetOriginMaterial(FMaterial* Mat) { OriginMaterial = Mat; };
-	virtual const wstring& GetShader() const override { return OriginMaterial->GetShader(); }
+	void SetBaseMaterial(FMaterial* Mat) { BaseMaterial = Mat; };
+
+	virtual const wstring& GetShader() const override { return BaseMaterial->GetShader(); }
 	virtual FMaterialParam GetNumericParams() override;
 	virtual vector<wstring> GetTextureParams() override;
 };

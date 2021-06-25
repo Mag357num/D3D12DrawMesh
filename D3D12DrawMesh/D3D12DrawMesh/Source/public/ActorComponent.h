@@ -2,11 +2,29 @@
 #include "stdafx.h"
 #include "Bounding.h"
 
-class FActorComponent
+enum class EComponentType
 {
-
+	STATICMESH_COMPONENT = 0,
+	CAMERA_COMPONENT = 1,
+	DIRECTIONALLIGHT_COMPONENT = 2,
+	POINTLIGHT_COMPONENT = 3,
+	SKELETALMESH_COMPONENT = 4,
+	UNKNOW = 5
 };
 
+class FActorComponent : public std::enable_shared_from_this<FActorComponent>
+{
+protected:
+	EComponentType Type;
+public:
+	FActorComponent() = default;
+	virtual ~FActorComponent() = default;
+
+	//void SetType(EComponentType T) { Type = T; }
+	const EComponentType& GetType() { return Type; }
+};
+
+class AActor;
 class FSceneComponent : public FActorComponent
 {
 protected:
@@ -14,10 +32,12 @@ protected:
 	FTransform Transform;
 	FMatrix WorldMatrix;
 	FBoxSphereBounds Bounding;
+	FSceneComponent* AttachParent;
+	vector<FSceneComponent*> AttachChildren;
+	AActor* Owner;
 
 public:
 	FSceneComponent() = default;
-	~FSceneComponent() = default;
 
 	template <typename T>
 	inline T* As() { return static_cast<T*>(this); }
@@ -31,10 +51,17 @@ public:
 	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); }
 	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); }
 	void SetBounding(const FBoxSphereBounds& InBounding) { SetBounding_Base(InBounding); }
+	void SetOwner(AActor* Actor) { Owner = Actor; }
 
 	const FTransform& GetTransform() const { return GetTransform_Base(); }
 	const FMatrix& GetWorldMatrix() { return GetWorldMatrix_Base(); }
 	FBoxSphereBounds& GetBounding() { return GetBounding_Base(); }
+	FSceneComponent* GetAttachParent() { return AttachParent; }
+	vector<FSceneComponent*> GetAttachChildren() { return AttachChildren; }
+	AActor* GetOwner() { return Owner; }
+
+	void AttachToComponent(FSceneComponent* InParent);
+	void DetachFromComponent();
 
 protected:
 	void SetScale_Base(const FVector& Scale) { Transform.Scale = Scale; WorldMatrixDirty = true; Bounding.Scale(Scale); }
@@ -50,9 +77,10 @@ protected:
 	{
 		WorldMatrix = Matrix;
 
-		Transform.Quat = glm::quat_cast(Matrix);
-		Transform.Translation = FVector(Matrix[3][0], Matrix[3][1], Matrix[3][2]);  // FMatrix[column][row]
-		Transform.Scale = FVector(1.f, 1.f, 1.f);
+		FVector Skew;
+		FVector4 Perspective;
+		glm::decompose(Matrix, Transform.Scale, Transform.Quat, Transform.Translation, Skew, Perspective);
+
 		Bounding.Transform(Transform);
 
 		WorldMatrixDirty = false;
@@ -76,6 +104,8 @@ private:
 	vector<shared_ptr<FMaterialInterface>> Materials;
 
 public:
+	FMeshComponent() = default;
+
 	void SetMaterials(vector<shared_ptr<FMaterialInterface>> Mats) { Materials = Mats; }
 	void SetMaterial(shared_ptr<FMaterialInterface> Mat, uint32 index);
 	FMaterialInterface* GetMaterial(uint32 index) const { return Materials[index].get(); }

@@ -48,6 +48,7 @@ void FEngine::Init(void* WindowHandle)
 
 		// camera
 		//CurrentScene->AddCamera(make_shared<ACameraActor>(FVector(1000.f, 0.f, 300.f), FVector(0.f, 0.f, 1.f), FVector(0.f, 1.f, -0.2f), 0.8f, static_cast<float>(ResoWidth), static_cast<float>(ResoHeight)));
+		CurrentScene->SetCurrentCamera(0);
 
 		// light
 		{
@@ -56,25 +57,25 @@ void FEngine::Init(void* WindowHandle)
 			//DirectionalLight->SetOrthoParam(-1200.f, 1200.f, -1200.f, 1200.f, 1.0f, 3000.0f); // TODO: hard coding
 			//CurrentScene->SetDirectionalLight(DirectionalLight);
 
-			//// point light
+			// point light
 			//shared_ptr<FPointLightComponent> PointLight1 = make_shared<FPointLightComponent>(FVector(120, 380, 160));
 			//CurrentScene->AddPointLight(PointLight1);
 		}
 
-		// character
-		shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
-		{
-			shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
-			{
-				SkeMeshCom->SetSkeletalMesh(FAssetManager::Get()->LoadSkeletalMesh(L"Resource\\Mesh\\SkeletalMeshBinary_.dat"));
-				SkeMeshCom->GetSkeletalMesh()->SetSkeleton(FAssetManager::Get()->LoadSkeleton(L"Resource\\Skeleton\\SkeletonBinary_.dat"));
-				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceRun_.dat")));
-				SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceIdle_.dat")));
-				SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
-			}
-			Cha->SetSkeletalMeshComponent(SkeMeshCom);
-		}
-		CurrentScene->SetCurrentCharacter(Cha);
+		//// character
+		//shared_ptr<ACharacter> Cha = make_shared<ACharacter>();
+		//{
+		//	shared_ptr<FSkeletalMeshComponent> SkeMeshCom = make_shared<FSkeletalMeshComponent>();
+		//	{
+		//		SkeMeshCom->SetSkeletalMesh(FAssetManager::Get()->LoadSkeletalMesh(L"Resource\\Mesh\\SkeletalMeshBinary_.dat"));
+		//		SkeMeshCom->GetSkeletalMesh()->SetSkeleton(FAssetManager::Get()->LoadSkeleton(L"Resource\\Skeleton\\SkeletonBinary_.dat"));
+		//		SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Run", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceRun_.dat")));
+		//		SkeMeshCom->AddSequence(std::pair<string, shared_ptr<FAnimSequence>>("Idle", FAssetManager::Get()->LoadAnimSequence(L"Resource\\Animation\\SequenceIdle_.dat")));
+		//		SkeMeshCom->SetTransform(FTransform(FVector(1.f, 1.f, 1.f), FQuat(EulerToQuat(FEuler(0.f, 0.f, 0.f))), FVector(0.f, -700.f, 0.f)));
+		//	}
+		//	Cha->SetSkeletalMeshComponent(SkeMeshCom);
+		//}
+		//CurrentScene->SetCurrentCharacter(Cha);
 	}
 
 	// thread

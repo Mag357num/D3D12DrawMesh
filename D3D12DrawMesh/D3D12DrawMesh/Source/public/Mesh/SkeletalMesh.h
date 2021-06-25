@@ -49,7 +49,7 @@ private:
 	FAnimInstance Animator;
 
 public:
-	FSkeletalMeshComponent() { Animator.initAnimation(this); };
+	FSkeletalMeshComponent() { Type = EComponentType::SKELETALMESH_COMPONENT; Animator.initAnimation(this); };
 	~FSkeletalMeshComponent() = default;
 
 	// animator
@@ -68,7 +68,7 @@ private:
 	FSkeletalMeshComponent* SkeletalMeshComponent;
 
 public:
-	ASkeletalMeshActor(shared_ptr<FSkeletalMeshComponent> Ske) { RootComponent = Ske; SkeletalMeshComponent = Ske.get(); OwnedComponents.push_back(Ske); }
+	ASkeletalMeshActor(shared_ptr<FSkeletalMeshComponent> Ske) { RootComponent = Ske; SkeletalMeshComponent = Ske.get(); AddOwnedComponent(Ske); }
 
 	void SetCurrentAnim(string Key);
 	void Tick(const float& ElapsedSeconds);

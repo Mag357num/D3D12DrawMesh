@@ -37,14 +37,14 @@ void FRenderer::RenderShadow(FDynamicRHI* RHI, const uint32& FrameIndex, FSingle
 
 		// draw character
 		{
-			RHI->SetPipelineState(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()].get());
+			//RHI->SetPipelineState(SFrameRes.RRMap_ShadowPass[SFrameRes.CharacterMesh.get()].get());
 
-			vector<shared_ptr<FHandle>> Handles;
-			Handles.push_back(MFrameRes.Character_ShadowPass_LocatingCB->CBHandle);
-			Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
-			RHI->SetShaderInput(Handles);
+			//vector<shared_ptr<FHandle>> Handles;
+			//Handles.push_back(MFrameRes.Character_ShadowPass_LocatingCB->CBHandle);
+			//Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
+			//RHI->SetShaderInput(Handles);
 
-			RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
+			//RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
 		}
 
 		// draw static mesh
@@ -110,23 +110,23 @@ void FRenderer::RenderScene(FDynamicRHI* RHI, const uint32& FrameIndex, FSingleB
 
 			// draw character
 			{
-				RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()].get());
-				vector<shared_ptr<FHandle>> Handles;
-				Handles.push_back(MFrameRes.Character_ScenePass_LocatingCB->CBHandle);
-				Handles.push_back(MFrameRes.CameraCB->CBHandle);
-				Handles.push_back(MFrameRes.DirectionalLight_LightingInfoCB->CBHandle);
-				Handles.push_back(MFrameRes.PointLights_LightingInfoCB->CBHandle);
-				Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
-				Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
-				Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
-				RHI->SetShaderInput(Handles);
-				RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
+				//RHI->SetPipelineState(SFrameRes.RRMap_ScenePass[SFrameRes.CharacterMesh.get()].get());
+				//vector<shared_ptr<FHandle>> Handles;
+				//Handles.push_back(MFrameRes.Character_ScenePass_LocatingCB->CBHandle);
+				//Handles.push_back(MFrameRes.CameraCB->CBHandle);
+				//Handles.push_back(MFrameRes.DirectionalLight_LightingInfoCB->CBHandle);
+				//Handles.push_back(MFrameRes.PointLights_LightingInfoCB->CBHandle);
+				//Handles.push_back(MFrameRes.CharacterPaletteCB->CBHandle);
+				//Handles.push_back(SFrameRes.ShadowMap->SrvHandle);
+				//Handles.push_back(SFrameRes.ClampSampler->SamplerHandle);
+				//RHI->SetShaderInput(Handles);
+				//RHI->DrawGeometry(SFrameRes.CharacterMesh.get());
 			}
 
 			// draw static mesh
 			for (uint32 i = 0; i < SFrameRes.StaticMeshes.size(); i++)
 			{
-				if (SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->BlendMode == FBlendMode::TRANSLUCENT_BM)
+				if (SFrameRes.RRMap_ScenePass[SFrameRes.StaticMeshes[i].get()]->BlendMode == EBlendMode::TRANSLUCENT_BM)
 				{
 					continue;
 				}
