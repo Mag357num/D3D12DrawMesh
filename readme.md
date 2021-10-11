@@ -56,6 +56,9 @@
     6.  push_back改成emplace_back
     7.  只需要3x4矩阵
     8.  可以处理成多线程的东西写成多线程
+    9.  减少overdraw
+        1.  开启early-z，不透明物体改为由近及远绘制
+    10. 对物体的排序不应该根据transform的值，应该根据包围盒的center
 3. 新功能
    1. 迁移UE4里面的getforwardvector用来转换quat和lookat
    2. 迁移getrightvector
