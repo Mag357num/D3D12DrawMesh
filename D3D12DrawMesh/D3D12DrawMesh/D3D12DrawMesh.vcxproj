@@ -25,7 +25,6 @@
     <ClCompile Include="Source\private\AnimNode.cpp" />
     <ClCompile Include="Source\private\AnimSequence.cpp" />
     <ClCompile Include="Source\private\AssetManager.cpp" />
-    <ClCompile Include="Source\private\Bounding.cpp" />
     <ClCompile Include="Source\private\Camera.cpp" />
     <ClCompile Include="Source\private\Character.cpp" />
     <ClCompile Include="Source\private\DDSTextureLoader.cpp" />
@@ -66,7 +65,6 @@
     <ClInclude Include="Source\public\Animation\Skeleton.h" />
     <ClInclude Include="Source\public\Animation\Track.h" />
     <ClInclude Include="Source\public\AssetManager.h" />
-    <ClInclude Include="Source\public\Bounding.h" />
     <ClInclude Include="Source\public\Camera.h" />
     <ClInclude Include="Source\public\Character.h" />
     <ClInclude Include="Source\public\d3dx12.h" />

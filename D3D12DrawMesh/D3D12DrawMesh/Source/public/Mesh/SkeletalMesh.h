@@ -42,14 +42,14 @@ public:
 	vector<FSkeletalMeshLOD>& GetMeshLODs() { return MeshLODs; }
 };
 
-class FSkeletalMeshComponent : public FMeshComponent
+class FSkeletalMeshComponent : public FActorComponent
 {
 private:
 	shared_ptr<FSkeletalMesh> SkeletalMesh;
 	FAnimInstance Animator;
 
 public:
-	FSkeletalMeshComponent() { Type = EComponentType::SKELETALMESH_COMPONENT; Animator.initAnimation(this); };
+	FSkeletalMeshComponent() { Animator.initAnimation(this); };
 	~FSkeletalMeshComponent() = default;
 
 	// animator
@@ -64,14 +64,6 @@ public:
 
 class ASkeletalMeshActor : public AActor
 {
-private:
-	FSkeletalMeshComponent* SkeletalMeshComponent;
-
-public:
-	ASkeletalMeshActor(shared_ptr<FSkeletalMeshComponent> Ske) { RootComponent = Ske; SkeletalMeshComponent = Ske.get(); AddOwnedComponent(Ske); }
-
-	void SetCurrentAnim(string Key);
-	void Tick(const float& ElapsedSeconds);
-
-	FSkeletalMeshComponent* GetSkeletalMeshComponent() { return SkeletalMeshComponent; }
+	void SetSkeletalMeshComponent( shared_ptr<FSkeletalMeshComponent> Com );
+	FSkeletalMeshComponent* GetSkeletalMeshComponent();
 };

@@ -17,22 +17,22 @@ public:
 class FStaticMesh
 {
 private:
-	vector<shared_ptr<FStaticMeshLOD>> MeshLODs;
+	vector<FStaticMeshLOD> MeshLODs;
 public:
 	FStaticMesh() = default;
 	~FStaticMesh() = default;
 
-	void SetMeshLODs(const vector<shared_ptr<FStaticMeshLOD>>& LODs) { MeshLODs = LODs; }
-	const vector<shared_ptr<FStaticMeshLOD>>& GetMeshLODs() const { return MeshLODs; }
+	void SetMeshLODs(const vector<FStaticMeshLOD>& LODs) { MeshLODs = LODs; }
+	const vector<FStaticMeshLOD>& GetMeshLODs() const { return MeshLODs; }
 };
 
-class FStaticMeshComponent : public FMeshComponent
+class FStaticMeshComponent : public FActorComponent
 {
 private:
 	shared_ptr<FStaticMesh> StaticMesh;
 
 public:
-	FStaticMeshComponent() { Type = EComponentType::STATICMESH_COMPONENT; };
+	FStaticMeshComponent() = default;
 	~FStaticMeshComponent() = default;
 
 	void SetStaticMesh(shared_ptr<FStaticMesh> SM) { StaticMesh = SM; }
@@ -43,15 +43,13 @@ class AStaticMeshActor : public AActor
 {
 private:
 	float AngularVelocity = 50.f;
-	FStaticMeshComponent* StaticMeshComponent;
 
 public:
-	AStaticMeshActor(shared_ptr<FStaticMeshComponent> Sta) { RootComponent = Sta; StaticMeshComponent = Sta.get(); AddOwnedComponent(Sta); }
-
-	void SetAnglarVel(const float& Ang) { AngularVelocity = Ang; }
+	void SetStaticMeshComponent(shared_ptr<FStaticMeshComponent> Com);
+	FStaticMeshComponent* GetStaticMeshComponent();
 
 	const float& GetAnglarVel() const { return AngularVelocity; }
-	FStaticMeshComponent* GetStaticMeshComponent() { return StaticMeshComponent; }
+	void SetAnglarVel(const float& Ang) { AngularVelocity = Ang; }
 
-	void Tick_ActorRotate(const float& ElapsedSeconds);
+	void Tick(const float& ElapsedSeconds);
 };

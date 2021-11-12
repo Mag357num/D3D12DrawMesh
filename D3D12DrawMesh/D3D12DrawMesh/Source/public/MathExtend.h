@@ -8,7 +8,6 @@
 #include <gtx/quaternion.hpp>
 #include <gtx/euler_angles.hpp>
 #include <gtx/transform.hpp>
-#include <gtx/matrix_decompose.hpp>
 
 using FVector2 = glm::vec2;
 using FVector = glm::vec3;

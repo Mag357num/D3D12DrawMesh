@@ -61,7 +61,7 @@ struct FMultiBufferFrameResource
 	shared_ptr<FCB> CharacterPaletteCB;
 	shared_ptr<FCB> DirectionalLight_LightingInfoCB;
 	shared_ptr<FCB> PointLights_LightingInfoCB;
-	vector<shared_ptr<FCB>> DirectionalLight_LocatingCBs;
+	shared_ptr<FCB> DirectionalLight_LocatingCB;
 	vector<shared_ptr<FCB>> PointLight_LocatingCBs;
 	shared_ptr<FCB> Character_ShadowPass_LocatingCB;
 	shared_ptr<FCB> Character_ScenePass_LocatingCB;
@@ -83,14 +83,14 @@ public:
 	void CreateActorsFrameRes(const shared_ptr<FScene> Scene, const uint32& FrameCount);
 	void UpdateFrameResources(FScene* Scene, const uint32& FrameIndex);
 
-	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, EBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
+	shared_ptr<FRenderResource> CreateRenderResource(const wstring& Shader, FBlendMode BlendMode, FVertexInputLayer VIL, FShaderInputLayer SIL, FFormat RtFormat, uint32 RtNum, uint32 FrameCount);
 
 	// create common shared cb
 	void CreateCameraCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacterPaletteCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateDirectionalLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreatePointLights_LightingInfoCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
-	void CreateDirectionalLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes);
+	void CreateDirectionalLight_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreatePointLight_LocatingCBs(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateStaticMesh_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);
 	void CreateCharacter_LocatingCB(FScene* Scene, FMultiBufferFrameResource& FrameRes);

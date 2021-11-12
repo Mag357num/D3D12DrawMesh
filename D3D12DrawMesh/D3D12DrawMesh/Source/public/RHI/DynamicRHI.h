@@ -56,7 +56,7 @@ namespace RHI
 		virtual void SetViewport(float Left, float Right, float Width, float Height, float MinDepth = 0.f, float MaxDepth = 1.f) = 0;
 
 		// Pipeline
-		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, EBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
+		virtual shared_ptr<FPipelineState> CreatePso(FFormat RtFormat, FBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig) = 0;
 		virtual void SetPipelineState(FRenderResource* RR) = 0;
 		virtual void SetShaderInput(vector<shared_ptr<FHandle>>& Handles) = 0;
 

@@ -11,22 +11,33 @@ enum class FCameraMoveMode
 	STATIC = 2,
 };
 
-class FCameraComponent : public FSceneComponent
+class ACamera : public AActor
 {
 private:
-	// mode
-	uint32 ProjectionMode; // 0:persp, 1: ortho
+	// reset data
+	FVector InitialPosition;
+	FVector InitialUpDir;
+	FVector InitialLookAt;
 
 	// perspective frustum parameter
 	float Fov = 90.f;
 	float AspectRatio = 1.7777777f;
 
 	// ortho frustum parameter
-	float OrthoWidth = 512.f;
+	float Left;
+	float Right;
+	float Bottom;
+	float Top;
 
 	// common parameter
 	float NearPlane = 1.f;
 	float FarPlane = 5000.f;
+
+	// movement parameter
+	float MoveSpeed = 300.0f;
+	float TurnSpeed = 1.570796327f;
+	float MouseSensibility = 0.01f;
+	float AngularVelocity;
 
 	// Secondary data, need to refresh depent on dirty
 	bool VDirty = true;
@@ -35,63 +46,42 @@ private:
 	bool PDirty = true;
 	FMatrix PMatrix_GameThread;
 	FMatrix PMatrix_RenderThread;
-	bool ODirty = true;
-	FMatrix OMatrix_GameThread;
-	FMatrix OMatrix_RenderThread;
-
-	shared_ptr<FStaticMeshComponent> CameraMesh;
 
 public:
-	friend class ACameraActor;
-	FCameraComponent() { Type = EComponentType::CAMERA_COMPONENT; }
-	FCameraComponent(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
+	ACamera();
+	~ACamera() = default;
+	ACamera(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
+
+	void Init(const FVector& Eye, const FVector& Up, const FVector& LookAt, const float& Fov, const float& Width, const float& Height, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f);
 	
-	void SetScale(const FVector& Scale) { SetScale_Base(Scale); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetScale(Scale); } }
-	void SetQuat(const FQuat& Quat) { SetQuat_Base(Quat); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetQuat(Quat); } }
-	void SetTranslate(const FVector& Translate) { SetTranslate_Base(Translate); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetTranslate(Translate); } }
-	void SetTransform(const FTransform& Trans) { SetTransform_Base(Trans); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetTransform(Trans); } }
-	void SetWorldMatrix(const FMatrix& Matrix) { SetWorldMatrix_Base(Matrix); VDirty = true; if (CameraMesh.get() != nullptr) { CameraMesh->SetWorldMatrix(Matrix); } }
-	void SetProjectMode(const uint32& Mode) { ProjectionMode = Mode; }
-	void SetFov(const float& FovParam) { Fov = FovParam; PDirty = true; }
-	void SetOrthoWidth(const float& Width) { OrthoWidth = Width; }
-	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; PDirty = true; }
-	void SetViewPlane(const float& Near, const float& Far) { NearPlane = Near; FarPlane = Far; PDirty = true; }
-	void SetLookAt(const FVector& Look); // TODO: need test and optimize
-
-	FStaticMeshComponent* GetCameraMesh() { return CameraMesh.get(); }
-	const FVector GetLookAt(); // TODO: need test and optimize
-	const uint32& GetProjectMode() { return ProjectionMode; }
-	const FMatrix& GetViewMatrix_GameThread();
-	const FMatrix& GetViewMatrix_RenderThread();
-	const FMatrix& GetPerspProjMatrix_GameThread();
-	const FMatrix& GetPerspProjMatrix_RenderThread();
-	const FMatrix& GetOrthoProjMatrix_GameThread();
-	const FMatrix& GetOrthoProjMatrix_RenderThread();
-
-};
-
-class ACameraActor : public AActor
-{
-private:
-	// movement parameter
-	float MoveSpeed = 300.0f;
-	float TurnSpeed = 1.570796327f;
-	float MouseSensibility = 0.01f;
-	float AngularVelocity;
-
-	FCameraComponent* CameraComponent;
-
-public:
-	ACameraActor(shared_ptr<FCameraComponent> Cam) { RootComponent = Cam; CameraComponent = Cam.get(); AddOwnedComponent(Cam); }
-
 	void SetMoveSpeed(const float& UnitsPerSecond);
 	void SetTurnSpeed(const float& RadiansPerSecond);
-	void SetCameraMesh(const shared_ptr<FStaticMeshComponent> Mesh) { CameraComponent->CameraMesh = Mesh; AddOwnedComponent(Mesh); }
 
-	FCameraComponent* GetCameraComponent() { return CameraComponent; }
+	void SetFov(const float& FovParam) { Fov = FovParam; PDirty = true; }
+	void SetAspectRatio(const float& AspParam) { AspectRatio = AspParam; PDirty = true; }
+	void SetViewPlane(const float& Near, const float& Far) { NearPlane = Near; FarPlane = Far; PDirty = true; }
+
+	void SetQuat(const FQuat& Quat);
+	void SetTranslate(const FVector& Trans);
+	void SetWorldMatrix(const FMatrix& W);
+	const FTransform& GetTransform();
+	const FMatrix& GetWorldMatrix();
+
+	void SetLookAt(const FVector& Look);
+	const FVector GetLookAt();
 
 	void Tick(const float& ElapsedSeconds, FCameraMoveMode Mode, FVector TargetLocation = FVector(0.f, 0.f, 0.f), float Distance = 0.f);
 	void UpdateCameraParam_Wander(const float& ElapsedSeconds);
 	void UpdateCameraParam_AroundTarget(const float& ElapsedSeconds, const FVector& TargetPos, const float& Distance);
 	void UpdateCameraParam_Static(const float& ElapsedSeconds);
+
+	const FMatrix& GetViewMatrix_GameThread();
+	const FMatrix& GetViewMatrix_RenderThread();
+
+	const FMatrix& GetPerspProjMatrix_GameThread();
+	const FMatrix& GetPerspProjMatrix_RenderThread();
+
+	FMatrix GetOrthoProjMatrix_GameThread(const float& Left, const float& Right, const float& Bottom, const float& Top, const float& NearPlane = 1.0f, const float& FarPlane = 5000.0f) const;
+
+	void Reset();
 };

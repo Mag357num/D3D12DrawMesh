@@ -1,7 +1,17 @@
 #include "ActorComponent.h"
-#include "Actor.h"
 
-void FMeshComponent::SetMaterial(shared_ptr<FMaterialInterface> Mat, uint32 index)
+void FActorComponent::SetWorldMatrix(const FMatrix& Matrix)
+{
+	WorldMatrix = Matrix;
+
+	Transform.Quat = glm::quat_cast(Matrix);
+	Transform.Translation = FVector(Matrix[3][0], Matrix[3][1], Matrix[3][2]);  // FMatrix[column][row]
+	Transform.Scale = FVector(1.f, 1.f, 1.f);
+
+	Dirty = false;
+}
+
+void FActorComponent::SetMaterial(shared_ptr<FMaterialInterface> Mat, uint32 index)
 {
 	if (Materials.size() < index + 1)
 	{
@@ -9,35 +19,4 @@ void FMeshComponent::SetMaterial(shared_ptr<FMaterialInterface> Mat, uint32 inde
 	}
 
 	Materials[index] = Mat;
-}
-
-void FSceneComponent::AttachToComponent(FSceneComponent* InParent)
-{
-	AttachParent = InParent;
-	InParent->AttachChildren.push_back(this);
-	InParent->GetOwner()->AddOwnedComponent(dynamic_pointer_cast<FSceneComponent>(shared_from_this()));
-}
-
-void FSceneComponent::DetachFromComponent()
-{
-	for (auto i = AttachParent->AttachChildren.begin(); i != AttachParent->AttachChildren.end(); i++)
-	{
-		if (*i == this)
-		{
-			AttachParent->AttachChildren.erase(i);
-			break;
-		}
-	}
-	AttachParent = nullptr;
-
-	vector<shared_ptr<FSceneComponent>>& OwnerOwnedComponents = GetOwner()->GetOwnedComponents();
-	for (auto i = OwnerOwnedComponents.begin(); i != OwnerOwnedComponents.end(); i++)
-	{
-		if ((*i).get() == this)
-		{
-			OwnerOwnedComponents.erase(i);
-			break;
-		}
-	}
-	SetOwner(nullptr);
 }

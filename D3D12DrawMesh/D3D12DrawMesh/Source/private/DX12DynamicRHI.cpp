@@ -128,7 +128,7 @@ namespace RHI
 		CommandLists[0].CommandList->RSSetViewports(1, &ShadowViewport);
 	}
 
-	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, EBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
+	shared_ptr<RHI::FPipelineState> FDX12DynamicRHI::CreatePso(FFormat RtFormat, FBlendMode BlendMode, FVertexInputLayer Layer, uint32 NumRt, FShader* VS, FShader* PS, FRootSignatrue* Sig)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC PsoDesc = {};
 
@@ -153,10 +153,10 @@ namespace RHI
 
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		depthStencilDesc.DepthEnable = TRUE;
-		depthStencilDesc.DepthWriteMask = BlendMode == EBlendMode::TRANSLUCENT_BM ? D3D12_DEPTH_WRITE_MASK_ZERO : D3D12_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthWriteMask = BlendMode == FBlendMode::TRANSLUCENT_BM ? D3D12_DEPTH_WRITE_MASK_ZERO : D3D12_DEPTH_WRITE_MASK_ALL;
 
 		D3D12_RENDER_TARGET_BLEND_DESC BlendDesc;
-		BlendDesc.BlendEnable = BlendMode == EBlendMode::TRANSLUCENT_BM ? TRUE : FALSE;
+		BlendDesc.BlendEnable = BlendMode == FBlendMode::TRANSLUCENT_BM ? TRUE : FALSE;
 		BlendDesc.LogicOpEnable = FALSE;
 		BlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
 		BlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
@@ -624,11 +624,11 @@ namespace RHI
 	shared_ptr<RHI::FGeometry> FDX12DynamicRHI::CreateGeometry( FStaticMeshComponent* MeshComponent )
 	{
 		shared_ptr<RHI::FDx12Geometry> Mesh = make_shared<RHI::FDx12Geometry>();
-		Mesh->IndexNum = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0]->Indice.size());
+		Mesh->IndexNum = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.size());
 
-		const vector<FStaticVertex>& VertexBuffer = MeshComponent->GetStaticMesh()->GetMeshLODs()[0]->Vertice;
+		const vector<FStaticVertex>& VertexBuffer = MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Vertice;
 		uint32 VertexBufferSize = static_cast<uint32>(VertexBuffer.size() * sizeof( FStaticVertex ));
-		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0]->Indice.size() * sizeof( uint32 ));
+		uint32 IndexBufferSize = static_cast<uint32>(MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.size() * sizeof( uint32 ));
 		auto CommandList = CommandLists[0].CommandList;
 
 		// vertex buffer
@@ -687,7 +687,7 @@ namespace RHI
 		// Copy data to the intermediate upload heap and then schedule a copy 
 		// from the upload heap to the index buffer.
 		D3D12_SUBRESOURCE_DATA indexData = {};
-		indexData.pData = MeshComponent->GetStaticMesh()->GetMeshLODs()[0]->Indice.data();
+		indexData.pData = MeshComponent->GetStaticMesh()->GetMeshLODs()[0].Indice.data();
 		indexData.RowPitch = IndexBufferSize;
 		indexData.SlicePitch = indexData.RowPitch;
 

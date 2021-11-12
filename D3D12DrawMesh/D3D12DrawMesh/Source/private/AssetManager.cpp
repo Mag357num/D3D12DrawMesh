@@ -6,8 +6,6 @@
 #include "Material.h"
 #include "FrameResourceManager.h"
 #include "RHIResource.h"
-#include "Camera.h"
-#include "Light.h"
 
 using RHI::GDynamicRHI;
 
@@ -30,7 +28,7 @@ void FAssetManager::DestroyAssetManager()
 	GAssetManager = nullptr;
 }
 
-shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileName)
+void FAssetManager::LoadStaticMeshActors(const std::wstring& BinFileName, vector<shared_ptr<AStaticMeshActor>>& Actors)
 {
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
@@ -39,213 +37,24 @@ shared_ptr<class FScene> FAssetManager::LoadScene(const std::wstring& BinFileNam
 		throw std::exception("ERROR: open file faild.");
 	}
 
-	shared_ptr<FScene> Scene = make_shared<FScene>();
-	uint32 SceneActorNum;
-	Fin.read((char*)&SceneActorNum, sizeof(uint32));
+	uint32 ActorNum;
+	Fin.read((char*)&ActorNum, sizeof(uint32));
 
-	for (uint32 i = 0; i < SceneActorNum; i++)
+	for (uint32 i = 0; i < ActorNum; i++)
 	{
-		// actor name
-		string ActorName;
-		{
-			int CharNum;
-			Fin.read((char*)&CharNum, sizeof(int));
-			ActorName.resize(CharNum);
-			Fin.read((char*)ActorName.data(), CharNum * sizeof(char));
-			ActorName = ActorName.c_str();
-		}
+		shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>();
+		shared_ptr<FStaticMeshComponent> Com = make_shared<FStaticMeshComponent>();
+		shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
+		Com->SetStaticMesh(SM);
+		Com->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODs(Fin));
+		Com->SetTransform(ReadTransform(Fin));
+		Com->SetMaterials(ReadMaterials(Fin));
 
-		// actor type
-		EActorType ActorType;
-		{
-			Fin.read((char*)&ActorType, sizeof(int));
-		}
-
-		switch (ActorType)
-		{
-			case EActorType::CAMERA_ACTOR:
-			{
-				vector<shared_ptr<FSceneComponent>> ComponentsRead;
-				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				shared_ptr<ACameraActor> Actor = make_shared<ACameraActor>(ReadCameraComponent(Fin));
-				Actor->SetName(ActorName);
-				Scene->AddCamera(Actor);
-				for (int i = 0; i < ComponentNumber - 1; i++)
-				{
-					auto Camera = ReadCameraComponent(Fin);
-					ComponentsRead.push_back(Camera);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto DLight = ReadDLightComponent(Fin);
-					ComponentsRead.push_back(DLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto PLight = ReadPLightComponent(Fin);
-					ComponentsRead.push_back(PLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				Actor->SetCameraMesh(ReadStaticMeshComponent(Fin));
-				for (int i = 0; i < ComponentNumber - 1; i++)
-				{
-					auto Mesh = ReadStaticMeshComponent(Fin);
-					ComponentsRead.push_back(Mesh);
-				}
-
-				for (auto i : ComponentsRead)
-				{
-					i->AttachToComponent(Actor->GetRootComponent());
-				}
-
-				break;
-			}
-
-			case EActorType::DIRECTIONALLIGHT_ACTOR:
-			{
-				vector<shared_ptr<FSceneComponent>> ComponentsRead;
-				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto Camera = ReadCameraComponent(Fin);
-					ComponentsRead.push_back(Camera);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				shared_ptr<ADirectionalLight> Actor = make_shared<ADirectionalLight>(ReadDLightComponent(Fin));
-				Actor->SetName(ActorName);
-				Scene->AddDirectionalLight(Actor);
-				for (int i = 0; i < ComponentNumber - 1; i++)
-				{
-					auto DLight = ReadDLightComponent(Fin);
-					ComponentsRead.push_back(DLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto PLight = ReadPLightComponent(Fin);
-					ComponentsRead.push_back(PLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto Mesh = ReadStaticMeshComponent(Fin);
-					ComponentsRead.push_back(Mesh);
-				}
-
-				for (auto i : ComponentsRead)
-				{
-					i->AttachToComponent(Actor->GetRootComponent());
-				}
-
-				break;
-			}
-
-			case EActorType::POINTLIGHT_ACTOR:
-			{
-				vector<shared_ptr<FSceneComponent>> ComponentsRead;
-				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for(int i = 0; i < ComponentNumber; i++)
-				{
-					auto Camera = ReadCameraComponent(Fin);
-					ComponentsRead.push_back(Camera);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto DLight = ReadDLightComponent(Fin);
-					ComponentsRead.push_back(DLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				shared_ptr<APointLight> Actor = make_shared<APointLight>(ReadPLightComponent(Fin));
-				Actor->SetName(ActorName);
-				Scene->AddPointLight(Actor);
-				for (int i = 0; i < ComponentNumber - 1; i++)
-				{
-					auto PLight = ReadPLightComponent(Fin);
-					ComponentsRead.push_back(PLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto Mesh = ReadStaticMeshComponent(Fin);
-					ComponentsRead.push_back(Mesh);
-				}
-
-				for (auto i : ComponentsRead)
-				{
-					i->AttachToComponent(Actor->GetRootComponent());
-				}
-
-				break;
-			}
-
-			case EActorType::STATICMESH_ACTOR:
-			{
-				vector<shared_ptr<FSceneComponent>> ComponentsRead;
-				int ComponentNumber;
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto Camera = ReadCameraComponent(Fin);
-					ComponentsRead.push_back(Camera);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto DLight = ReadDLightComponent(Fin);
-					ComponentsRead.push_back(DLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				for (int i = 0; i < ComponentNumber; i++)
-				{
-					auto PLight = ReadPLightComponent(Fin);
-					ComponentsRead.push_back(PLight);
-				}
-
-				Fin.read((char*)&ComponentNumber, sizeof(int));
-				shared_ptr<AStaticMeshActor> Actor = make_shared<AStaticMeshActor>(ReadStaticMeshComponent(Fin));
-				Actor->SetName(ActorName);
-				Scene->AddStaticMeshActor(Actor);
-				for (int i = 0; i < ComponentNumber - 1; i++)
-				{
-					auto Mesh = ReadStaticMeshComponent(Fin);
-					ComponentsRead.push_back(Mesh);
-				}
-
-				for (auto i : ComponentsRead)
-				{
-					i->AttachToComponent(Actor->GetRootComponent());
-				}
-
-				break;
-			}
-
-			case EActorType::UNKNOW:
-				assert(0);
-				break;
-			default:
-				break;
-		}
+		Actor->SetStaticMeshComponent(Com);
+		Actors.push_back(Actor);
 	}
 
 	Fin.close();
-	return Scene;
 }
 
 shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFileName)
@@ -253,153 +62,13 @@ shared_ptr<FStaticMesh> FAssetManager::LoadStaticMesh(const std::wstring& BinFil
 	std::ifstream Fin(BinFileName, std::ios::binary);
 
 	shared_ptr<FStaticMesh> SM = make_shared<FStaticMesh>();
-	SM->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
+	SM->SetMeshLODs(ReadStaticMeshLODs(Fin));
 	return SM;
 }
 
-shared_ptr<FCameraComponent> FAssetManager::ReadCameraComponent(std::ifstream& Fin)
+vector<FStaticMeshLOD> FAssetManager::ReadStaticMeshLODs(std::ifstream& Fin)
 {
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	shared_ptr<FCameraComponent> CameraComponent = make_shared<FCameraComponent>();
-
-	FVector BoundingOrigin;
-	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
-	CameraComponent->GetBounding().SetOrigin(BoundingOrigin);
-
-	FVector BoundingExtend;
-	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
-	CameraComponent->GetBounding().SetExtent(BoundingExtend);
-
-	FTransform Trans;
-	Fin.read((char*)&Trans, 10 * sizeof(float));
-	CameraComponent->SetTransform(Trans);
-
-	uint32 ProjectMode;
-	Fin.read((char*)&ProjectMode, sizeof(int));
-	CameraComponent->SetProjectMode(ProjectMode);
-
-	float FOV;
-	Fin.read((char*)&FOV, sizeof(float));
-	CameraComponent->SetFov(FOV);
-
-	float Aspect;
-	Fin.read((char*)&Aspect, sizeof(float));
-	CameraComponent->SetAspectRatio(Aspect);
-
-	float OrthoWidth;
-	Fin.read((char*)&OrthoWidth, sizeof(float));
-	CameraComponent->SetOrthoWidth(OrthoWidth);
-
-	return CameraComponent;
-}
-
-shared_ptr<FDirectionalLightComponent> FAssetManager::ReadDLightComponent(std::ifstream& Fin)
-{
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	shared_ptr<FDirectionalLightComponent> DLightComponent = make_shared<FDirectionalLightComponent>();
-
-	FVector BoundingOrigin;
-	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
-	DLightComponent->GetBounding().SetOrigin(BoundingOrigin);
-
-	FVector BoundingExtend;
-	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
-	DLightComponent->GetBounding().SetExtent(BoundingExtend);
-
-	FTransform Trans;
-	Fin.read((char*)&Trans, 10 * sizeof(float));
-	DLightComponent->SetTransform(Trans);
-
-	FVector4 Color;
-	Fin.read((char*)&Color, 4 * sizeof(float));
-	DLightComponent->SetColor(Color);
-
-	float Intensity;
-	Fin.read((char*)&Intensity, sizeof(float));
-	DLightComponent->SetIntensity(Intensity);
-
-	return DLightComponent;
-}
-
-shared_ptr<FPointLightComponent> FAssetManager::ReadPLightComponent(std::ifstream& Fin)
-{
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	shared_ptr<FPointLightComponent> PLightComponent = make_shared<FPointLightComponent>();
-
-	FVector BoundingOrigin;
-	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
-	PLightComponent->GetBounding().SetOrigin(BoundingOrigin);
-
-	FVector BoundingExtend;
-	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
-	PLightComponent->GetBounding().SetExtent(BoundingExtend);
-
-	FTransform Trans;
-	Fin.read((char*)&Trans, 10 * sizeof(float));
-	PLightComponent->SetTransform(Trans);
-
-	FVector4 Color;
-	Fin.read((char*)&Color, 4 * sizeof(float));
-	PLightComponent->SetColor(Color);
-
-	float Intensity;
-	Fin.read((char*)&Intensity, sizeof(float));
-	PLightComponent->SetIntensity(Intensity);
-
-	float AttenuationRadius;
-	Fin.read((char*)&AttenuationRadius, sizeof(float));
-	PLightComponent->SetAttenuationRadius(AttenuationRadius);
-
-	float SourceRadius;
-	Fin.read((char*)&SourceRadius, sizeof(float));
-	PLightComponent->SetSourceRadius(SourceRadius);
-
-	return PLightComponent;
-}
-
-shared_ptr<FStaticMeshComponent> FAssetManager::ReadStaticMeshComponent(std::ifstream& Fin)
-{
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	shared_ptr<FStaticMeshComponent> StaticMeshComponent = make_shared<FStaticMeshComponent>();
-
-	FVector BoundingOrigin;
-	Fin.read((char*)&BoundingOrigin, 3 * sizeof(float));
-	StaticMeshComponent->GetBounding().SetOrigin(BoundingOrigin);
-
-	FVector BoundingExtend;
-	Fin.read((char*)&BoundingExtend, 3 * sizeof(float));
-	StaticMeshComponent->GetBounding().SetExtent(BoundingExtend);
-
-	FTransform Trans;
-	Fin.read((char*)&Trans, 10 * sizeof(float));
-	StaticMeshComponent->SetTransform(Trans);
-
-	StaticMeshComponent->SetStaticMesh(make_shared<FStaticMesh>());
-	StaticMeshComponent->GetStaticMesh()->SetMeshLODs(ReadStaticMeshLODsInSceneBinary(Fin));
-	StaticMeshComponent->SetMaterials(ReadMaterialInfosInSceneBinary(Fin));
-
-	return StaticMeshComponent;
-}
-
-vector<shared_ptr<FStaticMeshLOD>> FAssetManager::ReadStaticMeshLODsInSceneBinary(std::ifstream& Fin)
-{
-	shared_ptr<FStaticMeshLOD> MeshLOD = make_shared<FStaticMeshLOD>();
+	FStaticMeshLOD MeshLOD;
 
 	if (!Fin.is_open())
 	{
@@ -416,16 +85,16 @@ vector<shared_ptr<FStaticMeshLOD>> FAssetManager::ReadStaticMeshLODsInSceneBinar
 
 	float VerticeSize = static_cast<float>(BufferByteSize) / sizeof(float);
 	assert(VerticeSize - floor(VerticeSize) == 0);
-	MeshLOD->Vertice.resize(static_cast<int>(BufferByteSize / sizeof(float)));
-	Fin.read((char*)MeshLOD->Vertice.data(), BufferByteSize);
+	MeshLOD.Vertice.resize(static_cast<int>(BufferByteSize / sizeof(float)));
+	Fin.read((char*)MeshLOD.Vertice.data(), BufferByteSize);
 
 	Fin.read((char*)&VertexNum, sizeof(int));
 	BufferByteSize = VertexNum * sizeof(int);
 
-	MeshLOD->Indice.resize(VertexNum);
-	Fin.read((char*)MeshLOD->Indice.data(), BufferByteSize);
+	MeshLOD.Indice.resize(VertexNum);
+	Fin.read((char*)MeshLOD.Indice.data(), BufferByteSize);
 
-	vector<shared_ptr<FStaticMeshLOD>> MeshLODs;
+	vector<FStaticMeshLOD> MeshLODs;
 	MeshLODs.push_back(MeshLOD);
 	return MeshLODs;
 }
@@ -504,28 +173,88 @@ vector<FSkeletalMeshLOD> FAssetManager::ReadSkeletalMeshLods(std::ifstream& Fin)
 	return MeshLODs;
 }
 
-vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterialInfosInSceneBinary(std::ifstream& Fin)
+FTransform FAssetManager::ReadTransform(std::ifstream& Fin)
+{
+	FTransform Trans;
+	if (!Fin.is_open())
+	{
+		throw std::exception("ERROR:  open file faild.");
+	}
+
+	Fin.read((char*)&Trans.Translation, 3 * sizeof(float));
+	Fin.read((char*)&Trans.Quat, 4 * sizeof(float));
+	Fin.read((char*)&Trans.Scale, 3 * sizeof(float));
+
+	return Trans;
+}
+
+vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstream& Fin)
 {
 	vector<shared_ptr<FMaterialInterface>> Mats;
 
 	int MatNum;
 	Fin.read((char*)&MatNum, sizeof(int));
-	for (int i = 0; i < MatNum; i++)
+	for (uint32 i = 0; i < MatNum; i++)
 	{
-		// read FString
-		int CharNum;
-		Fin.read((char*)&CharNum, sizeof(int));
-		string MaterialName;
-		MaterialName.resize(CharNum);
-		Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
-		MaterialName = MaterialName.c_str();
-
+		shared_ptr<FMaterialInterface> Mat;
 		bool IsMaterialInstance;
 		Fin.read((char*)&IsMaterialInstance, sizeof(bool));
 		char padding[3];
 		Fin.read((char*)&padding, 3 * sizeof(char));
-		string FileName = IsMaterialInstance ? "Resource\\Material\\" + MaterialName + ".matins" : "Resource\\Material\\" + MaterialName + ".material";
-		shared_ptr<FMaterialInterface> Mat = IsMaterialInstance ? LoadMaterialInstance(FileName) : LoadMaterial(FileName);
+
+		// read FString
+		int CharNum;
+		Fin.read((char*)&CharNum, sizeof(int));
+		string BaseMaterialName;
+		BaseMaterialName.resize(CharNum);
+		Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
+		BaseMaterialName = BaseMaterialName.c_str();
+
+		if (IsMaterialInstance)
+		{
+			Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
+		}
+		else
+		{
+			Mat = BaseMaterialMap[BaseMaterialName]; // base materials create in assetmanager when engine init.
+		}
+
+		if (Mat.get() == nullptr)
+		{
+			throw std::exception("ERROR: there is no such Material!");
+		}
+
+		int ScalarNum;
+		Fin.read((char*)&ScalarNum, sizeof(int));
+		for (uint32 i = 0; i < ScalarNum; i++)
+		{
+			float Scalar;
+			Fin.read((char*)&Scalar, sizeof(float));
+			Mat->ChangeScalarParams(i, Scalar);
+		}
+
+		int VectorNum;
+		Fin.read((char*)&VectorNum, sizeof(int));
+		for (uint32 i = 0; i < VectorNum; i++)
+		{
+			FVector4 Vector;
+			Fin.read((char*)&Vector, 4 * sizeof(float));
+			Mat->ChangeVectorParams(i, Vector);
+		}
+
+		int TextureNum;
+		Fin.read((char*)&TextureNum, sizeof(int));
+		for (uint32 i = 0; i < TextureNum; i++)
+		{
+			int CharNum;
+			Fin.read((char*)&CharNum, sizeof(int));
+			string Texture;
+			Texture.resize(CharNum);
+			Fin.read((char*)Texture.data(), CharNum * sizeof(char));
+			Texture = Texture.c_str();
+			std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+			Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
+		}
 		Mats.push_back(Mat);
 	}
 
@@ -538,7 +267,7 @@ shared_ptr<class FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstri
 
 	if (!Fin.is_open())
 	{
-		throw std::exception("ERROR: open file faild.");
+		throw std::exception("ERROR:  open file faild.");
 	}
 
 	shared_ptr<FSkeletalMesh> SkeMesh = make_shared<FSkeletalMesh>();
@@ -548,167 +277,6 @@ shared_ptr<class FSkeletalMesh> FAssetManager::LoadSkeletalMesh(const std::wstri
 	Fin.close();
 
 	return SkeMesh;
-}
-
-shared_ptr<FMaterialInterface> FAssetManager::LoadMaterial(const string& MaterialFileName)
-{
-	std::ifstream Fin(MaterialFileName, std::ios::binary);
-
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR:  open file faild.");
-	}
-
-	shared_ptr<FMaterial> Mat;
-
-	// MaterialName
-	int CharNum;
-	Fin.read((char*)&CharNum, sizeof(int));
-	string MaterialName;
-	MaterialName.resize(CharNum);
-	Fin.read((char*)MaterialName.data(), CharNum * sizeof(char));
-	MaterialName = MaterialName.c_str();
-
-	if (BaseMaterialMap.find(MaterialName) != BaseMaterialMap.end())
-	{
-		Mat = BaseMaterialMap[MaterialName];
-		assert(Mat != nullptr);
-		Fin.close();
-		return Mat;
-	}
-
-	Mat = make_shared<FMaterial>();
-	Mat->SetName(MaterialName);
-	BaseMaterialMap.insert({ MaterialName, Mat });
-
-	// ShaderFileName
-	Fin.read((char*)&CharNum, sizeof(int));
-	string ShaderFileName;
-	ShaderFileName.resize(CharNum);
-	Fin.read((char*)ShaderFileName.data(), CharNum * sizeof(char));
-	ShaderFileName = ShaderFileName.c_str();
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	Mat->SetShader(converter.from_bytes(ShaderFileName));
-
-	// BlendMode
-	EBlendMode Bm;
-	Fin.read((char*)&Bm, sizeof(int));
-	Mat->SetBlendMode(Bm);
-
-	// param
-	int ScalarNum;
-	Fin.read((char*)&ScalarNum, sizeof(int));
-	for (int i = 0; i < ScalarNum; i++)
-	{
-		float Scalar;
-		Fin.read((char*)&Scalar, sizeof(float));
-		Mat->ChangeScalarParams(i, Scalar);
-	}
-
-	int VectorNum;
-	Fin.read((char*)&VectorNum, sizeof(int));
-	for (int i = 0; i < VectorNum; i++)
-	{
-		FVector4 Vector;
-		Fin.read((char*)&Vector, 4 * sizeof(float));
-		Mat->ChangeVectorParams(i, Vector);
-	}
-
-	int TextureNum;
-	Fin.read((char*)&TextureNum, sizeof(int));
-	for (int i = 0; i < TextureNum; i++)
-	{
-		int CharNum;
-		Fin.read((char*)&CharNum, sizeof(int));
-		string Texture;
-		Texture.resize(CharNum);
-		Fin.read((char*)Texture.data(), CharNum * sizeof(char));
-		Texture = Texture.c_str();
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-		Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
-	}
-
-	Fin.close();
-	return Mat;
-}
-
-shared_ptr<FMaterialInterface> FAssetManager::LoadMaterialInstance(const string& MaterialFileName)
-{
-	std::ifstream Fin(MaterialFileName, std::ios::binary);
-
-	if (!Fin.is_open())
-	{
-		throw std::exception("ERROR: open file faild.");
-	}
-
-	shared_ptr<FMaterialInstance> Mat;
-
-	// MaterialInstanceName
-	int CharNum;
-	Fin.read((char*)&CharNum, sizeof(int));
-	string MaterialInstanceName;
-	MaterialInstanceName.resize(CharNum);
-	Fin.read((char*)MaterialInstanceName.data(), CharNum * sizeof(char));
-	MaterialInstanceName = MaterialInstanceName.c_str();
-
-	if (MaterialInstanceMap.find(MaterialInstanceName) != MaterialInstanceMap.end())
-	{
-		Mat = MaterialInstanceMap[MaterialInstanceName];
-		assert(Mat != nullptr);
-		Fin.close();
-		return Mat;
-	}
-
-	// BaseMaterialName
-	Fin.read((char*)&CharNum, sizeof(int));
-	string BaseMaterialName;
-	BaseMaterialName.resize(CharNum);
-	Fin.read((char*)BaseMaterialName.data(), CharNum * sizeof(char));
-	BaseMaterialName = BaseMaterialName.c_str();
-
-	if (BaseMaterialMap.find(BaseMaterialName) == BaseMaterialMap.end() || BaseMaterialMap[BaseMaterialName] == nullptr)
-	{
-		LoadMaterial("Resource\\Material\\" + BaseMaterialName + ".material");
-	}
-	Mat = make_shared<FMaterialInstance>(BaseMaterialMap[BaseMaterialName].get());
-	Mat->SetName(MaterialInstanceName);
-	MaterialInstanceMap.insert({ MaterialInstanceName, Mat });
-
-	// param
-	int ScalarNum;
-	Fin.read((char*)&ScalarNum, sizeof(int));
-	for (int i = 0; i < ScalarNum; i++)
-	{
-		float Scalar;
-		Fin.read((char*)&Scalar, sizeof(float));
-		Mat->ChangeScalarParams(i, Scalar);
-	}
-
-	int VectorNum;
-	Fin.read((char*)&VectorNum, sizeof(int));
-	for (int i = 0; i < VectorNum; i++)
-	{
-		FVector4 Vector;
-		Fin.read((char*)&Vector, 4 * sizeof(float));
-		Mat->ChangeVectorParams(i, Vector);
-	}
-
-	int TextureNum;
-	Fin.read((char*)&TextureNum, sizeof(int));
-	for (int i = 0; i < TextureNum; i++)
-	{
-		int CharNum;
-		Fin.read((char*)&CharNum, sizeof(int));
-		string Texture;
-		Texture.resize(CharNum);
-		Fin.read((char*)Texture.data(), CharNum * sizeof(char));
-		Texture = Texture.c_str();
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-		Mat->ChangeTextureParams(i, converter.from_bytes(Texture));
-	}
-
-	Fin.close();
-	return Mat;
 }
 
 shared_ptr<FSkeleton> FAssetManager::LoadSkeleton(const std::wstring& BinFileName)
@@ -830,40 +398,40 @@ shared_ptr<RHI::FTexture> FAssetManager::LoadTexture(const wstring& TexFileName)
 	return Tex;
 }
 
-//void FAssetManager::InitMaterialShaderMap()
-//{
-//	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
-//	BasicShapeMaterial->SetShader(L"Resource\\Shader\\BasicShapeMaterial.hlsl");
-//	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-//	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
-//
-//	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
-//	BrickWallMaterial->SetShader(L"Resource\\Shader\\BrickWallMaterial.hlsl");
-//	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-//	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
-//
-//	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
-//	BloomMaterial->SetShader(L"Resource\\Shader\\BloomMaterial.hlsl");
-//	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
-//	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
-//
-//	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
-//	GlassBrickMaterial->SetShader(L"Resource\\Shader\\GlassBrickMaterial.hlsl");
-//	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-//	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
-//
-//	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
-//	GlassMaterial->SetShader(L"Resource\\Shader\\GlassMaterial.hlsl");
-//	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
-//	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
-//
-//	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
-//	M_MaterialSphere->SetShader(L"Resource\\Shader\\M_MaterialSphere.hlsl");
-//	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
-//	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
-//
-//	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
-//	M_MaterialSphere_Plain->SetShader(L"Resource\\Shader\\M_MaterialSphere_Plain.hlsl");
-//	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
-//	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
-//}
+void FAssetManager::InitMaterialShaderMap()
+{
+	shared_ptr<FMaterial> BasicShapeMaterial = make_shared<FMaterial>(1, 1, 0);
+	BasicShapeMaterial->SetShader(L"Resource\\Shader\\BasicShapeMaterial.hlsl");
+	BasicShapeMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BasicShapeMaterial", BasicShapeMaterial });
+
+	shared_ptr<FMaterial> BrickWallMaterial = make_shared<FMaterial>(2, 0, 2);
+	BrickWallMaterial->SetShader(L"Resource\\Shader\\BrickWallMaterial.hlsl");
+	BrickWallMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BrickWallMaterial", BrickWallMaterial });
+
+	shared_ptr<FMaterial> BloomMaterial = make_shared<FMaterial>(0, 1, 0);
+	BloomMaterial->SetShader(L"Resource\\Shader\\BloomMaterial.hlsl");
+	BloomMaterial->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "BloomMaterial", BloomMaterial });
+
+	shared_ptr<FMaterial> GlassBrickMaterial = make_shared<FMaterial>(5, 1, 2);
+	GlassBrickMaterial->SetShader(L"Resource\\Shader\\GlassBrickMaterial.hlsl");
+	GlassBrickMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+	BaseMaterialMap.insert({ "GlassBrickMaterial", GlassBrickMaterial });
+
+	shared_ptr<FMaterial> GlassMaterial = make_shared<FMaterial>(5, 1, 0);
+	GlassMaterial->SetShader(L"Resource\\Shader\\GlassMaterial.hlsl");
+	GlassMaterial->SetBlendMode(FBlendMode::TRANSLUCENT_BM);
+	BaseMaterialMap.insert({ "GlassMaterial", GlassMaterial });
+
+	shared_ptr<FMaterial> M_MaterialSphere = make_shared<FMaterial>(0, 0, 0);
+	M_MaterialSphere->SetShader(L"Resource\\Shader\\M_MaterialSphere.hlsl");
+	M_MaterialSphere->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "M_MaterialSphere", M_MaterialSphere });
+
+	shared_ptr<FMaterial> M_MaterialSphere_Plain = make_shared<FMaterial>(0, 0, 0);
+	M_MaterialSphere_Plain->SetShader(L"Resource\\Shader\\M_MaterialSphere_Plain.hlsl");
+	M_MaterialSphere_Plain->SetBlendMode(FBlendMode::OPAQUE_BM);
+	BaseMaterialMap.insert({ "M_MaterialSphere_Plain", M_MaterialSphere_Plain });
+}
