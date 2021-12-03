@@ -194,7 +194,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstrea
 
 	int MatNum;
 	Fin.read((char*)&MatNum, sizeof(int));
-	for (uint32 i = 0; i < MatNum; i++)
+	for (int32 i = 0; i < MatNum; i++)
 	{
 		shared_ptr<FMaterialInterface> Mat;
 		bool IsMaterialInstance;
@@ -226,7 +226,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstrea
 
 		int ScalarNum;
 		Fin.read((char*)&ScalarNum, sizeof(int));
-		for (uint32 i = 0; i < ScalarNum; i++)
+		for (int32 i = 0; i < ScalarNum; i++)
 		{
 			float Scalar;
 			Fin.read((char*)&Scalar, sizeof(float));
@@ -235,7 +235,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstrea
 
 		int VectorNum;
 		Fin.read((char*)&VectorNum, sizeof(int));
-		for (uint32 i = 0; i < VectorNum; i++)
+		for (int32 i = 0; i < VectorNum; i++)
 		{
 			FVector4 Vector;
 			Fin.read((char*)&Vector, 4 * sizeof(float));
@@ -244,7 +244,7 @@ vector<shared_ptr<FMaterialInterface>> FAssetManager::ReadMaterials(std::ifstrea
 
 		int TextureNum;
 		Fin.read((char*)&TextureNum, sizeof(int));
-		for (uint32 i = 0; i < TextureNum; i++)
+		for (int32 i = 0; i < TextureNum; i++)
 		{
 			int CharNum;
 			Fin.read((char*)&CharNum, sizeof(int));
