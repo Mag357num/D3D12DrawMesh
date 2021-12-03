@@ -1,5 +1,5 @@
 ## 运行方式
-D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的win10系统)
+D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的win10系统, 并且使用Visual Studio 2019 (v142) 的生成工具)
 ## 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
 ## 效果节点(倒序)
@@ -39,7 +39,7 @@ D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的
 4. learnopengl
    https://learnopengl-cn.readthedocs.io/zh/latest/
 
-# TODOList引擎持续更新计划
+# TODOList
 1. 设计优化
     1.  FrameResource里面存的都是渲染要用的东西，包括Geometry和RenderResource，Sampler和texture，后两者可以放到rr里面吗？有必要吗？
         1.  暂时认为:静态的资源，因为不会产生gpu读和cpu写的竞争所以放在哪都可以
