@@ -2,7 +2,7 @@
 D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的win10系统, 并且使用Visual Studio 2019 (v142) 的生成工具)
 ## 操控方式
 按w前进, 鼠标左/右键按住拖动前进视角
-## 效果节点(倒序)
+## 一些效果
 1. Translucent(Order dependent)  
 ![img](README_img/Translucent.png)
 2. PointLight(no shadow)  
