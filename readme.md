@@ -13,6 +13,9 @@ D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的
 ![img](README_img/Bloom.png)
 3. Shadow Map  
 ![img](README_img/ShadowMap2.png)
+4. texturing
+![img](README_img/ModelTexturing.png)
+
 
 # 工程结构
 1. Actor-ActorComponent  
