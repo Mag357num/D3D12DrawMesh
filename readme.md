@@ -35,12 +35,10 @@ D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的
    一个特定RR储存了某个Actor在某一个Pass下所需要的大部分渲染资源和信息, 有些渲染需要的constant buffer可能在公共的framebuffer中
 
 # 参考目录
-1. rastertek.com
-   http://www.rastertek.com/
-2. 龙书demo
-3. dx12官方demo
-4. learnopengl
-   https://learnopengl-cn.readthedocs.io/zh/latest/
+1. rastertek.com: http://www.rastertek.com/
+2. 龙书demo: https://github.com/d3dcoder/d3d12book.git
+3. dx12官方demo: https://github.com/microsoft/DirectX-Graphics-Samples.git
+4. learnopengl: https://learnopengl-cn.readthedocs.io/zh/latest/
 
 
 
