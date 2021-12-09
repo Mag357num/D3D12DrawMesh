@@ -36,7 +36,8 @@ D3D12DrawMesh下sln工程用vs打开后点击运行。(需要是自带dx12API的
 
 # 参考目录
 1. rastertek.com: http://www.rastertek.com/
-2. 龙书demo: https://github.com/d3dcoder/d3d12book.git
+2. 龙书demo: https://github.com/d3dcoder/d3d12book.git  
+   (在win10可能需要安装"图形工具"这个可选功能(在设置中搜索"添加可选功能"), 否则运行工程时会报错:"应用程序请求的操作依赖于已缺失或不匹配的 SDK 组件")
 3. dx12官方demo: https://github.com/microsoft/DirectX-Graphics-Samples.git
 4. learnopengl: https://learnopengl-cn.readthedocs.io/zh/latest/
 
