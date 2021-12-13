@@ -107,4 +107,7 @@
 
 #有用资料搜集
 合理的CBuffer布局有利于做GPU Instancing:
-![img](README_img/CBufferArrange.png)
+1. ![img](README_img/CBufferArrange.png)
+2. RenderLab：知乎大佬Ubp.a写的引擎，可以参考
+   1. Ubp.a的教程：https://www.zhihu.com/people/UbpaX
+3. 另一个大佬的dx12引擎教程：https://www.zhihu.com/people/MoriyaSuwako61/posts
