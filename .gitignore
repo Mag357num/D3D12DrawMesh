@@ -6,3 +6,12 @@ D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.ilk
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.pdb
 D3D12DrawMesh/D3D12DrawMesh/bin/x64/Debug/*.exe
 ParadoxEngine/.vs
+*.pdb
+*.tlog
+*.obj
+*.recipe
+*.ilk
+*.log
+*.idb
+*.pch
+*.pdb
