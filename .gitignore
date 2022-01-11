@@ -15,3 +15,5 @@ ParadoxEngine/.vs
 *.idb
 *.pch
 *.pdb
+*.exe
+*.pdb
